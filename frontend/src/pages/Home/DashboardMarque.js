@@ -1,5 +1,5 @@
 // frontend/src/components/Dashboard/DashboardMarque.js
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Chart from 'react-apexcharts';
 import {
   fetchMarquesWithCount,
@@ -201,7 +201,6 @@ const DashboardMarque = () => {
     legend: { position: 'bottom', labels: { colors: '#94a3b8' } },
     dataLabels: { enabled: true, style: { colors: ['#fff'], fontSize: '11px' } },
     tooltip: { theme: 'dark', y: { formatter: (val, { seriesIndex }) => {
-      const label = Object.keys(statsEquipes?.etatsCount || {})[seriesIndex];
       const total = statsEquipes?.totalEquipements || 1;
       return `${val} équipement(s) (${((val / total) * 100).toFixed(1)}%)`;
     } } }

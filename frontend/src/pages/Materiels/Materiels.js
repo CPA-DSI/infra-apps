@@ -8,7 +8,7 @@ import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import { useAuth } from '../../contexts/AuthContext';
 import { apiClient } from '../../services/api';
-import { Button, Form, InputGroup, Spinner, Card, ProgressBar, Alert } from 'react-bootstrap';
+import { Button, Form, InputGroup, Spinner, Card, Alert } from 'react-bootstrap';
 import { FaEye, FaEdit, FaTrash, FaFileExcel, FaSearch, FaSync, FaTimes, FaDesktop, FaFileImport, FaPlus, FaUpload, FaCheckCircle, FaFileUpload, FaHistory, FaInfoCircle, FaInbox } from 'react-icons/fa';
 import { MdOutlineAddCircleOutline } from 'react-icons/md';
 /// --- Importations des Modales ---
@@ -211,11 +211,11 @@ const [selectedMateriel, setSelectedMateriel] = useState(null);
 const [modalType, setModalType] = useState(null);
 const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 const [isAddMarqueOpen, setIsAddMarqueOpen] = useState(false);
-const [addMarqueKey, setAddMarqueKey] = useState(0);
+const [addMarqueKey] = useState(0);
 const [isHistoriqueModalOpen, setIsHistoriqueModalOpen] = useState(false);
 const [selectedMaterielForHistory, setSelectedMaterielForHistory] = useState(null);
 const [successMessage, setSuccessMessage] = useState(null);
-const [error, setError] = useState(null);
+const [error] = useState(null);
 
 // --- États pour l'import intégré ---
 const [showImportSection, setShowImportSection] = useState(false);
@@ -229,7 +229,6 @@ const [importPreview, setImportPreview] = useState([]);
 const [importData, setImportData] = useState([]);
 const [isDragging, setIsDragging] = useState(false);
 const fileInputRef = useRef(null);
-const abortControllerRef = useRef(null);
 
 // --- Fonctions de récupération des données ---
 const fetchMateriels = useCallback(async () => {
@@ -925,11 +924,6 @@ const handleDrop = useCallback((e) => {
     }
 }, []);
 
-// Gestion du clic sur "parcourir"
-const handleBrowseClick = useCallback(() => {
-    fileInputRef.current?.click();
-}, []);
-
 // Gestion de la sélection de fichier
 const handleFileSelect = useCallback((e) => {
     const selectedFile = e.target.files?.[0];
@@ -995,21 +989,6 @@ const previewFile = useCallback((file) => {
         }
     };
     reader.readAsArrayBuffer(file);
-}, []);
-
-// --- FONCTIONS DE VALIDATION DES DONNÉES ---
-const validateUserData = useCallback((item) => {
-    const errors = [];
-    
-    if (item.utilisateur && !item.id_n) {
-        errors.push(`L'utilisateur "${item.utilisateur}" n'a pas de matricule (ID_N)`);
-    }
-    
-    if (item.id_n && !item.utilisateur) {
-        errors.push(`Le matricule ${item.id_n} n'a pas de nom d'utilisateur associé`);
-    }
-    
-    return errors;
 }, []);
 
 // --- FONCTION D'IMPORT COMPLÈTE ---
@@ -1104,13 +1083,6 @@ const handleImportSubmit = useCallback(async () => {
         setIsImporting(false);
     }
 }, [importFile, importData, parseExcelFile, fetchMateriels, resetImportState]);
-
-// Annuler l'import en cours
-const cancelImport = useCallback(() => {
-    if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-    }
-}, []);
 
 // Fonction d'exportation Excel principale
 const handleExportExcel = useCallback(() => {

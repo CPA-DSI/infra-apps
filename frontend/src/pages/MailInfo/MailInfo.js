@@ -5,7 +5,7 @@ import { saveAs } from 'file-saver';
 import { Button, Alert } from 'react-bootstrap';
 import Swal from 'sweetalert2';
 
-import { FaFileExcel, FaPlus, FaTrash, FaEdit, FaSearch, FaTimes, FaSync, FaEye, FaEnvelope, FaUser, FaUsers, FaLayerGroup, FaShieldAlt, FaUserShield, FaCalendarAlt, FaClock, FaCrown, FaExclamationCircle, FaCheckCircle, FaTimesCircle, FaBan, FaFileImport } from 'react-icons/fa';
+import { FaFileExcel, FaPlus, FaEdit, FaSearch, FaTimes, FaSync, FaEye, FaEnvelope, FaUser, FaUsers, FaShieldAlt, FaUserShield, FaClock, FaCrown, FaExclamationCircle, FaCheckCircle, FaTimesCircle, FaBan, FaFileImport } from 'react-icons/fa';
 import { fetchUsers, fetchAllMaterielsByIdN, updateUser } from '../../services/api';
 import { ROLE_PERMISSIONS, ROLES } from '../../config/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -173,7 +173,6 @@ const RoleBadge = ({ role, showIcon = true, showTooltip = true, size = 'normal' 
 const EditableRoleBadge = ({ row, onRoleChange }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [selectedRole, setSelectedRole] = useState(row.role || 'USER');
-    const { label, bg, text, border, Icon, description } = formatUserRole(selectedRole);
 
     const handleRoleChange = async (newRole) => {
         setSelectedRole(newRole);
@@ -805,19 +804,6 @@ const UsersManager = () => {
         }).then((result) => {
             if (result.isConfirmed) {
                 handleStatusUpdate(user, newStatus);
-            }
-        });
-    };
-
-    const openDisable = (user) => {
-        Swal.fire({
-            title: 'Êtes-vous sûr ?',
-            html: `Cette action va <strong>désactiver</strong> le compte de <strong>${user.materiel?.utilisateur || 'cet utilisateur'}</strong>. Il ne pourra plus se connecter.`,
-            icon: 'warning',
-            showCancelButton: true, confirmButtonColor: '#dc3545', cancelButtonColor: '#6c757d', confirmButtonText: 'Oui, désactiver', cancelButtonText: 'Annuler', reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                handleStatusUpdate(user, false);
             }
         });
     };

@@ -4,8 +4,8 @@ import React, { useState, useEffect, useCallback, memo } from 'react';
 import { fetchALocaux, fetchAMarques, updateMateriel } from '../../services/api';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
-import { FaVideo, FaNetworkWired, FaUsb, FaKeyboard, FaTag, FaLaptop, FaTv, FaUsers, FaCalendarAlt, FaBuilding, FaDoorOpen, FaHeart, FaUserCircle, FaPlug, FaKey, FaBatteryFull, FaMicrochip, FaCommentAlt, FaQrcode, FaKeyboard as FaKeyboardIcon, FaLock, FaCheckCircle, FaTimesCircle, FaPlus, FaHdd, FaTimes, FaIdBadge, FaTerminal, FaWifi, FaShieldAlt, FaUserSecret, FaCogs, FaDesktop, FaEdit, FaSave, FaInfoCircle } from 'react-icons/fa';
-import { MdComputer, MdSecurity, MdComment, MdDevices, MdMonitor } from 'react-icons/md';
+import { FaVideo, FaNetworkWired, FaUsb, FaLaptop, FaTv, FaUsers, FaCalendarAlt, FaBuilding, FaDoorOpen, FaHeart, FaUserCircle, FaPlug, FaKey, FaBatteryFull, FaMicrochip, FaCommentAlt, FaQrcode, FaKeyboard as FaKeyboardIcon, FaCheckCircle, FaTimesCircle, FaHdd, FaTimes, FaTerminal, FaShieldAlt, FaDesktop, FaEdit, FaSave, FaInfoCircle } from 'react-icons/fa';
+import { MdMonitor } from 'react-icons/md';
 import Select from 'react-select';
 import './Materiels.css';
 

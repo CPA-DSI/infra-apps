@@ -138,7 +138,6 @@ const DashboardDocuments = () => {
       theme: 'dark',
       y: {
         formatter: (val, opts) => {
-          const label = categoryData[opts.seriesIndex]?.label || 'N/A';
           const pct = stats.totalDocuments > 0 ? ((val / stats.totalDocuments) * 100).toFixed(1) : 0;
           return `${val} (${pct}%)`;
         }

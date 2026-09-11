@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Form, Button, Alert, Spinner, Card, Row, Col } from 'react-bootstrap';
+import { Form, Button, Alert, Card, Row, Col } from 'react-bootstrap';
 import { updateDailyEmailConfig, sendTestEmailQuotidien } from '../../services/api';
 import { API_BASE_URL } from '../../config/api';
 import Swal from 'sweetalert2';
@@ -12,7 +12,7 @@ export default function EmailConfigPage({ initialConfig, onConfigUpdate }) {
   const [loading, setLoading] = useState(false);
   const [testLoading, setTestLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const [isRunning, setIsRunning] = useState(false);
+  const [, setIsRunning] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   
   // Fonction pour obtenir la date du jour au format français
@@ -45,25 +45,6 @@ export default function EmailConfigPage({ initialConfig, onConfigUpdate }) {
           .then(data => setIsRunning(data.running))
           .catch(err => console.warn("Le serveur Robot n'est pas encore démarré."));
   }, []);
-
-  const toggleCron = async () => {
-    try {
-        const action = isRunning ? 'stop' : 'start';
-        const response = await fetch(`${API_BASE_URL}/api/cron/toggle`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action, type: 'quotidien' })
-        });
-
-        if (!response.ok) throw new Error('Erreur serveur');
-
-        const data = await response.json();
-        setIsRunning(data.running);
-    } catch (error) {
-        console.error("Erreur de connexion au Robot :", error);
-        alert("Impossible de contacter le serveur Robot. Vérifiez qu'il est lancé sur le port 3001.");
-    }
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;

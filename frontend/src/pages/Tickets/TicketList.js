@@ -3,9 +3,9 @@ import DataTable from 'react-data-table-component';
 import { Button, Alert, Spinner } from 'react-bootstrap';
 import {
   FaList, FaCheckCircle,
-  FaDownload, FaSyncAlt, FaPlus, FaSearch, FaTimes, FaTh,
-  FaClock, FaExclamationTriangle, FaPaperPlane, FaLock,
-  FaFlag, FaArchive, FaUser, FaLaptop, FaCalendarAlt,
+  FaDownload, FaSyncAlt, FaPlus, FaSearch, FaTimes,
+  FaClock, FaExclamationTriangle, FaPaperPlane,
+  FaFlag, FaArchive, FaUser, FaLaptop,
   FaArrowRight, FaInfoCircle, FaStar, FaStarHalfAlt, FaTicketAlt, FaCommentDots
 } from 'react-icons/fa';
 import * as XLSX from 'xlsx';
@@ -428,13 +428,6 @@ const TicketList = () => {
           {label}
         </span>
       );
-    };
-
-    const getUserInfo = (row, { formattedName, fallbackName, formattedEquipe, fallbackEquipe }) => {
-      const nom = formattedName || fallbackName || '';
-      const equipe = formattedEquipe || fallbackEquipe || '';
-      const isInconnu = !nom || nom === 'Inconnu' || nom === 'N/A' || nom === '—';
-      return { nom, equipe, isInconnu };
     };
 
     const renderUserChip = ({ nom, equipe, isInconnu, unassignedLabel, color, icon }) => {

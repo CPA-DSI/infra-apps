@@ -1,6 +1,6 @@
 // src/pages/Documents/Documents.js
 // --- Importations React et Bibliothèques ---
-import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import DataTable from 'react-data-table-component';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
@@ -10,10 +10,10 @@ import withReactContent from 'sweetalert2-react-content';
 import { Button, Form, InputGroup, Spinner, Card, Alert, Tabs, Tab } from 'react-bootstrap';
 import {
   FaEye, FaEdit, FaTrash, FaSearch, FaSync, FaTimes,
-  FaPlus, FaFileAlt, FaGlobe, FaLock, FaInbox, FaInfoCircle, FaFileUpload,
-  FaTag, FaCodeBranch, FaUser, FaCalendarAlt, FaReceipt, FaFileContract,
+  FaPlus, FaFileAlt, FaGlobe, FaLock, FaInbox,
+  FaTag, FaUser, FaCalendarAlt, FaReceipt, FaFileContract,
   FaShieldAlt, FaBook, FaProjectDiagram, FaCertificate, FaTruck, FaClipboardCheck, FaFile,
-  FaFilePdf, FaFileWord, FaFileExcel, FaFileImage, FaFileImport
+  FaFileExcel, FaFileImport
 } from 'react-icons/fa';
 import AddDocModal from './AddDocModal';
 import DocumentDetailModal from './DocumentDetailModal';
@@ -96,11 +96,10 @@ function Documents() {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterCategorie, setFilterCategorie] = useState('');
   const [filterPublic, setFilterPublic] = useState('');
   const [activeTab, setActiveTab] = useState('');
   const [selectedDoc, setSelectedDoc] = useState(null);
-  const [successMessage, setSuccessMessage] = useState(null);
+  const [successMessage] = useState(null);
   const [error, setError] = useState(null);
   const [quickPreview, setQuickPreview] = useState({ show: false, files: [], selectedIndex: 0 });
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Tilt from 'react-parallax-tilt';
 import Swal from 'sweetalert2';
 import { API_BASE_URL } from '../../config/api';
@@ -41,7 +41,6 @@ const KeyIcon = () => (
 );
 
 const ForgotPassword = () => {
-  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 

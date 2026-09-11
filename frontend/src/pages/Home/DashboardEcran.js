@@ -10,8 +10,8 @@ const EcranChart = () => {
     const [totalEcran, setTotalEcran] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [seriesData, setSeriesData] = useState([]);
-    const [chartLabels, setChartLabels] = useState([]);
+    const [, setSeriesData] = useState([]);
+    const [, setChartLabels] = useState([]);
     const [hoveredBrand, setHoveredBrand] = useState(null);
 
     const [chartType, setChartType] = useState('line');
@@ -158,12 +158,6 @@ const EcranChart = () => {
 
             const labelsArray = Object.keys(brandCounts);
             const counts = Object.values(brandCounts);
-
-            const maxCount = Math.max(...counts, 0);
-            const dominantBrand = labelsArray[counts.indexOf(maxCount)] || '';
-            const avgCount = counts.length > 0 
-                ? (counts.reduce((a, b) => a + b, 0) / counts.length).toFixed(1) 
-                : 0;
 
             setChartLabels(labelsArray);
             setSeriesData([{

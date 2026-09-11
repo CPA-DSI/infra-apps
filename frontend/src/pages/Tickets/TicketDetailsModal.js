@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Badge, Spinner, Alert } from 'react-bootstrap';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Spinner, Alert } from 'react-bootstrap';
 import { getTicketById, fetchAllMaterielsIt } from '../../services/api';
 import './Tickets.css';
 import {
-    FaTicketAlt, FaCalendarAlt, FaUser, FaLaptop, FaTag, FaExclamationCircle,
-    FaCheck, FaArrowRight, FaTimes, FaEye, FaInfoCircle, FaClock, FaCheckCircle,
+    FaTicketAlt, FaCalendarAlt, FaUser, FaLaptop,
+    FaArrowRight, FaTimes, FaInfoCircle, FaClock, FaCheckCircle,
     FaArchive, FaLock, FaExclamationTriangle, FaStar, FaStarHalfAlt, FaSyncAlt, FaFlag
 } from 'react-icons/fa';
 
@@ -44,7 +44,7 @@ const TicketDetailsModal = ({ show, handleClose, ticketId }) => {
         getMateriels();
     }, []);
 
-    const materielMap = useMemo(() => {
+    useMemo(() => {
         const map = new Map();
         materiels.forEach(item => {
             map.set(item.id_n, item);

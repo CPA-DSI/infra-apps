@@ -5,15 +5,15 @@ import { fetchALocaux, fetchAMarques, addMateriel, fetchAllMateriels } from '../
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import Select from 'react-select';
-import { 
-    FaVideo, FaNetworkWired, FaUsb, FaKeyboard, FaTag, FaLaptop, FaTv, 
-    FaUsers, FaCalendarAlt, FaBuilding, FaDoorOpen, FaHeart, FaUserCircle, 
-    FaPlug, FaKey, FaBatteryFull, FaMicrochip, FaCommentAlt, FaQrcode, 
-    FaKeyboard as FaKeyboardIcon, FaLock, FaCheckCircle, FaTimesCircle, FaPlus, FaHdd, 
-    FaTimes, FaIdBadge, FaTerminal, FaWifi, FaShieldAlt, FaUserSecret, 
-    FaCogs, FaDesktop, FaUserPlus, FaSave, FaInfoCircle
+import {
+    FaVideo, FaNetworkWired, FaUsb, FaLaptop, FaTv,
+    FaUsers, FaCalendarAlt, FaBuilding, FaDoorOpen, FaHeart, FaUserCircle,
+    FaPlug, FaKey, FaBatteryFull, FaMicrochip, FaCommentAlt, FaQrcode,
+    FaKeyboard as FaKeyboardIcon, FaCheckCircle, FaTimesCircle, FaPlus, FaHdd,
+    FaTimes, FaTerminal, FaShieldAlt,
+    FaDesktop, FaUserPlus, FaInfoCircle
 } from 'react-icons/fa';
-import { MdComputer, MdSecurity, MdComment, MdDevices, MdMonitor } from 'react-icons/md';
+import { MdMonitor } from 'react-icons/md';
 import './Materiels.css';
 
 const MySwal = withReactContent(Swal);
@@ -192,8 +192,7 @@ const AddModal = ({ onClose, onMaterialAdded }) => {
     const [localOptions, setLocalOptions] = useState([]);
     const [existingIds, setExistingIds] = useState([]);
     const [idError, setIdError] = useState("");
-    const [activeSection, setActiveSection] = useState('general');
-    
+
     const handleChange = useCallback((e) => {
         const { name, value, type, checked } = e.target;
 

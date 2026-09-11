@@ -13,14 +13,6 @@ export const apiClient = axios.create({
   withCredentials: true,
 });
 
-const apiClientNoAuth = axios.create({
-  baseURL: BASE,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  withCredentials: true,
-});
-
 export const apiClientUpload = axios.create({
   baseURL: BASE,
   withCredentials: true,

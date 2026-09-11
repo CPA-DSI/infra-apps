@@ -122,7 +122,7 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
   const [csvContent, setCsvContent] = useState('');
   const [csvError, setCsvError] = useState(false);
   const [csvHeaders, setCsvHeaders] = useState([]);
-  const [csvRows, setCsvRows] = useState([]);
+  const [, setCsvRows] = useState([]);
   const [csvSeparator, setCsvSeparator] = useState(';');
   const [editedRows, setEditedRows] = useState([]);
   const [csvPage, setCsvPage] = useState(0);

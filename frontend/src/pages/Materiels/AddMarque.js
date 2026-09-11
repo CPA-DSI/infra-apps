@@ -1,6 +1,6 @@
 // src/pages/Materiels/AddMarque.js - Version avec suppression améliorée et notifications locales
 
-import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
@@ -109,7 +109,6 @@ const LocalNotification = ({ message, type, onClose, undoAction, onUndo }) => {
     if (!message) return null;
 
     const backgroundColor = type === 'success' ? '#d4edda' : '#f8d7da';
-    const borderColor = type === 'success' ? '#c3e6cb' : '#f5c6cb';
     const textColor = type === 'success' ? '#155724' : '#721c24';
     const icon = type === 'success' ? <FaCheckCircle /> : <FaExclamationTriangle />;
 

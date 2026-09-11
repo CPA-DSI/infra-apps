@@ -2,12 +2,11 @@
 // --- Importations React et Bibliothèques ---
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import DataTable from 'react-data-table-component';
-import axios from 'axios';
 import * as XLSX from 'xlsx';
 import Swal from 'sweetalert2';
 
 // --- Importations Bootstrap et Icônes ---
-import { Button, Spinner, Alert, Form, InputGroup, Card, ProgressBar } from 'react-bootstrap';
+import { Button, Spinner, Alert } from 'react-bootstrap';
 import { FaEye, FaEdit, FaTrash, FaPlus, FaFileExcel, FaSearch, FaBoxOpen, FaSync, FaTimes, FaFilter, FaArrowUp, FaArrowDown, FaExchangeAlt, FaChartBar, FaUpload, FaCheckCircle, FaFileUpload, FaFileImport } from 'react-icons/fa';
 
 /// --- Importations des Modales ---
@@ -396,11 +395,6 @@ const Mouvements = () => {
         }
     }, []);
 
-    // Gestion du clic sur "parcourir"
-    const handleBrowseClick = useCallback(() => {
-        fileInputRef.current?.click();
-    }, []);
-
     // Gestion de la sélection de fichier
     const handleFileSelect = useCallback((e) => {
         const selectedFile = e.target.files?.[0];
@@ -606,13 +600,6 @@ const handleImportSubmit = useCallback(async () => {
         }
     }
 }, [importFile, importData, fetchAllMouvements, resetImportState, importError, importSuccess]);
-
-    // Annuler l'import en cours
-    const cancelImport = useCallback(() => {
-        if (abortControllerRef.current) {
-            abortControllerRef.current.abort();
-        }
-    }, []);
 
     // --- DÉFINITION DES COLONNES ---
     const columns = useMemo(() => [

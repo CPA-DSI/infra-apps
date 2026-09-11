@@ -226,19 +226,6 @@ const EmptyState = () => (
   </div>
 );
 
-const StatBadge = ({ type, count, percentage, themeColor }) => (
-  <div className={`dashboard-ssd-stat-badge dashboard-ssd-stat-badge-${type}`}>
-    <div className="dashboard-ssd-stat-icon" style={{ background: themeColor }}>
-      <FaHdd style={{ color: '#fff', fontSize: 14 }} />
-    </div>
-    <div className="dashboard-ssd-stat-info">
-      <p className="dashboard-ssd-stat-label">{type.toUpperCase()}</p>
-      <p className="dashboard-ssd-stat-value">{count}</p>
-      <p className="dashboard-ssd-stat-percentage">{percentage}%</p>
-    </div>
-  </div>
-);
-
 const DashboardSSD = () => {
   const [storageData, setStorageData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);

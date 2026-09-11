@@ -12,16 +12,9 @@ export default function EmailConfigMonthlyPage({ initialConfig, onConfigUpdate }
   const [loading, setLoading] = useState(false);
   const [testLoading, setTestLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const [isRunning, setIsRunning] = useState(false);
+  const [, setIsRunning] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   
-  // Fonction pour obtenir la date du jour au format français
-  const getCurrentDate = () => {
-    const today = new Date();
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return today.toLocaleDateString('fr-FR', options);
-  };
-
   // Fonction pour obtenir le mois actuel
   const getCurrentMonth = () => {
     const today = new Date();
@@ -53,25 +46,6 @@ export default function EmailConfigMonthlyPage({ initialConfig, onConfigUpdate }
           .then(data => setIsRunning(data.running))
           .catch(err => console.warn("Le serveur Robot n'est pas encore démarré."));
   }, []);
-
-  const toggleCron = async () => {
-    try {
-        const action = isRunning ? 'stop' : 'start';
-        const response = await fetch(`${API_BASE_URL}/api/cron/toggle`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action, type: 'mensuel' })
-        });
-
-        if (!response.ok) throw new Error('Erreur serveur');
-
-        const data = await response.json();
-        setIsRunning(data.running);
-    } catch (error) {
-        console.error("Erreur de connexion au Robot :", error);
-        alert("Impossible de contacter le serveur Robot. Vérifiez qu'il est lancé sur le port 3001.");
-    }
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;

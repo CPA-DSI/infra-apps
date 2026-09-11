@@ -268,7 +268,7 @@ const DashboardHistoriqueChart = () => {
   const [allSorties,     setAllSorties]     = useState(Array(12).fill(0));
   const [allPrevEntrees, setAllPrevEntrees] = useState(Array(12).fill(0));
   const [allPrevSorties, setAllPrevSorties] = useState(Array(12).fill(0));
-  const [totals,      setTotals]      = useState({ totalEntrees: 0, totalSorties: 0 });
+  const [,      setTotals]      = useState({ totalEntrees: 0, totalSorties: 0 });
   const [chartType,   setChartType]   = useState('bar');   // 'bar' | 'line'
   const [period,      setPeriod]      = useState('all');   // clé de PERIODS
   const [loading,     setLoading]     = useState(true);

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Container, Navbar, Nav, NavDropdown, Modal, Button, Alert, Form, Badge } from 'react-bootstrap';
-import { FaHome, FaLaptopCode, FaEnvelopeOpenText, FaBoxes, FaUserCircle, FaSignOutAlt, FaProductHunt, FaExchangeAlt, FaArrowCircleRight, FaArrowRight, FaMapMarkerAlt, FaBars, FaTimes, FaTicketAlt, FaEye, FaEyeSlash, FaCheck, FaList, FaHistory, FaUsers, FaFileAlt, FaMobileAlt } from 'react-icons/fa';
+import { Container, Navbar, Nav, NavDropdown, Modal, Button, Alert, Form } from 'react-bootstrap';
+import { FaHome, FaLaptopCode, FaEnvelopeOpenText, FaBoxes, FaUserCircle, FaSignOutAlt, FaProductHunt, FaExchangeAlt, FaArrowCircleRight, FaBars, FaTimes, FaTicketAlt, FaEye, FaEyeSlash, FaCheck, FaList, FaHistory, FaUsers, FaFileAlt } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import logo from '../../assets/logo.png';
-import { API_ENDPOINTS, PAGE_TITLES, ROLES, validatePassword, hasPermission, PERMISSIONS } from '../../config/api';
+import { PAGE_TITLES, ROLES, validatePassword, hasPermission, PERMISSIONS } from '../../config/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { apiClient } from '../../services/api';
 import './Navbar.css';

@@ -1,8 +1,8 @@
 // src/pages/HistoriqueMateriel/HistoriqueMateriel.js
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Card, Button, InputGroup, Form, FormControl, Spinner, Alert } from 'react-bootstrap';
-import { FaSearch, FaSync, FaHistory, FaDesktop, FaFilter, FaTimes, FaFileExcel, FaPlus } from 'react-icons/fa';
+import { Card, Button, InputGroup, Form, Spinner } from 'react-bootstrap';
+import { FaSearch, FaSync, FaHistory, FaTimes, FaFileExcel, FaPlus } from 'react-icons/fa';
 import DataTable from 'react-data-table-component';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';

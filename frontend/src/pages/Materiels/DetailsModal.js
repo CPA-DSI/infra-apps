@@ -1,8 +1,8 @@
 // src/pages/Materiels/DetailsModal.js
 
 import React, { useState } from 'react';
-import { FaLaptopCode, FaBarcode, FaDesktop, FaMapMarkerAlt, FaUser, FaCode, FaKeyboard, FaLock, FaCheckCircle, FaTimesCircle, FaInfoCircle, FaVideo, FaNetworkWired, FaUsb, FaKeyboard as FaKeyboardIcon, FaBatteryFull, FaMicrochip, FaCommentAlt, FaQrcode, FaBuilding, FaDoorOpen, FaHeart, FaUserCircle, FaTerminal, FaPlug, FaShieldAlt, FaHdd, FaTimes, FaCalendarAlt, FaUserFriends, FaCogs, FaKey, FaLocationArrow, FaToggleOn, FaPowerOff, FaEye, FaEyeSlash } from 'react-icons/fa';
-import { MdMonitor, MdComputer, MdSecurity, MdComment, MdDevices } from 'react-icons/md';
+import { FaLaptopCode, FaBarcode, FaDesktop, FaCheckCircle, FaTimesCircle, FaVideo, FaNetworkWired, FaUsb, FaKeyboard as FaKeyboardIcon, FaBatteryFull, FaMicrochip, FaCommentAlt, FaQrcode, FaBuilding, FaHeart, FaUserCircle, FaTerminal, FaPlug, FaShieldAlt, FaHdd, FaTimes, FaCalendarAlt, FaUserFriends, FaKey, FaLocationArrow, FaToggleOn, FaPowerOff, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { MdMonitor, MdComputer, MdSecurity, MdComment } from 'react-icons/md';
 import './Materiels.css';
 
 function PasswordField({ label, value, name, visible, onToggle, toggleKey }) {

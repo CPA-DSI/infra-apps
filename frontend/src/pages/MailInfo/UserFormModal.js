@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import {
     FaUser, FaEdit, FaQrcode, FaUsers, FaEnvelope, FaLock, FaTimes,
-    FaCheck, FaShieldAlt, FaEnvelopeOpenText, FaPlus
+    FaShieldAlt, FaEnvelopeOpenText, FaPlus
 } from 'react-icons/fa';
 import { addUser, updateUser } from '../../services/api';
 import { ROLES } from '../../config/api';

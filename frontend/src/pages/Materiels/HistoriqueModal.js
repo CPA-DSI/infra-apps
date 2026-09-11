@@ -1,7 +1,7 @@
 // src/pages/Materiels/HistoriqueModal.js
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { FaHistory, FaUser, FaDesktop, FaEdit, FaTimes, FaCalendarAlt, FaPlus, FaSave, FaUndo } from 'react-icons/fa';
+import { FaHistory, FaUser, FaDesktop, FaTimes, FaPlus, FaSave } from 'react-icons/fa';
 import DataTable from 'react-data-table-component';
 import { getHistoriqueMaterielByMaterielId, createHistoriqueMateriel, fetchMateriels } from '../../services/api';
 import './Materiels.css';
