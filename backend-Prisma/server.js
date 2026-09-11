@@ -22,8 +22,8 @@ const PORT = process.env.PORT || 4000;
 
 // --- 2. MIDDLEWARES ---
 
-const allowedOrigins = process.env.FRONTEND_URL
-    ? process.env.FRONTEND_URL.split(',').map((origin) => origin.trim())
+const allowedOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
     : ['http://localhost:3000'];
 
 app.use(cors({
