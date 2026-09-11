@@ -1,0 +1,427 @@
+@import '../../styles/theme.css';
+@import '../../styles/animations.css';
+@import '../../styles/ModalSystem.css';
+@import '../../styles/Buttons.css';
+
+/* ============================================================================
+   Mail.css — Modern Header & Components
+   ============================================================================ */
+
+.modern-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 14px 20px;
+    border: none;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.modern-header h1 {
+    color: white !important;
+    font-weight: 700;
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.modern-header p {
+    color: rgba(255, 255, 255, 0.85) !important;
+    margin: 4px 0 0 0;
+    font-size: 0.875rem;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+/* Animation fadeInUp pour les cartes de statistiques */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Styles pour les cartes de statistiques */
+.stat-card {
+    padding: 16px 20px;
+    border-radius: 14px;
+    cursor: default;
+    user-select: none;
+}
+
+/* ============================================================================
+   STYLES - Email Cells
+   ============================================================================ */
+
+.email-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px -2px rgba(139, 92, 246, 0.1);
+}
+
+.email-cell:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px -2px rgba(139, 92, 246, 0.15);
+}
+
+.email-primary {
+    background: rgba(139, 92, 246, 0.08);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    color: #7c3aed;
+}
+
+.email-secondary {
+    background: rgba(59, 130, 246, 0.08);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    color: #1e40af;
+}
+
+.email-password {
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    color: #b45309;
+}
+
+.email-password-secondary {
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    color: #047857;
+}
+
+/* ============================================================================
+   STYLES - Role Badge & Edition
+   ============================================================================ */
+
+/* Badge de rôle avec animation */
+.role-badge {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.role-badge::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.role-badge:hover::after {
+    opacity: 1;
+}
+
+.role-badge:hover {
+    transform: scale(1.05) translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+}
+
+.role-badge.role-unknown {
+    border-style: dashed;
+    opacity: 0.8;
+    animation: pulseUnknown 2s ease-in-out infinite;
+}
+
+@keyframes pulseUnknown {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+}
+
+/* Animation d'entrée des badges */
+.role-badge {
+    animation: fadeInBadge 0.3s ease forwards;
+}
+
+@keyframes fadeInBadge {
+    from {
+        opacity: 0;
+        transform: scale(0.85) translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Sélecteur d'édition de rôle */
+.role-edit-select {
+    transition: all 0.3s ease;
+}
+
+.role-edit-select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.role-edit-select option {
+    padding: 8px 12px;
+    font-weight: 500;
+}
+
+/* Icône d'édition de rôle */
+.role-edit-icon {
+    transition: all 0.3s ease;
+}
+
+[title="Cliquez pour modifier le rôle"]:hover .role-edit-icon {
+    opacity: 1 !important;
+    transform: rotate(15deg) scale(1.1);
+}
+
+/* Tooltip personnalisé pour les badges */
+.role-badge[title] {
+    position: relative;
+}
+
+/* Styles spécifiques pour chaque rôle dans le sélecteur */
+.role-edit-select option[value="USER"] {
+    color: #16a34a;
+}
+
+.role-edit-select option[value="IT_ADMIN"] {
+    color: #dc2626;
+}
+
+.role-edit-select option[value="DIRECTION"] {
+    color: #7c3aed;
+}
+
+/* ============================================================================
+   STYLES - Nouvelles colonnes (Statut, Emails, Tickets)
+   ============================================================================ */
+
+.status-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    letter-spacing: 0.3px;
+    border-radius: 50px !important;
+    transition: all 0.2s ease;
+}
+
+.status-badge:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.email-count-badge {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 50px !important;
+    font-weight: 600;
+}
+
+.ticket-badge {
+    font-size: 0.6rem;
+    padding: 2px 5px;
+    border-radius: 50px !important;
+    font-weight: 600;
+    cursor: help;
+    transition: all 0.2s ease;
+}
+
+.ticket-badge:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* Amélioration des cellules d'email avec indicateur primaire/secondaire */
+.email-primary .email-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.email-secondary .email-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.email-badge-primary {
+    background: rgba(139, 92, 246, 0.15);
+    color: #7c3aed;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.email-badge-secondary {
+    background: rgba(59, 130, 246, 0.15);
+    color: #1e40af;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.email-badge-verified {
+    background: rgba(34, 197, 94, 0.15);
+    color: #15803d;
+    font-size: 0.6rem;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.email-badge-unverified {
+    background: rgba(245, 158, 11, 0.15);
+    color: #b45309;
+    font-size: 0.6rem;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+/* ============================================================================
+   STYLES - Expandable Email Rows
+   ============================================================================ */
+
+.email-cell-email-row {
+    transition: all 0.2s ease;
+}
+
+.email-cell-email-row:hover {
+    transform: translateX(4px);
+}
+
+.expandable-email-row {
+    animation: expandRowFadeIn 0.3s ease forwards;
+}
+
+@keyframes expandRowFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.email-count-badge-table {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    cursor: default;
+}
+
+.email-count-badge-table.has-multiple {
+    background-color: var(--color-primary);
+    color: white;
+    cursor: pointer;
+}
+
+.email-count-badge-table.single {
+    background-color: var(--color-bg-alt);
+    color: var(--color-text-sub);
+}
+
+.email-count-badge-table:hover {
+    transform: scale(1.05);
+}
+
+.verified-count-badge {
+    font-size: 0.65rem;
+    font-weight: 500;
+    margin-top: 3px;
+    transition: all 0.2s ease;
+}
+
+.email-primary-expandable {
+    background: rgba(139, 92, 246, 0.08);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    color: #7c3aed;
+}
+
+.email-secondary-expandable {
+    background: rgba(59, 130, 246, 0.08);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    color: #1e40af;
+}
+
+.email-badge-primary-expandable {
+    background: rgba(139, 92, 246, 0.15);
+    color: #7c3aed;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.email-badge-secondary-expandable {
+    background: rgba(59, 130, 246, 0.15);
+    color: #1e40af;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.email-badge-verified-expandable {
+    background: rgba(34, 197, 94, 0.15);
+    color: #15803d;
+    font-size: 0.6rem;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.email-badge-unverified-expandable {
+    background: rgba(245, 158, 11, 0.15);
+    color: #b45309;
+    font-size: 0.6rem;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+/* ============================================================================
+   STYLES - Scoped Bootstrap Alert Overrides (Mail page)
+   ============================================================================ */
+
+.page-mail .alert {
+    border-radius: 12px;
+    border: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 12px 16px;
+    margin-bottom: 1rem;
+    animation: fadeIn 0.3s ease;
+}
+
+.page-mail .alert-danger {
+    background-color: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.page-mail .alert-success {
+    background-color: #f0fdf4;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}

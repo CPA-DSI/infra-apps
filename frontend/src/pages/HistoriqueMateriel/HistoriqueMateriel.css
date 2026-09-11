@@ -1,0 +1,232 @@
+/* HistoriqueMateriel.css */
+
+/* ========================================================== */
+/* BOUTONS PRINCIPAUX - DESIGN 2026                          */
+/* ========================================================== */
+
+/* ---- Base pour tous les boutons principaux ---- */
+.mtr-btn-add,
+.mtr-btn-export,
+.mtr-btn-import,
+.mtr-btn-marque {
+    position: relative;
+    overflow: hidden;
+    border-radius: 40px !important;
+    padding: 8px 22px !important;
+    font-weight: 700 !important;
+    color: white !important;
+    font-size: 0.88rem;
+    border: none !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    letter-spacing: 0.3px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    white-space: nowrap;
+}
+
+.mtr-btn-add:active:not(:disabled),
+.mtr-btn-export:active:not(:disabled),
+.mtr-btn-import:active:not(:disabled),
+.mtr-btn-marque:active:not(:disabled) {
+    transform: scale(0.97) !important;
+}
+
+.mtr-btn-add:disabled,
+.mtr-btn-export:disabled,
+.mtr-btn-import:disabled,
+.mtr-btn-marque:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: grayscale(20%);
+}
+
+/* ---- Ripple effet au survol ---- */
+.mtr-btn-add::before,
+.mtr-btn-export::before,
+.mtr-btn-import::before,
+.mtr-btn-marque::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.5s ease, height 0.5s ease;
+}
+
+.mtr-btn-add:hover:not(:disabled)::before,
+.mtr-btn-export:hover:not(:disabled)::before,
+.mtr-btn-import:hover:not(:disabled)::before,
+.mtr-btn-marque:hover:not(:disabled)::before {
+    width: 320px;
+    height: 320px;
+}
+
+/* ---- Bouton Ajouter (Bleu cyan dégradé) ---- */
+.mtr-btn-add {
+    background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%) !important;
+    box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.mtr-btn-add:hover:not(:disabled) {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+    background: linear-gradient(135deg, #1d4ed8 0%, #0891b2 100%) !important;
+}
+
+/* ---- Bouton Marque (Violet magenta dégradé) ---- */
+.mtr-btn-marque {
+    background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%) !important;
+    box-shadow: 0 2px 10px rgba(139, 92, 246, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.mtr-btn-marque:hover:not(:disabled) {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+    background: linear-gradient(135deg, #7c3aed 0%, #c026d3 100%) !important;
+}
+
+/* ---- Bouton Exporter (Orange ambre dégradé) ---- */
+.mtr-btn-export {
+    background: linear-gradient(135deg, #ea580c 0%, #f97316 100%) !important;
+    box-shadow: 0 2px 10px rgba(234, 88, 12, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.mtr-btn-export:hover:not(:disabled) {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(234, 88, 12, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+    background: linear-gradient(135deg, #c2410c 0%, #ea580c 100%) !important;
+}
+
+/* ---- Bouton Importer (Vert émeraude dégradé) ---- */
+.mtr-btn-import {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+    box-shadow: 0 2px 10px rgba(5, 150, 105, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.mtr-btn-import:hover:not(:disabled) {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+    background: linear-gradient(135deg, #047857 0%, #059669 100%) !important;
+}
+
+/* ---- Bouton Rafraîchir (Style glass/blanc élégant) ---- */
+.ha-btn-refresh {
+    width: 42px;
+    height: 42px;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    border: none !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: white !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.ha-btn-refresh:hover:not(:disabled) {
+    transform: translateY(-2px) !important;
+    background: rgba(255, 255, 255, 0.25) !important;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+    color: white !important;
+}
+
+.ha-btn-refresh:hover:not(:disabled) svg {
+    transform: rotate(180deg);
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ha-btn-refresh:active:not(:disabled) {
+    transform: scale(0.92) !important;
+    background: rgba(255, 255, 255, 0.3) !important;
+}
+
+.ha-btn-refresh:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.ha-btn-refresh:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 2px;
+}
+
+.add-modal-select {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background-color: white;
+    font-size: 0.85rem;
+    color: #1e293b;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.add-modal-select:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.ha-table-card {
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+}
+
+.ha-cell-badge {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+.ha-cell-badge--equipe {
+    background-color: #eef2ff;
+    color: #4f46e5;
+}
+
+.ha-cell-badge--local {
+    background-color: #f0fdf4;
+    color: #047857;
+}
+
+.ha-cell-badge--ancien {
+    background-color: #fef2f2;
+    color: #dc2626;
+    text-decoration: line-through;
+}
+
+.ha-cell-badge--nouveau {
+    background-color: #ecfdf5;
+    color: #059669;
+}
+
+.ha-cell-badge--modifie {
+    background-color: #fdf4ff;
+    color: #a21caf;
+}
+
+.ha-cell-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+    max-width: 220px;
+}

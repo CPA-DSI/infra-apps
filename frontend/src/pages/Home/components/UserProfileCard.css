@@ -1,0 +1,79 @@
+.userProfileCard {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  border-radius: 20px;
+  padding: 32px 36px;
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 24px;
+  animation: fadeInUp 0.5s ease-out;
+  margin-bottom: 24px;
+}
+
+.userProfileCardLeft {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.userProfileAvatar {
+  font-size: 52px;
+  color: rgba(255, 255, 255, 0.9);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+  animation: fadeIn 0.8s ease-out;
+}
+
+.userProfileInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.userProfileName {
+  color: #ffffff;
+  font-size: 34px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.userProfileGreeting {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 15px;
+  font-weight: 400;
+  margin: 0;
+}
+
+.userProfileMatricule {
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+@media (max-width: 992px) {
+  .userProfileCard {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .userProfileCardLeft {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 576px) {
+  .userProfileCard {
+    padding: 24px;
+  }
+
+  .userProfileName {
+    font-size: 24px;
+  }
+
+  .userProfileAvatar {
+    font-size: 42px;
+  }
+}

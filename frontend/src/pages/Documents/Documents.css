@@ -1,0 +1,382 @@
+@import '../../styles/theme.css';
+@import '../../styles/animations.css';
+@import '../../styles/Buttons.css';
+
+/* src/pages/Documents/Documents.css */
+
+.doc-page {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* --- Header --- */
+.doc-header {
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+  box-shadow: 0 1px 3px rgba(79, 70, 229, 0.15);
+  border-radius: 16px !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.doc-header-icon {
+  background: rgba(255, 255, 255, 0.15);
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* --- Boutons d'action dans le tableau --- */
+.doc-btn-action {
+  transition: all 0.2s ease !important;
+  width: 32px !important;
+  height: 32px !important;
+}
+
+.doc-btn-action:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* ==========================================================
+   --- Modal Détails ---
+   ========================================================== */
+.doc-details-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1080;
+  padding: 1rem;
+  animation: docFadeIn 0.25s ease;
+}
+
+.doc-details-modal {
+  background: var(--color-bg);
+  border-radius: 18px;
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+  animation: docSlideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.doc-details-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.4rem 1.6rem;
+  border-bottom: 1px solid #f1f5f9;
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+  border-radius: 18px 18px 0 0;
+  color: #fff;
+}
+
+.doc-details-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.doc-details-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.doc-details-subtitle {
+  font-size: 0.82rem;
+  margin: 0;
+  opacity: 0.85;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 380px;
+}
+
+.doc-details-close {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.doc-details-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.doc-details-body {
+  padding: 1.4rem 1.6rem;
+}
+
+.doc-detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.88rem;
+  color: var(--color-text-main);
+}
+
+.doc-detail-row-column {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.doc-detail-label {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-sub);
+  font-weight: 500;
+  font-size: 0.82rem;
+}
+
+.doc-detail-description {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-sub);
+  line-height: 1.5;
+  background: var(--color-bg-alt);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  width: 100%;
+  white-space: pre-wrap;
+}
+
+.doc-details-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1.2rem 1.6rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.doc-details-footer .btn {
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 8px 18px;
+}
+
+@keyframes docFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes docSlideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Scrollbar discret pour la modal */
+.doc-details-modal::-webkit-scrollbar {
+  width: 8px;
+}
+.doc-details-modal::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 8px;
+}
+.doc-details-modal::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Document Detail Modal - Sections */
+.doc-details-icon-wrapper {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.doc-details-section {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.doc-section-header {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.doc-section-header:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.doc-section-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.doc-section-title {
+  position: relative;
+  z-index: 1;
+}
+
+.doc-info-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--color-bg);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+}
+
+.doc-info-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.doc-info-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.doc-info-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.doc-info-label {
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.doc-info-value {
+  font-size: 0.85rem;
+  color: var(--color-text-main);
+  font-weight: 500;
+  word-break: break-all;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+@media (max-width: 768px) {
+  .doc-details-modal {
+    max-width: 100%;
+    margin: 0 10px;
+  }
+
+  .doc-details-body {
+    padding: 16px !important;
+  }
+
+  .doc-details-section {
+    padding: 14px !important;
+  }
+
+  .doc-section-header {
+    padding: 8px 14px !important;
+    flex-wrap: wrap;
+  }
+
+  .doc-details-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .doc-details-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+
+  .doc-details-header > div:last-child {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* ==========================================================
+   --- Onglets de catégorie (Solution 3)
+   ========================================================== */
+.doc-category-tabs {
+  border-bottom: 0 !important;
+}
+
+.doc-category-tabs .nav-tabs {
+  border-bottom: 1px solid var(--color-border) !important;
+  background: var(--color-bg-alt);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 2px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.doc-category-tabs .nav-tabs .nav-link {
+  border: none !important;
+  border-radius: 10px !important;
+  color: var(--color-text-main);
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 8px 14px;
+  transition: all 0.2s ease;
+  background: transparent;
+  white-space: nowrap;
+}
+
+.doc-category-tabs .nav-tabs .nav-link:hover {
+  background: #eef2ff;
+  color: #1e3a8a;
+}
+
+.doc-category-tabs .nav-tabs .nav-link.active {
+  background: var(--color-bg) !important;
+  color: #1e3a8a !important;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--color-border) !important;
+  border-bottom: 1px solid var(--color-bg) !important;
+  margin-bottom: -1px;
+  border-radius: 10px !important;
+}
+
+.doc-category-tabs .tab-content {
+  display: none;
+}

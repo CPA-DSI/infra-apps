@@ -1,0 +1,175 @@
+@import './theme.css';
+@import './animations.css';
+
+/* ============================================================
+   BUTTON SYSTEM — Styles partagés pour tous les boutons
+   ============================================================ */
+
+/* ---- Base pill button ---- */
+.btn-pill {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-pill) !important;
+  padding: 8px 22px;
+  font-weight: 700;
+  color: white;
+  font-size: 0.88rem;
+  border: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  letter-spacing: 0.3px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+}
+
+.btn-pill:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn-pill:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(20%);
+}
+
+.btn-pill::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.5s ease, height 0.5s ease;
+}
+
+.btn-pill:hover:not(:disabled)::before {
+  width: 320px;
+  height: 320px;
+}
+
+/* ---- Variants ---- */
+.btn-pill-primary {
+  background: var(--gradient-add);
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.btn-pill-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  background: var(--gradient-add-hover);
+}
+
+.btn-pill-success {
+  background: var(--gradient-import);
+  box-shadow: 0 2px 10px rgba(5, 150, 105, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.btn-pill-success:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  background: var(--gradient-import-hover);
+}
+
+.btn-pill-warning {
+  background: var(--gradient-export);
+  box-shadow: 0 2px 10px rgba(234, 88, 12, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.btn-pill-warning:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(234, 88, 12, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  background: var(--gradient-export-hover);
+}
+
+.btn-pill-secondary {
+  background: var(--gradient-marque);
+  box-shadow: 0 2px 10px rgba(139, 92, 246, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.btn-pill-secondary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  background: var(--gradient-marque-hover);
+}
+
+.btn-pill-ghost {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.btn-pill-ghost:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+.btn-pill-ghost:hover:not(:disabled) svg {
+  transform: rotate(180deg);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-pill-ghost:active:not(:disabled) {
+  transform: scale(0.92);
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.btn-pill-ghost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-pill-ghost:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.4), 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* ---- Refresh button (circular) ---- */
+.btn-refresh {
+  width: 42px;
+  height: 42px;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  border: none !important;
+  background: var(--gradient-refresh) !important;
+  color: white !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-refresh:hover:not(:disabled) {
+  transform: translateY(-2px) !important;
+  background: var(--gradient-refresh-hover) !important;
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4) !important;
+  color: white !important;
+}
+
+.btn-refresh:hover:not(:disabled) svg {
+  transform: rotate(180deg);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-refresh:active:not(:disabled) {
+  transform: scale(0.92) !important;
+}
+
+.btn-refresh:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

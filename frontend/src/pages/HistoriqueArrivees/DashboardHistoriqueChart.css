@@ -1,0 +1,687 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   DashboardHistoriqueChart.css
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.dashboard-historique {
+    padding: 24px;
+    background-color: #0a0f1c;
+    font-family: 'Poppins', sans-serif;
+    border-radius: 16px;
+    min-height: 100%;
+}
+
+/* ── En-tête ──────────────────────────────────────────────────────────────── */
+.dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.dashboard-header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.dashboard-icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
+    flex-shrink: 0;
+}
+
+.dashboard-icon-box svg {
+    stroke: white;
+}
+
+.dashboard-title {
+    color: #f1f5f9;
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.dashboard-year {
+    background: linear-gradient(135deg, #6366f1 0%, #a5b4fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Badge période (T1, S2…) */
+.dashboard-period-badge {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    color: #a5b4fc;
+    -webkit-text-fill-color: #a5b4fc;
+    letter-spacing: 0.3px;
+}
+
+.dashboard-subtitle {
+    color: #64748b;
+    margin: 4px 0 0;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+/* ── Contrôles (période + toggle) ─────────────────────────────────────────── */
+.dashboard-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* ── Sélecteur d'année ────────────────────────────────────────────────────── */
+.year-selector-dash {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(100, 116, 139, 0.2);
+    border-radius: 10px;
+    padding: 6px 10px;
+}
+
+.year-selector-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #94a3b8;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.year-selector-select {
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 7px;
+    color: #a5b4fc;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.year-selector-select:hover {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: rgba(99, 102, 241, 0.5);
+}
+
+.year-selector-select:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.year-selector-select option {
+    background: #0a0f1c;
+    color: #f1f5f9;
+}
+
+/* ── Sélecteur de période ─────────────────────────────────────────────────── */
+.period-selector {
+    display: flex;
+    gap: 4px;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(100, 116, 139, 0.2);
+    border-radius: 10px;
+    padding: 4px;
+}
+
+.period-btn {
+    padding: 6px 12px;
+    border-radius: 7px;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+    white-space: nowrap;
+}
+
+.period-btn:hover {
+    background: rgba(99, 102, 241, 0.1);
+    color: #a5b4fc;
+}
+
+.period-btn.active {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(129, 140, 248, 0.15) 100%);
+    color: #a5b4fc;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+/* ── Toggle Bar / Line ────────────────────────────────────────────────────── */
+.chart-type-toggle {
+    display: flex;
+    gap: 6px;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(100, 116, 139, 0.2);
+    border-radius: 10px;
+    padding: 4px;
+}
+
+.toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 7px;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-size: 0.78rem;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+    white-space: nowrap;
+}
+
+.toggle-btn svg {
+    stroke: currentColor;
+    flex-shrink: 0;
+}
+
+.toggle-btn:hover {
+    background: rgba(99, 102, 241, 0.1);
+    color: #a5b4fc;
+}
+
+.toggle-btn.active {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(129, 140, 248, 0.15) 100%);
+    color: #a5b4fc;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+/* ── Grille des statistiques ──────────────────────────────────────────────── */
+.dashboard-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+/* ── Carte statistique ────────────────────────────────────────────────────── */
+.stat-card {
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.9) 0%, rgba(10, 15, 28, 0.8) 100%);
+    padding: 18px 20px;
+    border-radius: 16px;
+    border: 1px solid rgba(100, 116, 139, 0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3);
+}
+
+/* Variantes de couleur */
+.stat-card.in {
+    border-color: rgba(99, 102, 241, 0.3);
+    background: linear-gradient(145deg, rgba(99, 102, 241, 0.08) 0%, rgba(15, 23, 42, 0.9) 100%);
+}
+.stat-card.out {
+    border-color: rgba(244, 63, 94, 0.3);
+    background: linear-gradient(145deg, rgba(244, 63, 94, 0.08) 0%, rgba(15, 23, 42, 0.9) 100%);
+}
+.stat-card.net {
+    border-color: rgba(16, 185, 129, 0.3);
+    background: linear-gradient(145deg, rgba(16, 185, 129, 0.08) 0%, rgba(15, 23, 42, 0.9) 100%);
+}
+.stat-card.ratio {
+    border-color: rgba(245, 158, 11, 0.3);
+    background: linear-gradient(145deg, rgba(245, 158, 11, 0.08) 0%, rgba(15, 23, 42, 0.9) 100%);
+}
+
+/* ── En-tête de la carte ── */
+.stat-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.stat-icon-box {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.stat-card.in .stat-icon-box {
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    color: #6366f1;
+}
+.stat-card.out .stat-icon-box {
+    background: rgba(244, 63, 94, 0.15);
+    border: 1px solid rgba(244, 63, 94, 0.25);
+    color: #f43f5e;
+}
+.stat-card.net .stat-icon-box {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    color: #10b981;
+}
+.stat-card.ratio .stat-icon-box {
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    color: #f59e0b;
+}
+
+.stat-label {
+    color: #94a3b8;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+/* ── Corps de la carte ── */
+.stat-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.stat-main-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #f1f5f9;
+    line-height: 1;
+}
+
+.stat-card.in .stat-value    { color: #818cf8; }
+.stat-card.out .stat-value   { color: #f43f5e; }
+.stat-card.net .stat-value   { color: #10b981; }
+.stat-card.ratio .stat-value { color: #f59e0b; }
+
+.stat-unit {
+    color: #64748b;
+    font-size: 0.8rem;
+}
+
+/* ── Mini sparkline ── */
+.stat-sparkline {
+    margin: 0 -4px;
+    opacity: 0.75;
+    pointer-events: none;
+}
+
+/* ── Pied de la carte ── */
+.stat-footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(100, 116, 139, 0.12);
+    flex-wrap: wrap;
+}
+
+.stat-prev-year {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.stat-label-prev {
+    color: #64748b;
+    font-size: 0.72rem;
+    font-weight: 500;
+}
+
+.stat-value-prev {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* ── Badge de tendance ── */
+.stat-trend {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 9px;
+    border-radius: 7px;
+    white-space: nowrap;
+}
+
+.stat-trend.positive {
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.22);
+    color: #10b981;
+}
+.stat-trend.negative {
+    background: rgba(244, 63, 94, 0.12);
+    border: 1px solid rgba(244, 63, 94, 0.22);
+    color: #f43f5e;
+}
+.stat-trend.neutral {
+    background: rgba(100, 116, 139, 0.12);
+    border: 1px solid rgba(100, 116, 139, 0.22);
+    color: #64748b;
+}
+
+/* ── Barre de progression Entrées vs Sorties ──────────────────────────────── */
+.flow-progress-bar {
+    margin-bottom: 20px;
+    padding: 14px 18px;
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.7) 0%, rgba(10, 15, 28, 0.6) 100%);
+    border: 1px solid rgba(100, 116, 139, 0.15);
+    border-radius: 12px;
+}
+
+.flow-progress-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.flow-label-in {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #818cf8;
+}
+
+.flow-label-out {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #fda4af;
+}
+
+.flow-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.dot-in  { background: #6366f1; }
+.dot-out { background: #f43f5e; }
+
+.flow-progress-track {
+    display: flex;
+    height: 8px;
+    border-radius: 99px;
+    overflow: hidden;
+    background: rgba(100, 116, 139, 0.1);
+    gap: 2px;
+}
+
+.flow-progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fill-in  { background: linear-gradient(90deg, #6366f1, #818cf8); }
+.fill-out { background: linear-gradient(90deg, #f43f5e, #fda4af); }
+
+/* ── Barre des mois pics ──────────────────────────────────────────────────── */
+.peak-months-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.peak-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.peak-item.peak-in {
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    color: #a5b4fc;
+}
+.peak-item.peak-out {
+    background: rgba(244, 63, 94, 0.1);
+    border: 1px solid rgba(244, 63, 94, 0.2);
+    color: #fda4af;
+}
+
+.peak-item svg {
+    fill: currentColor;
+    flex-shrink: 0;
+}
+
+.peak-label  { color: inherit; opacity: 0.75; }
+.peak-month  { font-weight: 700; }
+.peak-value  { opacity: 0.85; }
+
+/* ── Conteneur du graphique ───────────────────────────────────────────────── */
+.dashboard-chart-container {
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.7) 0%, rgba(10, 15, 28, 0.6) 100%);
+    padding: 20px 16px 12px;
+    border-radius: 16px;
+    border: 1px solid rgba(100, 116, 139, 0.15);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    margin-bottom: 20px;
+}
+
+/* ── Tableau récapitulatif mensuel ────────────────────────────────────────── */
+.monthly-table-wrapper {
+    border-radius: 14px;
+    border: 1px solid rgba(100, 116, 139, 0.15);
+    overflow: hidden;
+}
+
+.monthly-table-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.8) 0%, rgba(10, 15, 28, 0.7) 100%);
+    border: none;
+    color: #94a3b8;
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.monthly-table-toggle:hover {
+    background: rgba(99, 102, 241, 0.08);
+    color: #a5b4fc;
+}
+
+.monthly-table-toggle svg {
+    stroke: currentColor;
+    flex-shrink: 0;
+}
+
+.monthly-table-toggle span {
+    flex: 1;
+}
+
+.monthly-table-container {
+    overflow-x: auto;
+    background: rgba(10, 15, 28, 0.6);
+}
+
+.monthly-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+
+.monthly-table thead tr {
+    background: rgba(15, 23, 42, 0.9);
+    border-bottom: 1px solid rgba(100, 116, 139, 0.15);
+}
+
+.monthly-table th {
+    padding: 10px 16px;
+    text-align: right;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.monthly-table th:first-child,
+.monthly-table td:first-child {
+    text-align: left;
+}
+
+.monthly-table tbody tr {
+    border-bottom: 1px solid rgba(100, 116, 139, 0.08);
+    transition: background 0.15s ease;
+}
+
+.monthly-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.monthly-table tbody tr:hover {
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.monthly-table td {
+    padding: 10px 16px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.monthly-table .col-month {
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.monthly-table .col-in    { color: #818cf8; }
+.monthly-table .col-out   { color: #f43f5e; }
+
+.monthly-table .col-net.positive { color: #10b981; }
+.monthly-table .col-net.negative { color: #f43f5e; }
+
+/* ── États de chargement / erreur ─────────────────────────────────────────── */
+.dashboard-loading,
+.dashboard-error {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 400px;
+    color: #64748b;
+    gap: 16px;
+}
+
+.dashboard-error svg {
+    stroke: #f43f5e;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(99, 102, 241, 0.2);
+    border-top-color: #6366f1;
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+    .dashboard-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 800px) {
+    .dashboard-controls {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .period-selector,
+    .chart-type-toggle {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 700px) {
+    .dashboard-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    .dashboard-historique {
+        padding: 14px;
+    }
+    .dashboard-title {
+        font-size: 20px;
+    }
+    .stat-value {
+        font-size: 24px;
+    }
+    .peak-months-bar {
+        flex-direction: column;
+    }
+    .period-selector {
+        flex-wrap: wrap;
+    }
+}

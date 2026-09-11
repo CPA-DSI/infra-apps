@@ -1,0 +1,538 @@
+@import '../../styles/theme.css';
+@import '../../styles/animations.css';
+@import '../../styles/ModalSystem.css';
+@import '../../styles/Buttons.css';
+
+/* ==========================================================
+   MATERIELS PAGE — Unique styles only (modals/buttons moved to shared)
+   ========================================================== */
+
+/* ---- Action buttons (table row actions) ---- */
+.btn-action-modern {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: none;
+    background-color: transparent;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    color: #6b7280;
+}
+
+.btn-action-modern:hover {
+    background-color: #f3f4f6 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+    color: #374151;
+}
+
+.btn-action-modern:active {
+    transform: scale(0.93) !important;
+}
+
+.btn-action-modern.text-danger:hover {
+    background-color: #fef2f2 !important;
+    color: #dc2626;
+    box-shadow: 0 4px 8px rgba(220, 38, 38, 0.15);
+}
+
+.btn-action-modern.text-info:hover {
+    background-color: #eff6ff !important;
+    color: #2563eb;
+    box-shadow: 0 4px 8px rgba(37, 99, 235, 0.15);
+}
+
+.btn-action-modern.text-warning:hover {
+    background-color: #fffbeb !important;
+    color: #d97706;
+    box-shadow: 0 4px 8px rgba(217, 119, 6, 0.15);
+}
+
+.btn-action-modern.text-primary:hover {
+    background-color: #eef2ff !important;
+    color: #4f46e5;
+    box-shadow: 0 4px 8px rgba(79, 70, 229, 0.15);
+}
+
+/* ---- AddModal unique styles (non-duplicate parts) ---- */
+.add-modal-checkbox-container {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+
+.add-modal-connectique-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+.add-modal-connectique-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--color-text-sub);
+}
+
+.add-modal-connectiques {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.add-modal-actif-group {
+    background: linear-gradient(135deg, var(--color-bg-alt) 0%, #f1f5f9 100%);
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    transition: all 0.2s ease;
+}
+
+.add-modal-actif-group:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.add-modal-actif-icon {
+    transition: all 0.2s ease;
+}
+
+.add-modal-toggle {
+    width: 44px;
+    height: 24px;
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.add-modal-toggle:hover {
+    filter: brightness(0.95);
+}
+
+.add-modal-toggle-knob {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: white;
+    position: absolute;
+    top: 2px;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* ---- DetailsModal unique styles ---- */
+.add-modal-details-content {
+    max-width: 1300px;
+}
+
+.add-modal-info-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: white;
+    border-radius: var(--radius-md);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
+}
+
+.add-modal-info-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.add-modal-info-icon {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.add-modal-info-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.add-modal-info-label {
+    font-size: 0.65rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.add-modal-info-value {
+    font-size: 0.85rem;
+    color: var(--color-text-main);
+    font-weight: 500;
+    word-break: break-all;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.add-modal-info-value-oui {
+    color: var(--color-success);
+    font-weight: 600;
+}
+
+.add-modal-info-value-non {
+    color: var(--color-danger);
+    font-weight: 600;
+}
+
+.est-actif-icon {
+    color: #22c55e;
+    filter: drop-shadow(0 0 2px rgba(34, 197, 94, 0.4));
+}
+
+.est-actif-icon-off {
+    color: var(--color-text-muted);
+    filter: drop-shadow(0 0 2px rgba(148, 163, 184, 0.3));
+}
+
+/* Image Card Styles for DetailsModal */
+.add-modal-image-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: white;
+    border-radius: var(--radius-md);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.add-modal-image {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.add-modal-image-header {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.add-modal-image-header:hover {
+    transform: scale(1.1);
+    border-color: rgba(255, 255, 255, 0.8);
+}
+
+.add-modal-image:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Details section styles */
+.details-section {
+    animation: fadeInUp 0.3s ease-out;
+}
+
+.details-section-header {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.details-section-header:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.details-section-header::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+.section-icon-wrapper {
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.details-section-header:hover .section-icon-wrapper {
+    transform: scale(1.05) rotate(-5deg);
+}
+
+.details-section-title {
+    position: relative;
+    z-index: 1;
+}
+
+/* Badge de section */
+.details-section-header .section-badge {
+    background: rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 2px 12px;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+/* ==========================================================
+   IMPORT SECTION - DESIGN 2026
+   ========================================================== */
+
+.import-section {
+    animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.import-section .table-responsive {
+    border-radius: 10px;
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+}
+
+.import-section .table thead th {
+    background-color: var(--color-bg-alt);
+    color: var(--color-text-main);
+    font-weight: 600;
+    font-size: 0.7rem;
+    border-bottom: 2px solid var(--color-border);
+    padding: 10px 12px;
+    white-space: nowrap;
+}
+
+.import-section .table tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+.import-section .table tbody tr:hover {
+    background-color: var(--color-bg-alt);
+}
+
+.import-drop-zone {
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.import-drop-zone.dragover {
+    border-color: var(--color-primary) !important;
+    background-color: #f5f3ff !important;
+    transform: scale(1.01);
+}
+
+.import-drop-zone.dragover::before {
+    opacity: 1;
+}
+
+.import-drop-zone::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, rgba(99, 102, 241, 0.04) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+/* Progress bar */
+.import-section .progress-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+}
+
+.import-section .progress-bar-fill {
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+}
+
+/* Step indicators (simplified) */
+.step-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.step-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.step-indicator.active .step-dot {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.connectiques-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.skeleton-row {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeletonLoading 1.5s infinite;
+}
+
+/* ==========================================================
+   SCOPED BOOTSTRAP OVERRIDES — Materiels page only
+   ========================================================== */
+
+.page-materiels .table-responsive {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.page-materiels .table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.page-materiels .table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.page-materiels .table tbody tr:hover {
+    transform: translateX(2px);
+}
+
+.page-materiels .alert {
+    border-radius: 12px !important;
+    border: none !important;
+    animation: fadeInUp 0.3s ease-out;
+}
+
+.page-materiels .alert-success {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%) !important;
+    color: #065f46 !important;
+}
+
+.page-materiels .alert-danger {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%) !important;
+    color: #991b1b !important;
+}
+
+.page-materiels .spinner-border {
+    animation-duration: 0.8s;
+}
+
+.page-materiels .card {
+    transition: all 0.3s ease;
+}
+
+.page-materiels .card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06) !important;
+}
+
+.page-materiels .rdt_Pagination {
+    border-radius: 12px;
+    padding: 12px !important;
+}
+
+.page-materiels .rdt_Pagination select {
+    border-radius: 8px !important;
+    border: 1px solid var(--color-border) !important;
+    padding: 4px 8px !important;
+}
+
+.page-materiels .table-responsive::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.page-materiels .table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.page-materiels .table-responsive::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 10px;
+}
+
+.page-materiels .table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+/* ==========================================================
+   RESPONSIVE
+   ========================================================== */
+
+@media (max-width: 768px) {
+    .add-modal-content.add-modal-details-content {
+        max-width: 100%;
+        margin: 0 10px;
+    }
+
+    .add-modal-body {
+        padding: 16px !important;
+    }
+
+    .details-section {
+        padding: 14px !important;
+    }
+
+    .details-section-header {
+        padding: 8px 14px !important;
+        flex-wrap: wrap;
+    }
+
+    .details-section-header .section-badge {
+        display: none;
+    }
+
+    .add-modal-form-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .connectiques-grid {
+        grid-template-columns: 1fr 1fr !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .connectiques-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .add-modal-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+
+    .add-modal-header > div:last-child {
+        width: 100%;
+        justify-content: space-between;
+    }
+}

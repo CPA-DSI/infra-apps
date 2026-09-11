@@ -1,0 +1,61 @@
+@import '../../styles/theme.css';
+@import '../../styles/animations.css';
+@import '../../styles/ModalSystem.css';
+@import '../../styles/Buttons.css';
+
+/* Supprimer le double fond blanc dans le modal d'ajout */
+.page-stock .modal .add-modal-overlay {
+    position: relative !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+    z-index: auto !important;
+    width: auto !important;
+    height: auto !important;
+}
+
+/* Forcer le contenu du modal Bootstrap à être transparent */
+.page-stock .modal-content {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Supprimer l'arrière-plan du body du modal Bootstrap */
+.page-stock .modal-body {
+    background-color: transparent !important;
+    padding: 0 !important;
+}
+
+/* Cacher l'en-tête du modal Bootstrap pour ne garder que celui de FormItem */
+.page-stock .modal-header {
+    display: none !important;
+}
+
+/* Le contenu du formulaire garde son propre fond blanc, pas de superposition */
+.page-stock .add-modal-content {
+    background-color: var(--color-bg);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    font-family: 'Inter', system-ui, sans-serif;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto; /* centrage */
+}
+
+/* Effet de flou sur l'arrière-plan lorsque la modale est ouverte */
+.page-stock .modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.3) !important; /* fond semi-transparent */
+    backdrop-filter: blur(6px) !important; /* flou de l'arrière-plan */
+    -webkit-backdrop-filter: blur(6px) !important; /* compatibilité Safari */
+}
+
+/* Optionnel : supprimer le fond blanc par défaut de l'overlay pour un meilleur rendu */
+.page-stock .modal-backdrop.show {
+    opacity: 1 !important;
+}

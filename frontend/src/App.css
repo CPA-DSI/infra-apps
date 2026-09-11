@@ -1,0 +1,128 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* App.css ou index.css */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  /* Ajoutez le padding-top global pour tout le corps de la page */
+  padding-top: 20px; /* Ajustez à la hauteur réelle de votre navbar */
+}
+
+/* Supprime la bordure inférieure de l'ensemble des onglets */
+.custom-flat-tabs .nav-tabs {
+  border-bottom: none !important;
+}
+
+/* Supprime le fond et les bordures des onglets individuels */
+.custom-flat-tabs .nav-link {
+  background-color: transparent !important;
+  border: none !important;
+  color: #000; /* Ajustez la couleur du texte si nécessaire */
+}
+
+/* Style de l'onglet actif pour qu'il reste "plat" mais visuellement distinct */
+.custom-flat-tabs .nav-link.active {
+  color: #007bff !important; /* Couleur d'accentuation pour le texte de l'onglet actif */
+  background-color: #f6f7f8 !important; /* <--- AJOUTE UN FOND GRIS CLAIR */
+  border-bottom: 5px solid #007bff !important; /* Conserve la ligne bleue en bas */
+  /* --- MODIFICATION ICI --- */
+  /* Ajoute un rayon de 0.25rem (taille standard Bootstrap) aux coins supérieurs uniquement */
+  border-top-left-radius: 0.25rem !important;
+  border-top-right-radius: 0.25rem !important;
+  /* Assure que les coins inférieurs restent plats */
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+/* Style du contenu des onglets (si vous voulez une boîte de contenu plate) */
+.tab-content {
+  border: 1px solid #dee2e6 !important; /* Optionnel: ajoute une bordure autour du contenu */
+  border-top: none !important; /* <--- SUPPRIME LA BORDURE DU HAUT */
+  padding: 1rem;
+  background-color: #fff;
+}
+
+.no-margin-content h3 {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.dashboard-title-style {
+  text-align: center;
+  font-size: 25px;
+  font-weight: bold;
+  color: #e8e8ed; /* Enlève le 'ff' final si non nécessaire pour l'opacité */
+  background-color: #2a3863; /* Enlève le 'ff' final si non nécessaire pour l'opacité */
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.card01{
+    background-color: #ebf0ebff; /* Un arrière-plan léger; par exemple */
+    border: 1px solid rgb(200, 194, 194); /* Une couleur de gris bleuté proche du fond */
+    border-radius: 5px; /* Optionnel: ajoute des coins arrondis */
+}
+
+
+.titre-dashboard {
+  /* Alignment */
+  text-align: center;
+
+  /* Font styles */
+  font-size: 20px;
+  font-weight: bold;
+  color: #FFF; /* Couleur du texte en blanc pour un meilleur contraste */
+
+  /* Background and Spacing */
+  background-color: #4862ae; /* Correction de la valeur de couleur (sans le 'ff' final pour CSS standard) */
+  padding: 15px; /* Ajoute de l'espace autour du texte */
+  margin-bottom: 15px; /* Ajoute de l'espace en bas */
+}
+
+.subtitle-style {
+  margin-top: 20px;
+  text-align: center;
+  color: #FFF;
+  font-weight: bold;
+  font-size: 1.2em;
+  padding: 10px;
+  border-top: 1px solid #AAAAAA;
+  background-color: #4862ae; /* Corrigé : le 'ff' final n'est pas nécessaire en CSS standard pour l'opacité complète */
+}

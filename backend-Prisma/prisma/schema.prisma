@@ -1,0 +1,464 @@
+// Schema Prisma de l'application de gestion d'infrastructure
+// Base de données : PostgreSQL
+// ORM : Prisma Client JS
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Configuration de la source de données
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ──────────────────────────────────────────────
+// UTILISATEURS & AUTHENTIFICATION
+// ──────────────────────────────────────────────
+
+// Utilisateurs du système
+model Users {
+  id_user              Int                     @id(map: "User_pkey") @default(autoincrement())
+  id_n                 Int                     @unique
+  role                 UserRole                @default(USER)
+  is_active            Boolean                 @default(true)
+  createdAt            DateTime?               @default(now())
+  updatedAt            DateTime?               @updatedAt
+  must_change_password Boolean                 @default(true)
+  documentsUploades    Document[]
+  accesDocuments       DocumentAcces[]
+  commentaires         HistoriqueCommentaire[]
+  materiel             Materiels?
+  tickets_assignes     Ticket[]                @relation("TicketAssigne")
+  tickets_crees        Ticket[]                @relation("TicketDemandeur")
+  tickets_fermes       TicketFermeture[]
+  emails               UserEmail[]
+
+  @@map("users")
+}
+
+// Emails associés aux utilisateurs
+model UserEmail {
+  id_uEmail   Int       @id @default(autoincrement())
+  email       String    @unique
+  password    String
+  pass_mail   String?
+  is_primary  Boolean   @default(false)
+  is_verified Boolean   @default(false)
+  user_id     Int
+  createdAt   DateTime? @default(now())
+  updatedAt   DateTime? @updatedAt
+  user        Users     @relation(fields: [user_id], references: [id_user])
+
+  @@unique([user_id, email])
+  @@map("user_emails")
+}
+
+// ──────────────────────────────────────────────
+// MATÉRIELS INFORMATIQUES
+// ──────────────────────────────────────────────
+
+// Équipements informatiques du parc
+model Materiels {
+  id_materiels      Int                  @id @default(autoincrement())
+  utilisateur       String               @db.VarChar(255)
+  id_n              Int?                 @unique
+  equipe            String               @db.VarChar(200)
+  date_pc           DateTime?            @db.Date
+  date_ecran        DateTime?            @db.Date
+  caracteristiques  String
+  code_pc           String?              @db.VarChar(200)
+  ecran             String?              @db.VarChar(200)
+  code_ecran        String?              @db.VarChar(200)
+  hdmi              Boolean?
+  clavier           Boolean?
+  lan               Boolean?
+  usb               Boolean?
+  etat_pc           String?              @db.VarChar(200)
+  salle             String?              @db.VarChar(200)
+  mdp_pc            String?              @db.VarChar(200)
+  mdp_admin         String?              @db.VarChar(200)
+  etat_batterie     String?              @db.VarChar(200)
+  commentaire       String?
+  id_marque         Int?
+  date_modification DateTime?            @default(now()) @db.Timestamp(6)
+  id_local          Int?
+  date_suppression  DateTime?            @map("date_suppression") @db.Timestamp(6)
+  est_actif         Boolean              @default(true) @map("est_actif")
+  historique        HistoriqueMateriel[]
+  local             Locaux?              @relation(fields: [id_local], references: [id_local])
+  marque            Marques?             @relation(fields: [id_marque], references: [id_marque])
+  user              Users?               @relation(fields: [id_n], references: [id_n], onDelete: NoAction)
+  documents_lies    MaterielDocument[]
+  mouvements        Mouvement[]
+  tickets           Ticket[]
+
+  @@map("materiels")
+}
+
+// Marques de matériels informatiques
+model Marques {
+  id_marque         Int         @id(map: "marque_pkey") @default(autoincrement())
+  nom_marque        String      @unique(map: "marque_nom_unique") @db.VarChar(100)
+  url               String?
+  date_modification DateTime?   @default(now()) @db.Timestamp(6)
+  documents         Document[]
+  materiels         Materiels[]
+
+  @@map("marques")
+}
+
+// Locaux et salles de l'entreprise
+// NB: un index unique sur lower(trim(nom_local)) existe en base
+// (migration add_unique_locaux_and_idn_sequence) mais n'est pas représentable
+// ici car Prisma ne supporte pas les index sur expression.
+model Locaux {
+  id_local              Int         @id @default(autoincrement())
+  nom_local             String?     @db.VarChar(200)
+  description           String?
+  materiels             Materiels[]
+  mouvementsDestination Mouvement[] @relation("MouvementDestination")
+  mouvementsSource      Mouvement[] @relation("MouvementSource")
+
+  @@map("locaux")
+}
+
+// ──────────────────────────────────────────────
+// TICKETS
+// ──────────────────────────────────────────────
+
+// Tickets de support et incidents
+model Ticket {
+  idTicket     Int                     @id @default(autoincrement()) @map("id_ticket")
+  numeroTicket String                  @unique @map("numero_ticket") @db.VarChar(50)
+  titre        String                  @db.VarChar(255)
+  description  String
+  statut       TicketStatus            @default(NOUVEAU)
+  priorite     Priority                @default(MOYENNE)
+  dateCreation DateTime                @default(now()) @map("date_creation") @db.Timestamp(6)
+  dateMaj      DateTime                @updatedAt @map("date_maj") @db.Timestamp(6)
+  idMateriels  Int                     @map("id_materiels")
+  idDemandeur  Int?                    @map("id_n_demandeur")
+  nomDemandeur String?                 @map("nom_demandeur") @db.VarChar(255)
+  idAssigne    Int?                    @map("id_n_assigne")
+  nomAssigne   String?                 @map("nom_assigne") @db.VarChar(255)
+  documents    Document[]
+  commentaires HistoriqueCommentaire[]
+  materiels    Materiels               @relation(fields: [idMateriels], references: [id_materiels])
+  assigneA     Users?                  @relation("TicketAssigne", fields: [idAssigne], references: [id_n])
+  demandeur    Users?                  @relation("TicketDemandeur", fields: [idDemandeur], references: [id_n])
+  fermeture    TicketFermeture?
+
+  @@map("tickets")
+}
+
+// Informations de fermeture des tickets
+model TicketFermeture {
+  id              Int      @id @default(autoincrement())
+  ticketId        Int      @unique @map("ticket_id")
+  solution        String
+  dateFermeture   DateTime @default(now()) @map("date_fermeture") @db.Timestamp(6)
+  fermePar        Int      @map("ferme_par")
+  motif           String?  @db.VarChar(255)
+  dureeResolution Int?     @map("duree_resolution")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+  fermeur         Users    @relation(fields: [fermePar], references: [id_n])
+  ticket          Ticket   @relation(fields: [ticketId], references: [idTicket], onDelete: Cascade)
+
+  @@map("tickets_fermeture")
+}
+
+// Commentaires postés sur les tickets
+model HistoriqueCommentaire {
+  idCommentaire Int      @id @default(autoincrement()) @map("id_commentaire")
+  contenu       String
+  datePubli     DateTime @default(now()) @map("date_publi") @db.Timestamp(6)
+  idTicket      Int      @map("id_ticket")
+  idAuteur      Int      @map("id_n_auteur")
+  auteur        Users    @relation(fields: [idAuteur], references: [id_n])
+  ticket        Ticket   @relation(fields: [idTicket], references: [idTicket], onDelete: Cascade)
+
+  @@map("historique_commentaires")
+}
+
+// ──────────────────────────────────────────────
+// PRODUITS & STOCKS
+// ──────────────────────────────────────────────
+
+// Produits en stock
+// NB: un index unique sur lower(trim(nom_produit)) existe en base
+// (migration add_unique_index_nom_produit) mais n'est pas représentable ici
+// car Prisma ne supporte pas les index sur expression.
+model Produits {
+  id_produit         Int                @id @default(autoincrement())
+  nom_produit        String?            @db.VarChar(200)
+  quantite_en_stock  Int?
+  seuil_alerte       Int?
+  last_date          DateTime?          @db.Date
+  historiqueArrivees HistoriqueArrive[]
+  mouvements         Mouvement[]
+  documents_lies     ProduitDocument[]
+
+  @@map("produits")
+}
+
+// Mouvements de stock
+model Mouvement {
+  id_mouvement         Int        @id @default(autoincrement())
+  id_produit           Int
+  date_mouvement       DateTime   @default(dbgenerated("CURRENT_DATE")) @db.Date
+  type_mouvement       String     @db.VarChar(20)
+  quantite             Int
+  id_local_source      Int?
+  id_local_destination Int?
+  id_materiels         Int?
+  motif                String?
+  remarque             String?
+  nom_utilisateur      String     @db.VarChar(255)
+  created_at           DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime   @default(now()) @db.Timestamptz(6)
+  localDestination     Locaux?    @relation("MouvementDestination", fields: [id_local_destination], references: [id_local])
+  localSource          Locaux?    @relation("MouvementSource", fields: [id_local_source], references: [id_local])
+  materiels            Materiels? @relation(fields: [id_materiels], references: [id_n])
+  produits             Produits   @relation(fields: [id_produit], references: [id_produit])
+
+  @@map("mouvements")
+}
+
+// Historique des modifications des fiches matériels
+model HistoriqueMateriel {
+  id_historique     Int       @id @default(autoincrement())
+  id_materiels      Int
+  ancienne_valeur   String?
+  nouvelle_valeur   String?
+  date_modification DateTime  @default(now()) @db.Timestamp(6)
+  nom_utilisateur   String?   @db.VarChar(255)
+  materiel          Materiels @relation(fields: [id_materiels], references: [id_materiels], onDelete: Cascade)
+
+  @@index([id_materiels])
+  @@index([date_modification(sort: Desc)])
+  @@map("historique_materiels")
+}
+
+// Historique des arrivages de produits
+model HistoriqueArrive {
+  id_arrivage             Int       @id @default(autoincrement())
+  id_produit              Int
+  quantite_arrivee        Int
+  date_arrivee            DateTime  @default(now()) @db.Timestamptz(6)
+  ancienne_quantite_stock Int?
+  ancienne_date_stock     DateTime? @db.Timestamp(6)
+  remarque                String?   @db.VarChar(255)
+  produit                 Produits  @relation(fields: [id_produit], references: [id_produit])
+
+  @@map("historique_arrive")
+}
+
+// ──────────────────────────────────────────────
+// CONFIGURATION EMAILS
+// ──────────────────────────────────────────────
+
+// Configuration de l'envoi quotidien de rapports par email
+model ConfigEmailQuotidien {
+  id           Int      @id @default(1)
+  email_dest   String
+  email_exp    String
+  email_pass   String
+  objet_mail   String   @default("Rapport Quotidien des Stocks")
+  message_mail String   @default("Bonjour, veuillez trouver ci-joint le rapport des stocks.")
+  heure_envoi  String   @default("17:15")
+  cron_actif   Boolean  @default(false)
+  created_at   DateTime @default(now()) @db.Timestamp(6)
+  updated_at   DateTime @updatedAt @db.Timestamp(6)
+
+  @@map("config_email_quotidien")
+}
+
+// Configuration de l'envoi hebdomadaire de rapports par email
+model ConfigEmailHebdomadaire {
+  id                 Int      @id @default(1)
+  email_dest         String
+  email_exp          String
+  email_pass         String
+  type_envoi         String   @default("hebdomadaire")
+  jour_envoi         Int      @default(1)
+  heure_envoi        String   @default("17:15")
+  cron_actif_hebdo   Boolean  @default(false)
+  objet_mail_hebdo   String   @default("Rapport Hebdomadaire des Stocks")
+  message_mail_hebdo String   @default("Bonjour, veuillez trouver ci-joint le rapport hebdomadaire des stocks.")
+  actif              Boolean  @default(true)
+  filtre_equipe      String?
+  include_materiels  Boolean  @default(true)
+  include_produits   Boolean  @default(true)
+  created_at         DateTime @default(now()) @db.Timestamp(6)
+  updated_at         DateTime @updatedAt @db.Timestamp(6)
+
+  @@map("config_email_hebdomadaire")
+}
+
+// Configuration de l'envoi mensuel de rapports par email
+model ConfigEmailMensuel {
+  id                Int      @id @default(1)
+  email_dest        String
+  email_exp         String
+  email_pass        String
+  objet_mail        String   @default("Rapport Mensuel des Stocks")
+  message_mail      String   @default("Bonjour, veuillez trouver ci-joint le rapport mensuel des stocks.")
+  heure_envoi       String   @default("17:15")
+  jour_envoi        Int      @default(1)
+  cron_actif        Boolean  @default(false)
+  filtre_equipe     String?
+  include_materiels Boolean  @default(true)
+  include_produits  Boolean  @default(true)
+  created_at        DateTime @default(now()) @db.Timestamp(6)
+  updated_at        DateTime @updatedAt @db.Timestamp(6)
+
+  @@map("config_email_mensuel")
+}
+
+// ──────────────────────────────────────────────
+// RÉINITIALISATION MOT DE PASSE
+// ──────────────────────────────────────────────
+
+// Tokens de réinitialisation de mot de passe
+model PasswordResetToken {
+  id        Int       @id @default(autoincrement())
+  email     String    @db.VarChar(255)
+  token     String    @unique
+  expiresAt DateTime  @db.Timestamp(6)
+  createdAt DateTime  @default(now()) @db.Timestamp(6)
+  usedAt    DateTime? @db.Timestamp(6)
+
+  @@map("password_reset_tokens")
+}
+
+// ──────────────────────────────────────────────
+// ASSOCIATIONS DOCUMENTS / MATÉRIELS
+// ──────────────────────────────────────────────
+
+// Association entre matériels et documents
+model MaterielDocument {
+  id           Int       @id @default(autoincrement())
+  id_materiels Int       @map("id_materiels")
+  id_document  Int       @map("id_document")
+  document     Document  @relation(fields: [id_document], references: [id], onDelete: Cascade)
+  materiel     Materiels @relation(fields: [id_materiels], references: [id_materiels], onDelete: Cascade)
+
+  @@unique([id_materiels, id_document])
+  @@map("materiels_documents")
+}
+
+// Association entre produits et documents
+model ProduitDocument {
+  id          Int      @id @default(autoincrement())
+  id_produit  Int      @map("id_produit")
+  id_document Int      @map("id_document")
+  document    Document @relation(fields: [id_document], references: [id], onDelete: Cascade)
+  produit     Produits @relation(fields: [id_produit], references: [id_produit], onDelete: Cascade)
+
+  @@unique([id_produit, id_document])
+  @@map("produits_documents")
+}
+
+// ──────────────────────────────────────────────
+// DOCUMENTS
+// ──────────────────────────────────────────────
+
+// Documents stockés dans le système
+model Document {
+  id              Int                @id @default(autoincrement())
+  nom_fichier     String             @map("nom_fichier") @db.VarChar(255)
+  chemin_stockage String             @unique @map("chemin_stockage")
+  taille          Int?               @map("taille")
+  type_mime       String?            @map("type_mime") @db.VarChar(100)
+  categorie       DocumentCategory   @default(AUTRE) @map("categorie")
+  description     String?
+  version         Int                @default(1) @map("version")
+  est_public      Boolean            @default(false) @map("est_public")
+  id_ticket       Int?               @map("id_ticket")
+  id_marque       Int?               @map("id_marque")
+  upload_par      Int                @map("upload_par")
+  date_upload     DateTime           @default(now()) @map("date_upload") @db.Timestamp(6)
+  derniere_modif  DateTime           @updatedAt @map("derniere_modif") @db.Timestamp(6)
+  marque          Marques?           @relation(fields: [id_marque], references: [id_marque])
+  ticket          Ticket?            @relation(fields: [id_ticket], references: [idTicket])
+  uploader        Users              @relation(fields: [upload_par], references: [id_n])
+  acces           DocumentAcces[]
+  materiels_lies  MaterielDocument[]
+  produits_lies   ProduitDocument[]
+  pieces_jointes  PieceJointe[]
+
+  @@index([id_ticket])
+  @@index([id_marque])
+  @@index([upload_par])
+  @@index([date_upload(sort: Desc)])
+  @@map("documents")
+}
+
+// Journal des accès aux documents
+model DocumentAcces {
+  id             Int      @id @default(autoincrement())
+  id_document    Int      @map("id_document")
+  id_utilisateur Int      @map("id_utilisateur")
+  date_acces     DateTime @default(now()) @map("date_acces") @db.Timestamp(6)
+  action         String   @db.VarChar(50)
+  document       Document @relation(fields: [id_document], references: [id], onDelete: Cascade)
+  utilisateur    Users    @relation(fields: [id_utilisateur], references: [id_n])
+
+  @@index([id_document])
+  @@index([id_utilisateur])
+  @@index([date_acces(sort: Desc)])
+  @@map("documents_acces")
+}
+
+// Pièces jointes des documents
+model PieceJointe {
+  id            Int      @id @default(autoincrement())
+  id_document   Int      @map("id_document")
+  nom_fichier   String   @db.VarChar(255)
+  chemin_stockage String @unique @map("chemin_stockage")
+  taille        Int?     @map("taille")
+  type_mime     String?  @db.VarChar(100)
+  date_upload   DateTime @default(now()) @map("date_upload") @db.Timestamp(6)
+  document      Document @relation(fields: [id_document], references: [id], onDelete: Cascade)
+
+  @@index([id_document])
+  @@map("pieces_jointes")
+}
+
+// ──────────────────────────────────────────────
+// ENUMS
+// ──────────────────────────────────────────────
+
+enum UserRole {
+  USER
+  IT_ADMIN
+  DIRECTION
+}
+
+enum TicketStatus {
+  NOUVEAU
+  EN_COURS
+  RESOLU
+  FERME
+}
+
+enum Priority {
+  BASSE
+  MOYENNE
+  HAUTE
+  URGENTE
+}
+
+enum DocumentCategory {
+  FACTURE
+  CONTRAT_MAINTENANCE
+  GARANTIE
+  MANUEL_TECHNIQUE
+  SCHEMA_RESEAU
+  LICENCE_LOGICIELLE
+  BON_LIVRAISON
+  RAPPORT_AUDIT
+  AUTRE
+}

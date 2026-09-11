@@ -1,0 +1,32 @@
+.saved-config-item {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-left: 3px solid transparent;
+}
+
+.saved-config-item:hover {
+  background: rgba(102, 126, 234, 0.05);
+  border-left-color: #667eea;
+}
+
+.saved-config-active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: white !important;
+  border-left-color: #667eea !important;
+}
+
+.saved-config-active .text-muted {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.saved-config-active strong {
+  color: white !important;
+}
+
+.saved-config-active .badge {
+  font-size: 0.7rem;
+}
+
+.config-details div {
+  line-height: 1.4;
+}

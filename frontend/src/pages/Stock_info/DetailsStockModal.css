@@ -1,0 +1,329 @@
+/* ============================================
+   DetailsStockModal.css - Version avec en-tête dynamique
+   ============================================ */
+
+/* Fond du modal : correction de la transparence */
+.profile-modal-modern .modal-content {
+  background-color: #ffffff !important;
+  border: none;
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+}
+
+/* Taille du modal */
+@media (min-width: 992px) {
+  .profile-modal-modern .modal-lg {
+    max-width: 900px;
+  }
+}
+
+/* Header avec dégradé dynamique (la couleur est gérée par inline style dans JS) */
+.modal-header-modern {
+  border-bottom: none !important;
+  padding: 1rem 1.5rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 0.75rem !important;
+  transition: background 0.3s ease;
+}
+
+/* Bouton fermeture blanc */
+.modal-header-modern .btn-close {
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+.modal-header-modern .btn-close:hover {
+  opacity: 1;
+}
+
+/* Conteneur titre + icône */
+.modal-header-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.modal-icon-wrapper {
+  width: 52px;
+  height: 52px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  color: white;
+}
+
+.modal-title-modern {
+  color: white;
+  font-weight: 700;
+  font-size: 1.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.modal-subtitle {
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 0;
+  font-size: 0.85rem;
+}
+
+/* Badge dans le header */
+.type-badge-header {
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  font-size: 0.75rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 40px;
+  font-weight: 500;
+  margin-left: 1rem;
+  flex-shrink: 0;
+}
+
+/* Corps du modal */
+.modal-body-modern {
+  background: #f8fafc;
+}
+.modal-body-modern.compact {
+  padding: 1.25rem !important;
+}
+
+.password-section {
+  margin-bottom: 1.8rem;
+}
+.compact .password-section {
+  margin-bottom: 1rem;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-left: 4px solid #3b82f6;
+  padding-left: 0.75rem;
+}
+.compact .section-title {
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.profile-info-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.compact .profile-info-cards {
+  gap: 0.5rem;
+}
+
+.info-card {
+  background: white;
+  border-radius: 20px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+}
+.info-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.08);
+  border-color: #cbd5e1;
+}
+.compact .info-card {
+  padding: 0.7rem 1rem;
+}
+
+.info-icon {
+  width: 42px;
+  height: 42px;
+  background: #eff6ff;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563eb;
+  font-size: 1.2rem;
+}
+.compact .info-icon {
+  width: 32px;
+  height: 32px;
+  font-size: 0.9rem;
+}
+
+.info-content {
+  flex: 1;
+}
+
+.info-label {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 0.2rem;
+}
+
+.info-value {
+  font-weight: 600;
+  color: #0f172a;
+  font-size: 0.95rem;
+}
+.compact .info-value {
+  font-size: 0.85rem;
+}
+
+.text-primary {
+  color: #3b82f6 !important;
+  font-size: 1.2rem;
+}
+
+.badge-role {
+  font-size: 0.75rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 40px;
+  font-weight: 500;
+}
+
+.brand-img {
+  max-width: 40px;
+  height: auto;
+  border-radius: 8px;
+}
+
+.text-muted.small {
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
+.mx-1 {
+  margin: 0 0.25rem;
+}
+
+.modal-divider {
+  margin: 1.5rem 0 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+.compact .modal-divider {
+  margin: 1rem 0;
+}
+
+.tracability-footer {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  text-align: right;
+}
+
+.modal-accordion-modern .accordion-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+.modal-accordion-modern .accordion-button {
+  background: white;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #334155;
+}
+.modal-accordion-modern .accordion-button:not(.collapsed) {
+  background: #eff6ff;
+  color: #2563eb;
+  box-shadow: none;
+}
+.modal-accordion-modern .accordion-button:focus {
+  box-shadow: none;
+}
+.modal-accordion-modern .accordion-body {
+  background: white;
+}
+.modal-accordion-modern .accordion-body .info-label {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 0.2rem;
+}
+.modal-accordion-modern .accordion-body .info-value {
+  font-weight: 500;
+  color: #0f172a;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.modal-footer-modern {
+  border-top: 1px solid #e2e8f0;
+  padding: 1rem 2rem;
+  background: white;
+}
+.modal-footer-modern.compact {
+  padding: 0.75rem 1.25rem !important;
+}
+
+.btn-secondary-modern {
+  border-radius: 40px;
+  padding: 0.5rem 1.5rem;
+  font-weight: 500;
+  border-color: #cbd5e1;
+  color: #475569;
+  background: transparent;
+  transition: all 0.2s;
+}
+.btn-secondary-modern:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #1e293b;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modal-header-modern {
+    padding: 1rem;
+  }
+  .modal-body-modern {
+    padding: 1rem;
+  }
+  .modal-icon-wrapper {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
+  .modal-title-modern {
+    font-size: 1.2rem;
+  }
+  .info-card {
+    padding: 0.8rem;
+  }
+  .info-icon {
+    width: 34px;
+    height: 34px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .modal-header-modern {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .type-badge-header {
+    margin-left: 0;
+    margin-top: 0.25rem;
+  }
+  .modal-header-content {
+    flex-wrap: wrap;
+  }
+}

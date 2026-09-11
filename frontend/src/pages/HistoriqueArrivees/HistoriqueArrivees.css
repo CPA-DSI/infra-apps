@@ -1,0 +1,627 @@
+/* ============================================================
+   HistoriqueArrivees.css
+   Styles extraits de HistoriqueArrivees.js
+   ============================================================ */
+
+/* ---- Conteneur principal ---- */
+.ha-container {
+  background-color: #f8f9fc;
+  min-height: 100vh;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ---- Header ---- */
+.ha-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 6px 24px rgba(102, 126, 234, 0.18);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-height: 80px;
+}
+
+/* ---- Icône animée dans le header ---- */
+.ha-header-icon {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.ha-header-icon:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: rotate(-15deg) scale(1.08);
+  box-shadow: 0 6px 16px rgba(255, 255, 255, 0.15);
+}
+
+/* ---- Titre du header ---- */
+.ha-header-title {
+  letter-spacing: 0.3px;
+  font-size: 1.35rem;
+}
+
+/* ---- Sous-titre du header ---- */
+.ha-header-subtitle {
+  font-size: 0.8rem;
+  opacity: 0.8;
+  font-weight: 300;
+}
+
+/* ---- Bouton Rafraîchir ---- */
+.ha-btn-refresh {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  width: 42px;
+  height: 42px;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  font-size: 0.9rem;
+}
+
+.ha-btn-refresh:hover {
+  background: rgba(255, 255, 255, 0.35) !important;
+  transform: rotate(180deg) scale(1.08);
+}
+
+/* ---- Bouton Exporter ---- */
+.ha-btn-export {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+  color: white !important;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 8px 20px !important;
+  transition: all 0.3s ease !important;
+  letter-spacing: 0.2px;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.ha-btn-export:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.35) !important;
+}
+
+.ha-btn-export:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---- Section Dashboard (carte graphique) ---- */
+.ha-dashboard-card {
+  border-radius: 25px;
+  background-color: #fff;
+}
+
+/* ---- Section DataTable (carte tableau) ---- */
+.ha-table-card {
+  border-radius: 25px;
+  background-color: #fff;
+}
+
+/* ---- Barre de recherche ---- */
+.ha-search-bar {
+  display: flex;
+  align-items: center;
+}
+
+.ha-search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background-color: transparent;
+  font-size: 14px;
+}
+
+.ha-search-clear-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6c757d;
+}
+
+/* ---- Composant NoData ---- */
+.ha-no-data {
+  padding: 48px;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.ha-no-data-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.ha-no-data-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.ha-no-data-subtitle {
+  margin: 8px 0 0 0;
+  font-size: 14px;
+}
+
+/* ---- Cellule Produit ---- */
+.ha-cell-produit {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+}
+
+.ha-cell-produit-name {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 14px;
+}
+
+/* ---- Badge Quantité Arrivée ---- */
+.ha-badge-qty-positive {
+  background-color: #dcfce7;
+  color: #16a34a;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-block;
+}
+
+.ha-badge-qty-negative {
+  background-color: #fee2e2;
+  color: #dc2626;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-block;
+}
+
+/* ---- Badge Stock Actuel ---- */
+.ha-badge-stock {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-block;
+}
+
+/* ---- Cellule Date ---- */
+.ha-cell-date {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ha-cell-date-main {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.ha-cell-date-age {
+  font-size: 11px;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* ---- Badge Stock Précédent ---- */
+.ha-badge-stock-prec {
+  background-color: #f1f5f9;
+  color: #475569;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+/* ---- Texte N/A ---- */
+.ha-text-na {
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+/* ---- Spinner de chargement ---- */
+.ha-spinner-wrapper {
+  padding: 3rem;
+  text-align: center;
+}
+
+.ha-spinner {
+  width: 3rem;
+  height: 3rem;
+  margin-right: 8px;
+}
+
+/* ============================================================
+   MODERN DATATABLE STYLES
+   ============================================================ */
+
+.modern-datatable-wrapper {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.modern-datatable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 0.875rem;
+}
+
+.modern-datatable thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.modern-datatable thead tr {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.modern-datatable thead th {
+  padding: 14px 16px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #475569;
+  border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.modern-datatable thead th:hover {
+  color: #1e293b;
+  background: rgba(99, 102, 241, 0.04);
+}
+
+.modern-datatable thead th::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #6366f1, #818cf8);
+  transition: width 0.3s ease;
+}
+
+.modern-datatable thead th:hover::after {
+  width: 60%;
+}
+
+.th-content {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.modern-datatable thead th:first-child .th-content {
+  justify-content: flex-start;
+}
+
+.modern-datatable tbody tr {
+  transition: all 0.2s ease;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.modern-datatable tbody tr:hover {
+  background: linear-gradient(90deg, #f8fafc 0%, #f1f5f9 100%);
+  transform: scale(1.002);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  z-index: 1;
+  position: relative;
+}
+
+.modern-datatable tbody tr:last-child {
+  border-bottom: none;
+}
+
+.modern-datatable tbody td {
+  padding: 14px 16px;
+  vertical-align: middle;
+  color: #334155;
+  transition: all 0.2s ease;
+}
+
+.modern-datatable tbody tr:hover td {
+  color: #1e293b;
+}
+
+/* ---- Product Cell ---- */
+.product-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.product-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+}
+
+.product-name {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+/* ---- Data Pills ---- */
+.data-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  transition: all 0.2s ease;
+}
+
+.data-pill.primary {
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+  color: #6366f1;
+  border: 1px solid rgba(99, 102, 241, 0.15);
+}
+
+.data-pill.success {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.15);
+}
+
+.data-pill.warning {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.15);
+}
+
+.data-value {
+  font-weight: 500;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+/* ---- Movement Badge ---- */
+.movement-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 14px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid #e2e8f0;
+}
+
+/* ---- Date Value ---- */
+.date-value {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ---- Empty State ---- */
+.empty-row td {
+  padding: 0 !important;
+}
+
+.empty-state {
+  padding: 48px 24px;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.6;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+/* ---- Row Animation ---- */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modern-datatable tbody tr {
+  animation: fadeInUp 0.3s ease forwards;
+}
+
+.modern-datatable tbody tr:nth-child(1) { animation-delay: 0.02s; }
+.modern-datatable tbody tr:nth-child(2) { animation-delay: 0.04s; }
+.modern-datatable tbody tr:nth-child(3) { animation-delay: 0.06s; }
+.modern-datatable tbody tr:nth-child(4) { animation-delay: 0.08s; }
+.modern-datatable tbody tr:nth-child(5) { animation-delay: 0.10s; }
+.modern-datatable tbody tr:nth-child(6) { animation-delay: 0.12s; }
+.modern-datatable tbody tr:nth-child(7) { animation-delay: 0.14s; }
+.modern-datatable tbody tr:nth-child(8) { animation-delay: 0.16s; }
+.modern-datatable tbody tr:nth-child(9) { animation-delay: 0.18s; }
+.modern-datatable tbody tr:nth-child(10) { animation-delay: 0.20s; }
+
+/* ---- Sort Icon ---- */
+.modern-datatable .sort-icon {
+  display: inline-flex;
+  align-items: center;
+  opacity: 0.4;
+  transition: all 0.2s ease;
+}
+
+.modern-datatable th:hover .sort-icon {
+  opacity: 0.7;
+}
+
+.modern-datatable th.active-sort .sort-icon {
+  opacity: 1;
+  color: #6366f1;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .modern-datatable thead th {
+    padding: 10px 8px;
+    font-size: 0.7rem;
+  }
+
+  .modern-datatable tbody td {
+    padding: 10px 8px;
+    font-size: 0.8rem;
+  }
+
+  .product-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+    border-radius: 8px;
+  }
+
+  .product-name {
+    font-size: 0.8rem;
+  }
+
+  .data-pill {
+    padding: 3px 8px;
+    font-size: 0.75rem;
+  }
+
+  .date-value {
+    font-size: 0.75rem;
+  }
+
+  .modern-datatable-wrapper {
+    border-radius: 12px;
+  }
+}
+
+/* Animation pour le spinner */
+@keyframes ha-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.fa-spin {
+    animation: ha-spin 1s linear infinite;
+}
+
+/* Style pour le code produit */
+.ha-cell-produit-code {
+    font-size: 11px;
+    color: #6c757d;
+    font-family: monospace;
+    margin-top: 2px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .ha-header-title {
+        font-size: 1rem;
+    }
+    
+    .ha-header-subtitle {
+        font-size: 0.7rem;
+    }
+    
+    .ha-dashboard-card .p-4,
+    .ha-table-card .p-4 {
+        padding: 1rem !important;
+    }
+    
+    .ha-btn-export span {
+        display: none;
+    }
+    
+    .ha-btn-export {
+        padding: 8px 12px !important;
+    }
+}
+
+/* Style pour les selects et inputs */
+.form-select:focus, .form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+/* Tooltip amélioré */
+[title] {
+    cursor: help;
+}
+
+/* Bouton Importer */
+.ha-btn-import {
+     background: #31299b !important;
+    color: white !important;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 8px 20px !important;
+    transition: all 0.3s ease !important;
+    letter-spacing: 0.2px;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 0 !important;
+}
+
+.ha-btn-import:hover:not(:disabled) {
+    transform: translateY(-2px);
+     box-shadow: 0 8px 20px rgba(59, 82, 255, 0.35) !important;
+}
+
+.ha-btn-import:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

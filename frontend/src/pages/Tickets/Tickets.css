@@ -1,0 +1,500 @@
+@import '../../styles/theme.css';
+@import '../../styles/animations.css';
+@import '../../styles/ModalSystem.css';
+@import '../../styles/Buttons.css';
+
+/* =========================================================
+   Tickets.css — Liste des tickets + modales partagées
+   ========================================================= */
+
+/* ---------- Header ---------- */
+.tck-header {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  box-shadow: 0 6px 24px rgba(79, 70, 229, 0.18);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-height: 80px;
+}
+
+.tck-header-icon {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* ---------- Cartes statistiques ---------- */
+.tck-stat-card {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.tck-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+.tck-stat-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  color: #fff;
+  flex-shrink: 0;
+}
+.tck-stat-total { background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)); }
+.tck-stat-open { background: linear-gradient(135deg, var(--color-warning), #d97706); }
+.tck-stat-inprogress { background: linear-gradient(135deg, var(--color-info), #2563eb); }
+.tck-stat-resolved { background: linear-gradient(135deg, var(--color-secondary), #7c3aed); }
+.tck-stat-closed { background: linear-gradient(135deg, var(--color-success), #059669); }
+.tck-stat-value { font-size: 1.6rem; font-weight: 700; color: var(--color-text-main); line-height: 1; }
+.tck-stat-label { font-size: 0.8rem; color: var(--color-text-sub); margin-top: 4px; }
+
+/* ---------- Filtres ---------- */
+.tck-filters-card {
+  background: var(--color-bg-alt);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+.tck-filters-card .input-group {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+}
+.tck-filters-card .input-group:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+.tck-search-icon {
+  background: transparent !important;
+  border: none !important;
+  color: var(--color-text-muted);
+  padding: 10px 14px;
+}
+.tck-search-input {
+  border: none !important;
+  padding: 10px 8px;
+  font-size: 0.9rem;
+  color: var(--color-text-main);
+  background: transparent;
+}
+.tck-search-input::placeholder { color: var(--color-text-muted); }
+.tck-search-input:focus { box-shadow: none; border-color: transparent; }
+.tck-clear-btn {
+  background: transparent !important;
+  border: none !important;
+  color: var(--color-text-muted);
+  padding: 10px 12px;
+}
+.tck-clear-btn:hover { color: var(--color-text-sub); }
+.tck-select-wrapper {
+  position: relative;
+}
+.tck-select {
+  border: 1px solid var(--color-border) !important;
+  border-radius: 12px !important;
+  padding: 10px 36px 10px 14px;
+  font-size: 0.9rem;
+  color: var(--color-text-main);
+  background: var(--color-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") no-repeat right 10px center;
+  background-size: 16px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 100%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.tck-select:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12) !important;
+  outline: none;
+}
+.tck-select:hover { border-color: var(--color-border) !important; }
+.tck-reset-btn {
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text-sub);
+  height: 42px;
+  border-radius: 12px !important;
+  background: var(--color-bg);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+}
+.tck-reset-btn:hover {
+  background: var(--color-bg-alt) !important;
+  color: var(--color-text-main);
+  border-color: var(--color-border) !important;
+}
+
+/* ---------- Tableau ---------- */
+.tck-table-card {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+.priority-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tck-materiel, .tck-user, .tck-assignee {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+}
+.tck-user {
+  max-width: 100%;
+  align-items: center;
+  gap: 8px;
+}
+.tck-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: var(--color-primary-dark);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.tck-user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-width: 0;
+  gap: 2px;
+}
+.tck-user-name {
+  font-weight: 600;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tck-user-team {
+  margin-left: 0;
+  padding: 1px 8px;
+  border-radius: 10px;
+  background-color: #eef2ff;
+  color: var(--color-primary-dark);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tck-user-team:empty {
+  display: none;
+}
+.tck-unassigned {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-style: italic;
+}
+.tck-comments {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-sub);
+}
+
+/* ---------- Modale de fermeture de ticket ---------- */
+.tck-close-modal-backdrop {
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(2px);
+}
+.tck-close-modal-content {
+  background: var(--color-bg);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  animation: tckPop 0.2s ease-out;
+}
+.tck-close-modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--color-border);
+}
+.tck-close-modal-header .modal-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+}
+.tck-close-modal-body {
+  padding: 24px;
+}
+
+/* ---------- Modale de confirmation ---------- */
+.tck-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  backdrop-filter: blur(2px);
+}
+.tck-confirm-card {
+  background: var(--color-bg);
+  border-radius: 18px;
+  padding: 28px;
+  width: 90%;
+  max-width: 420px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  animation: tckPop 0.2s ease-out;
+}
+.tck-confirm-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #fee2e2;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  margin: 0 auto 14px;
+}
+.tck-cancel-btn {
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text-main) !important;
+  border-radius: 10px !important;
+  padding: 8px 20px;
+}
+.tck-delete-btn {
+  background: var(--color-danger) !important;
+  border: none !important;
+  color: #fff !important;
+  border-radius: 10px !important;
+  padding: 8px 20px;
+  font-weight: 600;
+}
+.tck-delete-btn:hover:not(:disabled) { background: #b91c1c !important; }
+
+@keyframes tckPop {
+  from { transform: scale(0.92); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* =========================================================
+   TicketModal / TicketDetailsModal unique styles
+   ========================================================= */
+
+.discussion-subtitle {
+  font-size: 0.78rem;
+  color: var(--color-text-sub);
+  display: inline-flex;
+  align-items: center;
+}
+
+/* --- Section commentaires --- */
+.ticket-comments-section {
+  margin-top: 20px;
+  border-top: 1px solid var(--color-border);
+  padding-top: 16px;
+  max-width: 640px;
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.comment-item {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.comment-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.comment-meta {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+  flex: 1;
+  min-width: 0;
+}
+
+.comment-author {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+
+.comment-team {
+  font-size: 0.7rem;
+  color: var(--color-primary);
+}
+
+.comment-date {
+  font-size: 0.68rem;
+  color: var(--color-text-muted);
+}
+
+.comment-delete-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.comment-delete-btn:hover {
+  color: var(--color-danger);
+  background: #fef2f2;
+}
+
+.comment-content {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-text-sub);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.comment-form {
+  margin-top: 4px;
+}
+
+.comment-textarea {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 0.82rem;
+  color: var(--color-text-main);
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  font-family: inherit;
+}
+
+.comment-textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.comment-submit-btn {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: #fff;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.comment-submit-btn:hover:not(:disabled) {
+  filter: brightness(1.05);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.comment-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Unique info-card styles for Ticket modals */
+.add-modal-info-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+.add-modal-info-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: var(--color-info);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.add-modal-info-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.add-modal-info-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+.add-modal-info-value {
+  font-size: 0.95rem;
+  color: var(--color-text-main);
+  font-weight: 600;
+}

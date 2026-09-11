@@ -1,0 +1,333 @@
+/* ============================================
+   STYLES MAILCHARTFROMAPI
+   ============================================ */
+
+:root {
+  --mc-bg: rgba(255, 255, 255, 0.85);
+  --mc-border: rgba(0, 0, 0, 0.05);
+  --mc-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --mc-text: #1e293b;
+  --mc-text-muted: #94a3b8;
+  --mc-font: 'Poppins', system-ui, sans-serif;
+  --mc-purple: #667eea;
+  --mc-violet: #764ba2;
+  --mc-amber: #f59e0b;
+  --mc-green: #4caf50;
+  --mc-red: #f44336;
+}
+
+/* --- Container principal --- */
+.mailchart-container {
+  background: var(--mc-bg);
+  backdrop-filter: blur(20px);
+  padding: 28px;
+  border-radius: 24px;
+  box-shadow: var(--mc-shadow);
+  font-family: var(--mc-font);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+/* --- Header --- */
+.mailchart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--mc-border);
+}
+
+.mailchart-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* --- Icon Box --- */
+.mailchart-icon-box {
+  background: linear-gradient(135deg, var(--mc-purple) 0%, var(--mc-violet) 100%);
+  color: #fff;
+  padding: 14px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.35);
+}
+
+/* --- Title & Subtitle --- */
+.mailchart-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--mc-text);
+  letter-spacing: -0.5px;
+}
+
+.mailchart-subtitle {
+  font-size: 12px;
+  color: var(--mc-text-muted);
+  font-weight: 500;
+}
+
+.mailchart-section-title {
+  margin: 0 0 15px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--mc-text);
+}
+
+/* --- Icon Button --- */
+.mailchart-icon-button {
+  background: rgba(102, 126, 234, 0.1);
+  padding: 10px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: var(--mc-text);
+}
+
+.mailchart-icon-button:hover {
+  background: rgba(102, 126, 234, 0.2);
+  transform: scale(1.05);
+}
+
+/* --- Badge Wrapper --- */
+.mailchart-badge-wrapper {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+/* --- Metric Card --- */
+.mailchart-metric-card {
+  flex: 1;
+  min-width: 120px;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  padding: 18px 12px;
+  border-radius: 18px;
+  text-align: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  cursor: pointer;
+}
+
+.mailchart-metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.mailchart-metric-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.mailchart-metric-icon {
+  font-size: 14px;
+}
+
+.mailchart-metric-icon--purple { color: var(--mc-purple); }
+.mailchart-metric-icon--violet { color: var(--mc-violet); }
+.mailchart-metric-icon--amber { color: var(--mc-amber); }
+.mailchart-metric-icon--green { color: var(--mc-green); }
+.mailchart-metric-icon--red { color: var(--mc-red); }
+
+.mailchart-metric-card--purple { border-color: rgba(102, 126, 234, 0.15); }
+.mailchart-metric-card--violet { border-color: rgba(118, 75, 172, 0.15); }
+.mailchart-metric-card--amber { border-color: rgba(245, 158, 11, 0.15); }
+.mailchart-metric-card--green { border-color: rgba(76, 175, 80, 0.15); }
+.mailchart-metric-card--red { border-color: rgba(244, 67, 54, 0.15); }
+
+.mailchart-metric-label {
+  font-size: 11px;
+  color: var(--mc-text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mailchart-metric-value {
+  font-size: 26px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.mailchart-metric-card--purple .mailchart-metric-value { color: var(--mc-purple); }
+.mailchart-metric-card--violet .mailchart-metric-value { color: var(--mc-violet); }
+.mailchart-metric-card--amber .mailchart-metric-value { color: var(--mc-amber); }
+.mailchart-metric-card--green .mailchart-metric-value { color: var(--mc-green); }
+.mailchart-metric-card--red .mailchart-metric-value { color: var(--mc-red); }
+
+/* --- Total Footer --- */
+.mailchart-total-footer {
+  margin-top: 20px;
+  background: linear-gradient(135deg, var(--mc-purple) 0%, var(--mc-violet) 100%);
+  color: #fff;
+  padding: 18px 22px;
+  border-radius: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.35);
+}
+
+.mailchart-total-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.mailchart-total-value {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 6px 14px;
+  border-radius: 12px;
+}
+
+/* --- Loading Container --- */
+.mailchart-loading-container {
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+}
+
+.mailchart-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid var(--mc-amber);
+  border-radius: 50%;
+  animation: mailchart-spin 1s linear infinite;
+}
+
+.mailchart-loading-text {
+  color: var(--mc-text-muted);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* --- Error Container --- */
+.mailchart-error-container {
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+}
+
+.mailchart-error-message {
+  color: var(--mc-text-muted);
+  font-weight: 600;
+  font-size: 14px;
+  text-align: center;
+}
+
+.mailchart-retry-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, var(--mc-purple) 0%, var(--mc-violet) 100%);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: transform 0.2s ease;
+}
+
+.mailchart-retry-button:hover {
+  transform: scale(1.05);
+}
+
+/* --- Chart Container --- */
+.mailchart-chart-container {
+  position: relative;
+  margin-top: 20px;
+}
+
+/* --- Donut Grid (deux graphiques côte à côte) --- */
+.mailchart-donut-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.mailchart-donut-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .mailchart-donut-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+/* --- Bar Section (graphique par rôle, pleine largeur) --- */
+.mailchart-bar-section {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+/* --- Footer Right --- */
+.mailchart-footer-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* --- Timestamp --- */
+.mailchart-timestamp {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--mc-text-muted);
+  font-weight: 500;
+}
+
+/* --- Metric Percentage --- */
+.mailchart-metric-pct {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mc-text-muted);
+  margin-top: 2px;
+}
+
+/* --- Metric Subtitle --- */
+.mailchart-metric-subtitle {
+  font-size: 10px;
+  color: #cbd5e1;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* --- Animation spin --- */
+@keyframes mailchart-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

@@ -1,0 +1,860 @@
+/* --- Styles pour Mouvements.js --- */
+
+/* Modern Header */
+.modern-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 6px 24px rgba(102, 126, 234, 0.18);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    min-height: 80px;
+}
+
+.modern-header h1 {
+    color: white !important;
+    font-weight: 700;
+    margin: 0;
+    font-size: 1.1rem;
+    letter-spacing: 0.3px;
+}
+
+.modern-header p {
+    color: rgba(255, 255, 255, 0.8) !important;
+    margin: 4px 0 0 0;
+    font-size: 0.75rem;
+    font-weight: 300;
+}
+
+/* Icon Circle */
+.icon-circle {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.icon-circle:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: rotate(-15deg) scale(1.08);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.15);
+}
+
+.icon-circle .text-white {
+    font-size: 1.25rem;
+}
+
+/* Header Buttons */
+.header-refresh-btn {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    width: 42px;
+    height: 42px;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    font-size: 0.8rem;
+}
+
+.header-refresh-btn:hover {
+    background: rgba(255, 255, 255, 0.35) !important;
+    transform: rotate(180deg) scale(1.08);
+}
+
+.header-export-btn {
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: white !important;
+    font-size: 0.75rem !important;
+    font-weight: 500 !important;
+    padding: 8px 20px !important;
+    transition: all 0.3s ease !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    letter-spacing: 0.2px;
+    align-items: center;
+    gap: 6px;
+}
+
+.header-export-btn:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    transform: translateY(-2px);
+}
+
+.header-add-btn {
+    background: white !important;
+    color: #667eea !important;
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+    padding: 8px 22px !important;
+    transition: all 0.3s ease !important;
+    letter-spacing: 0.2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.header-add-btn:hover {
+    transform: translateY(-3px) scale(1.04);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.35);
+}
+
+/* Main Card */
+.mouvements-card {
+    border: 0;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    border-radius: 25px;
+    background-color: #fff;
+}
+
+/* Statistics Cards */
+.stat-card {
+    padding: 1rem;
+    border-radius: 0.75rem;
+    text-align: center;
+}
+
+.stat-card-total {
+    background-color: #e3f2fd;
+    border-left: 4px solid #2196f3;
+}
+
+.stat-card-entree {
+    background-color: #C6F6D5;
+    border-left: 4px solid #38a169;
+}
+
+.stat-card-sortie {
+    background-color: #FED7D7;
+    border-left: 4px solid #e53e3e;
+}
+
+.stat-card-ajustement {
+    background-color: #E9D8FD;
+    border-left: 4px solid #805ad5;
+}
+
+.stat-card-autres {
+    background-color: #BEE3F8;
+    border-left: 4px solid #3182ce;
+}
+
+.stat-icon {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+.stat-icon-blue { color: #2196f3; }
+.stat-icon-green { color: #38a169; }
+.stat-icon-red { color: #e53e3e; }
+.stat-icon-purple { color: #805ad5; }
+.stat-icon-light-blue { color: #3182ce; }
+
+.stat-value {
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+.stat-value-blue { color: #1565c0; }
+.stat-value-green { color: #2F855A; }
+.stat-value-red { color: #C53030; }
+.stat-value-purple { color: #6B46C1; }
+.stat-value-light-blue { color: #2B6CB0; }
+
+.stat-label {
+    font-size: 0.75rem;
+}
+
+.stat-label-blue { color: #64b5f6; }
+.stat-label-green { color: #68d391; }
+.stat-label-red { color: #fc8181; }
+.stat-label-purple { color: #b794f4; }
+.stat-label-light-blue { color: #63b3ed; }
+
+/* Search Bar */
+.search-bar {
+    background: #f8f9fa;
+    border-radius: 50px;
+    padding: 8px 16px;
+    border: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+}
+
+.search-bar-icon {
+    color: #6c757d;
+    margin-right: 8px;
+}
+
+.search-bar input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background-color: transparent;
+    font-size: 14px;
+}
+
+.search-bar-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #6c757d;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+/* Filter Buttons */
+.filter-btn {
+    width: 100%;
+    border-radius: 50px !important;
+    border: 0 !important;
+    font-weight: 500 !important;
+    padding: 10px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.filter-btn-active {
+    background: #667eea !important;
+    color: white !important;
+}
+
+.filter-btn-inactive {
+    background: #e9ecef !important;
+    color: #495057 !important;
+}
+
+.reset-btn {
+    width: 100%;
+    border-radius: 50px !important;
+    border: 0 !important;
+    background: #f8f9fa !important;
+    color: #495057 !important;
+    font-weight: 500 !important;
+    padding: 10px !important;
+    transition: all 0.3s ease;
+}
+
+/* Advanced Filters */
+.advanced-filters {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    padding: 1rem;
+    border-radius: 0.75rem;
+}
+
+.advanced-filters label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.advanced-filters .form-select,
+.advanced-filters .form-control {
+    border: 0;
+    border-radius: 0.5rem;
+    background-color: #fff;
+    font-size: 0.9rem;
+}
+
+/* Loading Spinner */
+.loading-container {
+    padding: 48px;
+    text-align: center;
+    color: #94a3b8;
+}
+
+.loading-spinner {
+    width: 3rem;
+    height: 3rem;
+    margin-right: 8px;
+}
+
+.loading-text {
+    color: #6c757d;
+    margin-top: 12px;
+}
+
+/* Table Cell Styles */
+.date-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.date-cell .date {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1F2937;
+}
+
+.date-cell .age {
+    font-size: 11px;
+    color: #6B7280;
+    font-style: italic;
+}
+
+.type-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.type-badge-entree {
+    background-color: #C6F6D5;
+    color: #2F855A;
+}
+
+.type-badge-sortie {
+    background-color: #FED7D7;
+    color: #C53030;
+}
+
+.type-badge-ajustement {
+    background-color: #E9D8FD;
+    color: #6B46C1;
+}
+
+.type-badge-autre {
+    background-color: #BEE3F8;
+    color: #2B6CB0;
+}
+
+.quantite-cell {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 14px;
+}
+
+.produit-cell {
+    display: flex;
+    flex-direction: column;
+}
+
+.produit-cell .nom {
+    font-weight: 500;
+    color: #1F2937;
+}
+
+.utilisateur-cell {
+    display: flex;
+    flex-direction: column;
+}
+
+.utilisateur-cell .nom {
+    font-weight: 500;
+    color: #1F2937;
+}
+
+.utilisateur-cell .equipe {
+    color: #6B7280;
+    font-size: 11px;
+}
+
+.marque-image {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.marque-text {
+    font-size: 12px;
+    color: #6B7280;
+}
+
+.local-cell {
+    font-size: 12px;
+    color: #475569;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.action-btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background: #fff;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.action-btn-view .text-info { color: #17a2b8; }
+.action-btn-edit .text-warning { color: #ffc107; }
+.action-btn-delete .text-danger { color: #dc3545; }
+
+/* Container */
+.mouvements-container {
+    background-color: #f8f9fc;
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+}
+
+/* ========================================================== */
+/* IMPORT BUTTON - STYLE HEADER                              */
+/* ========================================================== */
+
+.header-import-btn {
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: white !important;
+    font-size: 0.75rem !important;
+    font-weight: 500 !important;
+    padding: 8px 20px !important;
+    transition: all 0.3s ease !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    letter-spacing: 0.2px;
+    align-items: center;
+    gap: 6px;
+}
+
+.header-import-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.3) !important;
+    transform: translateY(-2px);
+}
+
+.header-import-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.header-import-btn.active {
+    background: rgba(255, 255, 255, 0.35) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2) !important;
+}
+
+/* ========================================================== */
+/* IMPORT SECTION - STYLE INTÉGRÉ (SANS MODAL)                */
+/* ========================================================== */
+
+.import-section {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes scaleIn {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Zone de drop */
+.import-drop-zone {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.import-drop-zone:hover:not(.has-file) {
+    border-color: #667eea !important;
+    background-color: #f0f1ff !important;
+}
+
+.import-drop-zone.dragover {
+    border-color: #667eea !important;
+    background-color: #e8eaff !important;
+    transform: scale(1.02);
+}
+
+/* Table preview styling */
+.import-section .table {
+    font-size: 0.7rem;
+}
+
+.import-section .table thead th {
+    background-color: #f3f4f6;
+    color: #374151;
+    font-weight: 600;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.import-section .table tbody tr:hover {
+    background-color: #f0f7ff;
+}
+
+/* Progress bar styling */
+.import-section .progress {
+    height: 8px;
+    border-radius: 20px;
+    background-color: #e9ecef;
+}
+
+.import-section .progress-bar {
+    background: linear-gradient(90deg, #667eea, #764ba2) !important;
+    border-radius: 20px;
+}
+
+/* ========================================================== */
+/* IMPORT MODAL - STYLE POUR LA MODALE (GARDÉ POUR COMPATIBILITÉ) */
+/* ========================================================== */
+
+.import-modal .modal-content {
+    border-radius: 20px;
+    border: 0;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.import-modal .modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 20px 20px 0 0;
+    border-bottom: 0;
+    padding: 1.5rem 2rem;
+}
+
+.import-modal .modal-header .close {
+    color: white;
+    opacity: 0.8;
+    text-shadow: none;
+}
+
+.import-modal .modal-header .close:hover {
+    opacity: 1;
+}
+
+.import-modal .modal-body {
+    padding: 2rem;
+}
+
+.import-modal .import-drop-zone {
+    border: 2px dashed #dee2e6;
+    border-radius: 16px;
+    padding: 3rem 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    background-color: #fafbfc;
+}
+
+.import-modal .import-drop-zone:hover {
+    border-color: #667eea;
+    background-color: #f0f1ff;
+}
+
+.import-modal .import-drop-zone.dragover {
+    border-color: #667eea;
+    background-color: #e8eaff;
+    transform: scale(1.02);
+}
+
+.import-modal .import-drop-zone .import-icon {
+    font-size: 3rem;
+    color: #667eea;
+    margin-bottom: 1rem;
+}
+
+.import-modal .import-drop-zone .import-text {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #1F2937;
+}
+
+.import-modal .import-drop-zone .import-subtext {
+    font-size: 0.9rem;
+    color: #6B7280;
+}
+
+.import-modal .import-drop-zone .import-formats {
+    font-size: 0.8rem;
+    color: #9CA3AF;
+    margin-top: 0.5rem;
+}
+
+.import-modal .import-file-input {
+    display: none;
+}
+
+.import-modal .import-preview {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.import-modal .import-preview .file-name {
+    font-weight: 600;
+    color: #1F2937;
+}
+
+.import-modal .import-preview .file-size {
+    color: #6B7280;
+    font-size: 0.9rem;
+}
+
+.import-modal .import-progress {
+    margin-top: 1.5rem;
+}
+
+.import-modal .import-progress .progress {
+    height: 8px;
+    border-radius: 20px;
+    background-color: #e9ecef;
+}
+
+.import-modal .import-progress .progress-bar {
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius: 20px;
+}
+
+.import-modal .import-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+}
+
+.import-modal .import-actions .btn {
+    padding: 10px 30px;
+    border-radius: 50px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.import-modal .import-actions .btn-primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border: 0;
+}
+
+.import-modal .import-actions .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.import-modal .import-actions .btn-secondary {
+    background-color: #e9ecef;
+    border: 0;
+    color: #495057;
+}
+
+.import-modal .import-actions .btn-secondary:hover {
+    background-color: #dee2e6;
+    transform: translateY(-2px);
+}
+
+/* Import Success Animation */
+.import-success {
+    text-align: center;
+    padding: 2rem;
+}
+
+.import-success .success-icon {
+    font-size: 4rem;
+    color: #38a169;
+    animation: scaleIn 0.5s ease;
+}
+
+.import-success .success-text {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #1F2937;
+    margin-top: 1rem;
+}
+
+.import-success .success-subtext {
+    color: #6B7280;
+    margin-top: 0.5rem;
+}
+
+/* ========================================================== */
+/* RESPONSIVE                                                */
+/* ========================================================== */
+
+@media (max-width: 768px) {
+    .import-drop-zone {
+        padding: 1.5rem 1rem !important;
+    }
+    
+    .import-section .table-responsive {
+        max-height: 150px !important;
+    }
+    
+    .import-section {
+        padding: 1rem !important;
+    }
+    
+    .import-modal .import-drop-zone {
+        padding: 2rem 1rem;
+    }
+    
+    .import-modal .import-drop-zone .import-icon {
+        font-size: 2rem;
+    }
+    
+    .import-modal .import-actions {
+        flex-direction: column;
+    }
+    
+    .import-modal .import-actions .btn {
+        width: 100%;
+    }
+}
+
+/* ========================================================== */
+/* BOUTONS PRINCIPAUX - DESIGN ROUNDED PILL (STYLE BADGES)   */
+/* ========================================================== */
+
+/* ---- Bouton Importer (Vert émeraude dégradé) ---- */
+.header-import-btn {
+    background: linear-gradient(120deg, #059669, #10b981) !important;
+    border-radius: 40px !important;
+    padding: 8px 24px !important;
+    font-weight: 700 !important;
+    color: white !important;
+    font-size: 0.9rem;
+    border: none !important;
+    transition: all 0.3s ease !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+}
+
+.header-import-btn:hover:not(:disabled) {
+    transform: scale(1.02) translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4) !important;
+    background: linear-gradient(120deg, #047857, #059669) !important;
+}
+
+.header-import-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.header-import-btn.active {
+    background: linear-gradient(120deg, #047857, #059669) !important;
+}
+
+/* ---- Bouton Exporter (Orange ambré dégradé) ---- */
+.header-export-btn {
+    background: linear-gradient(120deg, #ea580c, #f97316) !important;
+    border-radius: 40px !important;
+    padding: 8px 24px !important;
+    font-weight: 700 !important;
+    color: white !important;
+    font-size: 0.9rem;
+    border: none !important;
+    transition: all 0.3s ease !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3);
+}
+
+.header-export-btn:hover:not(:disabled) {
+    transform: scale(1.02) translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(234, 88, 12, 0.4) !important;
+    background: linear-gradient(120deg, #c2410c, #ea580c) !important;
+}
+
+.header-export-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ---- Bouton Nouveau (Bleu cyan dégradé) ---- */
+.header-add-btn {
+    background: linear-gradient(120deg, #2563eb, #06b6d4) !important;
+    border-radius: 40px !important;
+    padding: 8px 24px !important;
+    font-weight: 700 !important;
+    color: white !important;
+    font-size: 0.9rem;
+    border: none !important;
+    transition: all 0.3s ease !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.header-add-btn:hover:not(:disabled) {
+    transform: scale(1.02) translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4) !important;
+    background: linear-gradient(120deg, #1d4ed8, #0891b2) !important;
+}
+
+.header-add-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ---- Bouton Rafraîchir (Indigo dégradé circulaire) ---- */
+.header-refresh-btn {
+    background: linear-gradient(120deg, #4f46e5, #6366f1) !important;
+    border-radius: 50% !important;
+    color: white !important;
+    width: 40px;
+    height: 40px;
+    padding: 0 !important;
+    border: none !important;
+    transition: all 0.3s ease !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+}
+
+.header-refresh-btn:hover:not(:disabled) {
+    transform: scale(1.05) translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4) !important;
+    background: linear-gradient(120deg, #4338ca, #4f46e5) !important;
+}
+
+.header-refresh-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

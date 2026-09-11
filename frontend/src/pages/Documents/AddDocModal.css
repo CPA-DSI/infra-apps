@@ -1,0 +1,468 @@
+/* src/pages/Documents/AddDocModal.css
+   Styles professionnels pour la modale d'ajout / édition de documents (GED) */
+
+.add-doc-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  z-index: 1090;
+  padding: 2.5rem 1rem;
+  overflow-y: auto;
+  animation: addDocFade 0.25s ease;
+}
+
+.add-doc-modal {
+  background: #fff;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 720px;
+  box-shadow: 0 28px 70px rgba(15, 23, 42, 0.28);
+  animation: addDocSlide 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  margin: auto 0;
+}
+
+/* --- En-tête --- */
+.add-doc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.4rem 1.6rem;
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  color: #fff;
+  position: relative;
+}
+
+.add-doc-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.add-doc-header-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.add-doc-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.add-doc-subtitle {
+  font-size: 0.82rem;
+  margin: 0;
+  opacity: 0.85;
+}
+
+.add-doc-close {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #fff;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.add-doc-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+/* --- Corps du formulaire --- */
+.add-doc-body {
+  padding: 1.5rem 1.6rem 0;
+  max-height: calc(90vh - 90px);
+  overflow-y: auto;
+}
+
+.add-doc-alert {
+  display: flex;
+  align-items: center;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 1.2rem;
+}
+
+/* --- Sections --- */
+.add-doc-section {
+  background: #fff;
+  border: 1px solid #eef2f7;
+  border-radius: 16px;
+  padding: 1.2rem 1.3rem;
+  margin-bottom: 1.2rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.add-doc-section-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.add-doc-section-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+}
+
+.add-doc-section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.add-doc-section-sub {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+/* --- Champs --- */
+.add-doc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.add-doc-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.mt-3 { margin-top: 1rem; }
+
+.add-doc-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+  display: flex;
+  align-items: center;
+}
+
+.add-doc-req { color: #ef4444; margin-left: 2px; }
+
+.add-doc-input,
+.add-doc-textarea {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.88rem;
+  color: #1e293b;
+  background: #fff;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.add-doc-textarea { resize: vertical; min-height: 80px; }
+
+.add-doc-input:focus,
+.add-doc-textarea:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.add-doc-input-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.add-doc-input-ico {
+  position: absolute;
+  left: 0.85rem;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+
+.add-doc-input.with-icon {
+  padding-left: 2.4rem;
+}
+
+/* --- Switch public / privé --- */
+.add-doc-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.add-doc-switch input { display: none; }
+
+.add-doc-switch-track {
+  width: 46px;
+  height: 26px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  position: relative;
+  transition: background 0.25s ease;
+  flex-shrink: 0;
+}
+
+.add-doc-switch-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.25s ease;
+}
+
+.add-doc-switch input:checked + .add-doc-switch-track {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+}
+
+.add-doc-switch input:checked + .add-doc-switch-track .add-doc-switch-thumb {
+  transform: translateX(20px);
+}
+
+.add-doc-switch-text {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* --- Zone de drag & drop --- */
+.add-doc-dropzone {
+  border: 2px dashed #c7d2fe;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f5f3ff 0%, #eef2ff 100%);
+  padding: 2rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.add-doc-dropzone:hover { border-color: #6366f1; background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); }
+
+.add-doc-dropzone.is-drag {
+  border-color: #4f46e5;
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  transform: scale(1.01);
+}
+
+.add-doc-dropzone-sm { padding: 1.2rem 1rem; }
+
+.add-doc-dropzone-icon {
+  font-size: 2rem;
+  color: #6366f1;
+  margin-bottom: 0.5rem;
+}
+
+.add-doc-dropzone-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #3730a3;
+  margin: 0;
+}
+
+.add-doc-dropzone-sub {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0.3rem 0 0;
+}
+
+.add-doc-dropzone-link {
+  color: #4f46e5;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* --- Puces fichier / pièces jointes --- */
+.add-doc-file-chip,
+.add-doc-att-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.7rem 0.9rem;
+  margin-top: 0.75rem;
+}
+
+.add-doc-att-list { list-style: none; margin: 0.75rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+
+.add-doc-file-ico,
+.add-doc-att-ico {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.add-doc-file-meta,
+.add-doc-att-meta { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+
+.add-doc-file-name,
+.add-doc-att-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1e293b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.add-doc-file-size,
+.add-doc-att-size { font-size: 0.72rem; color: #94a3b8; }
+
+.add-doc-file-remove {
+  background: #fee2e2;
+  border: none;
+  color: #dc2626;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.add-doc-file-remove:hover { background: #fecaca; transform: scale(1.05); }
+
+/* --- react-select : option avec case à cocher --- */
+.add-doc-check-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 2px 0;
+}
+
+.add-doc-check-box {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 2px solid #cbd5e1;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.add-doc-check-box.checked {
+  background: #4f46e5;
+  border-color: #4f46e5;
+}
+
+.add-doc-check-label { font-size: 0.88rem; }
+
+/* --- Pied de modal --- */
+.add-doc-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1.2rem 0 1.5rem;
+  position: sticky;
+  bottom: 0;
+  background: linear-gradient(to top, #fff 70%, rgba(255, 255, 255, 0));
+}
+
+.add-doc-btn {
+  border: none;
+  border-radius: 11px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  padding: 0.6rem 1.3rem;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.add-doc-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+
+.add-doc-btn-ghost {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.add-doc-btn-ghost:hover:not(:disabled) { background: #e2e8f0; color: #1e293b; }
+
+.add-doc-btn-primary {
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.add-doc-btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4338ca, #4f46e5);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(79, 70, 229, 0.4);
+}
+
+/* --- Animations --- */
+@keyframes addDocFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes addDocSlide { from { opacity: 0; transform: translateY(24px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* --- Scrollbar discret --- */
+.add-doc-body::-webkit-scrollbar { width: 8px; }
+.add-doc-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+.add-doc-body::-webkit-scrollbar-track { background: transparent; }
+
+/* --- Responsive --- */
+@media (max-width: 600px) {
+  .add-doc-overlay { padding: 0; }
+  .add-doc-modal { max-width: 100%; border-radius: 0; min-height: 100vh; }
+  .add-doc-row { grid-template-columns: 1fr; }
+  .add-doc-body { padding: 1.2rem 1rem 0; }
+  .add-doc-footer { flex-direction: column-reverse; }
+  .add-doc-btn { width: 100%; justify-content: center; }
+}

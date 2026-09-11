@@ -1,0 +1,9 @@
+.statusBadge {
+  letter-spacing: 0.3px;
+  transition: all 0.2s ease;
+}
+
+.statusBadge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}

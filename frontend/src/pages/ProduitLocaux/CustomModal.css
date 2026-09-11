@@ -1,0 +1,6 @@
+
+/* Définissez la largeur désirée pour la modale */
+.super-large-modal .modal-dialog {
+  max-width: 1400px; /* Par exemple, une largeur maximale de 1400 pixels */
+  width: 90vw;       /* Ou 90% de la largeur de la fenêtre */
+}

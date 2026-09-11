@@ -1,0 +1,481 @@
+/* ============================================
+   🎨 DashboardSSD - Styles CSS
+   Design System 2026
+   ============================================ */
+
+/* --- Thème --- */
+:root {
+  --theme-primary: #6366f1;
+  --theme-secondary: #8b5cf6;
+  --theme-success: #10b981;
+  --theme-warning: #f59e0b;
+  --theme-danger: #ef4444;
+  --theme-background: #0f172a;
+  --theme-card-bg: rgba(30, 41, 59, 0.8);
+  --theme-text-main: #f8fafc;
+  --theme-text-sub: #94a3b8;
+  --theme-border: rgba(99, 102, 241, 0.2);
+  --theme-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --theme-shadow: 0 8px 32px rgba(99, 102, 241, 0.15);
+  --theme-glow: 0 0 40px rgba(99, 102, 241, 0.3);
+}
+
+/* --- Animations --- */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+/* --- Container principal --- */
+.dashboard-ssd-container {
+  background: var(--theme-card-bg);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  border: 1px solid var(--theme-border);
+  box-shadow: var(--theme-shadow);
+  padding: 28px;
+  position: relative;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+.dashboard-ssd-container::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 50%);
+  pointer-events: none;
+  animation: pulse 4s ease-in-out infinite;
+}
+
+/* --- Header --- */
+.dashboard-ssd-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 28px;
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-ssd-icon-container {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--theme-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--theme-glow);
+}
+
+.dashboard-ssd-icon {
+  font-size: 28px;
+  color: #ffffff;
+}
+
+.dashboard-ssd-title-block {
+  flex: 1;
+}
+
+.dashboard-ssd-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--theme-text-main);
+  letter-spacing: -0.5px;
+}
+
+.dashboard-ssd-subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: var(--theme-text-sub);
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* --- Graphiques --- */
+.dashboard-ssd-charts-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-ssd-chart-card {
+  background: rgba(15, 23, 42, 0.4);
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid var(--theme-border);
+}
+
+.dashboard-ssd-chart-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--theme-text-main);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dashboard-ssd-chart-wrapper {
+  min-height: 280px;
+}
+
+/* --- Statistiques Modern --- */
+.dashboard-ssd-stats-modern {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 16px;
+  padding: 20px 0;
+  border-top: 1px solid var(--theme-border);
+  margin-top: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-ssd-stat-card {
+  flex: 1;
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 16px;
+  padding: 16px;
+  border: 1px solid var(--theme-border);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-ssd-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--theme-primary);
+  opacity: 0.8;
+}
+
+.dashboard-ssd-stat-card.hdd::before {
+  background: var(--theme-warning);
+}
+
+.dashboard-ssd-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+  border-color: var(--theme-primary);
+}
+
+.dashboard-ssd-stat-card.hdd:hover {
+  border-color: var(--theme-warning);
+}
+
+.dashboard-ssd-stat-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.dashboard-ssd-stat-icon-modern {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.dashboard-ssd-stat-type {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--theme-text-sub);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.dashboard-ssd-stat-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dashboard-ssd-stat-count {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--theme-text-main);
+  line-height: 1;
+}
+
+.dashboard-ssd-progress-bar {
+  height: 6px;
+  background: rgba(99, 102, 241, 0.15);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.dashboard-ssd-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.dashboard-ssd-progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.dashboard-ssd-stat-percent {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--theme-text-sub);
+  text-align: right;
+}
+
+/* --- System Status --- */
+.dashboard-ssd-system-status {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 16px;
+  min-width: 140px;
+  transition: all 0.3s ease;
+}
+
+.dashboard-ssd-system-status:hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(16, 185, 129, 0.1) 100%);
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
+}
+
+.dashboard-ssd-status-pulse {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--theme-success);
+  box-shadow: 0 0 12px var(--theme-success), 0 0 24px rgba(16, 185, 129, 0.4);
+  animation: pulse-modern 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse-modern {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 0 12px var(--theme-success), 0 0 24px rgba(16, 185, 129, 0.4);
+  }
+  50% { 
+    transform: scale(1.15);
+    box-shadow: 0 0 20px var(--theme-success), 0 0 40px rgba(16, 185, 129, 0.6);
+  }
+}
+
+.dashboard-ssd-status-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dashboard-ssd-status-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--theme-text-sub);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dashboard-ssd-status-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--theme-success);
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+  .dashboard-ssd-stats-modern {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .dashboard-ssd-stat-card {
+    padding: 14px;
+  }
+  
+  .dashboard-ssd-stat-count {
+    font-size: 24px;
+  }
+  
+  .dashboard-ssd-system-status {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* --- États (Loading, Error, Empty) --- */
+.dashboard-ssd-loading-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--theme-text-sub);
+}
+
+.dashboard-ssd-loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(99, 102, 241, 0.3);
+  border-top: 4px solid var(--theme-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+.dashboard-ssd-loading-text {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.dashboard-ssd-error-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--theme-danger);
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 16px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.dashboard-ssd-error-text {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.dashboard-ssd-retry-button {
+  margin-top: 16px;
+  padding: 10px 20px;
+  background: var(--theme-gradient);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dashboard-ssd-empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--theme-text-sub);
+}
+
+.dashboard-ssd-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.dashboard-ssd-empty-text {
+  font-size: 16px;
+}
+
+/* --- Point indicadores --- */
+.dashboard-ssd-indicator-primary {
+  color: var(--theme-primary);
+}
+
+.dashboard-ssd-indicator-secondary {
+  color: var(--theme-secondary);
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+  .dashboard-ssd-stats-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding: 24px 16px;
+  }
+  
+  .dashboard-ssd-stat-badge {
+    max-width: 100%;
+    width: 100%;
+    padding: 16px 20px;
+  }
+  
+  .dashboard-ssd-stat-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+  }
+  
+  .dashboard-ssd-stat-value {
+    font-size: 28px;
+  }
+  
+  .dashboard-ssd-stat-label {
+    font-size: 12px;
+  }
+  
+  .dashboard-ssd-status-indicator {
+    width: 100%;
+    justify-content: center;
+    padding: 16px 24px;
+    font-size: 13px;
+  }
+  
+  .dashboard-ssd-status-dot {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-ssd-stats-modern {
+    gap: 10px;
+  }
+  
+  .dashboard-ssd-stat-card {
+    padding: 12px;
+  }
+  
+  .dashboard-ssd-stat-icon-modern {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .dashboard-ssd-stat-count {
+    font-size: 20px;
+  }
+  
+  .dashboard-ssd-system-status {
+    padding: 12px 16px;
+  }
+}

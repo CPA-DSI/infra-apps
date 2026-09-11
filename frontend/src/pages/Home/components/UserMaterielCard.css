@@ -1,0 +1,119 @@
+.userMaterielCard {
+  background: var(--dk-surface-solid, #1e293b);
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  padding: 28px;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid var(--dk-border, rgba(99, 102, 241, 0.2));
+  overflow: hidden;
+  animation: fadeInUp 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+.userMaterielCard:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.userMaterielCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--dk-border-light, #475569);
+}
+
+.userMaterielCardHeaderRight {
+  margin-left: auto;
+}
+
+.userMaterielCardIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: white;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.userMaterielCardTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--dk-text-primary, #f8fafc);
+  margin: 0;
+}
+
+.userMaterielCardContent {
+  color: var(--dk-text-secondary, #94a3b8);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.userMaterielGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0;
+}
+
+.userMaterielField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+}
+
+.userMaterielFieldWithBorder {
+  border-bottom: 1px solid var(--dk-border-light, #475569);
+}
+
+.userMaterielFieldHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.userMaterielFieldIcon {
+  font-size: 12px;
+  color: var(--dk-accent-light, #a5b4fc);
+}
+
+.userMaterielLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--dk-text-muted, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.userMaterielValue {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--dk-text-primary, #f8fafc);
+  padding-left: 20px;
+  word-break: break-word;
+}
+
+.userMaterielEmpty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--dk-text-muted, #64748b);
+  font-size: 14px;
+}
+
+@media (max-width: 576px) {
+  .userMaterielGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .userMaterielCard {
+    padding: 20px;
+  }
+
+  .userMaterielCardHeader {
+    flex-wrap: wrap;
+  }
+}

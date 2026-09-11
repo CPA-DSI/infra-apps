@@ -1,0 +1,286 @@
+/* ========================================
+   UserDashboard.css - Modernized
+   ======================================== */
+
+:root {
+  /* Color System */
+  --ud-bg: #0f172a;
+  --ud-surface: #1e293b;
+  --ud-border: rgba(99, 102, 241, 0.2);
+  --ud-border-light: #475569;
+  --ud-text-primary: #f8fafc;
+  --ud-text-secondary: #94a3b8;
+  --ud-text-muted: #64748b;
+  --ud-accent: #6366f1;
+  --ud-accent-light: rgba(99, 102, 241, 0.15);
+  --ud-success: #10b981;
+  --ud-success-bg: rgba(16, 185, 129, 0.15);
+  --ud-danger: #ef4444;
+  --ud-danger-bg: rgba(239, 68, 68, 0.1);
+  --ud-danger-border: rgba(239, 68, 68, 0.3);
+  --ud-muted-bg: #334155;
+
+  /* Spacing Scale */
+  --ud-space-1: 4px;
+  --ud-space-2: 8px;
+  --ud-space-3: 12px;
+  --ud-space-4: 16px;
+  --ud-space-5: 20px;
+  --ud-space-6: 24px;
+  --ud-space-7: 28px;
+  --ud-space-8: 32px;
+  --ud-space-10: 40px;
+  --ud-space-12: 48px;
+  --ud-space-20: 80px;
+
+  /* Typography Scale */
+  --ud-text-xs: 0.75rem;
+  --ud-text-sm: 0.875rem;
+  --ud-text-base: 1rem;
+  --ud-text-lg: 1.125rem;
+  --ud-text-xl: 1.25rem;
+  --ud-text-2xl: 1.5rem;
+  --ud-text-3xl: 1.875rem;
+
+  /* Border Radius Scale */
+  --ud-radius-sm: 16px;
+  --ud-radius: 20px;
+  --ud-radius-lg: 24px;
+  --ud-radius-xl: 28px;
+
+  /* Shadow System */
+  --ud-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --ud-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.25);
+  --ud-shadow-md: 0 8px 20px rgba(0, 0, 0, 0.3);
+  --ud-shadow-lg: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+  --ud-shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.4);
+
+  /* Transitions */
+  --ud-transition-fast: 150ms ease;
+  --ud-transition: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --ud-transition-slow: 500ms ease;
+
+  /* Font */
+  --ud-font: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+  /* Container Query support */
+  container-type: inline-size;
+}
+
+.userDashboardContainer {
+  padding: var(--ud-space-8) var(--ud-space-6);
+  background: var(--ud-bg);
+  min-height: 100vh;
+  font-family: var(--ud-font);
+  container-type: inline-size;
+}
+
+.userDashboardLoading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ud-space-20) var(--ud-space-5);
+  gap: var(--ud-space-5);
+  background: var(--ud-surface);
+  border-radius: var(--ud-radius-lg);
+  box-shadow: var(--ud-shadow-md);
+  border: 1px solid var(--ud-border);
+  margin-block-end: var(--ud-space-6);
+}
+
+.userDashboardSpinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--ud-muted-bg);
+  border-top-color: var(--ud-accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.userDashboardLoadingText {
+  color: var(--ud-text-muted);
+  font-size: var(--ud-text-base);
+  font-weight: 500;
+}
+
+.userDashboardError {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ud-space-3);
+  padding: var(--ud-space-10);
+  background: var(--ud-danger-bg);
+  border: 1px solid var(--ud-danger-border);
+  border-radius: var(--ud-radius-lg);
+  color: var(--ud-danger);
+  font-size: var(--ud-text-base);
+  font-weight: 500;
+  box-shadow: var(--ud-shadow-sm);
+  margin-block-end: var(--ud-space-6);
+}
+
+.userDashboardError i {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.userDashboardEmptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ud-space-20) var(--ud-space-5);
+  gap: var(--ud-space-4);
+  background: var(--ud-surface);
+  border-radius: var(--ud-radius-xl);
+  box-shadow: var(--ud-shadow-md);
+  border: 1px solid var(--ud-border);
+  text-align: center;
+  margin-block-end: var(--ud-space-6);
+}
+
+.userDashboardEmptyStateIcon {
+  font-size: 48px;
+  color: var(--ud-text-muted);
+  opacity: 0.8;
+}
+
+.userDashboardEmptyStateTitle {
+  font-size: var(--ud-text-xl);
+  font-weight: 600;
+  color: var(--ud-text-primary);
+  margin: 0;
+}
+
+.userDashboardEmptyStateText {
+  font-size: var(--ud-text-sm);
+  color: var(--ud-text-muted);
+  margin: 0;
+  max-width: 400px;
+  line-height: 1.5;
+}
+
+.userDashboardContent {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: var(--ud-space-6);
+  align-items: start;
+  margin-block-start: var(--ud-space-6);
+}
+
+.userDashboardLeftColumn {
+  min-width: 0;
+}
+
+.userDashboardRightColumn {
+  min-width: 0;
+}
+
+.userDashboardTabsCard {
+  background: var(--ud-surface);
+  border-radius: var(--ud-radius-xl);
+  box-shadow: var(--ud-shadow-md);
+  padding: var(--ud-space-6);
+  border: 1px solid var(--ud-border);
+  overflow: hidden;
+  animation: fadeInUp 0.6s ease-out forwards;
+  opacity: 0;
+  animation-delay: 0.2s;
+  transition: box-shadow var(--ud-transition-fast), transform var(--ud-transition-fast);
+  margin-block-end: var(--ud-space-6);
+}
+
+.userDashboardTabsCard:hover {
+  box-shadow: var(--ud-shadow-lg);
+  transform: translateY(-2px);
+}
+
+.userDashboardTabContent {
+  margin-block-start: var(--ud-space-5);
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@container (max-width: 992px) {
+  .userDashboardContainer {
+    padding: var(--ud-space-6) var(--ud-space-4);
+  }
+
+  .userDashboardContent {
+    grid-template-columns: 1fr;
+    gap: var(--ud-space-5);
+  }
+
+  .userDashboardTabsCard {
+    padding: var(--ud-space-5);
+  }
+}
+
+@container (max-width: 576px) {
+  .userDashboardContainer {
+    padding: var(--ud-space-5) var(--ud-space-3);
+  }
+
+  .userDashboardTabsCard {
+    padding: var(--ud-space-4);
+    border-radius: var(--ud-radius-lg);
+  }
+
+  .userDashboardEmptyState {
+    padding: var(--ud-space-10) var(--ud-space-4);
+  }
+
+  .userDashboardEmptyStateTitle {
+    font-size: var(--ud-text-lg);
+  }
+
+  .userDashboardTabsCard {
+    animation: none;
+    opacity: 1;
+  }
+
+  .userDashboardTabContent {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .userDashboardTabsCard {
+    animation: none;
+    opacity: 1;
+  }
+
+  .userDashboardTabContent {
+    animation: none;
+  }
+
+  .userDashboardSpinner {
+    animation: none;
+  }
+}

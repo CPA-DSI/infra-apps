@@ -1,0 +1,18 @@
+/* Suppression de la transparence sur la modale de confirmation */
+.confirm-delete-modal .modal-content {
+    background-color: white !important;
+    border-radius: 16px;
+    box-shadow: 0 20px 35px rgba(0, 0, 0, 0.2);
+    opacity: 1 !important;
+}
+
+.confirm-delete-modal .modal-header,
+.confirm-delete-modal .modal-body,
+.confirm-delete-modal .modal-footer {
+    background-color: white !important;
+}
+
+.confirm-delete-modal .modal-backdrop.show {
+    opacity: 0.5 !important;
+    background-color: black !important;
+}

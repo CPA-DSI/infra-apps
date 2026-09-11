@@ -1,0 +1,266 @@
+/* ============================================
+   QuickPreviewModal.css
+   ============================================ */
+
+/* Fond du modal : correction de la transparence */
+.quick-preview-modal .modal-content {
+  background-color: #ffffff !important;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.quick-preview-modal .modal-header {
+  border-bottom: 1px solid #e5e7eb !important;
+  padding: 1rem 1.5rem !important;
+  background-color: #ffffff !important;
+}
+
+.quick-preview-modal .modal-body {
+  padding: 1.5rem !important;
+  background-color: #ffffff !important;
+}
+
+.quick-preview-modal .modal-footer {
+  border-top: 1px solid #e5e7eb !important;
+  padding: 1rem 1.5rem !important;
+  background-color: #ffffff !important;
+}
+
+.quick-preview-modal .modal-backdrop {
+  background: rgba(15, 23, 42, 0.6) !important;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.quick-preview-modal .modal-content {
+  animation: modalFadeIn 0.25s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* --- Sections de prévisualisation --- */
+.preview-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.preview-frame-wrapper {
+  position: relative;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.preview-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 2rem;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.preview-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 2.5rem 1rem;
+  text-align: center;
+}
+
+.preview-error p {
+  margin: 0;
+  color: #334155;
+  font-weight: 500;
+}
+
+.preview-error small {
+  color: #94a3b8;
+}
+
+.preview-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.preview-footer .text-muted {
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.preview-tabs button:focus {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+.preview-tabs button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+}
+
+/* --- CSV / Texte --- */
+.preview-csv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  table-layout: auto;
+}
+
+.preview-csv-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 10px 12px;
+  border-bottom: 2px solid #e5e7eb;
+  border-right: 1px solid #f3f4f6;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  background-color: #f8fafc;
+  white-space: nowrap;
+  min-width: 120px;
+}
+
+.preview-csv-table tbody td {
+  padding: 6px 8px;
+  border-bottom: 1px solid #f3f4f6;
+  border-right: 1px solid #f3f4f6;
+  vertical-align: top;
+}
+
+.preview-csv-table tbody tr:nth-child(even) {
+  background-color: #ffffff;
+}
+
+.preview-csv-table tbody tr:nth-child(odd) {
+  background-color: #f9fafb;
+}
+
+.preview-csv-table tbody tr:hover {
+  background-color: #eef2ff;
+}
+
+.preview-csv-cell-index {
+  color: #9ca3af;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.preview-csv-input {
+  width: 100%;
+  min-width: 80px;
+  padding: 6px 8px;
+  border: 1px solid #6366f1;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  background-color: #eef2ff;
+  outline: none;
+  box-sizing: border-box;
+  color: #1f2937;
+}
+
+.preview-csv-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.preview-csv-pagination .btn-group {
+  gap: 8px;
+}
+
+/* --- Word (mammoth) --- */
+.preview-docx-content {
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #1f2937;
+}
+
+.preview-docx-content h1,
+.preview-docx-content h2,
+.preview-docx-content h3,
+.preview-docx-content h4,
+.preview-docx-content h5,
+.preview-docx-content h6 {
+  margin-top: 1.2em;
+  margin-bottom: 0.6em;
+  font-weight: 600;
+  color: #111827;
+}
+
+.preview-docx-content p {
+  margin: 0 0 0.8em;
+}
+
+.preview-docx-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.8em 0;
+  font-size: 0.9rem;
+}
+
+.preview-docx-content th,
+.preview-docx-content td {
+  border: 1px solid #d1d5db;
+  padding: 6px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.preview-docx-content th {
+  background-color: #f3f4f6;
+  font-weight: 600;
+}
+
+.preview-docx-content ul,
+.preview-docx-content ol {
+  padding-left: 1.5em;
+  margin: 0 0 0.8em;
+}
+
+.preview-docx-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+.preview-docx-content blockquote {
+  border-left: 4px solid #6366f1;
+  padding-left: 1em;
+  margin: 0.8em 0;
+  color: #374151;
+  background: #f9fafb;
+  padding: 0.6em 1em;
+  border-radius: 0 6px 6px 0;
+}

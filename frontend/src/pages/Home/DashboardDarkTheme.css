@@ -1,0 +1,76 @@
+/* ========================================
+   Dashboard Dark Theme - Shared System
+   ======================================== */
+
+:root {
+  /* Color System */
+  --dk-bg-primary: #0f172a;
+  --dk-bg-secondary: #1e293b;
+  --dk-bg-tertiary: #334155;
+  --dk-bg-hover: #475569;
+  --dk-surface: rgba(30, 41, 59, 0.8);
+  --dk-surface-solid: #1e293b;
+  --dk-border: rgba(99, 102, 241, 0.2);
+  --dk-border-light: #475569;
+  --dk-text-primary: #f8fafc;
+  --dk-text-secondary: #94a3b8;
+  --dk-text-muted: #64748b;
+  --dk-accent: #6366f1;
+  --dk-accent-light: #a5b4fc;
+  --dk-accent-dark: #4f46e5;
+  --dk-success: #10b981;
+  --dk-success-bg: rgba(16, 185, 129, 0.15);
+  --dk-success-border: rgba(16, 185, 129, 0.3);
+  --dk-warning: #f59e0b;
+  --dk-warning-bg: rgba(245, 158, 11, 0.15);
+  --dk-danger: #ef4444;
+  --dk-danger-bg: rgba(239, 68, 68, 0.1);
+  --dk-danger-border: rgba(239, 68, 68, 0.3);
+
+  /* Spacing Scale */
+  --dk-space-1: 4px;
+  --dk-space-2: 8px;
+  --dk-space-3: 12px;
+  --dk-space-4: 16px;
+  --dk-space-5: 20px;
+  --dk-space-6: 24px;
+  --dk-space-7: 28px;
+  --dk-space-8: 32px;
+  --dk-space-10: 40px;
+  --dk-space-12: 48px;
+  --dk-space-16: 64px;
+
+  /* Typography Scale */
+  --dk-text-xs: 0.75rem;
+  --dk-text-sm: 0.875rem;
+  --dk-text-base: 1rem;
+  --dk-text-lg: 1.125rem;
+  --dk-text-xl: 1.25rem;
+  --dk-text-2xl: 1.5rem;
+  --dk-text-3xl: 1.875rem;
+
+  /* Border Radius Scale */
+  --dk-radius-sm: 16px;
+  --dk-radius: 20px;
+  --dk-radius-lg: 24px;
+  --dk-radius-xl: 28px;
+
+  /* Shadow System */
+  --dk-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --dk-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.25);
+  --dk-shadow-md: 0 8px 20px rgba(0, 0, 0, 0.3);
+  --dk-shadow-lg: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+  --dk-shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.4);
+  --dk-glow: 0 0 40px rgba(99, 102, 241, 0.3);
+
+  /* Transitions */
+  --dk-transition-fast: 150ms ease;
+  --dk-transition: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --dk-transition-slow: 500ms ease;
+
+  /* Font */
+  --dk-font: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+  /* Container Query support */
+  container-type: inline-size;
+}

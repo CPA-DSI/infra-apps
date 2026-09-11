@@ -1,0 +1,151 @@
+@import '../../styles/theme.css';
+@import '../../styles/animations.css';
+@import '../../styles/ModalSystem.css';
+@import '../../styles/Buttons.css';
+
+/* ============================================ */
+/* STYLES POUR LE MODAL D'AJOUT (AddStockModal) */
+/* ============================================ */
+
+.page-stock .modal .add-modal-overlay {
+    position: relative !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+    z-index: auto !important;
+    width: auto !important;
+    height: auto !important;
+}
+
+.page-stock .add-modal-overlay .modal-content {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.page-stock .add-modal-overlay .modal-body {
+    background-color: transparent !important;
+    padding: 0 !important;
+}
+
+.page-stock .add-modal-overlay .modal-header {
+    display: none !important;
+}
+
+.page-stock .add-modal-content {
+    background-color: var(--color-bg);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    font-family: 'Inter', system-ui, sans-serif;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto;
+}
+
+/* ============================================ */
+/* STYLES POUR LE MODAL D'ÉDITION */
+/* ============================================ */
+
+.custom-edit-modal .modal-content {
+    background-color: var(--color-bg) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.15) !important;
+    border: none !important;
+}
+
+/* Version par défaut (fond blanc) sans !important pour éviter les conflits */
+.custom-edit-modal .modal-header {
+    background-color: var(--color-bg);
+    border-bottom: 1px solid #e9ecef;
+    border-radius: 24px 24px 0 0;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+}
+
+.custom-edit-modal .modal-body {
+    background-color: var(--color-bg) !important;
+    padding: 1.5rem !important;
+}
+
+/* Formulaires */
+.stock-form-modern .form-label {
+    font-size: 0.9rem;
+    margin-bottom: 0.4rem;
+    color: var(--color-text-main);
+    font-weight: 600;
+}
+
+.stock-form-modern .form-control,
+.stock-form-modern .form-select,
+.stock-form-modern textarea {
+    background-color: var(--color-bg) !important;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    padding: 0.6rem 1rem;
+}
+
+.stock-form-modern .form-control:focus,
+.stock-form-modern .form-select:focus,
+.stock-form-modern textarea:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    outline: none;
+}
+
+.stock-form-modern .btn {
+    border-radius: 40px;
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.stock-form-modern .btn-primary {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.stock-form-modern .btn-primary:hover {
+    background-color: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+    transform: translateY(-1px);
+}
+
+.stock-form-modern .btn-secondary:hover {
+    transform: translateY(-1px);
+}
+
+/* Arrière-plan flou */
+.page-stock .modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+}
+
+.page-stock .modal-backdrop.show {
+    opacity: 1 !important;
+}
+
+/* ========== COULEUR VIOLETTE POUR L'EN-TÊTE ========== */
+.custom-edit-modal .modal-header {
+    background-color: #7D5FF4 !important;
+    border-bottom: none !important;
+    border-radius: 24px 24px 0 0 !important;
+    padding: 1.25rem 1.5rem !important;
+    display: flex !important;
+}
+
+.custom-edit-modal .btn-close {
+    filter: brightness(0) invert(1);
+}
+
+/* Texte blanc dans le header */
+.custom-edit-modal .modal-header .modal-title,
+.custom-edit-modal .modal-header p {
+    color: white !important;
+}

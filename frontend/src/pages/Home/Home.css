@@ -1,0 +1,207 @@
+/* Home.module.css */
+
+.homeContainer {
+  padding: 40px 24px 40px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+  min-height: 100vh;
+}
+
+.headerSection {
+  margin-bottom: 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  padding: 28px 32px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 10px 20px rgba(102, 126, 234, 0.2);
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.headerText {
+  flex: 1;
+  min-width: 200px;
+}
+
+.title {
+  color: #ffffff;
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.subtitle {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 15px;
+  font-weight: 400;
+  margin: 0;
+}
+
+.cardGrid {
+  display: grid;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.cardGridFull {
+  grid-template-columns: 1fr;
+  min-height: 700px;
+}
+
+.cardGridHalf {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.cardGridThird {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.dashboardCard {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+  padding: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  overflow: hidden;
+  min-height: 650px;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboardCard:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 12px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.cardTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #334155;
+  margin: 0;
+}
+
+.cardIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 14px;
+  margin-right: 10px;
+}
+
+/* Style pour les icônes dans les titres */
+.cardTitle i {
+  margin-right: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 14px;
+}
+
+.cardContent {
+  min-height: 200px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ajustement du contenu pour les graphiques */
+.cardContent > div {
+  width: 100%;
+  height: 100%;
+  min-height: 600px;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .cardGridHalf {
+    grid-template-columns: 1fr;
+  }
+  
+  .cardGridThird {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .headerSection {
+    padding: 20px;
+  }
+  
+  .headerContent {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .title {
+    font-size: 24px;
+  }
+  
+  .cardGridThird {
+    grid-template-columns: 1fr;
+  }
+  
+  .dashboardCard {
+    padding: 16px;
+  }
+}
+
+/* Animation d'entrée */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dashboardCard {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.dashboardCard:nth-child(1) { animation-delay: 0.05s; }
+.dashboardCard:nth-child(2) { animation-delay: 0.1s; }
+.dashboardCard:nth-child(3) { animation-delay: 0.15s; }
+.dashboardCard:nth-child(4) { animation-delay: 0.2s; }
+.dashboardCard:nth-child(5) { animation-delay: 0.25s; }
+.dashboardCard:nth-child(6) { animation-delay: 0.3s; }
+.dashboardCard:nth-child(7) { animation-delay: 0.35s; }
+
+/* Cards with taller content (CountEquipe table) */
+.dashboardCardTall {
+  min-height: 800px;
+}
+
+/* Section separator for better visual separation */
+.sectionSeparator {
+  height: 24px;
+  width: 100%;
+}
