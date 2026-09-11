@@ -22,8 +22,12 @@ const PORT = process.env.PORT || 4000;
 
 // --- 2. MIDDLEWARES ---
 
+const allowedOrigins = process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(',').map((origin) => origin.trim())
+    : ['http://localhost:3000'];
+
 app.use(cors({
-    origin: ['http://localhost:3000', 'https://votre-application-frontend.com'],
+    origin: allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
@@ -137,19 +141,21 @@ app.get('/', (req, res) => {
     res.status(200).json({ service: "API Gestion Matériel", status: "Online", robot: "Intégré (Quotidien & Hebdomadaire)" });
 });
 
-// Pour déboguer, ajoute ceci pour voir toutes les routes enregistrées
-console.log('Routes enregistrées:');
-app._router.stack.forEach((r) => {
-  if (r.route && r.route.path) {
-    console.log(`${Object.keys(r.route.methods)} ${r.route.path}`);
-  } else if (r.name === 'router' && r.handle.stack) {
-    r.handle.stack.forEach((layer) => {
-      if (layer.route && layer.route.path) {
-        console.log(`${Object.keys(layer.route.methods)} /api/historique${layer.route.path}`);
-      }
-    });
-  }
-});
+// Pour déboguer, ajoute ceci pour voir toutes les routes enregistrées (dev uniquement)
+if (process.env.NODE_ENV !== 'production') {
+  console.log('Routes enregistrées:');
+  app._router.stack.forEach((r) => {
+    if (r.route && r.route.path) {
+      console.log(`${Object.keys(r.route.methods)} ${r.route.path}`);
+    } else if (r.name === 'router' && r.handle.stack) {
+      r.handle.stack.forEach((layer) => {
+        if (layer.route && layer.route.path) {
+          console.log(`${Object.keys(layer.route.methods)} /api/historique${layer.route.path}`);
+        }
+      });
+    }
+  });
+}
 // --- 5. LANCEMENT ---
 
 app.listen(PORT, async () => {
