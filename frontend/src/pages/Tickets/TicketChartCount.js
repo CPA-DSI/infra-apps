@@ -250,7 +250,12 @@ const useAnimatedStats = (targetStats, isLoading) => {
   const [animatedStats, setAnimatedStats] = useState(INITIAL_STATS);
   const animationRef = useRef(null);
   const previousStatsRef = useRef(INITIAL_STATS);
-  
+  const animatedStatsRef = useRef(animatedStats);
+
+  useEffect(() => {
+    animatedStatsRef.current = animatedStats;
+  }, [animatedStats]);
+
   useEffect(() => {
     // Annuler l'animation précédente
     if (animationRef.current) {
@@ -268,7 +273,7 @@ const useAnimatedStats = (targetStats, isLoading) => {
     let currentStep = 0;
     
     // Stocker les stats précédentes pour l'interpolation
-    previousStatsRef.current = animatedStats;
+    previousStatsRef.current = animatedStatsRef.current;
     const fromStats = { ...previousStatsRef.current };
     const toStats = { ...targetStats };
     
@@ -583,7 +588,7 @@ const TicketChartCount = () => {
   // Calcul des pourcentages avec useMemo pour la performance
   const percentages = useMemo(
     () => calculatePercentages(stats),
-    [stats.NOUVEAU, stats.EN_COURS, stats.RESOLU, stats.FERME, stats.total]
+    [stats]
   );
   
   // Animation des statistiques

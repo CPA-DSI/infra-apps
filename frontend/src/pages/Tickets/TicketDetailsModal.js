@@ -84,7 +84,7 @@ const TicketDetailsModal = ({ show, handleClose, ticketId }) => {
             document.addEventListener('keydown', handleEsc);
             return () => document.removeEventListener('keydown', handleEsc);
         }
-    }, [show]);
+    }, [show, handleClose]);
 
     const statutConfig = ticket ? (STATUS_CONFIG[ticket.statut] || STATUS_CONFIG.NOUVEAU) : STATUS_CONFIG.NOUVEAU;
     const prioriteConfig = ticket ? (PRIORITY_CONFIG[ticket.priorite] || PRIORITY_CONFIG.MOYENNE) : PRIORITY_CONFIG.MOYENNE;

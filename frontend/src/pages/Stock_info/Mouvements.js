@@ -126,60 +126,14 @@ const Mouvements = () => {
     const handleAddClick = () => setShowAddModal(true);
     const handleCloseAdd = () => setShowAddModal(false);
 
-    const handleDetailsClick = (row) => {
-        setSelectedItemId(row.id_mouvement);
-        setShowDetailsModal(true);
-    };
-
     const handleCloseDetailsModal = () => {
         setShowDetailsModal(false);
         setSelectedItemId(null);
     };
 
-    const handleEditClick = (row) => {
-        setSelectedItem(row);
-        setShowEditModal(true);
-    };
     const handleCloseEdit = () => {
         setShowEditModal(false);
         setSelectedItem(null);
-    };
-    
-    // ✅ NOUVELLE GESTION DE LA SUPPRESSION AVEC SWEETALERT
-    const handleDeleteClick = (row) => {
-        // Récupération des informations
-        const produit = row.produits?.nom_produit || row.nom_produit || 'Produit inconnu';
-        const typeMouvement = row.type_mouvement === 'ENTREE' ? 'Entrée' :
-                            row.type_mouvement === 'SORTIE' ? 'Sortie' :
-                            row.type_mouvement === 'ENTREE_QUANTITE' ? 'Ajustement' : row.type_mouvement || 'Type inconnu';
-        const dateFormatee = new Date(row.date_mouvement).toLocaleDateString('fr-FR');
-
-        Swal.fire({
-            title: 'Confirmation de suppression',
-            html: `Supprimer définitivement ce mouvement ?<br><br>
-                <strong>Produit :</strong> ${produit}<br>
-                <strong>Type :</strong> ${typeMouvement}<br>
-                <strong>Date :</strong> ${dateFormatee}`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Oui, supprimer !',
-            cancelButtonText: 'Annuler'
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                try {
-                    await deleteMouvement(row.id_mouvement);
-                    setSuccessMessage("Mouvement supprimé avec succès !");
-                    fetchAllMouvements();
-                    setTimeout(() => setSuccessMessage(null), 3000);
-                } catch (err) {
-                    console.error("Erreur suppression :", err);
-                    setError("Impossible de supprimer ce mouvement.");
-                    setTimeout(() => setError(null), 4000);
-                }
-            }
-        });
     };
 
     const fetchAllMouvements = useCallback(async () => {
@@ -213,6 +167,53 @@ const Mouvements = () => {
 
     useEffect(() => {
         fetchAllMouvements();
+    }, [fetchAllMouvements]);
+
+    const handleDetailsClick = useCallback((row) => {
+        setSelectedItemId(row.id_mouvement);
+        setShowDetailsModal(true);
+    }, []);
+
+    const handleEditClick = useCallback((row) => {
+        setSelectedItem(row);
+        setShowEditModal(true);
+    }, []);
+
+    // ✅ NOUVELLE GESTION DE LA SUPPRESSION AVEC SWEETALERT
+    const handleDeleteClick = useCallback((row) => {
+        // Récupération des informations
+        const produit = row.produits?.nom_produit || row.nom_produit || 'Produit inconnu';
+        const typeMouvement = row.type_mouvement === 'ENTREE' ? 'Entrée' :
+                            row.type_mouvement === 'SORTIE' ? 'Sortie' :
+                            row.type_mouvement === 'ENTREE_QUANTITE' ? 'Ajustement' : row.type_mouvement || 'Type inconnu';
+        const dateFormatee = new Date(row.date_mouvement).toLocaleDateString('fr-FR');
+
+        Swal.fire({
+            title: 'Confirmation de suppression',
+            html: `Supprimer définitivement ce mouvement ?<br><br>
+                <strong>Produit :</strong> ${produit}<br>
+                <strong>Type :</strong> ${typeMouvement}<br>
+                <strong>Date :</strong> ${dateFormatee}`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Oui, supprimer !',
+            cancelButtonText: 'Annuler'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    await deleteMouvement(row.id_mouvement);
+                    setSuccessMessage("Mouvement supprimé avec succès !");
+                    fetchAllMouvements();
+                    setTimeout(() => setSuccessMessage(null), 3000);
+                } catch (err) {
+                    console.error("Erreur suppression :", err);
+                    setError("Impossible de supprimer ce mouvement.");
+                    setTimeout(() => setError(null), 4000);
+                }
+            }
+        });
     }, [fetchAllMouvements]);
 
     // --- Fonctions de gestion de succès après les opérations CUD ---
@@ -332,14 +333,6 @@ const Mouvements = () => {
     // --- FONCTIONS D'IMPORT INTÉGRÉ ---
     // ==========================================================
 
-    // Ouvrir/fermer la section d'import
-    const toggleImportSection = useCallback(() => {
-        if (!showImportSection) {
-            resetImportState();
-        }
-        setShowImportSection(prev => !prev);
-    }, [showImportSection]);
-
     // Réinitialiser l'état d'import
     const resetImportState = useCallback(() => {
         setImportFile(null);
@@ -354,6 +347,14 @@ const Mouvements = () => {
             fileInputRef.current.value = '';
         }
     }, []);
+
+    // Ouvrir/fermer la section d'import
+    const toggleImportSection = useCallback(() => {
+        if (!showImportSection) {
+            resetImportState();
+        }
+        setShowImportSection(prev => !prev);
+    }, [showImportSection, resetImportState]);
 
     // Gestion du drag & drop
     const handleDragEnter = useCallback((e) => {
@@ -374,17 +375,38 @@ const Mouvements = () => {
         setIsDragging(true);
     }, []);
 
+    // Prévisualiser le fichier
+    const previewFile = useCallback((file) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+
+                // Afficher un aperçu des 5 premières lignes
+                setImportPreview(jsonData.slice(0, 5));
+                setImportData(jsonData);
+            } catch (error) {
+                console.error('Erreur lors de la lecture du fichier:', error);
+                setImportError('Erreur lors de la lecture du fichier. Vérifiez le format.');
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }, []);
+
     const handleDrop = useCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
         setIsDragging(false);
-        
+
         const droppedFiles = e.dataTransfer.files;
         if (droppedFiles.length > 0) {
             const selectedFile = droppedFiles[0];
             const validExtensions = ['.xlsx', '.xls', '.csv'];
             const fileExt = selectedFile.name.split('.').pop().toLowerCase();
-            
+
             if (validExtensions.includes(`.${fileExt}`)) {
                 setImportFile(selectedFile);
                 setImportError(null);
@@ -393,7 +415,7 @@ const Mouvements = () => {
                 setImportError('Format non supporté. Utilisez .xlsx, .xls ou .csv');
             }
         }
-    }, []);
+    }, [previewFile]);
 
     // Gestion de la sélection de fichier
     const handleFileSelect = useCallback((e) => {
@@ -401,7 +423,7 @@ const Mouvements = () => {
         if (selectedFile) {
             const validExtensions = ['.xlsx', '.xls', '.csv'];
             const fileExt = selectedFile.name.split('.').pop().toLowerCase();
-            
+
             if (validExtensions.includes(`.${fileExt}`)) {
                 setImportFile(selectedFile);
                 setImportError(null);
@@ -411,7 +433,7 @@ const Mouvements = () => {
                 e.target.value = '';
             }
         }
-    }, []);
+    }, [previewFile]);
 
     // Supprimer le fichier sélectionné
     const handleRemoveFile = useCallback(() => {
@@ -422,27 +444,6 @@ const Mouvements = () => {
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
-    }, []);
-
-    // Prévisualiser le fichier
-    const previewFile = useCallback((file) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-                
-                // Afficher un aperçu des 5 premières lignes
-                setImportPreview(jsonData.slice(0, 5));
-                setImportData(jsonData);
-            } catch (error) {
-                console.error('Erreur lors de la lecture du fichier:', error);
-                setImportError('Erreur lors de la lecture du fichier. Vérifiez le format.');
-            }
-        };
-        reader.readAsArrayBuffer(file);
     }, []);
 
 // Fonction d'import améliorée avec gestion de progression réelle
@@ -753,7 +754,7 @@ const handleImportSubmit = useCallback(async () => {
             ),
             ignoreRowClick: true, allowOverflow: true, button: true, width: '120px',
         },
-    ], []);
+    ], [handleDetailsClick, handleEditClick, handleDeleteClick]);
 
     return (
         <div className="container-fluid py-2 px-2 mouvements-container">

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import DataTable from 'react-data-table-component';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
@@ -582,12 +582,7 @@ const UsersManager = () => {
         });
     };
 
-    useEffect(() => {
-        loadData();
-        loadMaterielsList();
-    }, []);
-
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         setLoading(true);
         try {
             const data = await fetchUsers();
@@ -597,7 +592,7 @@ const UsersManager = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     const loadMaterielsList = async () => {
         try {
@@ -607,6 +602,11 @@ const UsersManager = () => {
             console.error('Erreur chargement matériels:', error.message);
         }
     };
+
+    useEffect(() => {
+        loadData();
+        loadMaterielsList();
+    }, [loadData]);
 
     const handleRefresh = async () => {
         setLoading(true);
@@ -787,10 +787,52 @@ const UsersManager = () => {
         saveAs(blob, filename);
     };
 
-    const handleToggleStatus = async (user, newStatus) => {
+    const handleStatusUpdate = useCallback(async (user, isActive) => {
+        try {
+            const payload = {
+                is_active: isActive,
+                emails: (user.emails || []).map((e, idx) => ({
+                    email: e.email || '',
+                    pass_mail: e.pass_mail || '',
+                    password: e.password || '',
+                    is_primary: idx === 0 ? true : (e.is_primary ?? false),
+                    is_verified: e.is_verified ?? false
+                }))
+            };
+
+            const primaryEmail = payload.emails[0];
+            if (primaryEmail?.password && primaryEmail.password.trim() !== '' && !primaryEmail.password.trim().startsWith('$2b$')) {
+                payload.password_1 = primaryEmail.password.trim();
+            }
+
+            await updateUser(user.id_user, payload);
+            await loadData();
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Statut mis à jour !',
+                text: isActive ? 'Le compte a été activé.' : 'Le compte a été désactivé.',
+                timer: 2000, showConfirmButton: false, toast: true, position: 'top-end'
+            });
+            setSuccessMessage(isActive ? 'Le compte a été activé.' : 'Le compte a été désactivé.');
+            setTimeout(() => setSuccessMessage(null), 3000);
+        } catch (error) {
+            console.error('Erreur lors du changement de statut:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Erreur',
+                text: 'Impossible de modifier le statut. Veuillez réessayer.',
+                confirmButtonText: 'OK'
+            });
+            setError('Impossible de modifier le statut. Veuillez réessayer.');
+            setTimeout(() => setError(null), 5000);
+        }
+    }, [loadData]);
+
+    const handleToggleStatus = useCallback((user, newStatus) => {
         const actionLabel = newStatus ? 'activer' : 'désactiver';
         const actionColor = newStatus ? '#22c55e' : '#dc3545';
-        
+
         Swal.fire({
             title: 'Êtes-vous sûr ?',
             html: `Cette action va <strong>${actionLabel}</strong> le compte de <strong>${user.materiel?.utilisateur || 'cet utilisateur'}</strong>.`,
@@ -806,7 +848,7 @@ const UsersManager = () => {
                 handleStatusUpdate(user, newStatus);
             }
         });
-    };
+    }, [handleStatusUpdate]);
 
     const openEdit = (user) => {
         setUserModalData(user);
@@ -910,7 +952,7 @@ const UsersManager = () => {
     }, [users]);
 
     // Fonction pour mettre à jour le rôle directement depuis le tableau
-    const handleRoleUpdate = async (user, newRole) => {
+    const handleRoleUpdate = useCallback(async (user, newRole) => {
         try {
             const payload = {
                 role: newRole,
@@ -950,49 +992,7 @@ const UsersManager = () => {
             setError('Impossible de modifier le rôle. Veuillez réessayer.');
             setTimeout(() => setError(null), 5000);
         }
-    };
-
-    const handleStatusUpdate = async (user, isActive) => {
-        try {
-            const payload = {
-                is_active: isActive,
-                emails: (user.emails || []).map((e, idx) => ({
-                    email: e.email || '',
-                    pass_mail: e.pass_mail || '',
-                    password: e.password || '',
-                    is_primary: idx === 0 ? true : (e.is_primary ?? false),
-                    is_verified: e.is_verified ?? false
-                }))
-            };
-
-            const primaryEmail = payload.emails[0];
-            if (primaryEmail?.password && primaryEmail.password.trim() !== '' && !primaryEmail.password.trim().startsWith('$2b$')) {
-                payload.password_1 = primaryEmail.password.trim();
-            }
-
-            await updateUser(user.id_user, payload);
-            await loadData();
-
-            Swal.fire({
-                icon: 'success',
-                title: 'Statut mis à jour !',
-                text: isActive ? 'Le compte a été activé.' : 'Le compte a été désactivé.',
-                timer: 2000, showConfirmButton: false, toast: true, position: 'top-end'
-            });
-            setSuccessMessage(isActive ? 'Le compte a été activé.' : 'Le compte a été désactivé.');
-            setTimeout(() => setSuccessMessage(null), 3000);
-        } catch (error) {
-            console.error('Erreur lors du changement de statut:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Erreur',
-                text: 'Impossible de modifier le statut. Veuillez réessayer.',
-                confirmButtonText: 'OK'
-            });
-            setError('Impossible de modifier le statut. Veuillez réessayer.');
-            setTimeout(() => setError(null), 5000);
-        }
-    };
+    }, [loadData]);
 
     const columns = useMemo(() => [
         { 
@@ -1208,7 +1208,7 @@ const UsersManager = () => {
             width: '120px', 
             center: true
         }
-    ], [columnWidths]);
+    ], [columnWidths, handleRoleUpdate, handleToggleStatus, isDirection]);
 
     return (
         <div className="container-fluid py-2 px-2 page-mail" style={{ backgroundColor: '#f9fafb', minHeight: '100vh' }}>

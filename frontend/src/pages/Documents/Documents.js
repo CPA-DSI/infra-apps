@@ -123,11 +123,6 @@ function Documents() {
     setLoading(false);
   }, []);
 
-  useEffect(() => {
-    fetchDocs();
-    loadRelationData();
-  }, [fetchDocs]);
-
   const loadRelationData = useCallback(async () => {
     try {
       const [materiels, marques, produits, tickets] = await Promise.all([
@@ -146,6 +141,11 @@ function Documents() {
       console.warn('Données de relations non disponibles pour le modal:', e);
     }
   }, []);
+
+  useEffect(() => {
+    fetchDocs();
+    loadRelationData();
+  }, [fetchDocs, loadRelationData]);
 
   // --- Helpers ---
   const formatDate = (dateString) => {

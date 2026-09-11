@@ -638,7 +638,7 @@ const columns = useMemo(() => {
         { name: 'Nb Doc.', selector: row => row.documents_count, sortable: true, minWidth: '90px', grow: 1, center: true, cell: renderDocumentsCount, ignoreRowClick: true, allowOverflow: true, button: true },
         { name: 'Actions', cell: renderActions, ignoreRowClick: true, allowOverflow: true, button: true, width: '130px', grow: 0, center: true },
     ];
-}, [handleView, handleEdit, handleOpenHistoriqueModal, confirmDelete, handleToggleEstActif]);
+}, [handleView, handleEdit, handleOpenHistoriqueModal, confirmDelete, handleToggleEstActif, userRole]);
 
 // --- FONCTIONS D'IMPORT EXCEL ---
 const normalizeCell = (val) => {
@@ -860,14 +860,6 @@ const parseExcelFile = useCallback(async (file) => {
 
 // --- FONCTIONS POUR L'IMPORT INTÉGRÉ ---
 
-// Ouvrir/fermer la section d'import
-const toggleImportSection = useCallback(() => {
-    if (!showImportSection) {
-        resetImportState();
-    }
-    setShowImportSection(prev => !prev);
-}, [showImportSection]);
-
 // Réinitialiser l'état d'import
 const resetImportState = useCallback(() => {
     setImportFile(null);
@@ -883,6 +875,14 @@ const resetImportState = useCallback(() => {
         fileInputRef.current.value = '';
     }
 }, []);
+
+// Ouvrir/fermer la section d'import
+const toggleImportSection = useCallback(() => {
+    if (!showImportSection) {
+        resetImportState();
+    }
+    setShowImportSection(prev => !prev);
+}, [showImportSection, resetImportState]);
 
 // Gestion du drag & drop
 const handleDragEnter = useCallback((e) => {
@@ -903,56 +903,6 @@ const handleDragOver = useCallback((e) => {
     setIsDragging(true);
 }, []);
 
-const handleDrop = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    
-    const droppedFiles = e.dataTransfer.files;
-    if (droppedFiles.length > 0) {
-        const selectedFile = droppedFiles[0];
-        const validExtensions = ['.xlsx', '.xls', '.csv'];
-        const fileExt = selectedFile.name.split('.').pop().toLowerCase();
-        
-        if (validExtensions.includes(`.${fileExt}`)) {
-            setImportFile(selectedFile);
-            setImportError(null);
-            previewFile(selectedFile);
-        } else {
-            setImportError('Format non supporté. Utilisez .xlsx, .xls ou .csv');
-        }
-    }
-}, []);
-
-// Gestion de la sélection de fichier
-const handleFileSelect = useCallback((e) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-        const validExtensions = ['.xlsx', '.xls', '.csv'];
-        const fileExt = selectedFile.name.split('.').pop().toLowerCase();
-        
-        if (validExtensions.includes(`.${fileExt}`)) {
-            setImportFile(selectedFile);
-            setImportError(null);
-            previewFile(selectedFile);
-        } else {
-            setImportError('Format non supporté. Utilisez .xlsx, .xls ou .csv');
-            e.target.value = '';
-        }
-    }
-}, []);
-
-// Supprimer le fichier sélectionné
-const handleRemoveFile = useCallback(() => {
-    setImportFile(null);
-    setImportPreview([]);
-    setImportData([]);
-    setImportError(null);
-    if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-    }
-}, []);
-
 // Prévisualiser le fichier
 const previewFile = useCallback((file) => {
     const reader = new FileReader();
@@ -962,13 +912,13 @@ const previewFile = useCallback((file) => {
             const workbook = XLSX.read(data, { type: 'array' });
             const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
             const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-            
+
             const excelDateToJSDate = (excelDate) => {
                 const excelEpoch = new Date(Date.UTC(1899, 11, 30));
                 const msPerDay = 24 * 60 * 60 * 1000;
                 return new Date(excelEpoch.getTime() + (excelDate * msPerDay));
             };
-            
+
             jsonData.forEach(row => {
                 Object.keys(row).forEach(key => {
                     const val = row[key];
@@ -980,7 +930,7 @@ const previewFile = useCallback((file) => {
                     }
                 });
             });
-            
+
             setImportPreview(jsonData.slice(0, 5));
             setImportData(jsonData);
         } catch (error) {
@@ -989,6 +939,56 @@ const previewFile = useCallback((file) => {
         }
     };
     reader.readAsArrayBuffer(file);
+}, []);
+
+const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const droppedFiles = e.dataTransfer.files;
+    if (droppedFiles.length > 0) {
+        const selectedFile = droppedFiles[0];
+        const validExtensions = ['.xlsx', '.xls', '.csv'];
+        const fileExt = selectedFile.name.split('.').pop().toLowerCase();
+
+        if (validExtensions.includes(`.${fileExt}`)) {
+            setImportFile(selectedFile);
+            setImportError(null);
+            previewFile(selectedFile);
+        } else {
+            setImportError('Format non supporté. Utilisez .xlsx, .xls ou .csv');
+        }
+    }
+}, [previewFile]);
+
+// Gestion de la sélection de fichier
+const handleFileSelect = useCallback((e) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+        const validExtensions = ['.xlsx', '.xls', '.csv'];
+        const fileExt = selectedFile.name.split('.').pop().toLowerCase();
+
+        if (validExtensions.includes(`.${fileExt}`)) {
+            setImportFile(selectedFile);
+            setImportError(null);
+            previewFile(selectedFile);
+        } else {
+            setImportError('Format non supporté. Utilisez .xlsx, .xls ou .csv');
+            e.target.value = '';
+        }
+    }
+}, [previewFile]);
+
+// Supprimer le fichier sélectionné
+const handleRemoveFile = useCallback(() => {
+    setImportFile(null);
+    setImportPreview([]);
+    setImportData([]);
+    setImportError(null);
+    if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+    }
 }, []);
 
 // --- FONCTION D'IMPORT COMPLÈTE ---

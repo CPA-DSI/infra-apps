@@ -153,7 +153,7 @@ function UserFormModal({ show, handleClose, mode, userData, availableMateriels, 
         } else if (!isEdit) {
             resetForm();
         }
-    }, [show, mode, userData]);
+    }, [show, mode, userData, isEdit]);
 
     const resetForm = () => {
         setForm({

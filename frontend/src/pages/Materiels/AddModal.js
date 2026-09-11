@@ -210,7 +210,7 @@ const AddModal = ({ onClose, onMaterialAdded }) => {
         }));
         
         if (name === 'id_marque') {
-            const marqueSelectionnee = marqueOptions.find(m => m.value == value); 
+            const marqueSelectionnee = marqueOptions.find(m => m.value === value);
             if (marqueSelectionnee) {
                 setFormData(prev => ({
                     ...prev,
@@ -225,7 +225,7 @@ const AddModal = ({ onClose, onMaterialAdded }) => {
         }
 
         if (name === 'id_local') {
-            const localSelectionne = localOptions.find(l => l.value == value);
+            const localSelectionne = localOptions.find(l => l.value === value);
             if (localSelectionne) {
                 setFormData(prev => ({ ...prev, nom_local: localSelectionne.label }));
             } else {
