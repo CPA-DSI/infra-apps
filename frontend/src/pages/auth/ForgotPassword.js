@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 import Tilt from 'react-parallax-tilt';
 import Swal from 'sweetalert2';
 import { API_BASE_URL } from '../../config/api';
+import { FaEnvelope, FaSpinner, FaLongArrowAltLeft } from 'react-icons/fa';
 
 // --- IMPORTS CSS ---
-import 'font-awesome/css/font-awesome.min.css'; 
 import '../../assets/vendor/animate/animate.css';
 import '../../assets/vendor/css-hamburgers/hamburgers.min.css';
 import '../../assets/vendor/select2/select2.min.css';
@@ -162,7 +162,7 @@ const ForgotPassword = () => {
             <input className="input-field" type="text" name="email" placeholder="Adresse email" value={email} onChange={(e) => setEmail(e.target.value)} onFocus={handleInputFocus} onBlur={handleInputBlur} autoComplete="email" />
             <span className="focus-input100 focus-input"></span>
             <span className="symbol-input100 symbol-input" aria-hidden="true">
-              <i className="fa fa-envelope" aria-hidden="true"></i>
+              <FaEnvelope aria-hidden="true" />
             </span>
           </div>
           
@@ -170,7 +170,7 @@ const ForgotPassword = () => {
             <button className={`login-button ${isLoading ? 'loading' : ''}`} type="submit" disabled={isLoading} aria-busy={isLoading} >
               {isLoading ? (
                 <>
-                  <i className="fa fa-spinner fa-spin" aria-hidden="true"></i>
+                  <FaSpinner className="fa-spinner icon-spin" aria-hidden="true" />
                   <span>Envoi en cours...</span>
                 </>
               ) : (
@@ -181,7 +181,7 @@ const ForgotPassword = () => {
 
           <div className="text-center p-t-12" style={{ marginTop: '20px' }}>
             <Link to="/login" className="txt2">
-              <i className="fa fa-long-arrow-left m-l-5" aria-hidden="true"></i>
+              <FaLongArrowAltLeft className="m-l-5" aria-hidden="true" />
               Retour à la connexion
             </Link>
           </div>

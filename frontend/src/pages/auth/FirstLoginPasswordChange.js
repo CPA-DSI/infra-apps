@@ -4,8 +4,8 @@ import { forceChangePassword } from '../../services/api.js';
 import { useAuth } from '../../contexts/AuthContext';
 import Tilt from 'react-parallax-tilt';
 import Swal from 'sweetalert2';
+import { FaLock, FaEye, FaEyeSlash, FaSpinner, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 
-import 'font-awesome/css/font-awesome.min.css';
 import '../../assets/vendor/animate/animate.css';
 import '../../assets/vendor/css-hamburgers/hamburgers.min.css';
 import '../../assets/vendor/select2/select2.min.css';
@@ -254,10 +254,11 @@ const FirstLoginPasswordChange = () => {
                   color: rule.passed ? '#2e7d32' : '#e53935',
                 }}
               >
-                <i
-                  className={`fa ${rule.passed ? 'fa-check-circle' : 'fa-times-circle'}`}
-                  style={{ marginRight: '8px', fontSize: '14px' }}
-                />
+                {rule.passed ? (
+                  <FaCheckCircle style={{ marginRight: '8px', fontSize: '14px' }} />
+                ) : (
+                  <FaTimesCircle style={{ marginRight: '8px', fontSize: '14px' }} />
+                )}
                 <span>{rule.label}</span>
               </div>
             ))}
@@ -287,7 +288,7 @@ const FirstLoginPasswordChange = () => {
             />
             <span className="focus-input100 focus-input" aria-hidden="true" />
             <span className="symbol-input100 symbol-input" aria-hidden="true">
-              <i className="fa fa-lock" aria-hidden="true" />
+              <FaLock aria-hidden="true" />
             </span>
             <span
               className="eye-icon"
@@ -303,7 +304,7 @@ const FirstLoginPasswordChange = () => {
               aria-label={showNewPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
               aria-pressed={showNewPassword}
             >
-              <i className={`fa ${showNewPassword ? 'fa-eye-slash' : 'fa-eye'}`} aria-hidden="true" />
+              {showNewPassword ? <FaEyeSlash aria-hidden="true" /> : <FaEye aria-hidden="true" />}
             </span>
           </div>
 
@@ -324,7 +325,7 @@ const FirstLoginPasswordChange = () => {
             />
             <span className="focus-input100 focus-input" aria-hidden="true" />
             <span className="symbol-input100 symbol-input" aria-hidden="true">
-              <i className="fa fa-lock" aria-hidden="true" />
+              <FaLock aria-hidden="true" />
             </span>
             <span
               className="eye-icon"
@@ -340,7 +341,7 @@ const FirstLoginPasswordChange = () => {
               aria-label={showConfirmPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
               aria-pressed={showConfirmPassword}
             >
-              <i className={`fa ${showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'}`} aria-hidden="true" />
+              {showConfirmPassword ? <FaEyeSlash aria-hidden="true" /> : <FaEye aria-hidden="true" />}
             </span>
             {errors.confirmPassword && (
               <span className="error-text" id="confirmPassword-error" role="alert">
@@ -358,7 +359,7 @@ const FirstLoginPasswordChange = () => {
             >
               {isSubmitting ? (
                 <>
-                  <i className="fa fa-spinner fa-spin" aria-hidden="true" />
+                  <FaSpinner className="fa-spinner icon-spin" aria-hidden="true" />
                   <span>Mise à jour en cours...</span>
                 </>
               ) : (

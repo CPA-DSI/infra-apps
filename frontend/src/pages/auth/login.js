@@ -4,9 +4,9 @@ import { login } from '../../services/api.js';
 import { useAuth } from '../../contexts/AuthContext';
 import Tilt from 'react-parallax-tilt';
 import Swal from 'sweetalert2';
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaSpinner } from 'react-icons/fa';
 
 // --- IMPORTS CSS ---
-import 'font-awesome/css/font-awesome.min.css';
 import '../../assets/vendor/animate/animate.css';
 import '../../assets/vendor/css-hamburgers/hamburgers.min.css';
 import '../../assets/vendor/select2/select2.min.css';
@@ -193,7 +193,7 @@ const Login = () => {
             />
             <span className="focus-input100 focus-input" aria-hidden="true" />
             <span className="symbol-input100 symbol-input" aria-hidden="true">
-              <i className="fa fa-envelope" aria-hidden="true" />
+              <FaEnvelope aria-hidden="true" />
             </span>
             {errors.email && (
               <span className="error-text" id="email-error" role="alert">
@@ -219,7 +219,7 @@ const Login = () => {
             />
             <span className="focus-input100 focus-input" aria-hidden="true" />
             <span className="symbol-input100 symbol-input" aria-hidden="true">
-              <i className="fa fa-lock" aria-hidden="true" />
+              <FaLock aria-hidden="true" />
             </span>
             <span
               className="eye-icon"
@@ -235,7 +235,7 @@ const Login = () => {
               aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
               aria-pressed={showPassword}
             >
-              <i className={`fa ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`} aria-hidden="true" />
+              {showPassword ? <FaEyeSlash aria-hidden="true" /> : <FaEye aria-hidden="true" />}
             </span>
             {errors.password && (
               <span className="error-text" id="password-error" role="alert">
@@ -272,7 +272,7 @@ const Login = () => {
             >
               {isLoading ? (
                 <>
-                  <i className="fa fa-spinner fa-spin" aria-hidden="true" />
+                  <FaSpinner className="fa-spinner icon-spin" aria-hidden="true" />
                   <span>Connexion en cours...</span>
                 </>
               ) : (

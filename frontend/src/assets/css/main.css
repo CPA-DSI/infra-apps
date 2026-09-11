@@ -659,6 +659,15 @@ iframe {
   box-sizing: border-box;
 }
 
+.icon-spin {
+  display: inline-block;
+  animation: icon-spin-rotate 1s linear infinite;
+}
+
+@keyframes icon-spin-rotate {
+  to { transform: rotate(360deg); }
+}
+
 .password-rules-title {
   display: block;
   font-family: Poppins-Medium, sans-serif;

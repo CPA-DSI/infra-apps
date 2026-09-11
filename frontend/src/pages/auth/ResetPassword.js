@@ -3,9 +3,9 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import Tilt from 'react-parallax-tilt';
 import Swal from 'sweetalert2';
 import { API_BASE_URL } from '../../config/api';
+import { FaLock, FaEye, FaEyeSlash, FaSpinner, FaLongArrowAltLeft } from 'react-icons/fa';
 
 // --- IMPORTS CSS ---
-import 'font-awesome/css/font-awesome.min.css'; 
 import '../../assets/vendor/animate/animate.css';
 import '../../assets/vendor/css-hamburgers/hamburgers.min.css';
 import '../../assets/vendor/select2/select2.min.css';
@@ -177,7 +177,7 @@ const ResetPassword = () => {
             </Link>
             <div className="text-center p-t-12" style={{ marginTop: '20px' }}>
               <Link to="/login" className="txt2">
-                <i className="fa fa-long-arrow-left m-l-5" aria-hidden="true"></i>
+                <FaLongArrowAltLeft className="m-l-5" aria-hidden="true" />
                 Retour à la connexion
               </Link>
             </div>
@@ -220,7 +220,7 @@ const ResetPassword = () => {
             />
             <span className="focus-input100 focus-input"></span>
             <span className="symbol-input100 symbol-input" aria-hidden="true">
-              <i className="fa fa-lock" aria-hidden="true"></i>
+              <FaLock aria-hidden="true" />
             </span>
             <span 
               className="eye-icon" 
@@ -229,7 +229,7 @@ const ResetPassword = () => {
               tabIndex={0}
               aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
             >
-              <i className={`fa ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`} aria-hidden="true"></i>
+              {showPassword ? <FaEyeSlash aria-hidden="true" /> : <FaEye aria-hidden="true" />}
             </span>
           </div>
 
@@ -248,7 +248,7 @@ const ResetPassword = () => {
             />
             <span className="focus-input100 focus-input"></span>
             <span className="symbol-input100 symbol-input" aria-hidden="true">
-              <i className="fa fa-lock" aria-hidden="true"></i>
+              <FaLock aria-hidden="true" />
             </span>
             <span 
               className="eye-icon" 
@@ -257,7 +257,7 @@ const ResetPassword = () => {
               tabIndex={0}
               aria-label={showConfirmPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
             >
-              <i className={`fa ${showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'}`} aria-hidden="true"></i>
+              {showConfirmPassword ? <FaEyeSlash aria-hidden="true" /> : <FaEye aria-hidden="true" />}
             </span>
           </div>
           
@@ -270,7 +270,7 @@ const ResetPassword = () => {
             >
               {isLoading ? (
                 <>
-                  <i className="fa fa-spinner fa-spin" aria-hidden="true"></i>
+                  <FaSpinner className="fa-spinner icon-spin" aria-hidden="true" />
                   <span>Réinitialisation...</span>
                 </>
               ) : (
@@ -281,7 +281,7 @@ const ResetPassword = () => {
 
           <div className="text-center p-t-12" style={{ marginTop: '20px' }}>
             <Link to="/login" className="txt2">
-              <i className="fa fa-long-arrow-left m-l-5" aria-hidden="true"></i>
+              <FaLongArrowAltLeft className="m-l-5" aria-hidden="true" />
               Retour à la connexion
             </Link>
           </div>
