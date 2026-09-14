@@ -199,6 +199,26 @@
   border: 1px solid #334155;
 }
 
+/* Menu d'export du graphique (Download SVG/PNG/CSV) : le texte hérite du
+   color clair de .count-equipe alors que le fond du menu ApexCharts est
+   blanc par défaut, d'où le texte illisible. On thème le menu en sombre. */
+.count-equipe .apexcharts-menu {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.count-equipe .apexcharts-menu-item {
+  color: #f1f5f9;
+  border-radius: 6px;
+}
+
+.count-equipe .apexcharts-menu-item:hover {
+  background: rgba(139, 92, 246, 0.2);
+  color: #ffffff;
+}
+
 .count-equipe-empty-state {
   display: flex;
   align-items: center;
