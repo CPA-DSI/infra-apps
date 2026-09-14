@@ -56,10 +56,17 @@
   box-shadow: 0 12px 48px -8px rgba(99, 102, 241, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
+/* Ossature de page : pousse le footer en bas quand le contenu est court */
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
 /* Main Content Wrapper - Responsive Margin Top */
 .main-content-wrapper {
   margin-top: 90px;
-  min-height: calc(100vh - 90px);
+  flex: 1 0 auto;
 }
 
 /* Media queries pour adapter le marginTop selon l'écran */

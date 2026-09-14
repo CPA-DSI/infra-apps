@@ -35,13 +35,13 @@ const AppLayout = () => {
   }
 
   return (
-    <>
+    <div className="app-shell">
       <FixedNavbarWithLogo />
       <main className="main-content-wrapper">
         <Outlet />
       </main>
       <Footer />
-    </>
+    </div>
   );
 };
 

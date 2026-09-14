@@ -1,5 +1,6 @@
 .app-footer {
   position: relative;
+  flex-shrink: 0;
   margin-top: 40px;
   background: var(--nav-bg, rgba(255, 255, 255, 0.8));
   backdrop-filter: blur(var(--nav-blur, 20px));
