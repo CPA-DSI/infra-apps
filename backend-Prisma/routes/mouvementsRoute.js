@@ -5,39 +5,11 @@ import prisma from '../prismaClient.js';
 import { importMouvementsFromBuffer } from '../services/importMouvements.js';
 import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
 import { PERMISSIONS } from '../constants/roles.js';
+import { creerNouveauProduit, ProduitDejaExistantError } from '../services/produitsService.js';
 
 const router = express.Router();
 
 router.use(authenticateToken, ensureActiveUser);
-
-
-
-// ====================================================
-// FONCTION DE GÉNÉRATION DU SEUIL D'ALERTE
-// ====================================================
-const generateSeuilAlerte = (nomProduit, quantiteInitiale) => {
-    const nomLower = nomProduit.toLowerCase();
-    
-    if (nomLower === 'clavier usb externe' ||
-        nomLower === 'souris usb avec fil' ||
-        nomLower === 'tapis souris' ||
-        nomLower === 'multi usb') {
-        return Math.floor(Math.random() * (5 - 3 + 1)) + 3;
-    }
-    
-    if (nomLower === 'adapteur hdmi-vga' ||
-        nomLower === 'adapteur usb-lan' ||
-        nomLower === 'câble alimentation stantard' ||
-        nomLower === 'câble alimentation trèfle' ||
-        nomLower === 'câble réseau' ||
-        nomLower === 'câble vga-vga' ||
-        nomLower === 'connecteur rj45') {
-        return Math.floor(Math.random() * (10 - 5 + 1)) + 5;
-    }
-    
-    const seuilCalcule = Math.min(8, Math.max(3, Math.floor(quantiteInitiale * 0.15)));
-    return Math.floor(Math.random() * (seuilCalcule - 2 + 1)) + 2;
-};
 
 // Configuration de multer pour l'upload de fichiers
 const storage = multer.memoryStorage();
@@ -318,18 +290,14 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
             let produitCree = null;
             
             if (type_mouvement === 'ENTREE') {
-                const seuilAlerte = generateSeuilAlerte(nom_produit, quantite_int);
-                produitCree = await tx.produits.create({ 
-                    data: { 
-                        nom_produit: nom_produit.trim(), 
-                        quantite_en_stock: quantite_int, 
-                        last_date: mouvementDate,
-                        seuil_alerte: seuilAlerte
-                    } 
+                produitCree = await creerNouveauProduit(tx, {
+                    nomProduit: nom_produit,
+                    quantiteInitiale: quantite_int,
+                    dateMouvement: mouvementDate
                 });
                 produitId = produitCree.id_produit;
                 ancienneQuantiteStock = 0;
-            } 
+            }
             else if (type_mouvement === 'ENTREE_QUANTITE') {
                 const oldStockData = await tx.produits.findUnique({ 
                     where: { id_produit: produitId }, 
@@ -403,6 +371,13 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
         }
         res.status(201).json({ success: true, message: successMessage, mouvement: mouvementCree });
     } catch (err) {
+        if (err instanceof ProduitDejaExistantError) {
+            return res.status(400).json({
+                error: "Produit déjà existant",
+                message: `Le produit "${err.nomProduit}" existe déjà. Utilisez le type "Entrée Quantité Produit" pour ajouter du stock.`,
+                existingProductId: err.existingProductId
+            });
+        }
         console.error("Erreur lors de la transaction du mouvement:", err.message);
         let errorMessage = err.message;
         let statusCode = 400;

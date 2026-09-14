@@ -1,6 +1,7 @@
 // backend/services/importMouvements.js
 import prisma from '../prismaClient.js';
 import * as XLSX from 'xlsx';
+import { creerNouveauProduit, ProduitDejaExistantError } from './produitsService.js';
 
 /**
  * Crée un jeu de caches isolé pour un import.
@@ -279,25 +280,22 @@ async function getProduit(nom, caches = createCaches()) {
 
     if (!produit) {
         try {
-            produit = await prisma.produits.create({
-                data: {
-                    nom_produit: nomTrim,
-                    quantite_en_stock: 0
-                }
+            // Stock initial à 0 : la quantité réelle de la ligne est appliquée
+            // ensuite par traiterMouvement(). Le seuil d'alerte, lui, est
+            // calculé dès la création pour que les produits importés ne se
+            // retrouvent pas sans alerte de stock bas.
+            produit = await creerNouveauProduit(prisma, {
+                nomProduit: nomTrim,
+                quantiteInitiale: 0
             });
-            console.log(`🆕 Produit créé: "${nomTrim}" (ID: ${produit.id_produit})`);
+            console.log(`🆕 Produit créé: "${nomTrim}" (ID: ${produit.id_produit}, seuil: ${produit.seuil_alerte})`);
         } catch (error) {
-            if (error.code === 'P2002') {
+            if (error instanceof ProduitDejaExistantError) {
                 // Un autre import concurrent vient de créer ce produit
                 // (contrainte unique produits_nom_produit_norm_key) : on
                 // récupère la ligne qu'il vient de créer.
-                produit = await prisma.produits.findFirst({
-                    where: {
-                        nom_produit: {
-                            equals: nomTrim,
-                            mode: 'insensitive'
-                        }
-                    }
+                produit = await prisma.produits.findUnique({
+                    where: { id_produit: error.existingProductId }
                 });
                 console.log(`✅ Produit créé entre-temps par un autre import: "${nomTrim}" (ID: ${produit.id_produit})`);
             } else {
