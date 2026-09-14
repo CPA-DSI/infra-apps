@@ -9,8 +9,10 @@ const APP_URL = process.env.APP_URL || null;
 
 const ensureJwtSecret = () => {
   if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
-    throw new Error('JWT_SECRET doit être défini et contenir au moins 32 caractères.');
+    console.error('JWT_SECRET is not configured or too weak.');
+    return false;
   }
+  return true;
 };
 
 const buildMailTransporter = async () => {
@@ -104,7 +106,9 @@ const validatePasswordStrength = (password) => {
 };
 
 export const login = async (req, res) => {
-  ensureJwtSecret();
+  if (!ensureJwtSecret()) {
+    return res.status(500).json({ error: 'Erreur de configuration serveur.' });
+  }
 
   const { email, password } = req.body;
 
@@ -203,7 +207,9 @@ export const login = async (req, res) => {
 };
 
 export const updatePasswords = async (req, res) => {
-  ensureJwtSecret();
+  if (!ensureJwtSecret()) {
+    return res.status(500).json({ error: 'Erreur de configuration serveur.' });
+  }
 
   const { p1 } = req.body;
   const userId = req.user?.userId;
@@ -306,7 +312,9 @@ export const logout = async (req, res) => {
 };
 
 export const forgotPassword = async (req, res) => {
-  ensureJwtSecret();
+  if (!ensureJwtSecret()) {
+    return res.status(500).json({ error: 'Erreur de configuration serveur.' });
+  }
 
   const { email } = req.body;
 
@@ -357,7 +365,9 @@ export const forgotPassword = async (req, res) => {
 };
 
 export const forceChangePassword = async (req, res) => {
-  ensureJwtSecret();
+  if (!ensureJwtSecret()) {
+    return res.status(500).json({ error: 'Erreur de configuration serveur.' });
+  }
   const userId = req.user?.userId;
   if (!userId) {
     return res.status(401).json({ error: 'Utilisateur non authentifié.' });
@@ -412,7 +422,9 @@ export const forceChangePassword = async (req, res) => {
 };
 
 export const resetPassword = async (req, res) => {
-  ensureJwtSecret();
+  if (!ensureJwtSecret()) {
+    return res.status(500).json({ error: 'Erreur de configuration serveur.' });
+  }
 
   const { token, password } = req.body;
 
