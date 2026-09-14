@@ -56,10 +56,11 @@ export const ensureActiveUser = async (req, res, next) => {
     });
 
     if (!user || !user.is_active) {
+      const isProduction = process.env.NODE_ENV === 'production';
       res.clearCookie('token', {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
       });
       return res.status(403).json({ error: 'Demandez à l\'administrateur d\'activer votre compte' });
     }
