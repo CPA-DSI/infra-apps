@@ -4,7 +4,8 @@ import Login from './pages/auth/login';
 import FirstLoginPasswordChange from './pages/auth/FirstLoginPasswordChange';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
-import FixedNavbarWithLogo from './components/Navbar/FixedNavbarWithLogo'; 
+import FixedNavbarWithLogo from './components/Navbar/FixedNavbarWithLogo';
+import Footer from './components/Footer/Footer';
 import Home from './pages/Home/Home';
 import Materiels from './pages/Materiels/Materiels';
 import HistoriqueMateriel from './pages/HistoriqueMateriel/HistoriqueMateriel';
@@ -39,6 +40,7 @@ const AppLayout = () => {
       <main className="main-content-wrapper">
         <Outlet />
       </main>
+      <Footer />
     </>
   );
 };
