@@ -133,28 +133,12 @@ export const login = async (req, res) => {
       return res.status(401).json({ error: 'Identifiants invalides.' });
     }
 
-    let mustChangePassword = user.must_change_password;
+    const mustChangePassword = user.must_change_password;
 
     const isPasswordValid = await bcrypt.compare(password, userEmail.password);
 
     if (!isPasswordValid) {
-      if (userEmail.password === password) {
-        const hashedPassword = await bcrypt.hash(password, 12);
-
-        await prisma.userEmail.update({
-          where: { id_uEmail: userEmail.id_uEmail },
-          data: { password: hashedPassword },
-        });
-
-        await prisma.users.update({
-          where: { id_user: user.id_user },
-          data: { must_change_password: true },
-        });
-
-        mustChangePassword = true;
-      } else {
-        return res.status(401).json({ error: 'Identifiants invalides.' });
-      }
+      return res.status(401).json({ error: 'Identifiants invalides.' });
     }
 
     if (!user.is_active) {
@@ -212,11 +196,15 @@ export const updatePasswords = async (req, res) => {
     return res.status(500).json({ error: 'Erreur de configuration serveur.' });
   }
 
-  const { p1 } = req.body;
+  const { oldPassword, p1 } = req.body;
   const userId = req.user?.userId;
 
   if (!userId) {
     return res.status(401).json({ error: 'Utilisateur non authentifié.' });
+  }
+
+  if (!oldPassword) {
+    return res.status(400).json({ error: 'Veuillez saisir votre mot de passe actuel.' });
   }
 
   if (!p1) {
@@ -235,6 +223,11 @@ export const updatePasswords = async (req, res) => {
 
     if (!primaryEmail) {
       return res.status(404).json({ error: 'Email principal introuvable.' });
+    }
+
+    const isOldPasswordValid = await bcrypt.compare(oldPassword, primaryEmail.password);
+    if (!isOldPasswordValid) {
+      return res.status(401).json({ error: 'Mot de passe actuel incorrect.' });
     }
 
     await prisma.userEmail.update({

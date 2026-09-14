@@ -7,6 +7,12 @@ import { PERMISSIONS } from '../constants/roles.js';
 const prisma = new PrismaClient();
 const router = express.Router();
 
+const omitEmailPassword = (userEmail) => {
+    if (!userEmail) return userEmail;
+    const { password, ...rest } = userEmail;
+    return rest;
+};
+
 router.get('/stats', authenticateToken, ensureActiveUser, requirePermission(PERMISSIONS.USERS_READ), async (req, res) => {
     try {
         const totalEmails = await prisma.userEmail.count();
@@ -74,7 +80,7 @@ router.post('/', authenticateToken, ensureActiveUser, requirePermission(PERMISSI
             include: { user: { include: { materiel: true } } }
         });
 
-        res.status(201).json(newEmail);
+        res.status(201).json(omitEmailPassword(newEmail));
     } catch (error) {
         console.error("Erreur lors de la création de l'email:", error);
         res.status(400).json({ message: error.message });
@@ -119,7 +125,7 @@ router.put('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMIS
             include: { user: { include: { materiel: true } } }
         });
 
-        res.json(updated);
+        res.json(omitEmailPassword(updated));
     } catch (error) {
         console.error("Erreur lors de la mise à jour de l'email:", error);
         res.status(400).json({ message: error.message });
@@ -141,7 +147,7 @@ router.get('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMIS
         if (!email) {
             return res.status(404).json({ message: "Email non trouvé." });
         }
-        res.json(email);
+        res.json(omitEmailPassword(email));
     } catch (error) {
         console.error("Erreur lors de la récupération de l'email:", error);
         res.status(500).json({ message: error.message });

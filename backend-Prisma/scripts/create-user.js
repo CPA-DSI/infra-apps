@@ -95,32 +95,48 @@ const sanitizeUserResponse = (user) => {
   };
 };
 
+const requireEnv = (name) => {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Variable d'environnement ${name} manquante.`);
+  }
+  return value;
+};
+
+const buildUserDataFromEnv = () => {
+  const emails = [
+    {
+      email: requireEnv('ADMIN_EMAIL_1'),
+      password: requireEnv('ADMIN_PASSWORD_1'),
+      pass_mail: process.env.ADMIN_PASS_MAIL_1 || null,
+      is_primary: true,
+      is_verified: true,
+    },
+  ];
+
+  if (process.env.ADMIN_EMAIL_2) {
+    emails.push({
+      email: requireEnv('ADMIN_EMAIL_2'),
+      password: requireEnv('ADMIN_PASSWORD_2'),
+      pass_mail: process.env.ADMIN_PASS_MAIL_2 || null,
+      is_primary: false,
+      is_verified: true,
+    });
+  }
+
+  return {
+    id_n: parseInt(requireEnv('ADMIN_ID_N'), 10),
+    role: process.env.ADMIN_ROLE || 'IT_ADMIN',
+    is_active: true,
+    must_change_password: false,
+    emails,
+  };
+};
+
 const createUser = async () => {
   ensureJwtSecret();
 
-  const userData = {
-    id_n: 1,
-    role: 'IT_ADMIN',
-    is_active: true,
-    // 👇 On impose false pour éviter le changement de mot de passe
-    must_change_password: false,
-    emails: [
-      {
-        email: 'dsi@experts-cpa.com',
-        password: 'Admin*2026*IT',
-        pass_mail: 'Cpa_maintenance1*',
-        is_primary: true,
-        is_verified: true,
-      },
-      {
-        email: 'dsi@rfc-production.com',
-        password: 'Admin2*2026*IT',
-        pass_mail: 'Rfc_maintenance1*',
-        is_primary: false,
-        is_verified: true,
-      },
-    ],
-  };
+  const userData = buildUserDataFromEnv();
 
   try {
     const user = await createUserWithEmails(userData);

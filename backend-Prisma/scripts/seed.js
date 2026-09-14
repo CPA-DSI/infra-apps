@@ -1,5 +1,6 @@
 // seed.js
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 // ================================================
@@ -224,7 +225,7 @@ async function main() {
       update: {},
       create: {
         email: u.email,
-        password: 'default123',
+        password: await bcrypt.hash('default123', 12),
         pass_mail: 'smtp_password',
         is_primary: true,
         is_verified: true,

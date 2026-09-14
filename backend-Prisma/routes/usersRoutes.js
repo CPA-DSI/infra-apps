@@ -25,7 +25,10 @@ router.get('/', authenticateToken, ensureActiveUser, requirePermission(PERMISSIO
             }
         });
 
-        const result = usersAvecDetails.map(u => ({ ...u, ...mapEmailsToFlatFields(u.emails) }));
+        const result = usersAvecDetails.map(u => {
+            const sanitizedEmails = sanitizeEmails(u.emails);
+            return { ...u, emails: sanitizedEmails, ...mapEmailsToFlatFields(sanitizedEmails) };
+        });
         res.json(result);
 
     } catch (error) {
@@ -33,6 +36,10 @@ router.get('/', authenticateToken, ensureActiveUser, requirePermission(PERMISSIO
         res.status(500).json({ message: "Erreur serveur lors de la récupération des utilisateurs." });
     }
 });
+
+function sanitizeEmails(emails = []) {
+    return emails.map(({ password, ...email }) => email);
+}
 
 function mapEmailsToFlatFields(emails = []) {
     const sorted = [...emails].sort((a, b) => (b.is_primary ? 1 : 0) - (a.is_primary ? 1 : 0) || a.id_uEmail - b.id_uEmail);
@@ -115,8 +122,9 @@ router.post('/', authenticateToken, ensureActiveUser, requirePermission(PERMISSI
             include: { emails: true }
         });
 
-        const flat = mapEmailsToFlatFields(newUser.emails);
-        res.status(201).json({ ...newUser, ...flat });
+        const sanitizedEmails = sanitizeEmails(newUser.emails);
+        const flat = mapEmailsToFlatFields(sanitizedEmails);
+        res.status(201).json({ ...newUser, emails: sanitizedEmails, ...flat });
     } catch (error) {
         console.error("Erreur backend lors de l'ajout d'utilisateur:", error);
         res.status(500).json({ message: "Erreur lors de la création : " + error.message });
@@ -212,8 +220,9 @@ router.put('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMIS
             include: { emails: true }
         });
 
-        const flat = mapEmailsToFlatFields(updated.emails);
-        res.json({ ...updated, ...flat });
+        const sanitizedEmails = sanitizeEmails(updated.emails);
+        const flat = mapEmailsToFlatFields(sanitizedEmails);
+        res.json({ ...updated, emails: sanitizedEmails, ...flat });
     } catch (error) {
         console.error("Prisma update error:", error.message);
         res.status(400).json({ message: error.message });

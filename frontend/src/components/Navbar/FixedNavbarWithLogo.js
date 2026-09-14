@@ -19,16 +19,16 @@ const FixedNavbarWithLogo = () => {
   const [showProfile, setShowProfile] = useState(false);
   const handleCloseProfile = () => {
     setShowProfile(false);
-    setNewPasswords({ p1: '', confirm: '' });
+    setNewPasswords({ oldPassword: '', p1: '', confirm: '' });
     setUpdateStatus({ type: '', msg: '' });
     setShowP1(false);
   };
   const handleShowProfile = () => {
-    setNewPasswords({ p1: '', confirm: '' });
+    setNewPasswords({ oldPassword: '', p1: '', confirm: '' });
     setUpdateStatus({ type: '', msg: '' });
     setShowProfile(true);
   };
-  const [newPasswords, setNewPasswords] = useState({ p1: '', confirm: '' });
+  const [newPasswords, setNewPasswords] = useState({ oldPassword: '', p1: '', confirm: '' });
   const [updateStatus, setUpdateStatus] = useState({ type: '', msg: '' });
   const [showP1, setShowP1] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -131,6 +131,11 @@ const FixedNavbarWithLogo = () => {
   const isActive = (path) => location.pathname.startsWith(path);
 
   const handleUpdatePassword = async () => {
+    if (!newPasswords.oldPassword) {
+      setUpdateStatus({ type: 'warning', msg: 'Veuillez saisir votre mot de passe actuel.' });
+      return;
+    }
+
     if (!newPasswords.p1) {
       setUpdateStatus({ type: 'warning', msg: 'Veuillez saisir un nouveau mot de passe UserMail.' });
       return;
@@ -151,13 +156,14 @@ const FixedNavbarWithLogo = () => {
     setIsUpdating(true);
     try {
       const response = await apiClient.post('/auth/update-passwords', {
+        oldPassword: newPasswords.oldPassword,
         p1: newPasswords.p1
       });
 
       const data = response?.data;
       if (data && data.success !== false && !data.error) {
         setUpdateStatus({ type: 'success', msg: 'Mot de passe UserMail mis à jour avec succès ! Vous allez être déconnecté.' });
-        setNewPasswords({ p1: '', confirm: '' });
+        setNewPasswords({ oldPassword: '', p1: '', confirm: '' });
 
         setTimeout(async () => {
           handleCloseProfile();
@@ -550,6 +556,23 @@ const FixedNavbarWithLogo = () => {
                   </Alert>
                 )}
                 <Form className="password-form">
+                  <Form.Group className="mb-3" controlId="userMailOldPassword">
+                    <Form.Label className="password-label">
+                      <FaEnvelopeOpenText /> Mot de passe actuel
+                    </Form.Label>
+                    <div className="password-input-wrapper">
+                      <Form.Control
+                        type={showP1 ? 'text' : 'password'}
+                        name="oldPassword"
+                        value={newPasswords.oldPassword}
+                        onChange={handleInputChange}
+                        placeholder="Saisir le mot de passe actuel"
+                        autoComplete="current-password"
+                        className="password-field"
+                      />
+                    </div>
+                  </Form.Group>
+
                   <Form.Group className="mb-3" controlId="userMailPassword">
                     <Form.Label className="password-label">
                       <FaEnvelopeOpenText /> Nouveau mot de passe
