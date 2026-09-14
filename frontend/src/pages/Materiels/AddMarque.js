@@ -1,20 +1,15 @@
 // src/pages/Materiels/AddMarque.js - Version avec suppression améliorée et notifications locales
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import axios from 'axios';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import DataTable from 'react-data-table-component';
 import { Form, Spinner, Row, Col, Alert } from 'react-bootstrap';
 import { FaPlus, FaTimes, FaImage, FaTrash, FaEdit, FaExclamationTriangle, FaCheckCircle } from 'react-icons/fa';
-import { API_BASE_URL } from '../../config/api';
+import { fetchAMarques, createMarque, updateMarque, deleteMarque } from '../../services/api';
 import './AddMarque.css';
 
 const MySwal = withReactContent(Swal);
-
-const API_URL = `${API_BASE_URL}/api/marques`;
-
-console.log('🔧 Configuration API:', { API_BASE_URL, API_URL });
 
 // ==========================================================
 // --- COMPOSANT LOGO SIMPLIFIÉ ---
@@ -193,12 +188,7 @@ const [loading, setLoading] = useState(false);
         if (deletePending && deletePending.marque) {
             try {
                 // Réinsérer la marque supprimée
-                const payload = {
-                    nom_marque: deletePending.marque.nom_marque,
-                    url: deletePending.marque.url
-                };
-                
-                await axios.post(API_URL, payload);
+                await createMarque(deletePending.marque.nom_marque, deletePending.marque.url);
                 console.log('🔄 Annulation suppression réussie');
                 
                 showLocalNotification(`↩️ "${deletePending.marque.nom_marque}" a été restauré`, 'success');
@@ -224,23 +214,16 @@ const [loading, setLoading] = useState(false);
         setApiError(null);
         
         try {
-            console.log(`📡 Appel API: ${API_URL}`);
-            const response = await axios.get(API_URL, {
-                timeout: 10000,
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            });
-            
-            console.log('📦 Statut réponse:', response.status);
-            console.log('📦 Données brutes:', response.data);
-            
-            if (!response.data) {
+            const data = await fetchAMarques();
+
+            console.log('📦 Données brutes:', data);
+
+            if (!data) {
                 throw new Error('Aucune donnée reçue du serveur');
             }
-            
-            let marquesData = Array.isArray(response.data) ? response.data : [];
-            
+
+            let marquesData = Array.isArray(data) ? data : [];
+
             const cleanedData = marquesData.map(marque => ({
                 id_marque: marque.id_marque,
                 nom_marque: marque.nom_marque || 'Sans nom',
@@ -259,20 +242,7 @@ const [loading, setLoading] = useState(false);
             
         } catch (err) {
             console.error('❌ Erreur détaillée:', err);
-            
-            let errorMessage = '';
-            if (err.code === 'ECONNABORTED') {
-                errorMessage = 'Timeout - Le serveur ne répond pas';
-            } else if (err.response) {
-                errorMessage = `Erreur ${err.response.status}: ${err.response.data?.error || err.response.statusText}`;
-                console.error('📡 Réponse erreur:', err.response.data);
-            } else if (err.request) {
-                errorMessage = `Impossible de contacter le serveur. Vérifiez que le backend est démarré sur ${API_BASE_URL}`;
-            } else {
-                errorMessage = err.message;
-            }
-            
-            setApiError(errorMessage);
+            setApiError(err.message);
             setMarques([]);
         } finally {
             setMarquesLoading(false);
@@ -317,15 +287,13 @@ const [loading, setLoading] = useState(false);
         setError('');
 
 try {
-             const payload = {
-                 nom_marque: formData.nom_marque.trim(),
-                 url: formData.url && formData.url.trim() !== '' ? formData.url.trim() : null
-             };
-             
-             console.log('📤 Envoi POST:', payload);
-             
-             const response = await axios.post(API_URL, payload);
-             console.log('✅ Réponse:', response.data);
+             const nomMarque = formData.nom_marque.trim();
+             const url = formData.url && formData.url.trim() !== '' ? formData.url.trim() : null;
+
+             console.log('📤 Envoi POST:', { nom_marque: nomMarque, url });
+
+             const response = await createMarque(nomMarque, url);
+             console.log('✅ Réponse:', response);
 
              setSuccessMessage('Marque ajoutée avec succès !');
              setTimeout(() => setSuccessMessage(null), 3000);
@@ -343,15 +311,7 @@ try {
              }
          } catch (err) {
             console.error('❌ Erreur POST:', err);
-            let errorMessage = 'Erreur lors de l\'ajout de la marque.';
-            if (err.response) {
-                errorMessage = err.response.data?.error || err.response.statusText;
-                if (err.response.status === 409) {
-                    errorMessage = 'Cette marque existe déjà. Veuillez choisir un autre nom.';
-                }
-            } else if (err.request) {
-                errorMessage = 'Serveur inaccessible. Vérifiez que le backend est démarré.';
-            }
+            const errorMessage = err.message || 'Erreur lors de l\'ajout de la marque.';
             setError(errorMessage);
             showNotification(`Erreur: ${errorMessage}`, 'error');
             showLocalNotification(`❌ Erreur: ${errorMessage}`, 'error');
@@ -381,13 +341,11 @@ try {
         setError('');
 
 try {
-             const payload = {
-                 nom_marque: formData.nom_marque.trim(),
-                 url: formData.url && formData.url.trim() !== '' ? formData.url.trim() : null
-             };
+             const nomMarque = formData.nom_marque.trim();
+             const url = formData.url && formData.url.trim() !== '' ? formData.url.trim() : null;
 
-             const response = await axios.put(`${API_URL}/${editingMarque.id_marque}`, payload);
-             console.log('✏️ Mise à jour réussie:', response.data);
+             const response = await updateMarque(editingMarque.id_marque, nomMarque, url);
+             console.log('✏️ Mise à jour réussie:', response);
 
              setSuccessMessage('Marque modifiée avec succès !');
              setTimeout(() => setSuccessMessage(null), 3000);
@@ -399,10 +357,7 @@ try {
              setFormData({ nom_marque: '', url: '' });
          } catch (err) {
             console.error('❌ Erreur PUT:', err);
-            let errorMessage = 'Erreur lors de la modification.';
-            if (err.response) {
-                errorMessage = err.response.data?.error || err.response.statusText;
-            }
+            const errorMessage = err.message || 'Erreur lors de la modification.';
             setError(errorMessage);
             showNotification(`Erreur: ${errorMessage}`, 'error');
             showLocalNotification(`❌ Erreur: ${errorMessage}`, 'error');
@@ -453,8 +408,8 @@ try {
         setLoading(true);
         
         try {
-            await axios.delete(`${API_URL}/${marque.id_marque}`);
-            
+            await deleteMarque(marque.id_marque);
+
             if (isUndoable) {
                 showLocalNotification(
                     `🗑️ "${marque.nom_marque}" a été supprimé (annulation possible 5s)`, 
@@ -481,20 +436,7 @@ try {
             }
         } catch (err) {
             console.error('❌ Erreur DELETE:', err);
-            
-            let errorMessage = 'Erreur lors de la suppression';
-            if (err.response) {
-                if (err.response.status === 400 || err.response.status === 409) {
-                    errorMessage = err.response.data?.error || 'Cette marque est utilisée par des matériels. Supprimez d\'abord les matériels associés.';
-                } else if (err.response.status === 404) {
-                    errorMessage = 'Marque non trouvée';
-                } else {
-                    errorMessage = err.response.data?.error || err.response.statusText;
-                }
-            } else if (err.request) {
-                errorMessage = 'Impossible de contacter le serveur';
-            }
-            
+            const errorMessage = err.message || 'Erreur lors de la suppression';
             showNotification(`Erreur: ${errorMessage}`, 'error');
             showLocalNotification(`❌ ${errorMessage}`, 'error');
         } finally {

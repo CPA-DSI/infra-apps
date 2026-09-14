@@ -601,6 +601,15 @@ export const createMarque = async (nom_marque, url) => {
     }
 };
 
+export const updateMarque = async (id_marque, nom_marque, url) => {
+    try {
+        const response = await apiClient.put(`/marques/${id_marque}`, { nom_marque, url });
+        return response.data;
+    } catch (error) {
+        throw new Error(getErrorMessage(error));
+    }
+};
+
 export const deleteMarque = async (id_marque) => {
     try {
         // Assurez-vous que l'ID est correctement passé dans l'URL
