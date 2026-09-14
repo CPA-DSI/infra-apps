@@ -117,6 +117,34 @@
     padding: 1rem;
     border-radius: 0.75rem;
     text-align: center;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card:focus-visible {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+.stat-card-active {
+    box-shadow: 0 0 0 2px rgba(30, 41, 59, 0.35) inset;
+}
+
+.stat-card-empty {
+    opacity: 0.55;
+}
+
+.stat-card-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 6px;
 }
 
 .stat-card-total {

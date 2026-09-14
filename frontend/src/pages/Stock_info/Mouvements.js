@@ -78,6 +78,32 @@ const NoDataComponent = () => (
     </div>
 );
 
+// --- Filtre spécial pour les types de mouvement hors ENTREE/SORTIE/ENTREE_QUANTITE ---
+const AUTRES_TYPE_FILTER = '__AUTRES__';
+
+// --- Composant StatCard mémoïsé ---
+const StatCard = React.memo(({ icon: Icon, value, label, cardClass, colorClass, isActive, isEmpty, onClick }) => (
+    <div
+        className={`stat-card ${cardClass}${isActive ? ' stat-card-active' : ''}${isEmpty ? ' stat-card-empty' : ''}`}
+        onClick={onClick}
+        role="button"
+        tabIndex={0}
+        aria-pressed={isActive}
+        onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onClick();
+            }
+        }}
+    >
+        <Icon className={`stat-icon stat-icon-${colorClass}`} aria-hidden="true" />
+        <div className="stat-card-row">
+            <div className={`stat-value stat-value-${colorClass}`}>{value}</div>
+            <div className={`stat-label stat-label-${colorClass}`}>{label}</div>
+        </div>
+    </div>
+));
+
 // --- Composant ActionButtons mémoïsé ---
 const ActionButtons = React.memo(({ row, handleView, handleEdit, handleDelete }) => (
     <div className="d-flex gap-2" role="group" aria-label="Actions">
@@ -248,6 +274,19 @@ const Mouvements = () => {
         };
     }, [data]);
 
+    // --- Configuration des cartes de statistiques (cliquables pour filtrer) ---
+    const statsConfig = useMemo(() => [
+        { key: 'total', label: 'Total', value: stats.total, icon: FaChartBar, cardClass: 'stat-card-total', colorClass: 'blue', filterValue: '' },
+        { key: 'entree', label: 'Entrées', value: stats.entree, icon: FaArrowUp, cardClass: 'stat-card-entree', colorClass: 'green', filterValue: 'ENTREE' },
+        { key: 'sortie', label: 'Sorties', value: stats.sortie, icon: FaArrowDown, cardClass: 'stat-card-sortie', colorClass: 'red', filterValue: 'SORTIE' },
+        { key: 'ajustement', label: 'Ajustements', value: stats.ajustement, icon: FaExchangeAlt, cardClass: 'stat-card-ajustement', colorClass: 'purple', filterValue: 'ENTREE_QUANTITE' },
+        { key: 'autres', label: 'Autres', value: stats.autres, icon: FaBoxOpen, cardClass: 'stat-card-autres', colorClass: 'light-blue', filterValue: AUTRES_TYPE_FILTER },
+    ], [stats]);
+
+    const handleStatCardClick = useCallback((filterValue) => {
+        setFilterType(current => (current === filterValue ? '' : filterValue));
+    }, []);
+
     // --- Données filtrées ---
     const filteredData = useMemo(() => {
         return data.filter(item => {
@@ -264,7 +303,11 @@ const Mouvements = () => {
                 date_mouvement.includes(lowerCaseSearch) || nom_produit.toLowerCase().includes(lowerCaseSearch) || nom_utilisateur.toLowerCase().includes(lowerCaseSearch) || equipe.toLowerCase().includes(lowerCaseSearch) || type_mouvement.toLowerCase().includes(lowerCaseSearch) || local_source.toLowerCase().includes(lowerCaseSearch) || local_destination.toLowerCase().includes(lowerCaseSearch)
             );
 
-            const matchType = !filterType || item.type_mouvement === filterType;
+            const matchType = !filterType || (
+                filterType === AUTRES_TYPE_FILTER
+                    ? !['ENTREE', 'SORTIE', 'ENTREE_QUANTITE'].includes(item.type_mouvement)
+                    : item.type_mouvement === filterType
+            );
 
             let matchDate = true;
             if (filterDateRange.start) {
@@ -1093,53 +1136,22 @@ const handleImportSubmit = useCallback(async () => {
                     {error && <Alert variant="danger" className="mb-3">{error}</Alert>}
                     {successMessage && <Alert variant="success" className="mb-3">{successMessage}</Alert>}
 
-                    {/* Statistiques Dashboard */}
+                    {/* Statistiques Dashboard - cliquables pour filtrer la table par type */}
                     <div className="row mb-3 g-2">
-                        <div className="col-6 col-md-3 col-lg-2">
-                            <div className="p-2 rounded-2 text-center" style={{ backgroundColor: '#e3f2fd', borderLeft: '3px solid #2196f3' }}>
-                                <FaChartBar style={{ fontSize: '1.4rem', color: '#2196f3', marginBottom: '6px' }} />
-                                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '6px' }}>
-                                    <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#1565c0' }}>{stats.total}</div>
-                                    <div style={{ fontSize: '0.8rem', color: '#64b5f6' }}>Total</div>
-                                </div>
+                        {statsConfig.map(cfg => (
+                            <div className="col-6 col-md-3 col-lg-2" key={cfg.key}>
+                                <StatCard
+                                    icon={cfg.icon}
+                                    value={cfg.value}
+                                    label={cfg.label}
+                                    cardClass={cfg.cardClass}
+                                    colorClass={cfg.colorClass}
+                                    isActive={filterType === cfg.filterValue}
+                                    isEmpty={cfg.value === 0}
+                                    onClick={() => handleStatCardClick(cfg.filterValue)}
+                                />
                             </div>
-                        </div>
-                        <div className="col-6 col-md-3 col-lg-2">
-                            <div className="p-2 rounded-2 text-center" style={{ backgroundColor: '#C6F6D5', borderLeft: '3px solid #38a169' }}>
-                                <FaArrowUp style={{ fontSize: '1.4rem', color: '#38a169', marginBottom: '6px' }} />
-                                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '6px' }}>
-                                    <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#2F855A' }}>{stats.entree}</div>
-                                    <div style={{ fontSize: '0.8rem', color: '#68d391' }}>Entrées</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="col-6 col-md-3 col-lg-2">
-                            <div className="p-2 rounded-2 text-center" style={{ backgroundColor: '#FED7D7', borderLeft: '3px solid #e53e3e' }}>
-                                <FaArrowDown style={{ fontSize: '1.4rem', color: '#e53e3e', marginBottom: '6px' }} />
-                                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '6px' }}>
-                                    <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#C53030' }}>{stats.sortie}</div>
-                                    <div style={{ fontSize: '0.8rem', color: '#fc8181' }}>Sorties</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="col-6 col-md-3 col-lg-2">
-                            <div className="p-2 rounded-2 text-center" style={{ backgroundColor: '#E9D8FD', borderLeft: '3px solid #805ad5' }}>
-                                <FaExchangeAlt style={{ fontSize: '1.4rem', color: '#805ad5', marginBottom: '6px' }} />
-                                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '6px' }}>
-                                    <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#6B46C1' }}>{stats.ajustement}</div>
-                                    <div style={{ fontSize: '0.8rem', color: '#b794f4' }}>Ajustements</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="col-6 col-md-3 col-lg-2">
-                            <div className="p-2 rounded-2 text-center" style={{ backgroundColor: '#BEE3F8', borderLeft: '3px solid #3182ce' }}>
-                                <FaBoxOpen style={{ fontSize: '1.4rem', color: '#3182ce', marginBottom: '6px' }} />
-                                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '6px' }}>
-                                    <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#2B6CB0' }}>{stats.autres}</div>
-                                    <div style={{ fontSize: '0.8rem', color: '#63b3ed' }}>Autres</div>
-                                </div>
-                            </div>
-                        </div>
+                        ))}
                     </div>
 
                     {/* Barre de recherche et filtres */}
@@ -1202,6 +1214,7 @@ const handleImportSubmit = useCallback(async () => {
                                     <option value="ENTREE">Entrée</option>
                                     <option value="SORTIE">Sortie</option>
                                     <option value="ENTREE_QUANTITE">Ajustement</option>
+                                    <option value={AUTRES_TYPE_FILTER}>Autres</option>
                                 </select>
                             </div>
                             <div className="col-md-4">
