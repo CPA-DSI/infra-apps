@@ -82,7 +82,7 @@ const NoDataComponent = () => (
 const AUTRES_TYPE_FILTER = '__AUTRES__';
 
 // --- Composant StatCard mémoïsé ---
-const StatCard = React.memo(({ icon: Icon, value, label, cardClass, colorClass, isActive, isEmpty, onClick }) => (
+const StatCard = React.memo(({ icon: Icon, value, label, qty, cardClass, colorClass, isActive, isEmpty, onClick }) => (
     <div
         className={`stat-card ${cardClass}${isActive ? ' stat-card-active' : ''}${isEmpty ? ' stat-card-empty' : ''}`}
         onClick={onClick}
@@ -100,6 +100,9 @@ const StatCard = React.memo(({ icon: Icon, value, label, cardClass, colorClass, 
         <div className="stat-card-row">
             <div className={`stat-value stat-value-${colorClass}`}>{value}</div>
             <div className={`stat-label stat-label-${colorClass}`}>{label}</div>
+        </div>
+        <div className={`stat-qty stat-label-${colorClass}`}>
+            {qty} {qty === 1 ? 'unité' : 'unités'} au total
         </div>
     </div>
 ));
@@ -265,22 +268,34 @@ const Mouvements = () => {
 
     // --- Statistiques des mouvements ---
     const stats = useMemo(() => {
+        const sommeQuantites = (items) => items.reduce((sum, d) => sum + (Number(d.quantite) || 0), 0);
+
+        const entrees = data.filter(d => d.type_mouvement === 'ENTREE');
+        const sorties = data.filter(d => d.type_mouvement === 'SORTIE');
+        const ajustements = data.filter(d => d.type_mouvement === 'ENTREE_QUANTITE');
+        const autres = data.filter(d => !['ENTREE', 'SORTIE', 'ENTREE_QUANTITE'].includes(d.type_mouvement));
+
         return {
             total: data.length,
-            entree: data.filter(d => d.type_mouvement === 'ENTREE').length,
-            sortie: data.filter(d => d.type_mouvement === 'SORTIE').length,
-            ajustement: data.filter(d => d.type_mouvement === 'ENTREE_QUANTITE').length,
-            autres: data.filter(d => !['ENTREE', 'SORTIE', 'ENTREE_QUANTITE'].includes(d.type_mouvement)).length,
+            entree: entrees.length,
+            sortie: sorties.length,
+            ajustement: ajustements.length,
+            autres: autres.length,
+            totalQte: sommeQuantites(data),
+            entreeQte: sommeQuantites(entrees),
+            sortieQte: sommeQuantites(sorties),
+            ajustementQte: sommeQuantites(ajustements),
+            autresQte: sommeQuantites(autres),
         };
     }, [data]);
 
     // --- Configuration des cartes de statistiques (cliquables pour filtrer) ---
     const statsConfig = useMemo(() => [
-        { key: 'total', label: 'Total', value: stats.total, icon: FaChartBar, cardClass: 'stat-card-total', colorClass: 'blue', filterValue: '' },
-        { key: 'entree', label: 'Entrées', value: stats.entree, icon: FaArrowUp, cardClass: 'stat-card-entree', colorClass: 'green', filterValue: 'ENTREE' },
-        { key: 'sortie', label: 'Sorties', value: stats.sortie, icon: FaArrowDown, cardClass: 'stat-card-sortie', colorClass: 'red', filterValue: 'SORTIE' },
-        { key: 'ajustement', label: 'Ajustements', value: stats.ajustement, icon: FaExchangeAlt, cardClass: 'stat-card-ajustement', colorClass: 'purple', filterValue: 'ENTREE_QUANTITE' },
-        { key: 'autres', label: 'Autres', value: stats.autres, icon: FaBoxOpen, cardClass: 'stat-card-autres', colorClass: 'light-blue', filterValue: AUTRES_TYPE_FILTER },
+        { key: 'total', label: 'Total', value: stats.total, qty: stats.totalQte, icon: FaChartBar, cardClass: 'stat-card-total', colorClass: 'blue', filterValue: '' },
+        { key: 'entree', label: 'Entrées', value: stats.entree, qty: stats.entreeQte, icon: FaArrowUp, cardClass: 'stat-card-entree', colorClass: 'green', filterValue: 'ENTREE' },
+        { key: 'sortie', label: 'Sorties', value: stats.sortie, qty: stats.sortieQte, icon: FaArrowDown, cardClass: 'stat-card-sortie', colorClass: 'red', filterValue: 'SORTIE' },
+        { key: 'ajustement', label: 'Ajustements', value: stats.ajustement, qty: stats.ajustementQte, icon: FaExchangeAlt, cardClass: 'stat-card-ajustement', colorClass: 'purple', filterValue: 'ENTREE_QUANTITE' },
+        { key: 'autres', label: 'Autres', value: stats.autres, qty: stats.autresQte, icon: FaBoxOpen, cardClass: 'stat-card-autres', colorClass: 'light-blue', filterValue: AUTRES_TYPE_FILTER },
     ], [stats]);
 
     const handleStatCardClick = useCallback((filterValue) => {
@@ -1144,6 +1159,7 @@ const handleImportSubmit = useCallback(async () => {
                                     icon={cfg.icon}
                                     value={cfg.value}
                                     label={cfg.label}
+                                    qty={cfg.qty}
                                     cardClass={cfg.cardClass}
                                     colorClass={cfg.colorClass}
                                     isActive={filterType === cfg.filterValue}

@@ -147,6 +147,12 @@
     gap: 6px;
 }
 
+.stat-qty {
+    font-size: 0.68rem;
+    margin-top: 2px;
+    opacity: 0.8;
+}
+
 .stat-card-total {
     background-color: #e3f2fd;
     border-left: 4px solid #2196f3;
