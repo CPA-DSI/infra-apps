@@ -6,6 +6,7 @@ import pkg from '@prisma/client';
 const { PrismaClient } = pkg;
 import { createCronTasks, syncCronStatus } from './cron-worker.js';
 import path from 'path';
+import fs from 'fs';
 import { authenticateToken, ensureActiveUser, requirePermission } from './middleware/authMiddleware.js';
 import { PERMISSIONS } from './constants/roles.js';
 
@@ -37,7 +38,12 @@ app.use(cookieParser());
 
 app.use(express.json({ limit: '1mb' }));
 
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+// Le dossier uploads est exclu de Git (contenu utilisateur) : on le recrée au démarrage
+// pour éviter les 500 de Multer si le déploiement ne l'a pas conservé.
+const uploadsDir = path.join(process.cwd(), 'uploads');
+fs.mkdirSync(uploadsDir, { recursive: true });
+
+app.use('/uploads', express.static(uploadsDir));
 
 app.use((req, res, next) => {
     req.prisma = prisma;
