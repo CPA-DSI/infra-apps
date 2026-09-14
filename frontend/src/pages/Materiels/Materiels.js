@@ -654,7 +654,7 @@ const normalizeCell = (val) => {
 // parseExcelFile avec date_ecran
 const parseExcelFile = useCallback(async (file) => {
     const arrayBuffer = await file.arrayBuffer();
-    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+    const workbook = XLSX.read(arrayBuffer, { type: 'array', cellDates: true });
     const firstSheetName = workbook.SheetNames?.[0];
     if (!firstSheetName) throw new Error('Fichier Excel invalide (aucune feuille trouvée).');
 
@@ -689,14 +689,30 @@ const parseExcelFile = useCallback(async (file) => {
         return Number.isFinite(num) ? num : null;
     };
 
+    const excelSerialToDate = (serial) => {
+        const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+        const msPerDay = 24 * 60 * 60 * 1000;
+        return new Date(excelEpoch.getTime() + (serial * msPerDay));
+    };
+
     const parseDateOrNull = (v) => {
         const n = normalizeCell(v);
         if (n === null) return null;
-        
+
         if (n instanceof Date && !isNaN(n.getTime())) {
             return n;
         }
-        
+
+        // Filet de sécurité : numéro de série Excel brut (cellule non reconnue
+        // comme date par SheetJS malgré cellDates: true, ex. format de cellule
+        // atypique dans le fichier source).
+        if (typeof n === 'number' && n > 1 && n < 100000) {
+            const date = excelSerialToDate(n);
+            if (!isNaN(date.getTime())) {
+                return date;
+            }
+        }
+
         const s = String(n).trim();
         if (!s) return null;
 
