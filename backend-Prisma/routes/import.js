@@ -454,14 +454,17 @@ async function findOrCreateUser(id_n, nomUtilisateur, equipe, localName, firstEm
         }
 
         // Mot de passe primaire prévisible (Rfc_/Cpa_ + identifiant + "1*") : haché pour
-        // l'authentification (password). password_enc/pass_mail (copie affichable/chiffrée)
-        // ne sont pas renseignés pendant l'import pour ne pas dépendre de
-        // PASS_MAIL_ENCRYPTION_KEY ici ; ils peuvent être ajoutés plus tard depuis la fiche utilisateur.
+        // l'authentification (password), et recopié en clair dans pass_mail pour affichage
+        // sur la fiche utilisateur. Pas d'appel à encryptPassMail ici : ne pas dépendre de
+        // PASS_MAIL_ENCRYPTION_KEY à l'import (cf. ac023f7) ; decryptPassMail sait déjà lire
+        // une valeur en clair (branche "ancienne valeur non chiffrée"). password_enc reste
+        // non renseigné pendant l'import et peut être ajouté plus tard depuis la fiche utilisateur.
         const primaryPlainPassword = primaryPass;
         const emailsCreate = [
             {
                 email: primaryEmail,
                 password: await bcrypt.hash(primaryPlainPassword, BCRYPT_ROUNDS),
+                pass_mail: primaryPlainPassword,
                 is_primary: true,
                 is_verified: primaryVerified
             }
@@ -472,6 +475,7 @@ async function findOrCreateUser(id_n, nomUtilisateur, equipe, localName, firstEm
             emailsCreate.push({
                 email: secondaryEmail,
                 password: await bcrypt.hash(secondaryPlainPassword, BCRYPT_ROUNDS),
+                pass_mail: secondaryPlainPassword,
                 is_primary: false,
                 is_verified: secondaryVerified
             });
