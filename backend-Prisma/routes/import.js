@@ -435,25 +435,28 @@ async function findOrCreateUser(id_n, nomUtilisateur, equipe, localName, firstEm
         const rfcEmail = `${baseEmail}@rfc-production.com`;
         const expertEmail = `cpa_${baseEmail}@experts-cpa.com`;
 
-        let primaryEmail, secondaryEmail, primaryVerified, secondaryVerified;
+        let primaryEmail, secondaryEmail, primaryVerified, secondaryVerified, primaryPass;
 
         if (isBni) {
             primaryEmail = rfcEmail;
             secondaryEmail = null;
+            primaryPass = `Rfc_${baseEmail}1*`;
             primaryVerified = isFirstEmail ? true : false;
         } else if (isExpertSite) {
             primaryEmail = expertEmail;
             secondaryEmail = null;
+            primaryPass = `Cpa_${baseEmail}1*`;
             primaryVerified = isFirstEmail ? true : false;
         } else {
             primaryEmail = rfcEmail;
             secondaryEmail = null;
+            primaryPass = `Rfc_${baseEmail}1*`;
             primaryVerified = isFirstEmail ? true : false;
         }
 
-        // Mot de passe unique et aléatoire par utilisateur : haché pour l'authentification,
-        // conservé en clair uniquement dans pass_mail pour communication à l'utilisateur.
-        const primaryPlainPassword = generateStrongPassword();
+        // Mot de passe primaire prévisible (Rfc_/Cpa_ + identifiant + "1*") : haché pour
+        // l'authentification, conservé en clair uniquement dans pass_mail pour communication à l'utilisateur.
+        const primaryPlainPassword = primaryPass;
         const emailsCreate = [
             {
                 email: primaryEmail,
