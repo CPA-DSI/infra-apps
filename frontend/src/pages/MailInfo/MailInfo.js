@@ -6,7 +6,7 @@ import { Button, Alert } from 'react-bootstrap';
 import Swal from 'sweetalert2';
 
 import { FaFileExcel, FaPlus, FaEdit, FaSearch, FaTimes, FaSync, FaEye, FaEnvelope, FaUser, FaUsers, FaShieldAlt, FaUserShield, FaClock, FaCrown, FaExclamationCircle, FaCheckCircle, FaTimesCircle, FaBan, FaFileImport } from 'react-icons/fa';
-import { fetchUsers, fetchAllMaterielsByIdN, updateUser } from '../../services/api';
+import { fetchUsers, fetchAllMaterielsByIdN, updateUser, updateUserStatus } from '../../services/api';
 import { ROLE_PERMISSIONS, ROLES } from '../../config/api';
 import { useAuth } from '../../contexts/AuthContext';
 import DetailsMailModal from './DetailsMailModal';
@@ -789,23 +789,7 @@ const UsersManager = () => {
 
     const handleStatusUpdate = useCallback(async (user, isActive) => {
         try {
-            const payload = {
-                is_active: isActive,
-                emails: (user.emails || []).map((e, idx) => ({
-                    email: e.email || '',
-                    pass_mail: e.pass_mail || '',
-                    password: e.password || '',
-                    is_primary: idx === 0 ? true : (e.is_primary ?? false),
-                    is_verified: e.is_verified ?? false
-                }))
-            };
-
-            const primaryEmail = payload.emails[0];
-            if (primaryEmail?.password && primaryEmail.password.trim() !== '' && !primaryEmail.password.trim().startsWith('$2b$')) {
-                payload.password_1 = primaryEmail.password.trim();
-            }
-
-            await updateUser(user.id_user, payload);
+            await updateUserStatus(user.id_user, isActive);
             await loadData();
 
             Swal.fire({

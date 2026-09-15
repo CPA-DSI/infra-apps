@@ -241,6 +241,33 @@ router.put('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMIS
     }
 });
 
+// PATCH /api/users/:id/status
+// Bascule uniquement is_active, sans toucher aux emails : ne dépend pas de PASS_MAIL_ENCRYPTION_KEY.
+router.patch('/:id/status', authenticateToken, ensureActiveUser, requirePermission(PERMISSIONS.USERS_WRITE), async (req, res) => {
+    try {
+        const { is_active } = req.body;
+        if (typeof is_active !== 'boolean') {
+            return res.status(400).json({ message: "Le champ is_active (booléen) est requis." });
+        }
+
+        const id_user = parseInt(req.params.id);
+        if (isNaN(id_user)) {
+            return res.status(400).json({ message: "ID utilisateur invalide." });
+        }
+
+        const updated = await prisma.Users.update({
+            where: { id_user },
+            data: { is_active },
+            select: { id_user: true, id_n: true, is_active: true }
+        });
+
+        res.json(updated);
+    } catch (error) {
+        console.error("Erreur backend lors du changement de statut:", error);
+        res.status(400).json({ message: error.message });
+    }
+});
+
 // DELETE /api/users/:id
 router.delete('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMISSIONS.USERS_DELETE), async (req, res) => {
     try {
