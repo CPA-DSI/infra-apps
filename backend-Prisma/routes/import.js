@@ -1,6 +1,5 @@
 // backend/routes/import.js
 import express from 'express';
-import crypto from 'node:crypto';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { authenticateToken, ensureActiveUser, requirePermission, requireRole } from '../middleware/authMiddleware.js';
@@ -13,8 +12,10 @@ router.use(authenticateToken, ensureActiveUser);
 
 const BCRYPT_ROUNDS = 10;
 
-// Génère un mot de passe fort et unique par utilisateur (à communiquer séparément, jamais dérivé du nom)
-const generateStrongPassword = () => crypto.randomBytes(12).toString('base64url');
+// Mot de passe par défaut attribué à tous les utilisateurs créés par import (cf. usersRoutes.js
+// qui applique la même convention pour la création manuelle). L'utilisateur doit le changer à la
+// première connexion (users.must_change_password vaut true par défaut).
+const DEFAULT_PASSWORD = 'User123456';
 
 // Fonction pour convertir les dates Excel (nombre de jours depuis 1900-01-01)
 const excelDateToJSDate = (excelDate) => {
@@ -434,48 +435,47 @@ async function findOrCreateUser(id_n, nomUtilisateur, equipe, localName, firstEm
         const rfcEmail = `${baseEmail}@rfc-production.com`;
         const expertEmail = `cpa_${baseEmail}@experts-cpa.com`;
 
-        let primaryEmail, secondaryEmail, primaryVerified, secondaryVerified, primaryPass;
+        let primaryEmail, secondaryEmail, primaryVerified, secondaryVerified;
 
         if (isBni) {
             primaryEmail = rfcEmail;
             secondaryEmail = null;
-            primaryPass = `Rfc_${baseEmail}1*`;
             primaryVerified = isFirstEmail ? true : false;
         } else if (isExpertSite) {
             primaryEmail = expertEmail;
             secondaryEmail = null;
-            primaryPass = `Cpa_${baseEmail}1*`;
             primaryVerified = isFirstEmail ? true : false;
         } else {
             primaryEmail = rfcEmail;
             secondaryEmail = null;
-            primaryPass = `Rfc_${baseEmail}1*`;
             primaryVerified = isFirstEmail ? true : false;
         }
 
-        // Mot de passe primaire prévisible (Rfc_/Cpa_ + identifiant + "1*") : haché pour
-        // l'authentification (password), et recopié en clair dans pass_mail pour affichage
-        // sur la fiche utilisateur. Pas d'appel à encryptPassMail ici : ne pas dépendre de
-        // PASS_MAIL_ENCRYPTION_KEY à l'import (cf. ac023f7) ; decryptPassMail sait déjà lire
-        // une valeur en clair (branche "ancienne valeur non chiffrée"). password_enc reste
-        // non renseigné pendant l'import et peut être ajouté plus tard depuis la fiche utilisateur.
-        const primaryPlainPassword = primaryPass;
+        // Mot de passe par défaut identique pour tous les utilisateurs créés (DEFAULT_PASSWORD) :
+        // haché pour l'authentification (password), et recopié en clair dans pass_mail/password_enc
+        // pour affichage sur la fiche utilisateur. Pas d'appel à encryptPassMail/encryptSecret ici :
+        // ne pas dépendre de PASS_MAIL_ENCRYPTION_KEY à l'import (cf. ac023f7) ; decryptPassMail et
+        // decryptSecret savent déjà lire une valeur en clair (branche "ancienne valeur non chiffrée").
+        // L'utilisateur doit changer ce mot de passe à sa première connexion (must_change_password).
+        const primaryPlainPassword = DEFAULT_PASSWORD;
         const emailsCreate = [
             {
                 email: primaryEmail,
                 password: await bcrypt.hash(primaryPlainPassword, BCRYPT_ROUNDS),
                 pass_mail: primaryPlainPassword,
+                password_enc: primaryPlainPassword,
                 is_primary: true,
                 is_verified: primaryVerified
             }
         ];
 
         if (secondaryEmail) {
-            const secondaryPlainPassword = generateStrongPassword();
+            const secondaryPlainPassword = DEFAULT_PASSWORD;
             emailsCreate.push({
                 email: secondaryEmail,
                 password: await bcrypt.hash(secondaryPlainPassword, BCRYPT_ROUNDS),
                 pass_mail: secondaryPlainPassword,
+                password_enc: secondaryPlainPassword,
                 is_primary: false,
                 is_verified: secondaryVerified
             });
