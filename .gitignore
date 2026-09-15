@@ -25,3 +25,5 @@ Thumbs.db
 # User-uploaded content (not source code)
 backend-Prisma/uploads/*
 !backend-Prisma/uploads/.gitkeep
+
+.vercel
