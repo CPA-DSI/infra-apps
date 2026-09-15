@@ -583,7 +583,7 @@ const columns = useMemo(() => {
             >
                 <FaEye size={14} className="text-info" />
             </Button>
-            {(userRole !== 'USER' && userRole !== 'DIRECTION') && (
+            {(userRole !== 'USER') && (
             <Button 
                 variant="light" 
                 className="shadow-sm border-0 p-2 rounded-circle" 
@@ -608,7 +608,7 @@ const columns = useMemo(() => {
             >
                 <FaHistory size={14} className="text-primary" />
             </Button>
-            {(userRole !== 'USER' && userRole !== 'DIRECTION') && (
+            {(userRole !== 'USER') && (
             <Button 
                 variant="light" 
                 className="shadow-sm border-0 p-2 rounded-circle" 
@@ -1320,7 +1320,7 @@ return (
                     <FaSync />
                 </Button>
                 
-                {(userRole !== 'USER' && userRole !== 'DIRECTION') && (
+                {(userRole !== 'USER') && (
                 <Button 
                     className={`btn-pill btn-pill-success ${showImportSection ? 'active' : ''}`} 
                     onClick={toggleImportSection} 
@@ -1360,7 +1360,7 @@ return (
                     </Button>
                 )}
                 
-                {(userRole !== 'USER' && userRole !== 'DIRECTION') && (
+                {(userRole !== 'USER') && (
                 <Button 
                     className="btn-pill btn-pill-primary" 
                     onClick={handleOpenAddModal}
@@ -1372,7 +1372,7 @@ return (
                 </Button>
                 )}
                 
-                {(userRole !== 'USER' && userRole !== 'DIRECTION') && (
+                {(userRole !== 'USER') && (
                 <Button 
                     className="btn-pill btn-pill-secondary" 
                     onClick={handleOpenAddMarque}

@@ -8,7 +8,6 @@ import Swal from 'sweetalert2';
 import { FaFileExcel, FaPlus, FaEdit, FaSearch, FaTimes, FaSync, FaEye, FaEnvelope, FaUser, FaUsers, FaShieldAlt, FaUserShield, FaClock, FaCrown, FaExclamationCircle, FaCheckCircle, FaTimesCircle, FaBan, FaFileImport } from 'react-icons/fa';
 import { fetchUsers, fetchAllMaterielsByIdN, updateUser, updateUserStatus } from '../../services/api';
 import { ROLE_PERMISSIONS, ROLES } from '../../config/api';
-import { useAuth } from '../../contexts/AuthContext';
 import DetailsMailModal from './DetailsMailModal';
 import UserFormModal from './UserFormModal';
 
@@ -360,18 +359,16 @@ const StatCard = React.memo(({ icon: Icon, value, label, colorScheme, tooltip })
     );
 });
 
-const ActionButtons = React.memo(({ row, handleView, handleEdit, handleToggleStatus, isDirection }) => {
+const ActionButtons = React.memo(({ row, handleView, handleEdit, handleToggleStatus }) => {
     const isActive = row.is_active !== false;
     return (
         <div className="d-flex gap-2" role="group" aria-label="Actions">
             <Button variant="light" onClick={() => handleView(row)} title="Voir les détails" className="shadow-sm border-0 p-2 rounded-circle" >
                 <FaEye size={12} className="text-info" />
             </Button>
-            {!isDirection && (
-                <Button variant="light" onClick={() => handleEdit(row)} title="Modifier" className="shadow-sm border-0 p-2 rounded-circle" >
-                    <FaEdit size={12} className="text-warning" />
-                </Button>
-            )}
+            <Button variant="light" onClick={() => handleEdit(row)} title="Modifier" className="shadow-sm border-0 p-2 rounded-circle" >
+                <FaEdit size={12} className="text-warning" />
+            </Button>
             <Button variant="light" onClick={() => handleToggleStatus(row, !isActive)} title={isActive ? 'Désactiver' : 'Activer'} className="shadow-sm border-0 p-2 rounded-circle" >
                 {isActive ? <FaBan size={12} className="text-warning" /> : <FaCheckCircle size={12} className="text-success" />}
             </Button>
@@ -550,10 +547,6 @@ const SearchableSelect = ({ value, onChange, options, allLabel, styleClass = 'fo
 };
 
 const UsersManager = () => {
-
-    const { user } = useAuth();
-    const userRole = user?.role?.toUpperCase();
-    const isDirection = userRole === 'DIRECTION';
 
     const [users, setUsers] = useState([]);
     const [allMateriels, setAllMateriels] = useState([]);
@@ -1185,14 +1178,14 @@ const UsersManager = () => {
         {
             name: 'Actions',
             cell: row => (
-                <ActionButtons row={row} handleView={openDetails} handleEdit={openEdit} handleToggleStatus={handleToggleStatus} isDirection={isDirection} />
+                <ActionButtons row={row} handleView={openDetails} handleEdit={openEdit} handleToggleStatus={handleToggleStatus} />
             ),
             ignoreRowClick: true, 
             button: true, 
             width: '120px', 
             center: true
         }
-    ], [columnWidths, handleRoleUpdate, handleToggleStatus, isDirection]);
+    ], [columnWidths, handleRoleUpdate, handleToggleStatus]);
 
     return (
         <div className="container-fluid py-2 px-2 page-mail" style={{ backgroundColor: '#f9fafb', minHeight: '100vh' }}>
@@ -1236,24 +1229,20 @@ const UsersManager = () => {
                         <FaSync className={loading ? 'fa-spin' : ''} />
                     </button>
 
-                    {!isDirection && (
-                        <button className="btn-pill btn-pill-success shadow-sm" onClick={() => {}} title="Importer des données" >
-                            <FaFileImport size={13} />
-                            <span>Importer</span>
-                        </button>
-                    )}
+                    <button className="btn-pill btn-pill-success shadow-sm" onClick={() => {}} title="Importer des données" >
+                        <FaFileImport size={13} />
+                        <span>Importer</span>
+                    </button>
 
                     <button className="btn-pill btn-pill-warning shadow-sm" onClick={exportToExcel} title="Exporter les données" >
                         <FaFileExcel size={13} />
                         <span>Exporter</span>
                     </button>
 
-                    {!isDirection && (
-                        <button className="btn-pill btn-pill-primary shadow-sm" onClick={() => { setUserModalData(null); setUserModalMode('add'); setShowUserModal(true); }} title="Ajouter un nouvel utilisateur" >
-                            <FaPlus size={14} />
-                            <span>Ajouter</span>
-                        </button>
-                    )}
+                    <button className="btn-pill btn-pill-primary shadow-sm" onClick={() => { setUserModalData(null); setUserModalMode('add'); setShowUserModal(true); }} title="Ajouter un nouvel utilisateur" >
+                        <FaPlus size={14} />
+                        <span>Ajouter</span>
+                    </button>
                 </div>
             </div>
 
@@ -1410,7 +1399,7 @@ const UsersManager = () => {
                 />
             )}
 
-            <DetailsMailModal show={showDetailsModal} handleClose={closeDetails} mailData={currentMailData} onEmailAdded={handleEmailAddedFromDetails} isDirection={isDirection} />
+            <DetailsMailModal show={showDetailsModal} handleClose={closeDetails} mailData={currentMailData} onEmailAdded={handleEmailAddedFromDetails} />
 
         </div>
     );

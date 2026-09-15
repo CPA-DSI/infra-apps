@@ -90,7 +90,7 @@ function PasswordField({ label, value, visible, onToggle, toggleKey, badge }) {
     );
 }
 
-function DetailsMailModal({ show, handleClose, mailData, onEmailAdded, isDirection = false }) {
+function DetailsMailModal({ show, handleClose, mailData, onEmailAdded }) {
     const [visiblePasswords, setVisiblePasswords] = useState({});
     const [expandedEmails, setExpandedEmails] = useState(false);
     const [expandedPasswords, setExpandedPasswords] = useState(false);
@@ -356,18 +356,16 @@ function DetailsMailModal({ show, handleClose, mailData, onEmailAdded, isDirecti
                                                     <span style={{ fontSize: '0.65rem', padding: '3px 10px', borderRadius: '50px', fontWeight: 600, backgroundColor: email.is_verified ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)', color: email.is_verified ? '#15803d' : '#dc2626' }}>
                                                         {email.is_verified ? '✓ VÉRIFIÉ' : 'NON VÉRIFIÉ'}
                                                     </span>
-                                                    {!isDirection && (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => { setEditingEmail(email); setShowAddEmailModal(true); }}
-                                                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6366f1', padding: '4px', borderRadius: '6px', transition: 'all 0.2s' }}
-                                                            title="Modifier cet email"
-                                                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(99,102,241,0.1)'}
-                                                            onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                                                        >
-                                                            <FaEdit size={14} />
-                                                        </button>
-                                                    )}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { setEditingEmail(email); setShowAddEmailModal(true); }}
+                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6366f1', padding: '4px', borderRadius: '6px', transition: 'all 0.2s' }}
+                                                        title="Modifier cet email"
+                                                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(99,102,241,0.1)'}
+                                                        onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                                                    >
+                                                        <FaEdit size={14} />
+                                                    </button>
                                                 </div>
                                             ))}
                                         </div>
@@ -469,11 +467,9 @@ function DetailsMailModal({ show, handleClose, mailData, onEmailAdded, isDirecti
                 <div className="add-modal-footer" style={{
                     background: '#F1F5F9', borderTop: '1px solid #E2E8F0', padding: '16px 24px', display: 'flex', justifyContent: 'flex-end', gap: '12px'
                 }}>
-                    {!isDirection && (
-                        <button onClick={() => setShowAddEmailModal(true)} className="add-modal-submit-btn" style={{ backgroundColor: '#22c55e', marginRight: '8px' }}>
-                            <FaPlus /> Ajouter un email
-                        </button>
-                    )}
+                    <button onClick={() => setShowAddEmailModal(true)} className="add-modal-submit-btn" style={{ backgroundColor: '#22c55e', marginRight: '8px' }}>
+                        <FaPlus /> Ajouter un email
+                    </button>
                     <button onClick={handleClose} className="add-modal-cancel-btn" style={{
                         background: 'white', color: '#1E293B', border: '1px solid #CBD5E1', padding: '10px 28px', borderRadius: '12px', fontWeight: '500', fontSize: '0.9rem', transition: 'all 0.2s ease'
                     }}>

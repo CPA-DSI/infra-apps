@@ -816,7 +816,7 @@ router.get('/locaux', requirePermission(PERMISSIONS.STOCKS_READ), async (req, re
 // arbitraire, dump de matériels, test de parsing de date).
 if (process.env.NODE_ENV !== 'production') {
     // Endpoint de test pour les locaux
-    router.get('/test-local/:nomLocal', requireRole(UserRole.IT_ADMIN), async (req, res) => {
+    router.get('/test-local/:nomLocal', requireRole(UserRole.IT_ADMIN, UserRole.DIRECTION), async (req, res) => {
         try {
             const { nomLocal } = req.params;
             const idLocal = await getOrCreateLocalId(nomLocal);
@@ -836,7 +836,7 @@ if (process.env.NODE_ENV !== 'production') {
     });
 
     // Endpoint pour debug - afficher les matériels avec leurs relations
-    router.get('/materiels-with-relations', requireRole(UserRole.IT_ADMIN), async (req, res) => {
+    router.get('/materiels-with-relations', requireRole(UserRole.IT_ADMIN, UserRole.DIRECTION), async (req, res) => {
         try {
             const materiels = await prisma.materiels.findMany({
                 take: 20,
@@ -863,7 +863,7 @@ if (process.env.NODE_ENV !== 'production') {
     });
 
     // Endpoint pour tester la conversion de date
-    router.post('/test-date', requireRole(UserRole.IT_ADMIN), async (req, res) => {
+    router.post('/test-date', requireRole(UserRole.IT_ADMIN, UserRole.DIRECTION), async (req, res) => {
         try {
             const { dateValue } = req.body;
             const converted = validateDate(dateValue);
@@ -882,7 +882,7 @@ if (process.env.NODE_ENV !== 'production') {
     // colonnes et les extractions (local, matricule, utilisateur, dates, marque)
     // sur un échantillon, en lecture seule (aucune création en base), pour valider
     // un fichier avant de lancer le véritable import.
-    router.post('/test-import', requireRole(UserRole.IT_ADMIN), async (req, res) => {
+    router.post('/test-import', requireRole(UserRole.IT_ADMIN, UserRole.DIRECTION), async (req, res) => {
         try {
             const { items } = req.body;
 
