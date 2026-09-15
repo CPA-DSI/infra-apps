@@ -73,7 +73,7 @@ function EmailSection({ title, subtitle, color, gradient, icon, index, emails, u
                     <input
                         type="text"
                         className="add-modal-input"
-                        value={email?.password || email?.pass_mail || ''}
+                        value={email?.password || ''}
                         onChange={e => updateEmail(index, 'password', e.target.value)}
                         disabled={isDisabled}
                         placeholder="Mot de passe compte"
@@ -86,7 +86,7 @@ function EmailSection({ title, subtitle, color, gradient, icon, index, emails, u
                     <input
                         type="text"
                         className="add-modal-input"
-                        value={email?.pass_mail || (email?.password && /^\$2[ab]?\$/.test(email?.password) ? email.password : '') || ''}
+                        value={email?.pass_mail || ''}
                         onChange={e => updateEmail(index, 'pass_mail', e.target.value)}
                         disabled={isDisabled}
                         placeholder="Mot de passe messagerie"
@@ -133,7 +133,7 @@ function UserFormModal({ show, handleClose, mode, userData, availableMateriels, 
                 ? normalizedEmails.map(e => ({
                     email: e.email || '',
                     pass_mail: e.pass_mail || '',
-                    password: '',
+                    password: e.password_enc || '',
                     is_primary: e.is_primary || false,
                     is_verified: e.is_verified || false
                 }))

@@ -68,14 +68,14 @@ const getSecondaryEmail = (user) => {
 const getPrimaryPassword = (user) => {
     if (!user?.emails || user.emails.length === 0) return '';
     const primary = user.emails.find(e => e.is_primary) || user.emails[0];
-    return primary.pass_mail || primary.password || '';
+    return primary.pass_mail || primary.password_enc || '';
 };
 
 const getSecondaryPassword = (user) => {
     if (!user?.emails || user.emails.length === 0) return '';
     const primary = user.emails.find(e => e.is_primary) || user.emails[0];
     const secondary = user.emails.find(e => e !== primary);
-    return secondary ? (secondary.pass_mail || secondary.password || '') : '';
+    return secondary ? (secondary.pass_mail || secondary.password_enc || '') : '';
 };
 
 const formatUserStatus = (isActive) => {
@@ -1426,7 +1426,7 @@ const UsersManager = () => {
                 />
             )}
 
-            <DetailsMailModal show={showDetailsModal} handleClose={closeDetails} mailData={currentMailData} onEmailAdded={handleEmailAddedFromDetails} />
+            <DetailsMailModal show={showDetailsModal} handleClose={closeDetails} mailData={currentMailData} onEmailAdded={handleEmailAddedFromDetails} isDirection={isDirection} />
 
         </div>
     );

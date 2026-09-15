@@ -67,19 +67,30 @@ router.post('/', authenticateToken, ensureActiveUser, requirePermission(PERMISSI
 
         const plainPassword = password && password.trim() !== '' ? password.trim() : '123456';
         const hashedPassword = await bcrypt.hash(plainPassword, 10);
+        const willBePrimary = (is_primary ?? false) || existingUser.emails.length === 0;
 
-        const newEmail = await prisma.userEmail.create({
+        const createEmail = () => prisma.userEmail.create({
             data: {
                 email: trimmedEmail,
                 password: hashedPassword,
                 password_enc: encryptSecret(plainPassword),
                 pass_mail: encryptPassMail(pass_mail || ''),
-                is_primary: is_primary ?? false,
+                is_primary: willBePrimary,
                 is_verified: is_verified ?? false,
                 user_id: parseInt(user_id)
             },
             include: { user: { include: { materiel: true } } }
         });
+
+        const newEmail = willBePrimary && existingUser.emails.length > 0
+            ? (await prisma.$transaction([
+                prisma.userEmail.updateMany({
+                    where: { user_id: parseInt(user_id) },
+                    data: { is_primary: false }
+                }),
+                createEmail()
+            ]))[1]
+            : await createEmail();
 
         res.status(201).json(serializeUserEmail(newEmail));
     } catch (error) {
@@ -121,11 +132,25 @@ router.put('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMIS
             updateData.password_enc = encryptSecret(password.trim());
         }
 
-        const updated = await prisma.userEmail.update({
-            where: { id_uEmail },
-            data: updateData,
-            include: { user: { include: { materiel: true } } }
-        });
+        const becomesPrimary = updateData.is_primary === true && !existingEmail.is_primary;
+
+        const updated = becomesPrimary
+            ? (await prisma.$transaction([
+                prisma.userEmail.updateMany({
+                    where: { user_id: existingEmail.user_id, id_uEmail: { not: id_uEmail } },
+                    data: { is_primary: false }
+                }),
+                prisma.userEmail.update({
+                    where: { id_uEmail },
+                    data: updateData,
+                    include: { user: { include: { materiel: true } } }
+                })
+            ]))[1]
+            : await prisma.userEmail.update({
+                where: { id_uEmail },
+                data: updateData,
+                include: { user: { include: { materiel: true } } }
+            });
 
         res.json(serializeUserEmail(updated));
     } catch (error) {

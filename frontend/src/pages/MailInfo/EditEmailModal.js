@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import { FaEnvelope, FaLock, FaPlus, FaEdit, FaTimes, FaShieldAlt, FaCheck } from 'react-icons/fa';
-import { apiClient } from '../../services/api';
+import { addUserEmail, updateUserEmail } from '../../services/api';
 
 function EmailFormFields({ formData, handleChange, disabled, mode }) {
     return (
@@ -108,7 +108,7 @@ function EditEmailModal({ show, handleClose, userData, emailData, onSaved }) {
             setFormData({
                 user_id: emailData.user_id || userData?.id_user || '',
                 email: emailData.email || '',
-                password: emailData.password || '',
+                password: emailData.password_enc || '',
                 pass_mail: emailData.pass_mail || '',
                 is_primary: emailData.is_primary || false,
                 is_verified: emailData.is_verified || false
@@ -153,9 +153,9 @@ function EditEmailModal({ show, handleClose, userData, emailData, onSaved }) {
             };
 
             if (isEdit && emailData?.id_uEmail) {
-                await apiClient.put(`/user-emails/${emailData.id_uEmail}`, payload);
+                await updateUserEmail(emailData.id_uEmail, payload);
             } else {
-                await apiClient.post('/user-emails', payload);
+                await addUserEmail(payload);
             }
 
             setSuccess(true);
@@ -166,7 +166,7 @@ function EditEmailModal({ show, handleClose, userData, emailData, onSaved }) {
                 }
             }, 1500);
         } catch (err) {
-            const message = err.response?.data?.message || err.message || "Erreur lors de l'enregistrement de l'email.";
+            const message = err.message || "Erreur lors de l'enregistrement de l'email.";
             setError(message);
             Swal.fire({
                 icon: 'error',

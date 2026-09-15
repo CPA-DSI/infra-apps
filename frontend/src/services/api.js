@@ -344,6 +344,15 @@ export const addUserEmail = async (emailData) => {
     }
 };
 
+export const updateUserEmail = async (id, emailData) => {
+    try {
+        const response = await apiClient.put(`/user-emails/${id}`, emailData);
+        return response.data;
+    } catch (error) {
+        throw new Error(getErrorMessage(error));
+    }
+};
+
 export const deleteUser = async (id) => {
     try {
         const response = await apiClient.delete(`/users/${id}`);
