@@ -333,31 +333,110 @@
 }
 
 .import-drop-zone {
-    transition: all 0.3s ease;
     position: relative;
+    margin: 0 1.25rem 1.25rem 1.25rem;
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 16px;
+    background-color: #fafbfc;
+    background-image:
+        linear-gradient(90deg, #d1d5db 50%, transparent 50%),
+        linear-gradient(90deg, #d1d5db 50%, transparent 50%),
+        linear-gradient(0deg, #d1d5db 50%, transparent 50%),
+        linear-gradient(0deg, #d1d5db 50%, transparent 50%);
+    background-position: 0 0, 0 100%, 0 0, 100% 0;
+    background-size: 16px 2px, 16px 2px, 2px 16px, 2px 16px;
+    background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+    transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.import-drop-zone:hover {
+    background-color: #f5f5ff;
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.08);
+}
+
+.import-drop-zone:hover .import-drop-icon {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(124, 58, 237, 0.28);
 }
 
 .import-drop-zone.dragover {
-    border-color: var(--color-primary) !important;
-    background-color: #f5f3ff !important;
+    background-color: #f5f3ff;
     transform: scale(1.01);
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.16);
+    background-image:
+        linear-gradient(90deg, #6366f1 50%, transparent 50%),
+        linear-gradient(90deg, #6366f1 50%, transparent 50%),
+        linear-gradient(0deg, #6366f1 50%, transparent 50%),
+        linear-gradient(0deg, #6366f1 50%, transparent 50%);
+    animation: dashSlide 0.6s linear infinite;
 }
 
-.import-drop-zone.dragover::before {
-    opacity: 1;
+.import-drop-zone.dragover .import-drop-icon {
+    transform: scale(1.08) translateY(-2px);
+    box-shadow: 0 10px 24px rgba(99, 102, 241, 0.35);
 }
 
-.import-drop-zone::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: radial-gradient(circle at center, rgba(99, 102, 241, 0.04) 0%, transparent 70%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
+.import-drop-zone.has-file {
+    cursor: default;
+    background-color: #f0fdf4;
+    background-image:
+        linear-gradient(90deg, #bbf7d0 50%, transparent 50%),
+        linear-gradient(90deg, #bbf7d0 50%, transparent 50%),
+        linear-gradient(0deg, #bbf7d0 50%, transparent 50%),
+        linear-gradient(0deg, #bbf7d0 50%, transparent 50%);
+}
+
+.import-drop-zone.has-file:hover {
+    box-shadow: none;
+}
+
+@keyframes dashSlide {
+    to { background-position: 16px 0, -16px 100%, 0 -16px, 100% 16px; }
+}
+
+.import-drop-icon {
+    width: 68px;
+    height: 68px;
+    margin: 0 auto 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 18px;
+    font-size: 1.7rem;
+    color: #ffffff;
+    background: linear-gradient(135deg, #7c3aed, #6366f1);
+    box-shadow: 0 6px 16px rgba(124, 58, 237, 0.22);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: floatIcon 2.6s ease-in-out infinite;
+}
+
+@keyframes floatIcon {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+.import-browse-link {
+    color: #6366f1;
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: rgba(99, 102, 241, 0.35);
+    text-underline-offset: 2px;
+}
+
+.import-file-icon {
+    animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes popIn {
+    from { transform: scale(0.6); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.import-remove-btn:hover:not(:disabled) {
+    background-color: #fee2e2 !important;
+    transform: rotate(90deg);
 }
 
 /* Progress bar */

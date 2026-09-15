@@ -1416,15 +1416,10 @@ return (
 
                 {!importSuccess ? (
                     <>
-                        <div 
-                            className={`import-drop-zone mx-4 mb-3 ${isDragging ? 'dragover' : ''}`}
+                        <div
+                            className={`import-drop-zone mx-4 mb-3 ${isDragging ? 'dragover' : ''} ${importFile ? 'has-file' : ''}`}
                             onDragEnter={handleDragEnter} onDragLeave={handleDragLeave} onDragOver={handleDragOver} onDrop={handleDrop}
                             onClick={() => fileInputRef.current?.click()}
-                            style={{
-                                border: `2px dashed ${isDragging ? '#6366f1' : '#e5e7eb'}`, borderRadius: '16px', padding: '3rem 2rem', textAlign: 'center', transition: 'all 0.3s ease',
-                                cursor: importFile ? 'default' : 'pointer', 
-                                backgroundColor: isDragging ? '#f5f3ff' : importFile ? '#f0fdf4' : '#fafbfc', position: 'relative', margin: '0 1.25rem 1.25rem 1.25rem'
-                            }}
                         >
                             <input
                                 ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFileSelect} style={{ display: 'none' }} disabled={isImporting}
@@ -1432,7 +1427,7 @@ return (
 
                             {importFile ? (
                                 <div className="d-flex align-items-center justify-content-center gap-4">
-                                    <div style={{ 
+                                    <div className="import-file-icon" style={{
                                         fontSize: '2.5rem', color: '#217346', filter: 'drop-shadow(0 2px 4px rgba(33, 115, 70, 0.15))'
                                     }}>
                                         <FaFileExcel />
@@ -1446,14 +1441,14 @@ return (
                                             <FaCheckCircle className="me-1" size={12} /> Fichier prêt à importer
                                         </div>
                                     </div>
-                                    <button 
-                                        className="btn btn-sm rounded-circle border-0"
+                                    <button
+                                        className="btn btn-sm rounded-circle border-0 import-remove-btn"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             handleRemoveFile();
                                         }}
                                         disabled={isImporting}
-                                        style={{ 
+                                        style={{
                                             width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s ease', color: '#ef4444', backgroundColor: '#fef2f2'
                                         }}
                                     >
@@ -1462,18 +1457,16 @@ return (
                                 </div>
                             ) : (
                                 <div>
-                                    <div style={{ 
-                                        fontSize: '3rem', color: '#9ca3af', marginBottom: '1rem', transition: 'all 0.3s ease', opacity: 0.8
-                                    }}>
+                                    <div className="import-drop-icon">
                                         <FaFileUpload />
                                     </div>
-                                    <div style={{ fontWeight: '600', color: '#374151', fontSize: '0.95rem', marginBottom: '0.5rem' }}>
+                                    <div style={{ fontWeight: '600', color: '#374151', fontSize: '0.95rem', marginBottom: '0.4rem' }}>
                                         Glissez-déposez votre fichier Excel ici
                                     </div>
-                                    <div style={{ color: '#6b7280', fontSize: '0.85rem', marginBottom: '0.75rem' }}>
-                                        ou cliquez pour parcourir
+                                    <div style={{ color: '#6b7280', fontSize: '0.85rem', marginBottom: '1rem' }}>
+                                        ou <span className="import-browse-link">parcourez vos fichiers</span>
                                     </div>
-                                    <div style={{ 
+                                    <div style={{
                                         color: '#6b7280', fontSize: '0.8rem', backgroundColor: '#f3f4f6', display: 'inline-block', padding: '4px 14px', borderRadius: '20px'
                                     }}>
                                         Formats acceptés : <span className="fw-semibold" style={{ color: '#7c3aed' }}>.xlsx, .xls</span>
