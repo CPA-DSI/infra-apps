@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
 import { PERMISSIONS } from '../constants/roles.js';
-import { encryptPassMail, decryptPassMail } from '../services/passMailCrypto.js';
+import { encryptPassMail, decryptPassMail, encryptSecret, decryptSecret } from '../services/passMailCrypto.js';
 
 const prisma = new PrismaClient();
 const router = express.Router();
@@ -39,7 +39,11 @@ router.get('/', authenticateToken, ensureActiveUser, requirePermission(PERMISSIO
 });
 
 function sanitizeEmails(emails = []) {
-    return emails.map(({ password, pass_mail, ...email }) => ({ ...email, pass_mail: decryptPassMail(pass_mail) }));
+    return emails.map(({ password, pass_mail, password_enc, ...email }) => ({
+        ...email,
+        pass_mail: decryptPassMail(pass_mail),
+        password_enc: decryptSecret(password_enc)
+    }));
 }
 
 function mapEmailsToFlatFields(emails = []) {
@@ -91,6 +95,7 @@ router.post('/', authenticateToken, ensureActiveUser, requirePermission(PERMISSI
             emailsToCreate = await Promise.all(mapped.map(async (e) => ({
                 email: e.email,
                 password: e.rawPassword ? await bcrypt.hash(e.rawPassword, 10) : hashedPassword,
+                password_enc: encryptSecret(e.rawPassword || autoPassword),
                 pass_mail: encryptPassMail(e.pass_mail),
                 is_primary: e.is_primary,
                 is_verified: e.is_verified
@@ -107,6 +112,7 @@ router.post('/', authenticateToken, ensureActiveUser, requirePermission(PERMISSI
             emailsToCreate = await Promise.all(simple.map(async (e) => ({
                 email: e.email,
                 password: e.rawPassword ? await bcrypt.hash(e.rawPassword, 10) : hashedPassword,
+                password_enc: encryptSecret(e.rawPassword || autoPassword),
                 pass_mail: encryptPassMail(e.pass_mail),
                 is_primary: e.is_primary,
                 is_verified: false
@@ -175,9 +181,11 @@ router.put('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMIS
         const hashedEmails = await Promise.all(desiredEmails.map(async (e) => ({
             ...e,
             pass_mail: encryptPassMail(e.pass_mail),
-            hashedPassword: e.password ? await bcrypt.hash(e.password, 10) : null
+            hashedPassword: e.password ? await bcrypt.hash(e.password, 10) : null,
+            passwordEnc: e.password ? encryptSecret(e.password) : null
         })));
         const defaultPasswordHash = await bcrypt.hash('123456', 10);
+        const defaultPasswordEnc = encryptSecret('123456');
 
         const currentEmails = currentUser.emails || [];
         const desiredEmailValues = hashedEmails.map(e => e.email);
@@ -203,6 +211,7 @@ router.put('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMIS
                             };
                             if (e.hashedPassword) {
                                 updateData.password = e.hashedPassword;
+                                updateData.password_enc = e.passwordEnc;
                             }
                             return {
                                 where: { email: e.email },
@@ -210,6 +219,7 @@ router.put('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMIS
                                 create: {
                                     email: e.email,
                                     password: e.hashedPassword || defaultPasswordHash,
+                                    password_enc: e.passwordEnc || defaultPasswordEnc,
                                     pass_mail: e.pass_mail,
                                     is_primary: e.is_primary,
                                     is_verified: e.is_verified

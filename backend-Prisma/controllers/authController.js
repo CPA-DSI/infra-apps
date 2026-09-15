@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
+import { encryptSecret } from '../services/passMailCrypto.js';
 
 const APP_URL = process.env.APP_URL || null;
 
@@ -232,7 +233,7 @@ export const updatePasswords = async (req, res) => {
 
     await prisma.userEmail.update({
       where: { id_uEmail: primaryEmail.id_uEmail },
-      data: { password: await bcrypt.hash(p1, 12) },
+      data: { password: await bcrypt.hash(p1, 12), password_enc: encryptSecret(p1) },
     });
 
     await prisma.users.update({
@@ -388,7 +389,7 @@ export const forceChangePassword = async (req, res) => {
       updates.push(
         prisma.userEmail.update({
           where: { id_uEmail: primary.id_uEmail },
-          data: { password: await bcrypt.hash(p1, 12) },
+          data: { password: await bcrypt.hash(p1, 12), password_enc: encryptSecret(p1) },
         }),
       );
     }
@@ -396,7 +397,7 @@ export const forceChangePassword = async (req, res) => {
       updates.push(
         prisma.userEmail.update({
           where: { id_uEmail: secondary.id_uEmail },
-          data: { password: await bcrypt.hash(p2, 12) },
+          data: { password: await bcrypt.hash(p2, 12), password_enc: encryptSecret(p2) },
         }),
       );
     }
@@ -455,7 +456,7 @@ export const resetPassword = async (req, res) => {
 
     await prisma.userEmail.updateMany({
       where: { email: resetTokenRecord.email },
-      data: { password: hashedPassword },
+      data: { password: hashedPassword, password_enc: encryptSecret(password) },
     });
 
     await prisma.passwordResetToken.update({

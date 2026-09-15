@@ -42,6 +42,7 @@ model UserEmail {
   id_uEmail   Int       @id @default(autoincrement())
   email       String    @unique
   password    String
+  password_enc String?
   pass_mail   String?
   is_primary  Boolean   @default(false)
   is_verified Boolean   @default(false)

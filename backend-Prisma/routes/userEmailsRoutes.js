@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
 import { PERMISSIONS } from '../constants/roles.js';
-import { encryptPassMail, decryptPassMail } from '../services/passMailCrypto.js';
+import { encryptPassMail, decryptPassMail, encryptSecret, decryptSecret } from '../services/passMailCrypto.js';
 
 const prisma = new PrismaClient();
 const router = express.Router();
@@ -11,7 +11,7 @@ const router = express.Router();
 const serializeUserEmail = (userEmail) => {
     if (!userEmail) return userEmail;
     const { password, ...rest } = userEmail;
-    return { ...rest, pass_mail: decryptPassMail(rest.pass_mail) };
+    return { ...rest, pass_mail: decryptPassMail(rest.pass_mail), password_enc: decryptSecret(rest.password_enc) };
 };
 
 router.get('/stats', authenticateToken, ensureActiveUser, requirePermission(PERMISSIONS.USERS_READ), async (req, res) => {
@@ -65,14 +65,14 @@ router.post('/', authenticateToken, ensureActiveUser, requirePermission(PERMISSI
             return res.status(400).json({ message: "Cet email est déjà associé à cet utilisateur." });
         }
 
-        const hashedPassword = password && password.trim() !== ''
-            ? await bcrypt.hash(password.trim(), 10)
-            : await bcrypt.hash('123456', 10);
+        const plainPassword = password && password.trim() !== '' ? password.trim() : '123456';
+        const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
         const newEmail = await prisma.userEmail.create({
             data: {
                 email: trimmedEmail,
                 password: hashedPassword,
+                password_enc: encryptSecret(plainPassword),
                 pass_mail: encryptPassMail(pass_mail || ''),
                 is_primary: is_primary ?? false,
                 is_verified: is_verified ?? false,
@@ -118,6 +118,7 @@ router.put('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMIS
 
         if (password && password.trim() !== '') {
             updateData.password = await bcrypt.hash(password.trim(), 10);
+            updateData.password_enc = encryptSecret(password.trim());
         }
 
         const updated = await prisma.userEmail.update({

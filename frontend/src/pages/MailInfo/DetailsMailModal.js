@@ -47,6 +47,11 @@ const roleLabels = Object.fromEntries(
         return email.pass_mail || null;
     };
 
+    const getLoginPassword = (email) => {
+        if (!email) return null;
+        return email.password_enc || null;
+    };
+
 function PasswordField({ label, value, visible, onToggle, toggleKey, badge }) {
     if (!value) return null;
     return (
@@ -370,12 +375,25 @@ function DetailsMailModal({ show, handleClose, mailData, onEmailAdded }) {
                         </div>
                     )}
 
-                    {(getMailPassword(primaryEmail) || otherEmails.some(e => getMailPassword(e))) && (
+                    {(getMailPassword(primaryEmail) || getLoginPassword(primaryEmail) || otherEmails.some(e => getMailPassword(e) || getLoginPassword(e))) && (
                         <div className="details-section" style={{
                             background: 'white', borderRadius: '16px', padding: '18px', marginBottom: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid #E2E8F0'
                         }}>
                             <SectionHeader section={sections[3]} />
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                {primaryEmail && getLoginPassword(primaryEmail) && (
+                                    <PasswordField
+                                        label="Mot de passe de Connexion"
+                                        value={getLoginPassword(primaryEmail)}
+                                        visible={visiblePasswords['primary-password_enc'] || false}
+                                        onToggle={togglePassword}
+                                        toggleKey="primary-password_enc"
+                                        badge={{
+                                            text: 'password',
+                                            style: { backgroundColor: 'rgba(34, 197, 94, 0.15)', color: '#15803d' }
+                                        }}
+                                    />
+                                )}
                                 {primaryEmail && getMailPassword(primaryEmail) && (
                                     <PasswordField
                                         label="Mot de passe Principal Mail"
@@ -389,7 +407,7 @@ function DetailsMailModal({ show, handleClose, mailData, onEmailAdded }) {
                                         }}
                                     />
                                 )}
-                                {otherEmails.some(e => getMailPassword(e)) && (
+                                {otherEmails.some(e => getMailPassword(e) || getLoginPassword(e)) && (
                                     <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
                                         <button
                                             type="button"
@@ -402,13 +420,26 @@ function DetailsMailModal({ show, handleClose, mailData, onEmailAdded }) {
                                             onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
                                             onMouseLeave={e => e.currentTarget.style.background = '#f8fafc'}
                                         >
-                                            <span>Mots de passe secondaires ({otherEmails.filter(e => getMailPassword(e)).length})</span>
+                                            <span>Mots de passe secondaires ({otherEmails.filter(e => getMailPassword(e) || getLoginPassword(e)).length})</span>
                                             {expandedPasswords ? <FaChevronUp style={{ fontSize: '0.8rem' }} /> : <FaChevronDown style={{ fontSize: '0.8rem' }} />}
                                         </button>
                                         {expandedPasswords && (
                                             <div style={{ animation: 'expandRowFadeIn 0.3s ease forwards', display: 'flex', flexDirection: 'column', gap: '16px', padding: '4px 0' }}>
                                                 {otherEmails.map((email, index) => (
-                                                    <div key={email.id_uEmail || index}>
+                                                    <div key={email.id_uEmail || index} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                                        {getLoginPassword(email) && (
+                                                            <PasswordField
+                                                                label={`Mot de passe de Connexion ${index + 1}`}
+                                                                value={getLoginPassword(email)}
+                                                                visible={visiblePasswords[`secondary-${index}-password_enc`] || false}
+                                                                onToggle={togglePassword}
+                                                                toggleKey={`secondary-${index}-password_enc`}
+                                                                badge={{
+                                                                    text: 'password',
+                                                                    style: { backgroundColor: 'rgba(34, 197, 94, 0.15)', color: '#15803d' }
+                                                                }}
+                                                            />
+                                                        )}
                                                         {getMailPassword(email) && (
                                                             <PasswordField
                                                                 label={`Mot de passe Secondaire Mail ${index + 1}`}

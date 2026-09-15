@@ -34,3 +34,9 @@ export function decryptPassMail(storedValue) {
     const decrypted = Buffer.concat([decipher.update(Buffer.from(dataHex, 'hex')), decipher.final()]);
     return decrypted.toString('utf8');
 }
+
+// Alias génériques : même algorithme AES-256-GCM, réutilisés pour chiffrer/déchiffrer
+// le mot de passe de connexion (UserEmail.password_enc) afin de pouvoir le communiquer
+// à l'utilisateur, en plus du hash bcrypt (UserEmail.password) qui sert à l'authentification.
+export const encryptSecret = encryptPassMail;
+export const decryptSecret = decryptPassMail;
