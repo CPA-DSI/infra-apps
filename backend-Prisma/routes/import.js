@@ -5,7 +5,6 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { authenticateToken, ensureActiveUser, requirePermission, requireRole } from '../middleware/authMiddleware.js';
 import { PERMISSIONS, UserRole } from '../constants/roles.js';
-import { encryptPassMail, encryptSecret } from '../services/passMailCrypto.js';
 
 const prisma = new PrismaClient();
 const router = express.Router();
@@ -455,15 +454,14 @@ async function findOrCreateUser(id_n, nomUtilisateur, equipe, localName, firstEm
         }
 
         // Mot de passe primaire prévisible (Rfc_/Cpa_ + identifiant + "1*") : haché pour
-        // l'authentification (password), et conservé chiffré de façon réversible dans
-        // password_enc pour pouvoir être communiqué à l'utilisateur.
+        // l'authentification (password). password_enc/pass_mail (copie affichable/chiffrée)
+        // ne sont pas renseignés pendant l'import pour ne pas dépendre de
+        // PASS_MAIL_ENCRYPTION_KEY ici ; ils peuvent être ajoutés plus tard depuis la fiche utilisateur.
         const primaryPlainPassword = primaryPass;
         const emailsCreate = [
             {
                 email: primaryEmail,
                 password: await bcrypt.hash(primaryPlainPassword, BCRYPT_ROUNDS),
-                password_enc: encryptSecret(primaryPlainPassword),
-                pass_mail: encryptPassMail(primaryPlainPassword),
                 is_primary: true,
                 is_verified: primaryVerified
             }
@@ -474,8 +472,6 @@ async function findOrCreateUser(id_n, nomUtilisateur, equipe, localName, firstEm
             emailsCreate.push({
                 email: secondaryEmail,
                 password: await bcrypt.hash(secondaryPlainPassword, BCRYPT_ROUNDS),
-                password_enc: encryptSecret(secondaryPlainPassword),
-                pass_mail: encryptPassMail(secondaryPlainPassword),
                 is_primary: false,
                 is_verified: secondaryVerified
             });
