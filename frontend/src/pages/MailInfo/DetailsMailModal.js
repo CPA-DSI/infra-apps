@@ -42,9 +42,9 @@ const roleLabels = Object.fromEntries(
     Object.entries(ROLES).map(([value, { label }]) => [value, label])
 );
 
-    const getDecryptedPassword = (email, field = 'pass_mail') => {
+    const getMailPassword = (email) => {
         if (!email) return null;
-        return email[field] || null;
+        return email.pass_mail || null;
     };
 
 function PasswordField({ label, value, visible, onToggle, toggleKey, badge }) {
@@ -370,29 +370,16 @@ function DetailsMailModal({ show, handleClose, mailData, onEmailAdded }) {
                         </div>
                     )}
 
-                    {(getDecryptedPassword(primaryEmail, 'password') || getDecryptedPassword(primaryEmail, 'pass_mail') || otherEmails.some(e => getDecryptedPassword(e, 'pass_mail'))) && (
+                    {(getMailPassword(primaryEmail) || otherEmails.some(e => getMailPassword(e))) && (
                         <div className="details-section" style={{
                             background: 'white', borderRadius: '16px', padding: '18px', marginBottom: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid #E2E8F0'
                         }}>
                             <SectionHeader section={sections[3]} />
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                {primaryEmail && getDecryptedPassword(primaryEmail, 'password') && (
-                                    <PasswordField
-                                        label="Mot de passe Principal"
-                                        value={getDecryptedPassword(primaryEmail, 'password')}
-                                        visible={visiblePasswords['primary-password'] || false}
-                                        onToggle={togglePassword}
-                                        toggleKey="primary-password"
-                                        badge={{
-                                            text: 'password',
-                                            style: { backgroundColor: 'rgba(34, 197, 94, 0.15)', color: '#15803d' }
-                                        }}
-                                    />
-                                )}
-                                {primaryEmail && getDecryptedPassword(primaryEmail, 'pass_mail') && (
+                                {primaryEmail && getMailPassword(primaryEmail) && (
                                     <PasswordField
                                         label="Mot de passe Principal Mail"
-                                        value={getDecryptedPassword(primaryEmail, 'pass_mail')}
+                                        value={getMailPassword(primaryEmail)}
                                         visible={visiblePasswords['primary-pass_mail'] || false}
                                         onToggle={togglePassword}
                                         toggleKey="primary-pass_mail"
@@ -402,7 +389,7 @@ function DetailsMailModal({ show, handleClose, mailData, onEmailAdded }) {
                                         }}
                                     />
                                 )}
-                                {otherEmails.some(e => getDecryptedPassword(e, 'pass_mail')) && (
+                                {otherEmails.some(e => getMailPassword(e)) && (
                                     <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
                                         <button
                                             type="button"
@@ -415,17 +402,17 @@ function DetailsMailModal({ show, handleClose, mailData, onEmailAdded }) {
                                             onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
                                             onMouseLeave={e => e.currentTarget.style.background = '#f8fafc'}
                                         >
-                                            <span>Mots de passe secondaires ({otherEmails.filter(e => getDecryptedPassword(e, 'pass_mail')).length})</span>
+                                            <span>Mots de passe secondaires ({otherEmails.filter(e => getMailPassword(e)).length})</span>
                                             {expandedPasswords ? <FaChevronUp style={{ fontSize: '0.8rem' }} /> : <FaChevronDown style={{ fontSize: '0.8rem' }} />}
                                         </button>
                                         {expandedPasswords && (
                                             <div style={{ animation: 'expandRowFadeIn 0.3s ease forwards', display: 'flex', flexDirection: 'column', gap: '16px', padding: '4px 0' }}>
                                                 {otherEmails.map((email, index) => (
                                                     <div key={email.id_uEmail || index}>
-                                                        {getDecryptedPassword(email, 'pass_mail') && (
+                                                        {getMailPassword(email) && (
                                                             <PasswordField
                                                                 label={`Mot de passe Secondaire Mail ${index + 1}`}
-                                                                value={getDecryptedPassword(email, 'pass_mail')}
+                                                                value={getMailPassword(email)}
                                                                 visible={visiblePasswords[`secondary-${index}-pass_mail`] || false}
                                                                 onToggle={togglePassword}
                                                                 toggleKey={`secondary-${index}-pass_mail`}

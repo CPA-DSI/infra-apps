@@ -5,6 +5,7 @@ import { PrismaClient } from '@prisma/client';
 
 import bcrypt from 'bcryptjs';
 import { authenticateToken, ensureActiveUser } from '../middleware/authMiddleware.js';
+import { encryptPassMail } from '../services/passMailCrypto.js';
 
 const prisma = new PrismaClient();
 
@@ -215,8 +216,8 @@ router.post('/', authenticateToken, ensureActiveUser, asyncHandler(async (req, r
                     id_n: dataToCreate.id_n,
                     emails: {
                         create: [
-                            { email: `rfc_${dataToCreate.id_n}@rfc-production.com`, password: hashedPass, pass_mail: 'default_pass', is_primary: true },
-                            { email: `cpa_${dataToCreate.id_n}@cpa-experts.com`, password: hashedPass, pass_mail: 'default_pass', is_primary: false }
+                            { email: `rfc_${dataToCreate.id_n}@rfc-production.com`, password: hashedPass, pass_mail: encryptPassMail('default_pass'), is_primary: true },
+                            { email: `cpa_${dataToCreate.id_n}@cpa-experts.com`, password: hashedPass, pass_mail: encryptPassMail('default_pass'), is_primary: false }
                         ]
                     },
                     role: 'USER'

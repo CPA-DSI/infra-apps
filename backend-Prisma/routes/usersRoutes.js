@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
 import { PERMISSIONS } from '../constants/roles.js';
+import { encryptPassMail, decryptPassMail } from '../services/passMailCrypto.js';
 
 const prisma = new PrismaClient();
 const router = express.Router();
@@ -38,7 +39,7 @@ router.get('/', authenticateToken, ensureActiveUser, requirePermission(PERMISSIO
 });
 
 function sanitizeEmails(emails = []) {
-    return emails.map(({ password, ...email }) => email);
+    return emails.map(({ password, pass_mail, ...email }) => ({ ...email, pass_mail: decryptPassMail(pass_mail) }));
 }
 
 function mapEmailsToFlatFields(emails = []) {
@@ -90,7 +91,7 @@ router.post('/', authenticateToken, ensureActiveUser, requirePermission(PERMISSI
             emailsToCreate = await Promise.all(mapped.map(async (e) => ({
                 email: e.email,
                 password: e.rawPassword ? await bcrypt.hash(e.rawPassword, 10) : hashedPassword,
-                pass_mail: e.pass_mail,
+                pass_mail: encryptPassMail(e.pass_mail),
                 is_primary: e.is_primary,
                 is_verified: e.is_verified
             })));
@@ -106,7 +107,7 @@ router.post('/', authenticateToken, ensureActiveUser, requirePermission(PERMISSI
             emailsToCreate = await Promise.all(simple.map(async (e) => ({
                 email: e.email,
                 password: e.rawPassword ? await bcrypt.hash(e.rawPassword, 10) : hashedPassword,
-                pass_mail: e.pass_mail,
+                pass_mail: encryptPassMail(e.pass_mail),
                 is_primary: e.is_primary,
                 is_verified: false
             })));
@@ -173,6 +174,7 @@ router.put('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMIS
 
         const hashedEmails = await Promise.all(desiredEmails.map(async (e) => ({
             ...e,
+            pass_mail: encryptPassMail(e.pass_mail),
             hashedPassword: e.password ? await bcrypt.hash(e.password, 10) : null
         })));
         const defaultPasswordHash = await bcrypt.hash('123456', 10);

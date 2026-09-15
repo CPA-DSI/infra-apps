@@ -3,14 +3,15 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
 import { PERMISSIONS } from '../constants/roles.js';
+import { encryptPassMail, decryptPassMail } from '../services/passMailCrypto.js';
 
 const prisma = new PrismaClient();
 const router = express.Router();
 
-const omitEmailPassword = (userEmail) => {
+const serializeUserEmail = (userEmail) => {
     if (!userEmail) return userEmail;
     const { password, ...rest } = userEmail;
-    return rest;
+    return { ...rest, pass_mail: decryptPassMail(rest.pass_mail) };
 };
 
 router.get('/stats', authenticateToken, ensureActiveUser, requirePermission(PERMISSIONS.USERS_READ), async (req, res) => {
@@ -72,7 +73,7 @@ router.post('/', authenticateToken, ensureActiveUser, requirePermission(PERMISSI
             data: {
                 email: trimmedEmail,
                 password: hashedPassword,
-                pass_mail: pass_mail || '',
+                pass_mail: encryptPassMail(pass_mail || ''),
                 is_primary: is_primary ?? false,
                 is_verified: is_verified ?? false,
                 user_id: parseInt(user_id)
@@ -80,7 +81,7 @@ router.post('/', authenticateToken, ensureActiveUser, requirePermission(PERMISSI
             include: { user: { include: { materiel: true } } }
         });
 
-        res.status(201).json(omitEmailPassword(newEmail));
+        res.status(201).json(serializeUserEmail(newEmail));
     } catch (error) {
         console.error("Erreur lors de la création de l'email:", error);
         res.status(400).json({ message: error.message });
@@ -112,7 +113,7 @@ router.put('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMIS
         };
 
         if (pass_mail !== undefined) {
-            updateData.pass_mail = pass_mail;
+            updateData.pass_mail = encryptPassMail(pass_mail);
         }
 
         if (password && password.trim() !== '') {
@@ -125,7 +126,7 @@ router.put('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMIS
             include: { user: { include: { materiel: true } } }
         });
 
-        res.json(omitEmailPassword(updated));
+        res.json(serializeUserEmail(updated));
     } catch (error) {
         console.error("Erreur lors de la mise à jour de l'email:", error);
         res.status(400).json({ message: error.message });
@@ -147,7 +148,7 @@ router.get('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMIS
         if (!email) {
             return res.status(404).json({ message: "Email non trouvé." });
         }
-        res.json(omitEmailPassword(email));
+        res.json(serializeUserEmail(email));
     } catch (error) {
         console.error("Erreur lors de la récupération de l'email:", error);
         res.status(500).json({ message: error.message });
