@@ -6,10 +6,17 @@ const VERSION_PREFIX = 'v1';
 
 function getKey() {
     const keyHex = process.env.PASS_MAIL_ENCRYPTION_KEY;
-    if (!keyHex || keyHex.length !== 64) {
+    if (!keyHex || keyHex.length !== 64 || !/^[0-9a-fA-F]{64}$/.test(keyHex)) {
         throw new Error('PASS_MAIL_ENCRYPTION_KEY doit être défini dans .env avec une clé hexadécimale de 64 caractères (32 octets).');
     }
     return Buffer.from(keyHex, 'hex');
+}
+
+// Appelé au démarrage du serveur pour échouer immédiatement (avec un message clair)
+// si la clé est absente ou invalide, plutôt que de laisser l'appli démarrer et planter
+// plus tard sur la première route qui chiffre/déchiffre un mot de passe (cf. ac023f7).
+export function assertPassMailEncryptionKeyConfigured() {
+    getKey();
 }
 
 export function encryptPassMail(plainText) {

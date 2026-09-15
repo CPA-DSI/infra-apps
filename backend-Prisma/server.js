@@ -9,6 +9,17 @@ import path from 'path';
 import fs from 'fs';
 import { authenticateToken, ensureActiveUser, requirePermission } from './middleware/authMiddleware.js';
 import { PERMISSIONS } from './constants/roles.js';
+import { assertPassMailEncryptionKeyConfigured } from './services/passMailCrypto.js';
+
+// Échoue immédiatement au démarrage si PASS_MAIL_ENCRYPTION_KEY est absente/invalide,
+// plutôt que de laisser le serveur démarrer et planter plus tard (login, gestion des
+// utilisateurs/emails, création de matériel en dépendent tous).
+try {
+    assertPassMailEncryptionKeyConfigured();
+} catch (error) {
+    console.error(`❌ Configuration invalide : ${error.message}`);
+    process.exit(1);
+}
 
 const prisma = new PrismaClient(); // 1. Créer l'instance
 

@@ -420,7 +420,6 @@ async function findOrCreateUser(id_n, nomUtilisateur, equipe, localName, firstEm
         const isFirstEmail = firstEmailState && !firstEmailState.processed;
 
         const localUpper = localName ? localName.toString().trim().toUpperCase() : '';
-        const isBni = localUpper === 'BNI';
         const isExpertSite = ['MATURA', 'MADAFIT', 'ANTSIRABE'].includes(localUpper);
 
         // Deux matricules diff\u00e9rents peuvent normaliser vers le m\u00eame nom (ex: homonymes) :
@@ -435,51 +434,32 @@ async function findOrCreateUser(id_n, nomUtilisateur, equipe, localName, firstEm
         const rfcEmail = `${baseEmail}@rfc-production.com`;
         const expertEmail = `cpa_${baseEmail}@experts-cpa.com`;
 
-        let primaryEmail, secondaryEmail, primaryVerified, secondaryVerified;
+        const primaryEmail = isExpertSite ? expertEmail : rfcEmail;
+        const primaryVerified = isFirstEmail ? true : false;
 
-        if (isBni) {
-            primaryEmail = rfcEmail;
-            secondaryEmail = null;
-            primaryVerified = isFirstEmail ? true : false;
-        } else if (isExpertSite) {
-            primaryEmail = expertEmail;
-            secondaryEmail = null;
-            primaryVerified = isFirstEmail ? true : false;
-        } else {
-            primaryEmail = rfcEmail;
-            secondaryEmail = null;
-            primaryVerified = isFirstEmail ? true : false;
-        }
-
-        // Mot de passe par défaut identique pour tous les utilisateurs créés (DEFAULT_PASSWORD) :
-        // haché pour l'authentification (password), et recopié en clair dans pass_mail/password_enc
-        // pour affichage sur la fiche utilisateur. Pas d'appel à encryptPassMail/encryptSecret ici :
-        // ne pas dépendre de PASS_MAIL_ENCRYPTION_KEY à l'import (cf. ac023f7) ; decryptPassMail et
-        // decryptSecret savent déjà lire une valeur en clair (branche "ancienne valeur non chiffrée").
-        // L'utilisateur doit changer ce mot de passe à sa première connexion (must_change_password).
+        // Mot de passe de connexion (authentification) : identique pour tous les
+        // utilisateurs créés (DEFAULT_PASSWORD), haché pour password et recopié en
+        // clair dans password_enc pour affichage sur la fiche utilisateur. Pas
+        // d'appel à encryptSecret ici : ne pas dépendre de PASS_MAIL_ENCRYPTION_KEY
+        // à l'import (cf. ac023f7) ; decryptSecret sait déjà lire une valeur en
+        // clair (branche "ancienne valeur non chiffrée"). L'utilisateur doit
+        // changer ce mot de passe à sa première connexion (must_change_password).
+        //
+        // Mot de passe de la boîte mail (pass_mail) : propre à chaque utilisateur,
+        // dérivé de son adresse (Rfc_/Cpa_ selon le domaine) plutôt qu'une valeur
+        // partagée par tous.
         const primaryPlainPassword = DEFAULT_PASSWORD;
+        const primaryPassMail = isExpertSite ? `Cpa_${baseEmail}1*` : `Rfc_${baseEmail}1*`;
         const emailsCreate = [
             {
                 email: primaryEmail,
                 password: await bcrypt.hash(primaryPlainPassword, BCRYPT_ROUNDS),
-                pass_mail: primaryPlainPassword,
+                pass_mail: primaryPassMail,
                 password_enc: primaryPlainPassword,
                 is_primary: true,
                 is_verified: primaryVerified
             }
         ];
-
-        if (secondaryEmail) {
-            const secondaryPlainPassword = DEFAULT_PASSWORD;
-            emailsCreate.push({
-                email: secondaryEmail,
-                password: await bcrypt.hash(secondaryPlainPassword, BCRYPT_ROUNDS),
-                pass_mail: secondaryPlainPassword,
-                password_enc: secondaryPlainPassword,
-                is_primary: false,
-                is_verified: secondaryVerified
-            });
-        }
         
         try {
             user = await prisma.users.create({
