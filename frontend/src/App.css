@@ -42,8 +42,9 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
-  /* Ajoutez le padding-top global pour tout le corps de la page */
-  padding-top: 20px; /* Ajustez à la hauteur réelle de votre navbar */
+  /* Le décalage sous la navbar fixe est géré par .main-content-wrapper
+     (voir Navbar.css) via --navbar-height : ne pas dupliquer ici, sous
+     peine de décalage incohérent selon la page (navbar hors AppLayout). */
 }
 
 /* Supprime la bordure inférieure de l'ensemble des onglets */

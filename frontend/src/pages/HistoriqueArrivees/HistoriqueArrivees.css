@@ -265,8 +265,12 @@
 }
 
 .modern-datatable thead {
+  /* Ce tableau défile avec la page (pas de scroll interne), donc "top: 0"
+     collerait l'en-tête pile sous la navbar fixe, qui le recouvrirait au
+     scroll. On colle plutôt juste sous la navbar via --navbar-height
+     (mesurée dans FixedNavbarWithLogo.js). */
   position: sticky;
-  top: 0;
+  top: var(--navbar-height, 90px);
   z-index: 10;
 }
 

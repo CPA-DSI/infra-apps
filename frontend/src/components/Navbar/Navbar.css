@@ -63,35 +63,12 @@
   flex-direction: column;
 }
 
-/* Main Content Wrapper - Responsive Margin Top */
+/* Main Content Wrapper - décalage basé sur la hauteur réelle de la navbar
+   (mesurée en JS et exposée via --navbar-height dans FixedNavbarWithLogo.js).
+   Le fallback 90px ne sert qu'avant le premier rendu / si le JS est bloqué. */
 .main-content-wrapper {
-  margin-top: 90px;
+  margin-top: var(--navbar-height, 90px);
   flex: 1 0 auto;
-}
-
-/* Media queries pour adapter le marginTop selon l'écran */
-@media (max-width: 1200px) {
-  .main-content-wrapper {
-    margin-top: 85px;
-  }
-}
-
-@media (max-width: 992px) {
-  .main-content-wrapper {
-    margin-top: 80px;
-  }
-}
-
-@media (max-width: 768px) {
-  .main-content-wrapper {
-    margin-top: 75px;
-  }
-}
-
-@media (max-width: 576px) {
-  .main-content-wrapper {
-    margin-top: 70px;
-  }
 }
 
 /* Logo et Texte */
@@ -120,17 +97,19 @@
 }
 
 .page-title {
-  font-size: 0.7rem;
+  /* Allégé pour ne pas rivaliser visuellement avec "InvTech IT" et pour
+     équilibrer un bloc marque sur 2 lignes face aux liens de nav sur 1 ligne. */
+  font-size: 0.62rem;
   color: var(--accent-color);
-  font-weight: 600;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
-  opacity: 0.85;
+  letter-spacing: 1px;
+  opacity: 0.65;
 }
 
 .logo-wrapper {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  padding: 8px 10px;
+  padding: 6px 8px;
   border-radius: 14px;
   box-shadow: 0 4px 16px -2px rgba(99, 102, 241, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8);
   transition: var(--transition-fast);
@@ -144,7 +123,9 @@
 }
 
 .navbar-logo {
-  height: 32px;
+  /* Agrandi et le padding du badge réduit ci-dessus : l'icône remplit
+     mieux son cadre au lieu de laisser une grande marge blanche visible. */
+  height: 38px;
   width: auto;
 }
 
@@ -648,7 +629,7 @@
    ============================================ */
 
 .nav-items-wrapper {
-  gap: 2px;
+  gap: 8px;
 }
 
 .nav-item-wrapper {
@@ -776,6 +757,13 @@
 /* Rotation de la flèche quand ouvert */
 .show .dropdown-arrow {
   transform: rotate(180deg);
+}
+
+/* Le fond dégradé + le soulignement (.nav-active::after) suffisent déjà à
+   signaler l'item actif : masquer le chevron évite qu'il se superpose
+   visuellement à ce soulignement sous le libellé du dropdown actif. */
+.nav-active .dropdown-arrow {
+  opacity: 0;
 }
 
 /* Hover du dropdown */

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Container, Navbar, Nav, NavDropdown, Modal, Button, Alert, Form } from 'react-bootstrap';
 import { FaHome, FaLaptopCode, FaEnvelopeOpenText, FaBoxes, FaUserCircle, FaSignOutAlt, FaProductHunt, FaExchangeAlt, FaArrowCircleRight, FaBars, FaTimes, FaTicketAlt, FaEye, FaEyeSlash, FaCheck, FaList, FaHistory, FaUsers, FaFileAlt } from 'react-icons/fa';
@@ -14,6 +14,7 @@ const MySwal = withReactContent(Swal);
 
 const FixedNavbarWithLogo = () => {
   const { user, logout } = useAuth();
+  const navbarRef = useRef(null);
   const [expanded, setExpanded] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -58,6 +59,10 @@ const FixedNavbarWithLogo = () => {
   const materielUser = materielData?.utilisateur || '';
   const materielIdN = materielData?.id_n || '';
 
+  const primaryEmail = userEmails.find(e => e.is_primary)?.email || userEmails[0]?.email || '';
+  const emailNamePart = primaryEmail.includes('@') ? primaryEmail.split('@')[0] : '';
+  const displayName = materielUser || user?.nom || user?.name || user?.username || emailNamePart || 'Utilisateur';
+
   const getInitials = (name) => {
     if (!name) return '?';
     const parts = name.trim().split(' ');
@@ -93,6 +98,29 @@ const FixedNavbarWithLogo = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Mesure la hauteur réelle de la navbar (fixe) pour que le contenu ne
+  // soit jamais caché dessous, quelle que soit la largeur d'écran, le
+  // wrapping du texte, ou l'ouverture du menu mobile.
+  useEffect(() => {
+    const navEl = navbarRef.current;
+    if (!navEl) return undefined;
+
+    const updateNavHeight = () => {
+      document.documentElement.style.setProperty('--navbar-height', `${navEl.offsetHeight}px`);
+    };
+
+    updateNavHeight();
+
+    const resizeObserver = new ResizeObserver(updateNavHeight);
+    resizeObserver.observe(navEl);
+    window.addEventListener('resize', updateNavHeight);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateNavHeight);
+    };
+  }, [expanded, scrolled]);
 
   // Fonction de déconnexion avec confirmation Sweetalert
   const handleLogout = async () => {
@@ -188,7 +216,7 @@ const FixedNavbarWithLogo = () => {
 
   return (
     <>
-      <Navbar expand="lg" expanded={expanded} onToggle={setExpanded} fixed="top" className={`custom-navbar ${scrolled ? 'navbar-scrolled' : ''}`} >
+      <Navbar ref={navbarRef} expand="lg" expanded={expanded} onToggle={setExpanded} fixed="top" className={`custom-navbar ${scrolled ? 'navbar-scrolled' : ''}`} >
         <Container>
           <Navbar.Brand as={Link} to="/Home" className="brand-container">
             <div className="logo-wrapper">
@@ -389,12 +417,12 @@ const FixedNavbarWithLogo = () => {
                             <img src={avatarSrc} alt="Avatar" className="user-avatar-img" />
                           ) : (
                             <div className="user-avatar-fallback">
-                              {getInitials(materielUser || user?.nom || user?.name || user?.username)}
+                              {getInitials(displayName)}
                             </div>
                           )}
                         </div>
                         <div className="d-flex flex-column">
-                          <span className="user-name-text">{materielUser || user?.nom || user?.name || user?.username || 'Utilisateur'}</span>
+                          <span className="user-name-text">{displayName}</span>
                         </div>
                       </div>
                     }
@@ -412,7 +440,7 @@ const FixedNavbarWithLogo = () => {
                       <div className="emails-label">Informations</div>
                       <div className="email-item">
                         <FaUserCircle className="email-icon" />
-                        <span className="email-text">{materielUser || user?.nom || user?.name || user?.username || 'Utilisateur'}</span>
+                        <span className="email-text">{displayName}</span>
                       </div>
                       <div className="email-item">
                         <FaList className="email-icon" />
@@ -485,11 +513,11 @@ const FixedNavbarWithLogo = () => {
                   <img src={avatarSrc} alt="Avatar" className="profile-avatar-img" />
                 ) : (
                   <span className="profile-avatar-fallback">
-                    {getInitials(materielUser || user?.nom || user?.name || user?.username)}
+                    {getInitials(displayName)}
                   </span>
                 )}
               </div>
-              <h4 className="profile-name">{materielUser || user?.nom || user?.name || user?.username || 'Utilisateur'}</h4>
+              <h4 className="profile-name">{displayName}</h4>
               <span className={`badge-role ${roleDisplay.className}`}>{roleDisplay.label}</span>
             </div>
           </div>

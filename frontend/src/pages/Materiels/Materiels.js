@@ -687,7 +687,7 @@ return (
                                         {importData.length} lignes au total
                                     </span>
                                 </div>
-                                <div className="table-responsive" style={{ maxHeight: '250px', overflow: 'auto', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                                <div className="table-responsive table-scroll-preview" style={{ maxHeight: '250px', overflow: 'auto', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
                                     <table className="table table-sm table-hover mb-0" style={{ fontSize: '0.75rem' }}>
                                         <thead className="table-light" style={{ 
                                            position: 'sticky', top: 0, backgroundColor: '#f9fafb', zIndex: 10

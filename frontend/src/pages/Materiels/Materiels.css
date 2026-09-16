@@ -491,7 +491,11 @@
     overflow: hidden;
 }
 
-.page-materiels .table thead th {
+/* Sticky uniquement dans les tableaux avec leur propre zone de défilement
+   (max-height + overflow). Sur un tableau non scrollable, "top: 0" colle
+   l'en-tête au sommet du viewport, exactement sous la navbar fixe, qui le
+   recouvre visuellement au scroll de la page. */
+.page-materiels .table-scroll-preview thead th {
     position: sticky;
     top: 0;
     z-index: 10;

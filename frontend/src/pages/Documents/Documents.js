@@ -35,9 +35,13 @@ const modernStyles = {
     },
   },
   headRow: {
+    // Pas de fixedHeader sur ce DataTable : il défile avec la page, donc
+    // "top: 0" collerait l'en-tête sous la navbar fixe (qui le recouvrirait
+    // au scroll). On colle plutôt juste sous la navbar via --navbar-height
+    // (mesurée dans FixedNavbarWithLogo.js).
     style: {
       backgroundColor: '#f9fafb', border: 'none', minHeight: '52px', borderRadius: '12px 12px 0 0',
-      boxShadow: '0 1px 2px rgba(0,0,0,0.03)', position: 'sticky', top: 0, zIndex: 10
+      boxShadow: '0 1px 2px rgba(0,0,0,0.03)', position: 'sticky', top: 'var(--navbar-height, 90px)', zIndex: 10
     },
   },
   headCells: {
