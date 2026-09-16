@@ -10,6 +10,7 @@ import UserTicketsTable from './components/UserTicketsTable';
 import UserHistoryTimeline from './components/UserHistoryTimeline';
 import UserOverviewBar from './components/UserOverviewBar';
 import UserAlertsBanner from './components/UserAlertsBanner';
+import UserTicketsChart from './components/UserTicketsChart';
 import './UserDashboard.css';
 
 const UserDashboard = () => {
@@ -123,6 +124,8 @@ const UserDashboard = () => {
         </div>
 
         <div className="userDashboardRightColumn">
+          <UserTicketsChart parStatut={data.tickets?.parStatut} total={data.tickets?.total || 0} />
+
           <div className="userDashboardTabsCard">
             <UserTabs
               activeTab={activeTab}

@@ -26,39 +26,53 @@ router.get('/me/dashboard', authenticateToken, ensureActiveUser, async (req, res
     const userMatricule = currentUser.id_n;
 
     if (userRole === 'USER') {
-      const [mesTickets, monMateriel] = await Promise.all([
+      const ticketsWhere = {
+        OR: [
+          { idDemandeur: userMatricule },
+          { idAssigne: userMatricule },
+        ],
+      };
+
+      const [ticketsRecents, monMateriel, statutsGroupBy] = await Promise.all([
         prisma.ticket.findMany({
-          where: {
-            OR: [
-              { idDemandeur: userMatricule },
-              { idAssigne: userMatricule },
-            ],
-          },
+          where: ticketsWhere,
           include: {
             materiels: { include: { local: true } },
             assigneA: { include: { materiel: true } },
           },
           orderBy: { dateCreation: 'desc' },
-          take: 10,
+          take: 5,
         }),
         prisma.Materiels.findFirst({
           where: { id_n: userMatricule },
           include: { local: true, marque: true },
         }),
+        prisma.ticket.groupBy({
+          by: ['statut'],
+          where: ticketsWhere,
+          _count: { statut: true },
+        }),
       ]);
 
-      const ticketsOuverts = mesTickets.filter(t => t.statut !== 'FERME').length;
-      const ticketsFermes = mesTickets.filter(t => t.statut === 'FERME').length;
+      const parStatut = { NOUVEAU: 0, EN_COURS: 0, RESOLU: 0, FERME: 0 };
+      let ticketsTotal = 0;
+      statutsGroupBy.forEach(({ statut, _count }) => {
+        if (Object.prototype.hasOwnProperty.call(parStatut, statut)) {
+          parStatut[statut] = _count.statut;
+        }
+        ticketsTotal += _count.statut;
+      });
 
       res.json({
         role: userRole,
         id_n: userMatricule,
         materiel: monMateriel,
         tickets: {
-          total: mesTickets.length,
-          ouverts: ticketsOuverts,
-          fermes: ticketsFermes,
-          recents: mesTickets.slice(0, 5),
+          total: ticketsTotal,
+          ouverts: ticketsTotal - parStatut.FERME,
+          fermes: parStatut.FERME,
+          parStatut,
+          recents: ticketsRecents,
         },
       });
     } else {
