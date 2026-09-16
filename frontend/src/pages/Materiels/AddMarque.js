@@ -189,8 +189,7 @@ const [loading, setLoading] = useState(false);
             try {
                 // Réinsérer la marque supprimée
                 await createMarque(deletePending.marque.nom_marque, deletePending.marque.url);
-                console.log('🔄 Annulation suppression réussie');
-                
+
                 showLocalNotification(`↩️ "${deletePending.marque.nom_marque}" a été restauré`, 'success');
                 await fetchMarques();
                 
@@ -209,14 +208,11 @@ const [loading, setLoading] = useState(false);
 
     // Fetch des marques existantes
     const fetchMarques = useCallback(async () => {
-        console.log('🔄 Début chargement des marques...');
         setMarquesLoading(true);
         setApiError(null);
-        
+
         try {
             const data = await fetchAMarques();
-
-            console.log('📦 Données brutes:', data);
 
             if (!data) {
                 throw new Error('Aucune donnée reçue du serveur');
@@ -231,15 +227,8 @@ const [loading, setLoading] = useState(false);
                 date_modification: marque.date_modification
             }));
             
-            console.log('✅ Données nettoyées:', cleanedData);
-            console.log(`✅ ${cleanedData.length} marques chargées`);
-            
             setMarques(cleanedData);
-            
-            if (cleanedData.length === 0) {
-                console.log('ℹ️ Aucune marque trouvée dans la base');
-            }
-            
+
         } catch (err) {
             console.error('❌ Erreur détaillée:', err);
             setApiError(err.message);
@@ -290,10 +279,7 @@ try {
              const nomMarque = formData.nom_marque.trim();
              const url = formData.url && formData.url.trim() !== '' ? formData.url.trim() : null;
 
-             console.log('📤 Envoi POST:', { nom_marque: nomMarque, url });
-
-             const response = await createMarque(nomMarque, url);
-             console.log('✅ Réponse:', response);
+             await createMarque(nomMarque, url);
 
              setSuccessMessage('Marque ajoutée avec succès !');
              setTimeout(() => setSuccessMessage(null), 3000);
@@ -322,7 +308,6 @@ try {
 
     const handleEdit = useCallback((marque, event) => {
         if (event) event.stopPropagation();
-        console.log('✏️ Édition:', marque);
         setEditingMarque(marque);
         setFormData({
             nom_marque: marque.nom_marque,
@@ -344,8 +329,7 @@ try {
              const nomMarque = formData.nom_marque.trim();
              const url = formData.url && formData.url.trim() !== '' ? formData.url.trim() : null;
 
-             const response = await updateMarque(editingMarque.id_marque, nomMarque, url);
-             console.log('✏️ Mise à jour réussie:', response);
+             await updateMarque(editingMarque.id_marque, nomMarque, url);
 
              setSuccessMessage('Marque modifiée avec succès !');
              setTimeout(() => setSuccessMessage(null), 3000);

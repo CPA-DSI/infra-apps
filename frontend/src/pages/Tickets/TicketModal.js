@@ -308,8 +308,6 @@ const TicketModal = ({ show, onClose, type, ticketData, onSaveSuccess, onError }
                 idTicket, idMateriels, idDemandeur, idAssigne, titre, description, statut, priorite, nomDemandeur, nomAssigne
             } = formData;
 
-            console.log("Valeurs envoyées:", { idMateriels, idDemandeur });
-
             if (!idMateriels || !idDemandeur) {
                 throw new Error("Le matériel et le demandeur sont obligatoires.");
             }
@@ -326,14 +324,12 @@ const TicketModal = ({ show, onClose, type, ticketData, onSaveSuccess, onError }
                 nomAssigne: nomAssigne || "",
             };
 
-            let result;
             if (type === 'edit') {
-                result = await updateTicket(idTicket, dataToSubmit);
+                await updateTicket(idTicket, dataToSubmit);
             } else {
-                result = await createTicket(dataToSubmit);
+                await createTicket(dataToSubmit);
             }
 
-            console.log("Succès !", result);
             showNotification("Ticket sauvegardé avec succès !", 'success');
             onClose();
             if (onSaveSuccess) onSaveSuccess(type);

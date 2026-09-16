@@ -141,7 +141,7 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="login-container">
+    <main className="login-container">
       <div className="wrap-login">
         <Tilt tiltMaxAngleX={15} tiltMaxAngleY={15} scale={1.05} transitionSpeed={400}>
           <div className="login-pic">
@@ -187,7 +187,7 @@ const ForgotPassword = () => {
           </div>
         </form>
       </div>
-    </div>
+    </main>
   );
 };
 

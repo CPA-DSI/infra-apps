@@ -236,7 +236,7 @@ const FirstLoginPasswordChange = () => {
   }
 
   return (
-    <div className="login-container">
+    <main className="login-container">
       <div className="wrap-login first-login-wrap">
         
 
@@ -379,7 +379,7 @@ const FirstLoginPasswordChange = () => {
           </div>
         </Tilt>
       </div>
-    </div>
+    </main>
   );
 };
 

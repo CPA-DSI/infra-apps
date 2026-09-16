@@ -182,7 +182,7 @@
 /* Eye Icon */
 .eye-icon {
   position: absolute;
-  right: 20px;
+  right: 9px;
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
@@ -190,6 +190,13 @@
   font-size: 18px;
   z-index: 100;
   transition: color 0.3s ease;
+  /* Cible tactile >= 24x24px (WCAG 2.5.8 / audit Lighthouse target-size),
+     l'icône reste visuellement identique grâce au centrage flex. */
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .eye-icon:hover {
@@ -287,7 +294,8 @@
 .forgot-password-link {
   font-family: 'Poppins-Regular', sans-serif;
   font-size: 14px;
-  color: #667eea;
+  /* #4f46e5 plutôt que #667eea : contraste WCAG AA (4.5:1) sur fond blanc */
+  color: #4f46e5;
   text-decoration: none;
   margin-left: auto;
   transition: color 0.3s ease;

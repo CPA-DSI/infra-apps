@@ -5,25 +5,16 @@ import {
   Container, Card, Spinner, Alert, Badge, Row, Col, 
   ButtonGroup, Button, Form, Pagination 
 } from 'react-bootstrap';
-import { Bar } from 'react-chartjs-2';
-import { 
-  Chart as ChartJS, 
-  CategoryScale, 
-  LinearScale, 
-  BarElement, 
-  Title, 
-  Tooltip, 
-  Legend 
-} from 'chart.js';
-import { 
-  FaBoxOpen, FaCubes, FaChartLine, FaWarehouse, 
-  FaSort, FaSortUp, FaSortDown, FaSearch 
+import Chart from 'react-apexcharts';
+import {
+  FaBoxOpen, FaCubes, FaChartLine, FaWarehouse,
+  FaSort, FaSortUp, FaSortDown, FaSearch
 } from 'react-icons/fa';
 import { getHistoriqueArrivees } from '../../services/api';
-import moment from 'moment';
+import dayjs from 'dayjs';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
-// Enregistrement des composants Chart.js
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+dayjs.extend(isSameOrAfter);
 
 // --- Composant KPI Card ---
 const KpiCard = ({ icon: Icon, label, value, color, bg }) => (
@@ -144,8 +135,7 @@ const HistoriqueArriveesChart = () => {
             setError(null);
             try {
                 const result = await getHistoriqueArrivees();
-                console.log('Données brutes du graphique:', result);
-                
+
                 const formatted = result.map(item => ({
                     id_arrivage: item.id_arrivage,
                     id_produit: item.id_produit,
@@ -156,7 +146,6 @@ const HistoriqueArriveesChart = () => {
                     date_arrivee: item.date_arrivee,
                 }));
                 
-                console.log('Données formatées:', formatted);
                 setRawData(formatted);
             } catch (err) {
                 console.error('Erreur chargement:', err);
@@ -171,8 +160,8 @@ const HistoriqueArriveesChart = () => {
     // Filtrage par période
     const filteredData = useMemo(() => {
         if (period === 0) return rawData;
-        const cutoff = moment().subtract(period, 'days').startOf('day');
-        return rawData.filter(item => moment(item.date_arrivee).isSameOrAfter(cutoff));
+        const cutoff = dayjs().subtract(period, 'day').startOf('day');
+        return rawData.filter(item => dayjs(item.date_arrivee).isSameOrAfter(cutoff));
     }, [rawData, period]);
 
     // Agrégation des données par produit
@@ -271,79 +260,51 @@ const HistoriqueArriveesChart = () => {
             : 0;
         
         const dernierArrivage = filteredData.length > 0 && filteredData[0]?.date_arrivee
-            ? moment(filteredData[0].date_arrivee).format('DD/MM/YY')
+            ? dayjs(filteredData[0].date_arrivee).format('DD/MM/YY')
             : '—';
             
         return { totalArrivees, produitsDistincts, stockMoyen, dernierArrivage };
     }, [filteredData]);
 
-    // Configuration du graphique
-    const chartConfig = {
-        labels: chartData.map(item => item.nom_produit),
-        datasets: [
-            {
-                label: 'Total Arrivées',
-                data: chartData.map(item => item.total_arrivees || 0),
-                backgroundColor: 'rgba(99, 102, 241, 0.7)',
-                borderColor: 'rgba(99, 102, 241, 1)',
-                borderWidth: 2,
-                borderRadius: 4,
-            },
-            {
-                label: 'Stock Actuel',
-                data: chartData.map(item => item.quantite_en_stock_actuel || 0),
-                backgroundColor: 'rgba(16, 185, 129, 0.7)',
-                borderColor: 'rgba(16, 185, 129, 1)',
-                borderWidth: 2,
-                borderRadius: 4,
-            }
-        ]
-    };
+    // Configuration du graphique (ApexCharts)
+    const chartSeries = useMemo(() => [
+        { name: 'Total Arrivées', data: chartData.map(item => item.total_arrivees || 0) },
+        { name: 'Stock Actuel', data: chartData.map(item => item.quantite_en_stock_actuel || 0) },
+    ], [chartData]);
 
-    const chartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'top',
-                labels: {
-                    font: { size: 12, weight: 'bold' },
-                    padding: 20,
-                    usePointStyle: true,
-                    pointStyle: 'circle',
-                }
-            },
-            tooltip: {
-                callbacks: {
-                    label: function(context) {
-                        return `${context.dataset.label}: ${context.raw.toLocaleString()} unité(s)`;
-                    }
-                }
-            }
+    const chartOptions = useMemo(() => ({
+        chart: {
+            toolbar: { show: false },
+            fontFamily: 'inherit',
         },
-        scales: {
-            x: {
-                grid: { display: false },
-                ticks: {
-                    maxRotation: 45,
-                    minRotation: 30,
-                    font: { size: 10 }
-                }
+        plotOptions: {
+            bar: { borderRadius: 4, columnWidth: '70%' },
+        },
+        dataLabels: { enabled: false },
+        colors: ['rgba(99, 102, 241, 1)', 'rgba(16, 185, 129, 1)'],
+        xaxis: {
+            categories: chartData.map(item => item.nom_produit),
+            labels: {
+                rotate: -45,
+                style: { fontSize: '10px' },
             },
+        },
+        yaxis: {
+            title: { text: 'Quantité', style: { fontSize: '12px', fontWeight: 'bold' } },
+        },
+        legend: {
+            position: 'top',
+            markers: { shape: 'circle' },
+        },
+        grid: {
+            borderColor: 'rgba(0,0,0,0.06)',
+        },
+        tooltip: {
             y: {
-                title: {
-                    display: true,
-                    text: 'Quantité',
-                    font: { size: 12, weight: 'bold' }
-                },
-                grid: {
-                    color: 'rgba(0,0,0,0.06)',
-                    drawBorder: false,
-                },
-                beginAtZero: true,
-            }
-        }
-    };
+                formatter: (val) => `${val.toLocaleString()} unité(s)`,
+            },
+        },
+    }), [chartData]);
 
     // Gestion du tri
     const handleSort = (field) => {
@@ -493,7 +454,7 @@ const HistoriqueArriveesChart = () => {
 
                     {chartData.length > 0 ? (
                         <div style={{ height: '400px' }}>
-                            <Bar data={chartConfig} options={chartOptions} />
+                            <Chart options={chartOptions} series={chartSeries} type="bar" height="100%" />
                         </div>
                     ) : (
                         <div className="text-center py-5">
@@ -619,7 +580,7 @@ const HistoriqueArriveesChart = () => {
                                                 </td>
                                                 <td className="text-end">
                                                     <span className="date-value">
-                                                        {item.dernier_arrivage ? moment(item.dernier_arrivage).format('DD/MM/YY HH:mm') : '—'}
+                                                        {item.dernier_arrivage ? dayjs(item.dernier_arrivage).format('DD/MM/YY HH:mm') : '—'}
                                                     </span>
                                                 </td>
                                             </tr>

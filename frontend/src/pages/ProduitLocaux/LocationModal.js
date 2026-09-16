@@ -1,44 +1,13 @@
 // src/pages/ProduitLocaux/LocationModal.js
 
-import React, { useState, useEffect, useCallback, memo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import { FaBuilding, FaAlignLeft, FaExclamationTriangle, FaTimes, FaPlus, FaSave } from "react-icons/fa";
+import FormItem from "../../components/FormItem/FormItem";
 import "./ProductModal.css";
 
 const MySwal = withReactContent(Swal);
-
-const FormItem = memo(({ label, name, type = "text", options = [], formData, handleChange, disabled = false, icon: Icon }) => {
-  const renderInput = () => {
-    if (type === "select") {
-      return (
-        <select name={name} value={formData[name] || ""} onChange={handleChange} className="add-modal-select" disabled={disabled}>
-          <option value="">Sélectionner...</option>
-          {options.map((opt) => (
-            <option key={opt.value} value={opt.value}> {opt.label} </option>
-          ))}
-        </select>
-      );
-    }
-
-    if (type === "textarea") {
-      return (
-        <textarea name={name} value={formData[name] || ""} onChange={handleChange} className="add-modal-textarea" placeholder={`Entrez ${label.toLowerCase()}`} />
-      );
-    }
-
-    return (
-      <input type={type} name={name} value={formData[name] || ""} onChange={handleChange} className="add-modal-input" placeholder={`Entrez ${label.toLowerCase()}`} />
-    );
-  };
-
-  return (
-    <div className="add-modal-form-group">
-      <label className="add-modal-label"> {Icon && <Icon />} {label} </label>
-      {renderInput()}
-    </div>
-  );
-});
 
 const LocationModal = ({ show, handleClose, onSaveSuccess, initialData, existingLocations = [], existingProducts = [] }) => {
   const [formData, setFormData] = useState({

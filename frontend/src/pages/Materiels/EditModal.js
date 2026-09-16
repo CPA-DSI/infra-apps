@@ -1,12 +1,12 @@
 // src/pages/Materiels/EditModal.js
 
-import React, { useState, useEffect, useCallback, memo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { fetchALocaux, fetchAMarques, updateMateriel } from '../../services/api';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
-import { FaVideo, FaNetworkWired, FaUsb, FaLaptop, FaTv, FaUsers, FaCalendarAlt, FaBuilding, FaDoorOpen, FaHeart, FaUserCircle, FaPlug, FaKey, FaBatteryFull, FaMicrochip, FaCommentAlt, FaQrcode, FaKeyboard as FaKeyboardIcon, FaCheckCircle, FaTimesCircle, FaHdd, FaTimes, FaTerminal, FaShieldAlt, FaDesktop, FaEdit, FaSave, FaInfoCircle } from 'react-icons/fa';
-import { MdMonitor } from 'react-icons/md';
-import Select from 'react-select';
+import { FaVideo, FaNetworkWired, FaUsb, FaPlug, FaCheckCircle, FaTimesCircle, FaTimes, FaEdit, FaSave, FaInfoCircle, FaKeyboard as FaKeyboardIcon } from 'react-icons/fa';
+import FormItem from '../../components/FormItem/FormItem';
+import { getMaterielFieldIcon } from './materielFieldIcons';
 import './Materiels.css';
 
 const MySwal = withReactContent(Swal);
@@ -74,89 +74,6 @@ const customSelectStyles = {
         fontSize: '0.85rem',
     }),
 };
-
-const FormItem = memo(({ label, name, type = 'text', options = [], formData, handleChange, onSelectChange, disabled = false, required = false }) => {
-    const getIcon = () => {
-        switch(name) {
-            case 'id_n': return <FaQrcode />;
-            case 'id_marque': return <FaLaptop />;
-            case 'ecran': return <FaTv />;
-            case 'equipe': return <FaUsers />;
-            case 'date_pc': return <FaCalendarAlt />;
-            case 'date_ecran': return <MdMonitor />;
-            case 'salle': return <FaBuilding />;
-            case 'id_local': return <FaDoorOpen />;
-            case 'etat_pc': return <FaHeart />;
-            case 'utilisateur': return <FaUserCircle />;
-            case 'code_pc': return <FaTerminal />;
-            case 'code_ecran': return <FaDesktop />;
-            case 'hdmi':
-            case 'lan':
-            case 'usb':
-            case 'clavier': return <FaPlug />;
-            case 'mdp_pc': return <FaKey />;
-            case 'mdp_admin': return <FaShieldAlt />;
-            case 'etat_batterie': return <FaBatteryFull />;
-            case 'caracteristiques': return <FaMicrochip />;
-            case 'commentaire': return <FaCommentAlt />;
-            default: return <FaHdd />;
-        }
-    };
-
-    const renderInput = () => {
-        if (type === 'select') {
-            return (
-                <Select
-                    name={name}
-                    value={options.find(opt => opt.value === formData[name]) || null}
-                    onChange={(selectedOption) => onSelectChange && onSelectChange(name, selectedOption)}
-                    options={options}
-                    isSearchable
-                    isClearable
-                    placeholder="Sélectionner..."
-                    isDisabled={disabled}
-                    className="add-modal-select"
-                    classNamePrefix="add-modal-select"
-                    styles={customSelectStyles}
-                    noOptionsMessage={() => "Aucune option disponible"}
-                />
-            );
-        }
-        
-        if (type === 'textarea') {
-            return (
-                <textarea name={name} value={formData[name] || ''} onChange={handleChange} className="add-modal-textarea" placeholder={`Entrez ${label.toLowerCase()}`} />
-            );
-        }
-        
-        if (type === 'checkbox') {
-            return (
-                <div className="add-modal-checkbox-wrapper">
-                    <input type="checkbox" name={name} checked={formData[name] || false} onChange={handleChange} className="add-modal-checkbox" />
-                    <span className="add-modal-checkbox-label">{label}</span>
-                </div>
-            );
-        }
-        
-        return (
-            <input type={type} name={name} value={formData[name] || ''} onChange={handleChange} className="add-modal-input" placeholder={`Entrez ${label.toLowerCase()}`} />
-        );
-    };
-
-    if (type === 'checkbox') {
-        return renderInput();
-    }
-
-    return (
-        <div className="add-modal-form-group">
-            <label className="add-modal-label">
-                {getIcon()} {label}
-                {required && <span style={{ color: '#EF4444', marginLeft: '4px' }}>*</span>}
-            </label>
-            {renderInput()}
-        </div>
-    );
-});
 
 const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
     const [formData, setFormData] = useState(data || {});
@@ -350,31 +267,31 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
                        display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px'
                     }}>
                         <div style={{ gridColumn: '1', gridRow: '1' }}>
-                            <FormItem label="N° Matricule" name="id_n" formData={formData} handleChange={handleChange} required />
+                            <FormItem label="N° Matricule" name="id_n" formData={formData} handleChange={handleChange} required icon={getMaterielFieldIcon("id_n")} />
                         </div>
                         <div style={{ gridColumn: '2', gridRow: '1' }}>
-                            <FormItem label="Utilisateur" name="utilisateur" formData={formData} handleChange={handleChange} required />
+                            <FormItem label="Utilisateur" name="utilisateur" formData={formData} handleChange={handleChange} required icon={getMaterielFieldIcon("utilisateur")} />
                         </div>
 
                         <div style={{ gridColumn: '1', gridRow: '2' }}>
-                            <FormItem label="Marque Laptop" name="id_marque" type="select" options={marqueOptions} formData={formData} handleChange={handleChange} onSelectChange={handleSelectChange} disabled={isLoadingMarques} />
+                            <FormItem label="Marque Laptop" name="id_marque" type="select" options={marqueOptions} formData={formData} handleChange={handleChange} onSelectChange={handleSelectChange} disabled={isLoadingMarques} isClearable selectStyles={customSelectStyles} noOptionsMessage={() => "Aucune option disponible"} icon={getMaterielFieldIcon("id_marque")} />
                         </div>
                         <div style={{ gridColumn: '2', gridRow: '2' }}>
-                            <FormItem label="Code PC" name="code_pc" formData={formData} handleChange={handleChange} />
+                            <FormItem label="Code PC" name="code_pc" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("code_pc")} />
                         </div>
 
                         <div style={{ gridColumn: '1', gridRow: '3' }}>
-                            <FormItem label="Marque Écran" name="ecran" formData={formData} handleChange={handleChange} />
+                            <FormItem label="Marque Écran" name="ecran" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("ecran")} />
                         </div>
                         <div style={{ gridColumn: '2', gridRow: '3' }}>
-                            <FormItem label="Code Écran" name="code_ecran" formData={formData} handleChange={handleChange} />
+                            <FormItem label="Code Écran" name="code_ecran" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("code_ecran")} />
                         </div>
 
                         <div style={{ gridColumn: '1', gridRow: '4' }}>
-                            <FormItem label="Équipe" name="equipe" formData={formData} handleChange={handleChange} required />
+                            <FormItem label="Équipe" name="equipe" formData={formData} handleChange={handleChange} required icon={getMaterielFieldIcon("equipe")} />
                         </div>
                         <div style={{ gridColumn: '1', gridRow: '5' }}>
-                            <FormItem label="Date PC" name="date_pc" type="date" formData={formData} handleChange={handleChange} />
+                            <FormItem label="Date PC" name="date_pc" type="date" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("date_pc")} />
                         </div>
                         {/* Le bloc Connectiques occupe exactement les lignes de grille "Équipe" + "Date PC",
                             ce qui garantit l'alignement de "Date Écran" avec "Mot de passe local" ci-dessous. */}
@@ -419,28 +336,28 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
                         </div>
 
                         <div style={{ gridColumn: '1', gridRow: '6' }}>
-                            <FormItem label="Date Écran" name="date_ecran" type="date" formData={formData} handleChange={handleChange} />
+                            <FormItem label="Date Écran" name="date_ecran" type="date" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("date_ecran")} />
                         </div>
                         <div style={{ gridColumn: '2', gridRow: '6' }}>
-                            <FormItem label="Mot de passe local" name="mdp_pc" formData={formData} handleChange={handleChange} />
+                            <FormItem label="Mot de passe local" name="mdp_pc" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("mdp_pc")} />
                         </div>
 
                         <div style={{ gridColumn: '1', gridRow: '7' }}>
-                            <FormItem label="salle" name="salle" formData={formData} handleChange={handleChange} />
+                            <FormItem label="salle" name="salle" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("salle")} />
                         </div>
                         <div style={{ gridColumn: '2', gridRow: '7' }}>
-                            <FormItem label="Mot de passe Admin" name="mdp_admin" formData={formData} handleChange={handleChange} />
+                            <FormItem label="Mot de passe Admin" name="mdp_admin" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("mdp_admin")} />
                         </div>
 
                         <div style={{ gridColumn: '1', gridRow: '8' }}>
-                            <FormItem label="Local(s)" name="id_local" type="select" options={localOptions} formData={formData} handleChange={handleChange} onSelectChange={handleSelectChange} disabled={isLoadingLocaux} />
+                            <FormItem label="Local(s)" name="id_local" type="select" options={localOptions} formData={formData} handleChange={handleChange} onSelectChange={handleSelectChange} disabled={isLoadingLocaux} isClearable selectStyles={customSelectStyles} noOptionsMessage={() => "Aucune option disponible"} icon={getMaterielFieldIcon("id_local")} />
                         </div>
                         <div style={{ gridColumn: '2', gridRow: '8' }}>
-                            <FormItem label="État Batterie" name="etat_batterie" formData={formData} handleChange={handleChange} />
+                            <FormItem label="État Batterie" name="etat_batterie" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("etat_batterie")} />
                         </div>
 
                         <div style={{ gridColumn: '1', gridRow: '9' }}>
-                            <FormItem label="État PC" name="etat_pc" type="select"
+                            <FormItem label="État PC" name="etat_pc" type="select" icon={getMaterielFieldIcon("etat_pc")}
                                 options={[
                                     { value: 'Très Bon', label: '✅ Très Bon' },
                                     { value: 'Bon', label: '👍 Bon' },
@@ -452,6 +369,9 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
                                 formData={formData}
                                 handleChange={handleChange}
                                 onSelectChange={handleSelectChange}
+                                isClearable
+                                selectStyles={customSelectStyles}
+                                noOptionsMessage={() => "Aucune option disponible"}
                             />
                         </div>
                         <div className="add-modal-form-group add-modal-actif-group" style={{ gridColumn: '2', gridRow: '9' }}>
@@ -490,8 +410,8 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
                     <div className="add-modal-form-grid" style={{
                        display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px'
                     }}>
-                        <FormItem label="Caractéristiques" name="caracteristiques" type="textarea" formData={formData} handleChange={handleChange} />
-                        <FormItem label="Commentaire" name="commentaire" type="textarea" formData={formData} handleChange={handleChange} />
+                        <FormItem label="Caractéristiques" name="caracteristiques" type="textarea" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("caracteristiques")} />
+                        <FormItem label="Commentaire" name="commentaire" type="textarea" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("commentaire")} />
                     </div>
                 </div>
 

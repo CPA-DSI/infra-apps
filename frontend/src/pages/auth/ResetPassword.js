@@ -166,7 +166,7 @@ const ResetPassword = () => {
 
   if (isValidToken === false) {
     return (
-      <div className="login-container">
+      <main className="login-container">
         <div className="wrap-login">
           <div className="login-form" style={{ textAlign: 'center' }}>
             <span className="login-title">
@@ -183,12 +183,12 @@ const ResetPassword = () => {
             </div>
           </div>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="login-container">
+    <main className="login-container">
       <div className="wrap-login">
         <Tilt tiltMaxAngleX={15} tiltMaxAngleY={15} scale={1.05} transitionSpeed={400}>
           <div className="login-pic">
@@ -287,7 +287,7 @@ const ResetPassword = () => {
           </div>
         </form>
       </div>
-    </div>
+    </main>
   );
 };
 

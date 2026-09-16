@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Button, Alert, InputGroup, FormControl } from 'react-bootstrap';
 import { FaSearch, FaSync, FaFileExcel, FaHistory, FaTimes, FaCalendarAlt, FaClipboardList } from 'react-icons/fa';
 import * as XLSX from 'xlsx';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import DataTable from 'react-data-table-component';
 import HistoriqueArriveesChart from './HistoriqueArriveesChart.js';
 import { fetchProduits, getHistoriqueArrivees } from '../../services/api';
@@ -82,9 +82,7 @@ const HistoriqueArrivees = () => {
         
         try {
             const response = await getHistoriqueArrivees();
-            
-            console.log('Données reçues:', response);
-            
+
             const normalizeData = (arr) => arr.map(item => ({
                 ...item,
                 nom_produit: item.nom_produit || item.produit?.nom_produit || null,
@@ -228,7 +226,7 @@ const HistoriqueArrivees = () => {
                 return (
                     <div className="ha-cell-date">
                         <span className="ha-cell-date-main">
-                            {moment(row.date_arrivee).format('DD/MM/YYYY')}
+                            {dayjs(row.date_arrivee).format('DD/MM/YYYY')}
                         </span>
                         <span className="ha-cell-date-age">
                             {ageText}
@@ -261,7 +259,7 @@ const HistoriqueArrivees = () => {
                 return (
                     <div className="ha-cell-date">
                         <span className="ha-cell-date-main">
-                            {moment(row.ancienne_date_stock).format('DD/MM/YYYY')}
+                            {dayjs(row.ancienne_date_stock).format('DD/MM/YYYY')}
                         </span>
                     </div>
                 );
@@ -298,9 +296,9 @@ const HistoriqueArrivees = () => {
             'Produit': item.nom_produit,
             'Quantité Arrivée': item.quantite_arrivee,
             'Stock Actuel': item.quantite_en_stock,
-            'Date Mouvement': moment(item.date_arrivee).format('DD/MM/YYYY HH:mm'),
+            'Date Mouvement': dayjs(item.date_arrivee).format('DD/MM/YYYY HH:mm'),
             'Stock Précédent': item.ancienne_quantite_stock ?? 'N/A',
-            'Date Stock Précédent': item.ancienne_date_stock ? moment(item.ancienne_date_stock).format('DD/MM/YYYY') : 'N/A'
+            'Date Stock Précédent': item.ancienne_date_stock ? dayjs(item.ancienne_date_stock).format('DD/MM/YYYY') : 'N/A'
         }));
 
         const worksheet = XLSX.utils.json_to_sheet(excelData);
@@ -313,9 +311,9 @@ const HistoriqueArrivees = () => {
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Historique des Arrivées");
         
-        let fileName = `Historique_Arrivees_${moment().format('YYYY-MM-DD')}`;
+        let fileName = `Historique_Arrivees_${dayjs().format('YYYY-MM-DD')}`;
         if (dateRange.start && dateRange.end) {
-            fileName += `_${moment(dateRange.start).format('DD-MM')}_au_${moment(dateRange.end).format('DD-MM')}`;
+            fileName += `_${dayjs(dateRange.start).format('DD-MM')}_au_${dayjs(dateRange.end).format('DD-MM')}`;
         }
         
         XLSX.writeFile(workbook, `${fileName}.xlsx`);

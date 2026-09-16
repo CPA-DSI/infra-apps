@@ -108,7 +108,6 @@ const FormItemUpdate = ({ initialData = {}, onSave, onClose }) => {
       };
 
       const response = await updateMouvement(formData.id_mouvement, dataToSend);
-      console.log('Réponse API:', response);
       setSubmitSuccess(true);
       setIsSubmitting(false);
       if (onSave) onSave(response);

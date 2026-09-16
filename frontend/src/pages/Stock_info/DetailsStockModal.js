@@ -16,7 +16,6 @@ const DetailsStockModal = ({ show, handleClose, selectedItemId }) => {
       const data = await getMouvementById(id);
       if (data && typeof data === 'object' && data.id_mouvement) {
           setItemDetails(data);
-          console.log("Détails reçus et validés:", data);
       } else {
           setError("L'API a répondu, mais n'a pas renvoyé de détails valides pour cet ID.");
           setItemDetails(null);
