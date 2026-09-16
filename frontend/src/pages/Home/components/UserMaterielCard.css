@@ -1,119 +1,151 @@
 .userMaterielCard {
-  background: var(--dk-surface-solid, #1e293b);
-  border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  padding: 28px;
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid var(--dk-border, rgba(99, 102, 241, 0.2));
-  overflow: hidden;
-  animation: fadeInUp 0.6s ease-out forwards;
-  opacity: 0;
-}
-
-.userMaterielCard:nth-child(1) {
-  animation-delay: 0.1s;
-}
-
-.userMaterielCardHeader {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #eef0f4;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  padding: 22px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 14px;
-  margin-bottom: 24px;
-  padding-bottom: 18px;
-  border-bottom: 1px solid var(--dk-border-light, #475569);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: fadeInUp 0.4s ease-out;
 }
 
-.userMaterielCardHeaderRight {
-  margin-left: auto;
+.userMaterielCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(124, 58, 237, 0.14);
+  border-color: #ddd6fe;
 }
 
-.userMaterielCardIcon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-  color: white;
-  font-size: 18px;
+.userMaterielTop {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.userMaterielLogo {
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   flex-shrink: 0;
 }
 
-.userMaterielCardTitle {
-  font-size: 18px;
+.userMaterielLogo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.userMaterielLogoFallback {
+  padding: 6px 12px;
+  background-color: #f3f4f6;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.userMaterielTitle {
+  flex: 1;
+  min-width: 0;
+}
+
+.userMaterielCode {
   font-weight: 700;
-  color: var(--dk-text-primary, #f8fafc);
-  margin: 0;
+  font-size: 0.95rem;
+  color: #1f2937;
 }
 
-.userMaterielCardContent {
-  color: var(--dk-text-secondary, #94a3b8);
-  font-size: 14px;
-  line-height: 1.7;
+.userMaterielSub {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 2px;
+  word-break: break-word;
 }
 
-.userMaterielGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0;
+.userMaterielStatusBadge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  text-transform: capitalize;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.userMaterielField {
+.userMaterielInfo {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 14px 16px;
+  gap: 9px;
+  padding: 12px 0;
+  border-top: 1px solid #f3f4f6;
+  border-bottom: 1px solid #f3f4f6;
 }
 
-.userMaterielFieldWithBorder {
-  border-bottom: 1px solid var(--dk-border-light, #475569);
-}
-
-.userMaterielFieldHeader {
+.userMaterielInfoItem {
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size: 0.85rem;
+  color: #4b5563;
 }
 
-.userMaterielFieldIcon {
-  font-size: 12px;
-  color: var(--dk-accent-light, #a5b4fc);
+.userMaterielInfoItem svg {
+  color: #7c3aed;
+  flex-shrink: 0;
+  font-size: 0.8rem;
 }
 
-.userMaterielLabel {
-  font-size: 11px;
+.userMaterielFooter {
+  display: flex;
+  align-items: center;
+}
+
+.userMaterielActifBadge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.7rem;
   font-weight: 600;
-  color: var(--dk-text-muted, #64748b);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.userMaterielValue {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--dk-text-primary, #f8fafc);
-  padding-left: 20px;
-  word-break: break-word;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .userMaterielEmpty {
   text-align: center;
   padding: 40px 20px;
-  color: var(--dk-text-muted, #64748b);
-  font-size: 14px;
+  color: #9ca3af;
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.userMaterielEmptyIcon {
+  font-size: 2.2rem;
+  color: #6366f1;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (max-width: 576px) {
-  .userMaterielGrid {
-    grid-template-columns: 1fr;
-  }
-
   .userMaterielCard {
-    padding: 20px;
-  }
-
-  .userMaterielCardHeader {
-    flex-wrap: wrap;
+    padding: 18px;
   }
 }

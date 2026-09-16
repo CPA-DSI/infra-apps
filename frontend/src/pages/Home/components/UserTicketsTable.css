@@ -33,9 +33,9 @@
 
 .userTicketsTable tbody td {
   padding: 14px 16px;
-  border-bottom: 1px solid var(--dk-border, rgba(99, 102, 241, 0.2));
+  border-bottom: 1px solid #f3f4f6;
   font-size: 14px;
-  color: var(--dk-text-secondary, #94a3b8);
+  color: #4b5563;
   transition: all 0.2s ease;
   vertical-align: middle;
 }
@@ -45,7 +45,7 @@
 }
 
 .userTicketsTable tbody tr:hover td {
-  background: #1e293b;
+  background: #f5f3ff;
 }
 
 .userTicketsTable tbody tr:hover {
@@ -55,17 +55,17 @@
 .userTicketNumber {
   font-family: 'Courier New', monospace;
   font-weight: 700;
-  color: var(--dk-accent, #6366f1);
+  color: #6366f1;
   font-size: 13px;
 }
 
 .userTicketTitle {
   font-weight: 500;
-  color: var(--dk-text-primary, #f8fafc);
+  color: #1f2937;
 }
 
 .userTicketDate {
-  color: var(--dk-text-muted, #64748b);
+  color: #9ca3af;
   font-size: 13px;
   white-space: nowrap;
 }
@@ -76,7 +76,7 @@
   align-items: center;
   justify-content: center;
   padding: 48px 20px;
-  color: var(--dk-text-muted, #64748b);
+  color: #9ca3af;
   gap: 12px;
 }
 

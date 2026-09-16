@@ -8,6 +8,8 @@ import UserMaterielCard from './components/UserMaterielCard';
 import UserTabs from './components/UserTabs';
 import UserTicketsTable from './components/UserTicketsTable';
 import UserHistoryTimeline from './components/UserHistoryTimeline';
+import UserOverviewBar from './components/UserOverviewBar';
+import UserAlertsBanner from './components/UserAlertsBanner';
 import './UserDashboard.css';
 
 const UserDashboard = () => {
@@ -85,6 +87,11 @@ const UserDashboard = () => {
     return (
       <div className="userDashboardContainer">
         <UserProfileCard user={user} matricule={data.id_n} />
+        <UserOverviewBar
+          ticketsOuverts={data.tickets?.ouverts || 0}
+          ticketsFermes={data.tickets?.fermes || 0}
+          materiel={data.materiel}
+        />
         <div className="userDashboardContent">
           <div className="userDashboardEmptyState">
             <FaInbox className="userDashboardEmptyStateIcon" />
@@ -101,6 +108,14 @@ const UserDashboard = () => {
   return (
     <div className="userDashboardContainer">
       <UserProfileCard user={user} matricule={data.id_n} />
+
+      <UserAlertsBanner tickets={data.tickets?.recents || []} materiel={data.materiel} />
+
+      <UserOverviewBar
+        ticketsOuverts={data.tickets?.ouverts || 0}
+        ticketsFermes={data.tickets?.fermes || 0}
+        materiel={data.materiel}
+      />
 
       <div className="userDashboardContent">
         <div className="userDashboardLeftColumn">

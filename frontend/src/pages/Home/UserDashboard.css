@@ -4,21 +4,21 @@
 
 :root {
   /* Color System */
-  --ud-bg: #0f172a;
-  --ud-surface: #1e293b;
-  --ud-border: rgba(99, 102, 241, 0.2);
-  --ud-border-light: #475569;
-  --ud-text-primary: #f8fafc;
-  --ud-text-secondary: #94a3b8;
-  --ud-text-muted: #64748b;
+  --ud-bg: #f9fafb;
+  --ud-surface: #ffffff;
+  --ud-border: #eef0f4;
+  --ud-border-light: #f3f4f6;
+  --ud-text-primary: #1f2937;
+  --ud-text-secondary: #4b5563;
+  --ud-text-muted: #9ca3af;
   --ud-accent: #6366f1;
-  --ud-accent-light: rgba(99, 102, 241, 0.15);
+  --ud-accent-light: rgba(99, 102, 241, 0.1);
   --ud-success: #10b981;
   --ud-success-bg: rgba(16, 185, 129, 0.15);
   --ud-danger: #ef4444;
   --ud-danger-bg: rgba(239, 68, 68, 0.1);
   --ud-danger-border: rgba(239, 68, 68, 0.3);
-  --ud-muted-bg: #334155;
+  --ud-muted-bg: #f3f4f6;
 
   /* Spacing Scale */
   --ud-space-1: 4px;
@@ -49,11 +49,11 @@
   --ud-radius-xl: 28px;
 
   /* Shadow System */
-  --ud-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
-  --ud-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.25);
-  --ud-shadow-md: 0 8px 20px rgba(0, 0, 0, 0.3);
-  --ud-shadow-lg: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
-  --ud-shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.4);
+  --ud-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --ud-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --ud-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --ud-shadow-lg: 0 10px 24px rgba(124, 58, 237, 0.12);
+  --ud-shadow-xl: 0 12px 30px rgba(0, 0, 0, 0.08);
 
   /* Transitions */
   --ud-transition-fast: 150ms ease;

@@ -569,6 +569,92 @@
 }
 
 /* ==========================================================
+   VUE EN CARTES (rôle USER) — remplace le tableau + les filtres avancés
+   ========================================================== */
+
+.materiel-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+    gap: 20px;
+}
+
+.materiel-card {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #eef0f4;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: fadeInUp 0.3s ease-out;
+}
+
+.materiel-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px rgba(124, 58, 237, 0.14);
+    border-color: #ddd6fe;
+}
+
+.materiel-card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.materiel-card-title {
+    flex: 1;
+    min-width: 0;
+}
+
+.materiel-card-code {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #1f2937;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.materiel-card-sub {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin-top: 2px;
+    word-break: break-word;
+}
+
+.materiel-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding: 12px 0;
+    border-top: 1px solid #f3f4f6;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.materiel-card-info-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: #4b5563;
+}
+
+.materiel-card-info-item svg {
+    color: #7c3aed;
+    flex-shrink: 0;
+    font-size: 0.75rem;
+}
+
+.materiel-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+/* ==========================================================
    RESPONSIVE
    ========================================================== */
 

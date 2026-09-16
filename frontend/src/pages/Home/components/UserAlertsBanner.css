@@ -1,0 +1,25 @@
+.userAlertsBanner {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.userAlertItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.userAlertIcon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  color: #d97706;
+}
