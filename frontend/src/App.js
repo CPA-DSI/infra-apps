@@ -1,23 +1,25 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Outlet, Navigate } from 'react-router-dom';
-import Login from './pages/auth/login';
-import FirstLoginPasswordChange from './pages/auth/FirstLoginPasswordChange';
-import ForgotPassword from './pages/auth/ForgotPassword';
-import ResetPassword from './pages/auth/ResetPassword';
 import FixedNavbarWithLogo from './components/Navbar/FixedNavbarWithLogo';
 import Footer from './components/Footer/Footer';
-import Home from './pages/Home/Home';
-import Materiels from './pages/Materiels/Materiels';
-import HistoriqueMateriel from './pages/HistoriqueMateriel/HistoriqueMateriel';
-import MailInfo from './pages/MailInfo/MailInfo';
-import Mouvements from './pages/Stock_info/Mouvements';
-import HistoriqueArrivees from './pages/HistoriqueArrivees/HistoriqueArrivees';
-import ProduitLocaux from './pages/ProduitLocaux/ProduitLocaux';
-import TicketList from './pages/Tickets/TicketList';
-import EmailHome from './pages/email/EmailHome';
-import Documents from './pages/Documents/Documents';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import 'bootstrap/dist/css/bootstrap.min.css'; 
+import { hasPermission, PERMISSIONS } from './config/api';
+import 'bootstrap/dist/css/bootstrap.min.css';
+
+const Login = lazy(() => import('./pages/auth/login'));
+const FirstLoginPasswordChange = lazy(() => import('./pages/auth/FirstLoginPasswordChange'));
+const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/auth/ResetPassword'));
+const Home = lazy(() => import('./pages/Home/Home'));
+const Materiels = lazy(() => import('./pages/Materiels/Materiels'));
+const HistoriqueMateriel = lazy(() => import('./pages/HistoriqueMateriel/HistoriqueMateriel'));
+const MailInfo = lazy(() => import('./pages/MailInfo/MailInfo'));
+const Mouvements = lazy(() => import('./pages/Stock_info/Mouvements'));
+const HistoriqueArrivees = lazy(() => import('./pages/HistoriqueArrivees/HistoriqueArrivees'));
+const ProduitLocaux = lazy(() => import('./pages/ProduitLocaux/ProduitLocaux'));
+const TicketList = lazy(() => import('./pages/Tickets/TicketList'));
+const EmailHome = lazy(() => import('./pages/email/EmailHome'));
+const Documents = lazy(() => import('./pages/Documents/Documents'));
 
 const AppLayout = () => {
   const { isAuthenticated, isLoading, mustChangePassword } = useAuth();
@@ -45,37 +47,80 @@ const AppLayout = () => {
   );
 };
 
+// Défense en profondeur : le backend est déjà censé filtrer par permission,
+// mais on évite ici qu'une route sensible reste accessible par simple saisie d'URL.
+const RequirePermission = ({ permission, children }) => {
+  const { user } = useAuth();
+
+  if (permission && !hasPermission(user?.role, permission)) {
+    return <Navigate to="/Home" replace />;
+  }
+
+  return children;
+};
+
 const RootRedirect = () => {
   return <Navigate to="/login" replace />;
 };
 
+const PageFallback = () => <div>Chargement...</div>;
+
 function AppInner() {
   return (
     <Router>
-      <div> 
-        <Routes>
-          <Route path="/" element={<RootRedirect />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/change-password" element={<FirstLoginPasswordChange />} />
+      <div>
+        <Suspense fallback={<PageFallback />}>
+          <Routes>
+            <Route path="/" element={<RootRedirect />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/change-password" element={<FirstLoginPasswordChange />} />
 
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
-          <Route element={<AppLayout />}>
-            <Route path="/Home" element={<Home />} />
-            <Route path="/Materiels" element={<Materiels />} />
-            <Route path="/HistoriqueMateriel" element={<HistoriqueMateriel />} />
-            <Route path="/MailInfo" element={<MailInfo />} />
-            <Route path="/Mouvements" element={<Mouvements />} />
-            <Route path="/HistoriqueArrivees" element={<HistoriqueArrivees />} />
-            <Route path="/ProduitLocaux" element={<ProduitLocaux />} />
-            <Route path="/Tickets" element={<TicketList />} />
-            <Route path="/EmailHome" element={<EmailHome />} />
-            <Route path="/Documents" element={<Documents />} />
-          </Route>
-          
-          <Route path="*" element={<div>Page non trouvée (Erreur 404)</div>} />
-        </Routes>
+            <Route element={<AppLayout />}>
+              <Route path="/Home" element={<Home />} />
+              <Route
+                path="/Materiels"
+                element={<RequirePermission permission={PERMISSIONS.MATERIELS_READ}><Materiels /></RequirePermission>}
+              />
+              <Route
+                path="/HistoriqueMateriel"
+                element={<RequirePermission permission={PERMISSIONS.MATERIELS_READ}><HistoriqueMateriel /></RequirePermission>}
+              />
+              <Route
+                path="/MailInfo"
+                element={<RequirePermission permission={PERMISSIONS.USERS_READ}><MailInfo /></RequirePermission>}
+              />
+              <Route
+                path="/Mouvements"
+                element={<RequirePermission permission={PERMISSIONS.STOCKS_READ}><Mouvements /></RequirePermission>}
+              />
+              <Route
+                path="/HistoriqueArrivees"
+                element={<RequirePermission permission={PERMISSIONS.STOCKS_READ}><HistoriqueArrivees /></RequirePermission>}
+              />
+              <Route
+                path="/ProduitLocaux"
+                element={<RequirePermission permission={PERMISSIONS.STOCKS_READ}><ProduitLocaux /></RequirePermission>}
+              />
+              <Route
+                path="/Tickets"
+                element={<RequirePermission permission={PERMISSIONS.TICKETS_READ}><TicketList /></RequirePermission>}
+              />
+              <Route
+                path="/EmailHome"
+                element={<RequirePermission permission={PERMISSIONS.CONFIG_READ}><EmailHome /></RequirePermission>}
+              />
+              <Route
+                path="/Documents"
+                element={<RequirePermission permission={PERMISSIONS.DOCUMENTS_READ}><Documents /></RequirePermission>}
+              />
+            </Route>
+
+            <Route path="*" element={<div>Page non trouvée (Erreur 404)</div>} />
+          </Routes>
+        </Suspense>
       </div>
     </Router>
   );
