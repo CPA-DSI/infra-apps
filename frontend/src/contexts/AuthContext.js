@@ -1,5 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
 import { apiClient, getCurrentUserProfile } from '../services/api';
+
+const MySwal = withReactContent(Swal);
+
+// Doit rester alignée avec la durée de vie du cookie/JWT côté backend
+// (voir TOKEN_MAX_AGE_MS dans backend-Prisma/config/authToken.js).
+const IDLE_TIMEOUT_MS = 10 * 60 * 1000;
+const IDLE_WARNING_MS = 60 * 1000;
 
 const AuthContext = createContext(null);
 
@@ -76,6 +85,89 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(false);
     }
   }, []);
+
+  // Déconnexion automatique après 10 min d'inactivité, avec un avertissement
+  // 1 min avant la coupure. Le compte à rebours est ignoré si l'utilisateur
+  // est inactif : seule une action explicite sur la modale (ou une activité
+  // avant son ouverture) prolonge la session.
+  useEffect(() => {
+    if (!isAuthenticated) {
+      return undefined;
+    }
+
+    let idleTimer = null;
+    let warningOpen = false;
+
+    const clearIdleTimer = () => {
+      if (idleTimer) {
+        clearTimeout(idleTimer);
+        idleTimer = null;
+      }
+    };
+
+    const scheduleWarning = () => {
+      clearIdleTimer();
+      idleTimer = setTimeout(showWarning, IDLE_TIMEOUT_MS - IDLE_WARNING_MS);
+    };
+
+    function showWarning() {
+      if (warningOpen) return;
+      warningOpen = true;
+
+      let remainingSeconds = IDLE_WARNING_MS / 1000;
+      let countdownInterval;
+
+      MySwal.fire({
+        title: 'Toujours là ?',
+        html: `Vous allez être déconnecté dans <b id="idle-countdown">${remainingSeconds}</b> secondes pour inactivité.`,
+        icon: 'warning',
+        showDenyButton: true,
+        confirmButtonText: 'Rester connecté',
+        denyButtonText: 'Se déconnecter',
+        confirmButtonColor: '#6366f1',
+        denyButtonColor: '#64748b',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        timer: IDLE_WARNING_MS,
+        timerProgressBar: true,
+        didOpen: () => {
+          countdownInterval = setInterval(() => {
+            remainingSeconds -= 1;
+            const el = document.getElementById('idle-countdown');
+            if (el) el.textContent = Math.max(remainingSeconds, 0);
+          }, 1000);
+        },
+        willClose: () => {
+          clearInterval(countdownInterval);
+        },
+      }).then((result) => {
+        warningOpen = false;
+        if (result.isConfirmed) {
+          checkAuth();
+          scheduleWarning();
+        } else {
+          logout();
+        }
+      });
+    }
+
+    const handleActivity = () => {
+      if (warningOpen) return;
+      scheduleWarning();
+    };
+
+    const activityEvents = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart'];
+    activityEvents.forEach((evt) => window.addEventListener(evt, handleActivity, { passive: true }));
+    scheduleWarning();
+
+    return () => {
+      activityEvents.forEach((evt) => window.removeEventListener(evt, handleActivity));
+      clearIdleTimer();
+      if (warningOpen) {
+        Swal.close();
+      }
+    };
+  }, [isAuthenticated, checkAuth, logout]);
 
   const value = {
     isAuthenticated,

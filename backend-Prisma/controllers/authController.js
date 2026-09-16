@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import { encryptSecret } from '../services/passMailCrypto.js';
+import { TOKEN_EXPIRES_IN, TOKEN_MAX_AGE_MS } from '../config/authToken.js';
 
 const APP_URL = process.env.APP_URL || null;
 
@@ -159,7 +160,7 @@ export const login = async (req, res) => {
         must_change_password: mustChangePassword,
       },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' },
+      { expiresIn: TOKEN_EXPIRES_IN },
     );
 
     const isProduction = process.env.NODE_ENV === 'production';
@@ -167,7 +168,7 @@ export const login = async (req, res) => {
       httpOnly: true,
       secure: isProduction,
       sameSite: isProduction ? 'none' : 'lax',
-      maxAge: 3600000,
+      maxAge: TOKEN_MAX_AGE_MS,
     });
 
     return res.status(200).json({

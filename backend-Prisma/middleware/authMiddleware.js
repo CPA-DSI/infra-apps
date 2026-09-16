@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import prisma from '../prismaClient.js';
 import { hasPermission } from '../constants/roles.js';
+import { TOKEN_EXPIRES_IN, TOKEN_MAX_AGE_MS } from '../config/authToken.js';
 
 const ensureJwtSecret = () => {
   if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
@@ -37,6 +38,19 @@ export const authenticateToken = (req, res, next) => {
       role: decoded.role,
       must_change_password: decoded.must_change_password,
     };
+
+    // Session glissante : chaque requête authentifiée prolonge la session
+    // de TOKEN_EXPIRES_IN, pour ne déconnecter que les utilisateurs
+    // réellement inactifs.
+    const { iat, exp, ...payload } = decoded;
+    const refreshedToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: TOKEN_EXPIRES_IN });
+    const isProduction = process.env.NODE_ENV === 'production';
+    res.cookie('token', refreshedToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
+      maxAge: TOKEN_MAX_AGE_MS,
+    });
 
     next();
   });

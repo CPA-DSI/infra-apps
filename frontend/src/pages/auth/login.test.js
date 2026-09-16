@@ -10,9 +10,15 @@ jest.mock('../../services/api', () => ({
   getCurrentUserProfile: jest.fn().mockRejectedValue(new Error('no session')),
 }));
 
-jest.mock('sweetalert2', () => ({
-  fire: jest.fn().mockResolvedValue({}),
-}));
+jest.mock('sweetalert2', () => {
+  // Classe (et non objet simple) : AuthContext.js utilise withReactContent(Swal),
+  // qui fait `class extends Swal`, et a donc besoin d'un vrai constructeur ici.
+  class MockSwal {
+    static fire = jest.fn().mockResolvedValue({});
+    static close = jest.fn();
+  }
+  return MockSwal;
+});
 
 jest.mock('react-parallax-tilt', () => ({ children }) => <div>{children}</div>);
 
