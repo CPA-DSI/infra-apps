@@ -96,6 +96,8 @@ const UsersManager = () => {
         importError,
         importPreview,
         importData,
+        importWarnings,
+        importErrors,
         isDragging,
         fileInputRef,
         toggleImportSection,
@@ -880,6 +882,23 @@ const UsersManager = () => {
                                 </div>
                             )}
 
+                            {importWarnings.length > 0 && !isImporting && (
+                                <div className="mx-4 mb-3" style={{
+                                    borderRadius: '10px', background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e', padding: '0.75rem 1rem', fontSize: '0.8rem'
+                                }}>
+                                    <div className="d-flex align-items-center gap-2 fw-semibold mb-1">
+                                        <FaInfoCircle style={{ fontSize: '0.85rem' }} />
+                                        <span>{importWarnings.length} doublon(s) détecté(s) dans le fichier</span>
+                                    </div>
+                                    <ul className="mb-0 ps-4" style={{ fontSize: '0.78rem' }}>
+                                        {importWarnings.map((w, idx) => <li key={idx}>{w}</li>)}
+                                    </ul>
+                                    <div className="mt-1" style={{ fontSize: '0.75rem', opacity: 0.85 }}>
+                                        Ces lignes seront ignorées lors de l'import.
+                                    </div>
+                                </div>
+                            )}
+
                             {isImporting && (
                                 <div className="mx-4 mb-3">
                                     <div className="d-flex justify-content-between align-items-center mb-2">
@@ -1017,6 +1036,31 @@ const UsersManager = () => {
                                     </div>
                                 )}
                             </div>
+
+                            {importErrors.length > 0 && (
+                                <div className="mx-4 mt-4 text-start" style={{
+                                    borderRadius: '10px', background: '#fef2f2', border: '1px solid #fecaca', padding: '0.75rem 1rem', maxHeight: '220px', overflowY: 'auto'
+                                }}>
+                                    <div className="fw-semibold mb-2" style={{ color: '#991b1b', fontSize: '0.85rem' }}>
+                                        Détail des lignes ignorées :
+                                    </div>
+                                    <ul className="mb-0 ps-3" style={{ fontSize: '0.78rem', color: '#991b1b' }}>
+                                        {importErrors.map((err, idx) => <li key={idx}>{err}</li>)}
+                                    </ul>
+                                </div>
+                            )}
+
+                            {importSuccessStats && (importSuccessStats.failed || 0) > 0 && (
+                                <div className="text-center mt-4">
+                                    <button
+                                        className="btn rounded-pill px-4"
+                                        onClick={toggleImportSection}
+                                        style={{ border: '1px solid #d1d5db', color: '#374151', backgroundColor: 'white', fontSize: '0.85rem', fontWeight: '500' }}
+                                    >
+                                        Fermer
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

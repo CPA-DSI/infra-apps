@@ -166,6 +166,56 @@ router.post('/import', authenticateToken, ensureActiveUser, requirePermission(PE
     const stats = { success: 0, failed: 0, warnings: 0 };
     const errors = [];
 
+    // --- Détection des doublons avant toute écriture ---
+    // Deux cas rejetés sans arbitrage (aucune ligne "gagnante" choisie, l'utilisateur
+    // doit corriger son fichier) :
+    //  1. Un même N° (id_n) apparaît sur plusieurs lignes du fichier.
+    //  2. Un même email est réclamé par plusieurs N° différents, que ce soit entre
+    //     deux lignes du fichier ou parce qu'il appartient déjà en base à un autre
+    //     utilisateur. Sans ce contrôle, l'upsert imbriqué de Prisma (where: { email })
+    //     réattribuerait silencieusement l'email à l'utilisateur traité en dernier.
+    const idNCounts = new Map();
+    const emailClaims = new Map(); // email (normalisé) -> Set des id_n qui le réclament
+
+    for (const item of items) {
+        const id_n = parseInt(item.id_n, 10);
+        if (!Number.isFinite(id_n)) continue;
+        idNCounts.set(id_n, (idNCounts.get(id_n) || 0) + 1);
+
+        for (const raw of [item.email_1, item.email_2]) {
+            if (!raw || !String(raw).trim()) continue;
+            const email = String(raw).trim().toLowerCase();
+            if (!emailClaims.has(email)) emailClaims.set(email, new Set());
+            emailClaims.get(email).add(id_n);
+        }
+    }
+
+    const allFileEmails = [...emailClaims.keys()];
+    const existingOwners = allFileEmails.length > 0
+        ? await prisma.userEmail.findMany({
+            where: { email: { in: allFileEmails } },
+            select: { email: true, user: { select: { id_n: true } } }
+        })
+        : [];
+    for (const owner of existingOwners) {
+        emailClaims.get(owner.email)?.add(owner.user.id_n);
+    }
+
+    const conflictedIdNs = new Map(); // id_n -> liste de raisons du rejet
+    const addConflict = (id_n, reason) => {
+        if (!conflictedIdNs.has(id_n)) conflictedIdNs.set(id_n, []);
+        conflictedIdNs.get(id_n).push(reason);
+    };
+    for (const [id_n, count] of idNCounts) {
+        if (count > 1) addConflict(id_n, `le N° ${id_n} apparaît ${count} fois dans le fichier`);
+    }
+    for (const [email, idNs] of emailClaims) {
+        if (idNs.size > 1) {
+            const list = [...idNs].join(', ');
+            idNs.forEach(id_n => addConflict(id_n, `l'email "${email}" est partagé avec le(s) N° ${list}`));
+        }
+    }
+
     for (let i = 0; i < items.length; i++) {
         const item = items[i];
         const rowLabel = `Ligne ${i + 2}`;
@@ -174,6 +224,12 @@ router.post('/import', authenticateToken, ensureActiveUser, requirePermission(PE
             if (!Number.isFinite(id_n)) {
                 stats.failed++;
                 errors.push(`${rowLabel}: N° invalide.`);
+                continue;
+            }
+
+            if (conflictedIdNs.has(id_n)) {
+                stats.failed++;
+                errors.push(`${rowLabel}: ${conflictedIdNs.get(id_n).join(' ; ')} (ligne ignorée).`);
                 continue;
             }
 

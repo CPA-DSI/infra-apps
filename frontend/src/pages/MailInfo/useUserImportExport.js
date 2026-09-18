@@ -76,6 +76,35 @@ const parseExcelFile = async (file) => {
     }).filter(item => item.id_n !== null);
 };
 
+// Détecte, côté client, les doublons qui feront rejeter des lignes par le
+// backend (N° en double, ou email partagé par plusieurs N°) : purement
+// informatif avant l'envoi, la validation qui compte reste côté serveur
+// (elle seule connaît les emails déjà utilisés en base par un autre utilisateur).
+const detectDuplicateWarnings = (items) => {
+    const idNCounts = new Map();
+    const emailToIdNs = new Map();
+
+    items.forEach(({ id_n, email_1, email_2 }) => {
+        if (id_n === null) return;
+        idNCounts.set(id_n, (idNCounts.get(id_n) || 0) + 1);
+        [email_1, email_2].forEach((email) => {
+            if (!email) return;
+            const key = String(email).trim().toLowerCase();
+            if (!emailToIdNs.has(key)) emailToIdNs.set(key, new Set());
+            emailToIdNs.get(key).add(id_n);
+        });
+    });
+
+    const warnings = [];
+    for (const [id_n, count] of idNCounts) {
+        if (count > 1) warnings.push(`Le N° ${id_n} apparaît ${count} fois dans le fichier.`);
+    }
+    for (const [email, idNs] of emailToIdNs) {
+        if (idNs.size > 1) warnings.push(`L'email "${email}" est partagé par les N° ${[...idNs].join(', ')}.`);
+    }
+    return warnings;
+};
+
 /**
  * Encapsule la logique d'import Excel des utilisateurs : parsing du fichier,
  * drag & drop, upload avec progression. Mêmes conventions que
@@ -91,6 +120,8 @@ export const useUserImportExport = ({ onImported }) => {
     const [importError, setImportError] = useState(null);
     const [importPreview, setImportPreview] = useState([]);
     const [importData, setImportData] = useState([]);
+    const [importWarnings, setImportWarnings] = useState([]);
+    const [importErrors, setImportErrors] = useState([]);
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef(null);
 
@@ -103,6 +134,8 @@ export const useUserImportExport = ({ onImported }) => {
         setImportError(null);
         setImportPreview([]);
         setImportData([]);
+        setImportWarnings([]);
+        setImportErrors([]);
         setIsDragging(false);
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
@@ -136,7 +169,7 @@ export const useUserImportExport = ({ onImported }) => {
 
     const previewFile = useCallback((file) => {
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
             try {
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
@@ -145,6 +178,15 @@ export const useUserImportExport = ({ onImported }) => {
 
                 setImportPreview(jsonData.slice(0, 5));
                 setImportData(jsonData);
+
+                // Avertissement précoce (avant l'envoi au serveur) sur les doublons
+                // qui seront de toute façon rejetés par le backend.
+                try {
+                    const items = await parseExcelFile(file);
+                    setImportWarnings(detectDuplicateWarnings(items));
+                } catch {
+                    setImportWarnings([]);
+                }
             } catch (error) {
                 console.error('Erreur lors de la lecture du fichier:', error);
                 setImportError('Erreur lors de la lecture du fichier. Vérifiez le format.');
@@ -195,6 +237,8 @@ export const useUserImportExport = ({ onImported }) => {
         setImportFile(null);
         setImportPreview([]);
         setImportData([]);
+        setImportWarnings([]);
+        setImportErrors([]);
         setImportError(null);
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
@@ -215,6 +259,7 @@ export const useUserImportExport = ({ onImported }) => {
         setIsImporting(true);
         setImportProgress(0);
         setImportError(null);
+        setImportErrors([]);
 
         try {
             setImportProgress(10);
@@ -240,6 +285,7 @@ export const useUserImportExport = ({ onImported }) => {
             setImportSuccess(true);
             const stats = response.data.stats || {};
             setImportSuccessStats(stats);
+            setImportErrors(response.data.errors || []);
 
             if (onImported) await onImported();
 
@@ -253,7 +299,7 @@ export const useUserImportExport = ({ onImported }) => {
                 title = 'Import terminé';
                 successText = 'L\'import a été traité. Vérifiez votre fichier.';
             } else if (failCount > 0) {
-                successText += `\n${failCount} échec(s).`;
+                successText += `\n${failCount} échec(s). Voir le détail ci-dessous.`;
             }
 
             await MySwal.fire({
@@ -263,8 +309,13 @@ export const useUserImportExport = ({ onImported }) => {
                 confirmButtonText: 'OK'
             });
 
-            setShowImportSection(false);
-            resetImportState();
+            // On ne referme/réinitialise automatiquement que si tout s'est bien passé :
+            // sinon on garde le panneau ouvert pour que le détail des échecs (importErrors)
+            // reste visible tant que l'utilisateur ne l'a pas fermé lui-même.
+            if (failCount === 0) {
+                setShowImportSection(false);
+                resetImportState();
+            }
 
         } catch (error) {
             console.error('Erreur import Excel utilisateurs:', error);
@@ -291,6 +342,8 @@ export const useUserImportExport = ({ onImported }) => {
         importError,
         importPreview,
         importData,
+        importWarnings,
+        importErrors,
         isDragging,
         fileInputRef,
         toggleImportSection,
