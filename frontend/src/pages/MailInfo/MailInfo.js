@@ -2,10 +2,10 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import DataTable from 'react-data-table-component';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-import { Button, Alert } from 'react-bootstrap';
+import { Button, Alert, Spinner } from 'react-bootstrap';
 import Swal from 'sweetalert2';
 
-import { FaFileExcel, FaPlus, FaSearch, FaTimes, FaSync, FaEnvelope, FaFileImport, FaUsers } from 'react-icons/fa';
+import { FaFileExcel, FaPlus, FaSearch, FaTimes, FaSync, FaEnvelope, FaFileImport, FaUsers, FaUpload, FaCheckCircle, FaFileUpload, FaInfoCircle } from 'react-icons/fa';
 import { fetchUsers, fetchAllMaterielsByIdN, updateUser, updateUserStatus } from '../../services/api';
 import { ROLE_PERMISSIONS, ROLES } from '../../config/api';
 import DetailsMailModal from './DetailsMailModal';
@@ -21,6 +21,7 @@ import ActionButtons from './ActionButtons';
 import ExpandableEmailRow from './ExpandableEmailRow';
 import SearchableSelect from './SearchableSelect';
 import { STATS_CONFIG, PAGINATION_OPTIONS } from './mailInfoTableConfig';
+import { useUserImportExport } from './useUserImportExport';
 
 import './Mail.css';
 
@@ -84,6 +85,28 @@ const UsersManager = () => {
         await loadData();
         await loadMaterielsList();
     };
+
+    const {
+        showImportSection,
+        importFile,
+        importProgress,
+        isImporting,
+        importSuccess,
+        importSuccessStats,
+        importError,
+        importPreview,
+        importData,
+        isDragging,
+        fileInputRef,
+        toggleImportSection,
+        handleDragEnter,
+        handleDragLeave,
+        handleDragOver,
+        handleDrop,
+        handleFileSelect,
+        handleRemoveFile,
+        handleImportSubmit,
+    } = useUserImportExport({ onImported: handleRefresh });
 
     const handleResetFilters = () => {
         setFilterText('');
@@ -703,9 +726,9 @@ const UsersManager = () => {
                         <FaSync className={loading ? 'fa-spin' : ''} />
                     </button>
 
-                    <button className="btn-pill btn-pill-success shadow-sm" onClick={() => {}} title="Importer des données" >
-                        <FaFileImport size={13} />
-                        <span>Importer</span>
+                    <button className={`btn-pill btn-pill-success shadow-sm ${showImportSection ? 'active' : ''}`} onClick={toggleImportSection} disabled={isImporting} title="Importer des données" >
+                        {isImporting ? <Spinner animation="border" size="sm" style={{ color: 'white' }} /> : <FaFileImport size={13} />}
+                        <span>{isImporting ? 'Import...' : 'Importer'}</span>
                     </button>
 
                     <button className="btn-pill btn-pill-warning shadow-sm" onClick={exportToExcel} title="Exporter les données" >
@@ -719,6 +742,285 @@ const UsersManager = () => {
                     </button>
                 </div>
             </div>
+
+            {showImportSection && (
+                <div className="import-section mb-4 rounded-3" style={{
+                    background: 'white', border: '1px solid #e5e7eb', borderRadius: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden'
+                }}>
+                    <div className="d-flex justify-content-between align-items-center p-4 pb-3">
+                        <h6 className="fw-bold mb-0 d-flex align-items-center gap-2" style={{ color: '#1F2937', fontSize: '1rem' }}>
+                            <div style={{
+                                width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, #667eea, #764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white'
+                            }}>
+                                <FaFileImport size={14} />
+                            </div>
+                            Importer des utilisateurs
+                        </h6>
+                        <button
+                            className="btn btn-sm rounded-circle border-0"
+                            onClick={toggleImportSection}
+                            style={{
+                                width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s ease', color: '#9ca3af'
+                            }}
+                            disabled={isImporting}
+                            title="Fermer"
+                        >
+                            <FaTimes size={14} />
+                        </button>
+                    </div>
+
+                    {!importSuccess ? (
+                        <>
+                            <div
+                                className={`import-drop-zone mx-4 mb-3 ${isDragging ? 'dragover' : ''} ${importFile ? 'has-file' : ''}`}
+                                onDragEnter={handleDragEnter} onDragLeave={handleDragLeave} onDragOver={handleDragOver} onDrop={handleDrop}
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                <input
+                                    ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFileSelect} style={{ display: 'none' }} disabled={isImporting}
+                                />
+
+                                {importFile ? (
+                                    <div className="d-flex align-items-center justify-content-center gap-4">
+                                        <div className="import-file-icon" style={{
+                                            fontSize: '2.5rem', color: '#217346', filter: 'drop-shadow(0 2px 4px rgba(33, 115, 70, 0.15))'
+                                        }}>
+                                            <FaFileExcel />
+                                        </div>
+                                        <div className="text-start flex-grow-1">
+                                            <div className="fw-semibold" style={{ color: '#1F2937', fontSize: '0.95rem' }}>{importFile.name}</div>
+                                            <div className="text-muted" style={{ fontSize: '0.8rem' }}>
+                                                {(importFile.size / 1024).toFixed(1)} Ko
+                                            </div>
+                                            <div className="text-success mt-1" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
+                                                <FaCheckCircle className="me-1" size={12} /> Fichier prêt à importer
+                                            </div>
+                                        </div>
+                                        <button
+                                            className="btn btn-sm rounded-circle border-0 import-remove-btn"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleRemoveFile();
+                                            }}
+                                            disabled={isImporting}
+                                            style={{
+                                                width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s ease', color: '#ef4444', backgroundColor: '#fef2f2'
+                                            }}
+                                        >
+                                            <FaTimes size={14} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <div className="import-drop-icon">
+                                            <FaFileUpload />
+                                        </div>
+                                        <div style={{ fontWeight: '600', color: '#374151', fontSize: '0.95rem', marginBottom: '0.4rem' }}>
+                                            Glissez-déposez votre fichier Excel ici
+                                        </div>
+                                        <div style={{ color: '#6b7280', fontSize: '0.85rem', marginBottom: '1rem' }}>
+                                            ou <span className="import-browse-link">parcourez vos fichiers</span>
+                                        </div>
+                                        <div style={{
+                                            color: '#6b7280', fontSize: '0.8rem', backgroundColor: '#f3f4f6', display: 'inline-block', padding: '4px 14px', borderRadius: '20px'
+                                        }}>
+                                            Formats acceptés : <span className="fw-semibold" style={{ color: '#667eea' }}>.xlsx, .xls</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {importPreview.length > 0 && !isImporting && (
+                                <div className="mx-4 mb-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '1rem' }}>
+                                    <div className="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 className="mb-0" style={{ fontSize: '0.85rem', fontWeight: '600', color: '#374151' }}>
+                                            <FaSearch className="me-2" style={{ color: '#667eea', fontSize: '0.75rem' }} />
+                                            Aperçu des données
+                                        </h6>
+                                        <span className="badge" style={{
+                                            backgroundColor: '#eef2ff', color: '#4338ca', fontSize: '0.75rem', padding: '4px 12px', borderRadius: '20px', fontWeight: '500'
+                                        }}>
+                                            {importData.length} lignes au total
+                                        </span>
+                                    </div>
+                                    <div className="table-responsive table-scroll-preview" style={{ maxHeight: '250px', overflow: 'auto', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                                        <table className="table table-sm table-hover mb-0" style={{ fontSize: '0.75rem' }}>
+                                            <thead className="table-light" style={{
+                                                position: 'sticky', top: 0, backgroundColor: '#f9fafb', zIndex: 10
+                                            }}>
+                                                <tr>
+                                                    {Object.keys(importPreview[0] || {}).map((key, index) => (
+                                                        <th key={index} style={{
+                                                            fontSize: '0.7rem', whiteSpace: 'nowrap', fontWeight: '600', color: '#374151', padding: '10px 12px', borderBottom: '2px solid #e5e7eb'
+                                                        }}>
+                                                            {key}
+                                                        </th>
+                                                    ))}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {importPreview.map((row, rowIndex) => (
+                                                    <tr key={rowIndex}>
+                                                        {Object.values(row).map((value, cellIndex) => (
+                                                            <td key={cellIndex} style={{
+                                                                fontSize: '0.75rem', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: '8px 12px', color: '#4b5563'
+                                                            }}>
+                                                                {String(value || '')}
+                                                            </td>
+                                                        ))}
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <small className="text-muted mt-2 d-block" style={{ fontSize: '0.75rem' }}>
+                                        <FaInfoCircle className="me-1" style={{ fontSize: '0.7rem' }} />
+                                        Aperçu des 5 premières lignes
+                                    </small>
+                                </div>
+                            )}
+
+                            {isImporting && (
+                                <div className="mx-4 mb-3">
+                                    <div className="d-flex justify-content-between align-items-center mb-2">
+                                        <div className="d-flex align-items-center gap-2">
+                                            <Spinner animation="border" size="sm" style={{ color: '#667eea' }} />
+                                            <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#374151' }}>
+                                                {importProgress < 25 ? 'Analyse du fichier Excel...' :
+                                                 importProgress < 70 ? 'Envoi des données au serveur...' :
+                                                 importProgress < 100 ? 'Traitement des données...' :
+                                                 'Importation terminée !'}
+                                            </span>
+                                        </div>
+                                        <span style={{
+                                            fontWeight: '600',
+                                            color: importProgress === 100 ? '#10b981' : '#667eea',
+                                            fontSize: '0.9rem'
+                                        }}>
+                                            {importProgress}%
+                                        </span>
+                                    </div>
+                                    <div className="progress-container" style={{
+                                        height: '10px', borderRadius: '10px', backgroundColor: '#f3f4f6', overflow: 'hidden', position: 'relative'
+                                    }}>
+                                        <div
+                                            className="progress-bar-fill"
+                                            style={{
+                                                height: '100%',
+                                                borderRadius: '10px',
+                                                background: importProgress === 100
+                                                    ? 'linear-gradient(90deg, #10b981, #059669)'
+                                                    : 'linear-gradient(90deg, #667eea, #764ba2)',
+                                                width: `${importProgress}%`,
+                                                transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {importError && (
+                                <div className="mx-4 mb-3">
+                                    <div style={{
+                                        borderRadius: '10px', background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', padding: '0.75rem 1rem', fontSize: '0.85rem'
+                                    }}>
+                                        <div className="d-flex align-items-center gap-2">
+                                            <FaTimes style={{ fontSize: '0.9rem' }} />
+                                            <span>{importError}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {!isImporting && !importSuccess && (
+                                <div className="d-flex justify-content-end gap-2 p-4 pt-0">
+                                    <button
+                                        className="btn rounded-pill px-4"
+                                        onClick={toggleImportSection}
+                                        disabled={isImporting}
+                                        style={{
+                                           transition: 'all 0.2s ease', border: '1px solid #d1d5db', color: '#374151', backgroundColor: 'white', fontSize: '0.85rem', fontWeight: '500',
+                                            opacity: isImporting ? 0.6 : 1
+                                        }}
+                                    >
+                                        <FaTimes className="me-2" size={12} />
+                                        Annuler
+                                    </button>
+                                    <button
+                                        className="btn rounded-pill px-4"
+                                        onClick={handleImportSubmit}
+                                        disabled={!importFile || isImporting}
+                                        style={{
+                                            background: !importFile || isImporting ? '#d1d5db' : '#10b981', color: 'white', border: 'none', fontWeight: '600', fontSize: '0.85rem', transition: 'all 0.3s ease',
+                                            opacity: !importFile || isImporting ? 0.6 : 1,
+                                            cursor: !importFile || isImporting ? 'not-allowed' : 'pointer'
+                                        }}
+                                    >
+                                        {isImporting ? (
+                                            <>
+                                                <Spinner animation="border" size="sm" className="me-2" />
+                                                Import en cours...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <FaUpload className="me-2" size={12} />
+                                                Importer
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        <div className="text-center py-5">
+                            <div style={{
+                                fontSize: '3.5rem', color: '#10b981', marginBottom: '1rem'
+                            }}>
+                                <FaCheckCircle />
+                            </div>
+                            <div style={{ fontSize: '1.2rem', fontWeight: '600', color: '#1F2937', marginTop: '0.5rem', marginBottom: '0.75rem' }}>
+                                {importSuccessStats && (importSuccessStats.success || 0) > 0 ? 'Importation réussie !' : 'Import terminé'}
+                            </div>
+                            <div style={{ color: '#6b7280', fontSize: '0.9rem', maxWidth: '400px', margin: '0 auto' }}>
+                                {importSuccessStats ? (
+                                    <div className="d-flex flex-column gap-2 mt-3">
+                                        {(importSuccessStats.success || 0) > 0 && (
+                                            <div className="d-flex align-items-center justify-content-center gap-2">
+                                                <div style={{
+                                                    width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#d1fae5', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                }}>
+                                                    <FaCheckCircle style={{ color: '#10b981', fontSize: '0.8rem' }} />
+                                                </div>
+                                                <span style={{ fontWeight: '500', color: '#065f46', fontSize: '0.9rem' }}>
+                                                    {importSuccessStats.success} utilisateur(s) importé(s)
+                                                </span>
+                                            </div>
+                                        )}
+                                        {(importSuccessStats.failed || 0) > 0 && (
+                                            <div className="d-flex align-items-center justify-content-center gap-2">
+                                                <div style={{
+                                                    width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                }}>
+                                                    <FaTimes style={{ color: '#f59e0b', fontSize: '0.8rem' }} />
+                                                </div>
+                                                <span style={{ fontWeight: '500', color: '#92400e', fontSize: '0.9rem' }}>
+                                                    {importSuccessStats.failed} échec(s)
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div style={{
+                                        padding: '10px 20px', backgroundColor: '#d1fae5', borderRadius: '10px', display: 'inline-block', marginTop: '0.5rem', color: '#065f46', fontSize: '0.9rem'
+                                    }}>
+                                        Les utilisateurs ont été importés avec succès.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {copyToast.show && (
                 <div 

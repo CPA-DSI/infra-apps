@@ -138,6 +138,131 @@ router.post('/', authenticateToken, ensureActiveUser, requirePermission(PERMISSI
     }
 });
 
+// POST /api/users/import - Import en masse depuis Excel (colonnes de l'export utilisateurs)
+router.post('/import', authenticateToken, ensureActiveUser, requirePermission(PERMISSIONS.USERS_WRITE), async (req, res) => {
+    const { items } = req.body;
+
+    if (!Array.isArray(items) || items.length === 0) {
+        return res.status(400).json({ message: "Aucune donnée à importer." });
+    }
+
+    const ROLE_LABELS = { 'Admin IT': 'IT_ADMIN', 'Direction': 'DIRECTION', 'Utilisateur': 'USER' };
+    const normalizeRole = (value) => {
+        if (!value) return 'USER';
+        const v = String(value).trim();
+        const upper = v.toUpperCase();
+        if (['USER', 'IT_ADMIN', 'DIRECTION'].includes(upper)) return upper;
+        return ROLE_LABELS[v] || 'USER';
+    };
+    const normalizeStatus = (value) => {
+        if (typeof value === 'boolean') return value;
+        const v = String(value ?? '').trim().toLowerCase();
+        return !['désactivé', 'desactive', 'désactive', 'inactif', 'false', '0', 'non', 'no'].includes(v);
+    };
+
+    const defaultPasswordHash = await bcrypt.hash('123456', 10);
+    const defaultPasswordEnc = encryptSecret('123456');
+
+    const stats = { success: 0, failed: 0, warnings: 0 };
+    const errors = [];
+
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const rowLabel = `Ligne ${i + 2}`;
+        try {
+            const id_n = parseInt(item.id_n, 10);
+            if (!Number.isFinite(id_n)) {
+                stats.failed++;
+                errors.push(`${rowLabel}: N° invalide.`);
+                continue;
+            }
+
+            const role = normalizeRole(item.role);
+            const is_active = normalizeStatus(item.is_active);
+
+            const desiredEmails = [];
+            if (item.email_1 && String(item.email_1).trim()) {
+                desiredEmails.push({
+                    email: String(item.email_1).trim().toLowerCase(),
+                    pass_mail: item.pass_mail_1 || '',
+                    is_primary: true
+                });
+            }
+            if (item.email_2 && String(item.email_2).trim()) {
+                desiredEmails.push({
+                    email: String(item.email_2).trim().toLowerCase(),
+                    pass_mail: item.pass_mail_2 || '',
+                    is_primary: false
+                });
+            }
+
+            const existingUser = await prisma.Users.findUnique({ where: { id_n }, include: { emails: true } });
+
+            if (existingUser) {
+                const currentEmails = existingUser.emails || [];
+                const desiredValues = desiredEmails.map(e => e.email);
+                const toDelete = currentEmails.filter(e => !desiredValues.includes(e.email));
+                if (toDelete.length) {
+                    await prisma.userEmail.deleteMany({ where: { id_uEmail: { in: toDelete.map(e => e.id_uEmail) } } });
+                }
+
+                await prisma.Users.update({
+                    where: { id_n },
+                    data: {
+                        role,
+                        is_active,
+                        ...(desiredEmails.length ? {
+                            emails: {
+                                upsert: desiredEmails.map(e => ({
+                                    where: { email: e.email },
+                                    update: {
+                                        pass_mail: encryptPassMail(e.pass_mail),
+                                        is_primary: e.is_primary
+                                    },
+                                    create: {
+                                        email: e.email,
+                                        password: defaultPasswordHash,
+                                        password_enc: defaultPasswordEnc,
+                                        pass_mail: encryptPassMail(e.pass_mail),
+                                        is_primary: e.is_primary,
+                                        is_verified: false
+                                    }
+                                }))
+                            }
+                        } : {})
+                    }
+                });
+            } else {
+                await prisma.Users.create({
+                    data: {
+                        id_n,
+                        role,
+                        is_active,
+                        emails: {
+                            create: desiredEmails.map(e => ({
+                                email: e.email,
+                                password: defaultPasswordHash,
+                                password_enc: defaultPasswordEnc,
+                                pass_mail: encryptPassMail(e.pass_mail),
+                                is_primary: e.is_primary,
+                                is_verified: false
+                            }))
+                        }
+                    }
+                });
+            }
+
+            stats.success++;
+        } catch (error) {
+            console.error(`Erreur import utilisateur (${rowLabel}):`, error.message);
+            stats.failed++;
+            errors.push(`${rowLabel}: ${error.message}`);
+        }
+    }
+
+    res.json({ message: 'Import terminé.', stats, errors });
+});
+
 // PUT /api/users/:id
 router.put('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMISSIONS.USERS_WRITE), async (req, res) => {
     try {
