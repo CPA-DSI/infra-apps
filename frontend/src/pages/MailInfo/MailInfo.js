@@ -13,7 +13,7 @@ import UserFormModal from './UserFormModal';
 import {
     getPrimaryEmail, getSecondaryEmail, getPrimaryPassword, getSecondaryPassword,
     formatUserStatus, formatUserRole, getEmailCount, getVerifiedEmailCount,
-    getTicketCounts, getCommentCount,
+    getTicketCounts,
 } from './mailInfoHelpers';
 import { EditableRoleBadge } from './RoleBadges';
 import StatCard from './StatCard';
@@ -222,10 +222,6 @@ const UsersManager = () => {
             'Mot de passe 2': getSecondaryPassword(u),
             'Nb Emails': getEmailCount(u),
             'Emails Vérifiés': getVerifiedEmailCount(u),
-            'Tickets Créés': getTicketCounts(u).created,
-            'Tickets Assignés': getTicketCounts(u).assigned,
-            'Tickets Fermés': getTicketCounts(u).closed,
-            'Commentaires': getCommentCount(u),
             'Créé le': u.createdAt ? new Date(u.createdAt).toLocaleDateString('fr-FR') : '-',
             'Modifié le': u.updatedAt ? new Date(u.updatedAt).toLocaleDateString('fr-FR') : '-',
             "Date d'export": new Date().toLocaleDateString('fr-FR')
