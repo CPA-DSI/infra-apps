@@ -454,7 +454,7 @@ const columns = useMemo(() => [
     { name: 'Caractéristiques', selector: row => row.caracteristiques, minWidth: '300px', grow: 3 },
     { name: 'État', selector: row => row.etat_pc, sortable: true, grow: 1, center: true, cell: renderStatus },
     { name: 'Local(s)', selector: row => row.nom_local || 'Non attribué', sortable: true, minWidth: '90px', grow: 1 },
-    { name: 'Est Actif', selector: row => row.est_actif, sortable: true, minWidth: '100px', grow: 1, center: true, cell: renderEstActif, ignoreRowClick: true, allowOverflow: true, button: true },
+    { name: 'Status', selector: row => row.est_actif, sortable: true, minWidth: '130px', grow: 1, center: true, cell: renderEstActif, ignoreRowClick: true, allowOverflow: true, button: true },
     { name: 'Nb Doc.', selector: row => row.documents_count, sortable: true, minWidth: '90px', grow: 1, center: true, cell: renderDocumentsCount, ignoreRowClick: true, allowOverflow: true, button: true },
     { name: 'Actions', cell: renderActions, ignoreRowClick: true, allowOverflow: true, button: true, width: '130px', grow: 0, center: true },
 ], [formatDate, renderMarque, renderStatus, renderEstActif, renderDocumentsCount, renderActions]);
