@@ -140,6 +140,36 @@ export const updateMateriel = async (id, materielData) => {
   }
 };
 
+// --- Affectations ---
+
+export const fetchBeneficiaires = async () => {
+  try {
+    const response = await apiClient.get('/materiels_all/affectation/beneficiaires');
+    return response.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+};
+
+// data : { id_n (null = stock), utilisateur, equipe, id_local?, motif?, etat_remise?, commentaire? }
+export const affecterMateriel = async (id, data) => {
+  try {
+    const response = await apiClient.post(`/materiels_all/${id}/affecter`, data);
+    return response.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+};
+
+export const fetchAffectationsMateriel = async (id) => {
+  try {
+    const response = await apiClient.get(`/materiels_all/${id}/affectations`);
+    return response.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+};
+
 export const deleteMateriel = async (id) => {
   try {
     const response = await apiClient.delete(`/materiels_all/${id}`);

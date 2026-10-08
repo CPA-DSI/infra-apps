@@ -4,6 +4,7 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { authenticateToken, ensureActiveUser, requirePermission, requireRole } from '../middleware/authMiddleware.js';
 import { PERMISSIONS, UserRole } from '../constants/roles.js';
+import { ouvrirAffectationInitiale, rattacherEcranParCode } from '../services/affectationService.js';
 
 const prisma = new PrismaClient();
 const router = express.Router();
@@ -670,10 +671,7 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
                     caracteristiques,
                     id_n: id_n_valide,
                     date_pc: convertedDatePC,
-                    date_ecran: convertedDateEcran,
                     code_pc: truncate(code_pc, 200),
-                    ecran: truncate(ecran, 200),
-                    code_ecran: truncate(code_ecran, 200),
                     hdmi,
                     clavier,
                     lan,
@@ -691,10 +689,17 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
 
                 // L'écriture en base (create/update) est différée après la boucle
                 // pour pouvoir grouper les créations en un seul aller-retour (cf. plus bas).
+                // L'écran n'est pas écrit dans la fiche : il est rattaché via la
+                // table ecrans après l'écriture des matériels (cf. plus bas).
                 preparedRows.push({
                     index: i,
                     utilisateur: item['Utilisateur'] || item.utilisateur || 'unknown',
-                    data
+                    data,
+                    ecran: {
+                        code_ecran: truncate(code_ecran, 200),
+                        modele: truncate(ecran, 200),
+                        date_ecran: convertedDateEcran
+                    }
                 });
 
             } catch (individualError) {
@@ -765,6 +770,43 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
             }
         }
 
+        // --- AFFECTATIONS & ÉCRANS ---
+        // Une transaction par ligne : un conflit d'écran (code déjà sur un autre
+        // poste) n'est qu'un avertissement et n'annule pas l'import de la fiche.
+        const warnings = [];
+        const idNsImportes = preparedRows.map(r => r.data.id_n).filter(id => id !== null && id !== undefined);
+        const postesImportes = idNsImportes.length > 0
+            ? await prisma.materiels.findMany({
+                where: { id_n: { in: idNsImportes }, date_suppression: null },
+                select: { id_materiels: true, id_n: true, utilisateur: true }
+            })
+            : [];
+        const posteParIdN = new Map(postesImportes.map(m => [m.id_n, m]));
+
+        for (const row of preparedRows) {
+            const poste = row.data.id_n !== null ? posteParIdN.get(row.data.id_n) : null;
+            if (!poste) {
+                if (row.ecran.code_ecran) {
+                    warnings.push({ index: row.index, utilisateur: row.utilisateur, error: `Écran ${row.ecran.code_ecran} non rattaché : poste sans matricule.` });
+                }
+                continue;
+            }
+            try {
+                await prisma.$transaction(async (tx) => {
+                    const affectationExistante = await tx.affectationMateriel.findFirst({
+                        where: { type_affectation: 'PC', id_materiels: poste.id_materiels },
+                        select: { id_affectation: true }
+                    });
+                    if (!affectationExistante) {
+                        await ouvrirAffectationInitiale(tx, { ...poste, id_n: row.data.id_n }, req.user?.id_n, 'Import Excel');
+                    }
+                    await rattacherEcranParCode(tx, poste.id_materiels, row.ecran, req.user?.id_n, 'Import Excel');
+                });
+            } catch (ecranError) {
+                warnings.push({ index: row.index, utilisateur: row.utilisateur, error: ecranError.message });
+            }
+        }
+
         let message;
         if (successCount === 0) {
             message = `Aucun élément importé sur ${items.length} (${errors.length} échec(s))`;
@@ -779,13 +821,14 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
             stats: {
                 success: successCount,
                 failed: errors.length,
-                warnings: 0
+                warnings: warnings.length
             },
             insertedCount: successCount,
             userCreatedCount: userCreatedCount,
             localCreatedCount: localCreatedCount,
             total: items.length,
             errors: errors,
+            warnings: warnings,
             createdUsers: createdUsers,
             message
         });

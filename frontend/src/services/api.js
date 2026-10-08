@@ -5,6 +5,7 @@ export * from './api/auth';
 export * from './api/emailConfig';
 export * from './api/users';
 export * from './api/materiels';
+export * from './api/ecrans';
 export * from './api/marques';
 export * from './api/locaux';
 export * from './api/produits';

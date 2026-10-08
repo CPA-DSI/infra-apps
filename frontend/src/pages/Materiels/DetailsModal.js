@@ -1,9 +1,76 @@
 // src/pages/Materiels/DetailsModal.js
 
-import React, { useState } from 'react';
-import { FaLaptopCode, FaBarcode, FaDesktop, FaCheckCircle, FaTimesCircle, FaVideo, FaNetworkWired, FaUsb, FaKeyboard as FaKeyboardIcon, FaBatteryFull, FaMicrochip, FaCommentAlt, FaQrcode, FaBuilding, FaHeart, FaUserCircle, FaTerminal, FaPlug, FaShieldAlt, FaHdd, FaTimes, FaCalendarAlt, FaUserFriends, FaKey, FaLocationArrow, FaToggleOn, FaPowerOff, FaEye, FaEyeSlash } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { FaExchangeAlt, FaHistory, FaLaptopCode, FaBarcode, FaDesktop, FaCheckCircle, FaTimesCircle, FaVideo, FaNetworkWired, FaUsb, FaKeyboard as FaKeyboardIcon, FaBatteryFull, FaMicrochip, FaCommentAlt, FaQrcode, FaBuilding, FaHeart, FaUserCircle, FaTerminal, FaPlug, FaShieldAlt, FaHdd, FaTimes, FaCalendarAlt, FaUserFriends, FaKey, FaLocationArrow, FaToggleOn, FaPowerOff, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { MdMonitor, MdComputer, MdSecurity, MdComment } from 'react-icons/md';
+import { fetchAffectationsMateriel } from '../../services/api';
+import AffectationModal from './AffectationModal';
 import './Materiels.css';
+
+const formatDateFr = (d) => (d ? new Date(d).toLocaleDateString('fr-FR') : '');
+
+// Historique des affectations du poste (PC et écrans passés par ce poste).
+function AffectationsHistorique({ idMateriels }) {
+    const [rows, setRows] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        let cancelled = false;
+        setLoading(true);
+        fetchAffectationsMateriel(idMateriels)
+            .then(data => { if (!cancelled) { setRows(data); setError(null); } })
+            .catch(err => { if (!cancelled) setError(err.message); })
+            .finally(() => { if (!cancelled) setLoading(false); });
+        return () => { cancelled = true; };
+    }, [idMateriels]);
+
+    if (loading) return <div style={{ color: '#64748b', fontSize: '0.85rem' }}>Chargement...</div>;
+    if (error) return <div style={{ color: '#991B1B', fontSize: '0.85rem' }}>{error}</div>;
+    if (rows.length === 0) return <div style={{ color: '#64748b', fontSize: '0.85rem' }}>Aucune affectation enregistrée.</div>;
+
+    const th = { fontSize: '0.72rem', fontWeight: 600, color: '#475569', padding: '8px 10px', borderBottom: '2px solid #E2E8F0', textAlign: 'left', whiteSpace: 'nowrap' };
+    const td = { fontSize: '0.8rem', color: '#1E293B', padding: '8px 10px', borderBottom: '1px solid #F1F5F9', verticalAlign: 'top' };
+
+    return (
+        <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                    <tr>
+                        <th style={th}>Équipement</th>
+                        <th style={th}>Bénéficiaire</th>
+                        <th style={th}>Du</th>
+                        <th style={th}>Au</th>
+                        <th style={th}>Motif</th>
+                        <th style={th}>État remise</th>
+                        <th style={th}>Par</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows.map(a => (
+                        <tr key={a.id_affectation}>
+                            <td style={td}>
+                                {a.type_affectation === 'PC'
+                                    ? <span><FaLaptopCode style={{ color: '#4F46E5', marginRight: '6px' }} />PC</span>
+                                    : <span><FaDesktop style={{ color: '#0EA5E9', marginRight: '6px' }} />Écran {a.ecran?.code_ecran}</span>}
+                            </td>
+                            <td style={td}>{a.id_n ? `${a.id_n} - ${a.nom_utilisateur}` : (a.nom_utilisateur || 'Stock')}</td>
+                            <td style={td}>{formatDateFr(a.date_debut)}</td>
+                            <td style={td}>
+                                {a.date_fin ? formatDateFr(a.date_fin) : (
+                                    <span style={{ background: '#D1FAE5', color: '#065F46', borderRadius: '20px', padding: '2px 10px', fontSize: '0.7rem', fontWeight: 600 }}>En cours</span>
+                                )}
+                            </td>
+                            <td style={td}>{a.motif || '—'}</td>
+                            <td style={td}>{a.etat_remise || '—'}</td>
+                            <td style={td}>{a.nom_affecte_par || '—'}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+}
 
 function PasswordField({ label, value, name, visible, onToggle, toggleKey }) {
     return (
@@ -35,8 +102,9 @@ function PasswordField({ label, value, name, visible, onToggle, toggleKey }) {
     );
 }
 
-const DetailsModal = ({ isOpen, onClose, data }) => {
+const DetailsModal = ({ isOpen, onClose, data, canManage = false }) => {
     const [visiblePasswords, setVisiblePasswords] = useState({});
+    const [affectationMode, setAffectationMode] = useState(null); // 'pc' | 'ecran' | null
 
     const togglePassword = (key) => {
         setVisiblePasswords(prev => ({
@@ -328,11 +396,44 @@ const DetailsModal = ({ isOpen, onClose, data }) => {
                                 <InfoCard label="Statut" value={data.est_actif} name="est_actif" />
                             </div>
                         </div>
+
+                        {/* Section 6: Historique des affectations */}
+                        {canManage && (
+                            <div className="details-section" style={{
+                               background: 'white', borderRadius: '16px', padding: '18px', marginTop: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid #E2E8F0'
+                            }}>
+                                <div className="details-section-header" style={{
+                                    background: 'linear-gradient(135deg, #0F766E, #14B8A6)', borderRadius: '12px', padding: '10px 18px', marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '14px'
+                                }}>
+                                    <div style={{ background: 'rgba(255, 255, 255, 0.25)', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', color: 'white' }}>
+                                        <FaHistory />
+                                    </div>
+                                    <h3 className="details-section-title" style={{ color: 'white', fontSize: '0.95rem', fontWeight: '600', margin: 0 }}>
+                                        Historique des affectations
+                                    </h3>
+                                </div>
+                                <AffectationsHistorique idMateriels={data.id_materiels} />
+                            </div>
+                        )}
                     </div>
 
                     <div className="add-modal-footer" style={{
                         background: '#F1F5F9', borderTop: '1px solid #E2E8F0', padding: '16px 24px', display: 'flex', justifyContent: 'flex-end', gap: '12px'
                     }}>
+                        {canManage && (
+                            <>
+                                <button type="button" onClick={() => setAffectationMode('pc')} style={{
+                                    marginRight: 'auto', background: 'linear-gradient(135deg, #4F46E5, #6366F1)', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '12px', fontWeight: '500', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer'
+                                }}>
+                                    <FaExchangeAlt /> Réaffecter le PC
+                                </button>
+                                <button type="button" onClick={() => setAffectationMode('ecran')} style={{
+                                    background: 'linear-gradient(135deg, #0EA5E9, #38BDF8)', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '12px', fontWeight: '500', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer'
+                                }}>
+                                    <FaDesktop /> {data.id_ecran ? "Déplacer l'écran" : 'Installer un écran'}
+                                </button>
+                            </>
+                        )}
                         <button onClick={onClose} className="add-modal-cancel-btn" style={{
                             background: 'white', color: '#1E293B', border: '1px solid #CBD5E1', padding: '10px 28px', borderRadius: '12px', fontWeight: '500', fontSize: '0.9rem', transition: 'all 0.2s ease'
                         }}>
@@ -341,6 +442,18 @@ const DetailsModal = ({ isOpen, onClose, data }) => {
                     </div>
                 </div>
             </div>
+            {affectationMode && (
+                <AffectationModal
+                    mode={affectationMode}
+                    materiel={data}
+                    onClose={() => setAffectationMode(null)}
+                    onDone={() => {
+                        setAffectationMode(null);
+                        // Les données du poste ont changé : on ferme, ce qui recharge la liste.
+                        onClose();
+                    }}
+                />
+            )}
         </>
     );
 };

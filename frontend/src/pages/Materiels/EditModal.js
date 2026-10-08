@@ -259,7 +259,8 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
                     }}>
                         <FaInfoCircle style={{ color: '#3B82F6', fontSize: '1.2rem' }} />
                         <span style={{ color: '#1E40AF', fontSize: '0.85rem' }}>
-                            Modifiez les champs souhaités et cliquez sur Sauvegarder pour enregistrer les modifications
+                            Modifiez les champs souhaités et cliquez sur Sauvegarder. Le matricule et l'écran se changent
+                            depuis le détail du matériel (« Réaffecter le PC » / « Déplacer l'écran ») pour garder l'historique.
                         </span>
                     </div>
                     
@@ -267,7 +268,7 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
                        display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px'
                     }}>
                         <div style={{ gridColumn: '1', gridRow: '1' }}>
-                            <FormItem label="N° Matricule" name="id_n" formData={formData} handleChange={handleChange} required icon={getMaterielFieldIcon("id_n")} />
+                            <FormItem label="N° Matricule" name="id_n" formData={formData} handleChange={handleChange} disabled icon={getMaterielFieldIcon("id_n")} />
                         </div>
                         <div style={{ gridColumn: '2', gridRow: '1' }}>
                             <FormItem label="Utilisateur" name="utilisateur" formData={formData} handleChange={handleChange} required icon={getMaterielFieldIcon("utilisateur")} />
@@ -281,10 +282,10 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
                         </div>
 
                         <div style={{ gridColumn: '1', gridRow: '3' }}>
-                            <FormItem label="Marque Écran" name="ecran" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("ecran")} />
+                            <FormItem label="Marque Écran" name="ecran" formData={formData} handleChange={handleChange} disabled icon={getMaterielFieldIcon("ecran")} />
                         </div>
                         <div style={{ gridColumn: '2', gridRow: '3' }}>
-                            <FormItem label="Code Écran" name="code_ecran" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("code_ecran")} />
+                            <FormItem label="Code Écran" name="code_ecran" formData={formData} handleChange={handleChange} disabled icon={getMaterielFieldIcon("code_ecran")} />
                         </div>
 
                         <div style={{ gridColumn: '1', gridRow: '4' }}>
@@ -336,7 +337,7 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
                         </div>
 
                         <div style={{ gridColumn: '1', gridRow: '6' }}>
-                            <FormItem label="Date Écran" name="date_ecran" type="date" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("date_ecran")} />
+                            <FormItem label="Date Écran" name="date_ecran" type="date" formData={formData} handleChange={handleChange} disabled icon={getMaterielFieldIcon("date_ecran")} />
                         </div>
                         <div style={{ gridColumn: '2', gridRow: '6' }}>
                             <FormItem label="Mot de passe local" name="mdp_pc" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("mdp_pc")} />

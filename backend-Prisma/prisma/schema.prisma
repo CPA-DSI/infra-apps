@@ -29,6 +29,8 @@ model Users {
   accesDocuments       DocumentAcces[]
   commentaires         HistoriqueCommentaire[]
   materiel             Materiels?
+  affectations         AffectationMateriel[]   @relation("AffectationBeneficiaire")
+  affectations_faites  AffectationMateriel[]   @relation("AffectationAuteur")
   tickets_assignes     Ticket[]                @relation("TicketAssigne")
   tickets_crees        Ticket[]                @relation("TicketDemandeur")
   tickets_fermes       TicketFermeture[]
@@ -93,8 +95,63 @@ model Materiels {
   documents_lies    MaterielDocument[]
   mouvements        Mouvement[]
   tickets           Ticket[]
+  ecran_actuel      Ecran?
+  affectations      AffectationMateriel[]
 
   @@map("materiels")
+}
+
+// Écrans du parc, gérés indépendamment des PC : un écran peut changer de
+// poste sans que le PC bouge. Un poste a au plus un écran (id_materiels unique).
+// Les colonnes ecran / code_ecran / date_ecran de materiels sont conservées
+// comme copie en lecture seule de l'écran actuel (cf. services/affectationService.js).
+model Ecran {
+  id_ecran     Int                   @id @default(autoincrement())
+  code_ecran   String                @unique @db.VarChar(200)
+  modele       String?               @db.VarChar(200)
+  date_ecran   DateTime?             @db.Date
+  statut       String                @default("AFFECTE") @db.VarChar(20) // EN_STOCK, AFFECTE, EN_REPARATION, REFORME
+  id_materiels Int?                  @unique
+  commentaire  String?
+  created_at   DateTime              @default(now()) @db.Timestamp(6)
+  updated_at   DateTime              @updatedAt @db.Timestamp(6)
+  materiel     Materiels?            @relation(fields: [id_materiels], references: [id_materiels], onDelete: SetNull)
+  affectations AffectationMateriel[]
+
+  @@map("ecrans")
+}
+
+// Historique des affectations (PC et écrans). Une ligne = une période pendant
+// laquelle un équipement était chez un bénéficiaire (date_fin null = en cours).
+// type_affectation = 'PC'    : id_materiels = le poste, id_ecran null
+// type_affectation = 'ECRAN' : id_ecran = l'écran, id_materiels = poste d'accueil (null = stock)
+// NB: une contrainte CHECK et deux index uniques partiels (une seule affectation
+// en cours par PC / par écran) existent en base (migration add_affectations_ecrans)
+// mais ne sont pas représentables ici.
+model AffectationMateriel {
+  id_affectation   Int        @id @default(autoincrement())
+  type_affectation String     @db.VarChar(10)
+  id_materiels     Int?
+  id_ecran         Int?
+  id_n             Int?
+  nom_utilisateur  String?    @db.VarChar(255)
+  date_debut       DateTime   @default(now()) @db.Timestamp(6)
+  date_fin         DateTime?  @db.Timestamp(6)
+  motif            String?    @db.VarChar(255)
+  etat_remise      String?    @db.VarChar(200)
+  commentaire      String?
+  affecte_par      Int?
+  nom_affecte_par  String?    @db.VarChar(255)
+  materiel         Materiels? @relation(fields: [id_materiels], references: [id_materiels], onDelete: Cascade)
+  ecran            Ecran?     @relation(fields: [id_ecran], references: [id_ecran], onDelete: Cascade)
+  beneficiaire     Users?     @relation("AffectationBeneficiaire", fields: [id_n], references: [id_n], onDelete: SetNull, onUpdate: Cascade)
+  auteur           Users?     @relation("AffectationAuteur", fields: [affecte_par], references: [id_n], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([id_materiels])
+  @@index([id_ecran])
+  @@index([id_n])
+  @@index([date_debut(sort: Desc)])
+  @@map("affectations_materiels")
 }
 
 // Marques de matériels informatiques

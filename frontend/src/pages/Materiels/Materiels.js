@@ -7,14 +7,14 @@ import withReactContent from 'sweetalert2-react-content';
 import { useAuth } from '../../contexts/AuthContext';
 import { apiClient } from '../../services/api';
 import { Button, Form, InputGroup, Spinner, Card, Alert } from 'react-bootstrap';
-import { FaEye, FaEdit, FaTrash, FaFileExcel, FaSearch, FaSync, FaTimes, FaDesktop, FaFileImport, FaPlus, FaUpload, FaCheckCircle, FaFileUpload, FaHistory, FaInfoCircle, FaInbox, FaUsers, FaMapMarkerAlt, FaCalendarAlt, FaUserCircle, FaBatteryFull } from 'react-icons/fa';
-import { MdOutlineAddCircleOutline } from 'react-icons/md';
+import { FaEye, FaEdit, FaTrash, FaFileExcel, FaSearch, FaSync, FaTimes, FaDesktop, FaFileImport, FaPlus, FaUpload, FaCheckCircle, FaFileUpload, FaHistory, FaInfoCircle, FaInbox, FaUsers, FaMapMarkerAlt, FaCalendarAlt, FaUserCircle, FaBatteryFull, FaTags } from 'react-icons/fa';
 /// --- Importations des Modales ---
 import AddModal from './AddModal';
 import DetailsModal from './DetailsModal';
 import EditModal from './EditModal';
 import AddMarque from './AddMarque';
 import HistoriqueModal from './HistoriqueModal';
+import EcransModal from './EcransModal';
 import SearchableSelect from './SearchableSelect';
 import { modernStyles, paginationOptions, statusConfig } from './materielsTableConfig';
 import { useMaterielImportExport } from './useMaterielImportExport';
@@ -45,6 +45,7 @@ const [selectedMateriel, setSelectedMateriel] = useState(null);
 const [modalType, setModalType] = useState(null);
 const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 const [isAddMarqueOpen, setIsAddMarqueOpen] = useState(false);
+const [isEcransModalOpen, setIsEcransModalOpen] = useState(false);
 const [addMarqueKey] = useState(0);
 const [isHistoriqueModalOpen, setIsHistoriqueModalOpen] = useState(false);
 const [selectedMaterielForHistory, setSelectedMaterielForHistory] = useState(null);
@@ -144,7 +145,7 @@ const handleDeleteConfirm = useCallback(async (row) => {
 
 const confirmDelete = useCallback((row) => {
     MySwal.fire({
-        title: 'Confirmer la suppression', text: `Êtes-vous sûr de vouloir supprimer définitivement le matériel ${row.code_pc} ? Cette action est irréversible.`, icon: 'warning',
+        title: 'Confirmer la suppression', text: `Supprimer le matériel ${row.code_pc || ''} ? Il disparaîtra de la liste, son écran repartira en stock et son historique sera conservé.`, icon: 'warning',
         showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: 'Oui, supprimer', cancelButtonText: 'Annuler'
     }).then((result) => {
         if (result.isConfirmed) {
@@ -617,11 +618,11 @@ return (
                 <Button 
                     className="btn-pill btn-pill-primary" 
                     onClick={handleOpenAddModal}
-                    title="Ajouter un nouveau matériel"
+                    title="Ajouter un nouveau poste (PC, utilisateur, écran)"
                     style={{ borderRadius: '9999px' }}
                 >
                     <FaPlus size={14} />
-                    <span className="ms-2">Nouveau</span>
+                    <span className="ms-2">Nouveau poste</span>
                 </Button>
                 )}
                 
@@ -629,11 +630,23 @@ return (
                 <Button 
                     className="btn-pill btn-pill-secondary" 
                     onClick={handleOpenAddMarque}
-                    title="Ajouter une nouvelle marque"
+                    title="Gérer les marques de PC (ajout, modification, suppression)"
                     style={{ borderRadius: '9999px' }}
                 >
-                    <MdOutlineAddCircleOutline size={17} />
-                    <span className="ms-2">Marque</span>
+                    <FaTags size={14} />
+                    <span className="ms-2">Marques PC</span>
+                </Button>
+                )}
+
+                {(userRole !== 'USER') && (
+                <Button
+                    className="btn-pill btn-pill-info"
+                    onClick={() => setIsEcransModalOpen(true)}
+                    title="Liste des écrans et ajout en stock"
+                    style={{ borderRadius: '9999px' }}
+                >
+                    <FaDesktop size={14} />
+                    <span className="ms-2">Écrans</span>
                 </Button>
                 )}
             </div>
@@ -1229,7 +1242,7 @@ return (
 
         {/* ✅ Modales - Utilisation de id_materiels pour l'historique */}
         {isAddModalOpen && <AddModal onClose={handleCloseAddModal} onMaterialAdded={handleMaterialAdded} />}
-        {modalType === 'details' && selectedMateriel && <DetailsModal isOpen={true} onClose={closeModal} data={selectedMateriel} />}
+        {modalType === 'details' && selectedMateriel && <DetailsModal isOpen={true} onClose={closeModal} data={selectedMateriel} canManage={userRole !== 'USER'} />}
         {modalType === 'edit' && selectedMateriel && <EditModal isOpen={true} onClose={closeModal} data={selectedMateriel} />}
         
         {/* ✅ MODAL HISTORIQUE CORRIGÉ - Utilise id_materiels */}
@@ -1243,6 +1256,8 @@ return (
             />
         )}
         
+        {isEcransModalOpen && <EcransModal onClose={() => setIsEcransModalOpen(false)} />}
+
         <div style={{ display: isAddMarqueOpen ? 'block' : 'none' }}>
             <AddMarque 
                 key={addMarqueKey}

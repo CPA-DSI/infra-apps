@@ -78,7 +78,7 @@ router.get('/me/dashboard', authenticateToken, ensureActiveUser, async (req, res
     } else {
       const [totalTickets, totalMateriels, ticketsRecents] = await Promise.all([
         prisma.ticket.count(),
-        prisma.Materiels.count({ where: { est_actif: true } }),
+        prisma.Materiels.count({ where: { est_actif: true, date_suppression: null } }),
         prisma.ticket.findMany({
           take: 5,
           orderBy: { dateCreation: 'desc' },

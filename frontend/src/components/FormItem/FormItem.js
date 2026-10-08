@@ -120,6 +120,7 @@ const FormItem = memo(
           onChange={handleChange}
           className="add-modal-input"
           placeholder={`Entrez ${label.toLowerCase()}`}
+          disabled={disabled}
         />
       );
     };

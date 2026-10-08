@@ -4,8 +4,16 @@ import express from 'express'; // Utilisez 'import' au lieu de 'require'
 import { PrismaClient } from '@prisma/client'; 
 
 import bcrypt from 'bcryptjs';
-import { authenticateToken, ensureActiveUser } from '../middleware/authMiddleware.js';
+import { authenticateToken, ensureActiveUser, requireRole } from '../middleware/authMiddleware.js';
+import { UserRole } from '../constants/roles.js';
 import { encryptPassMail } from '../services/passMailCrypto.js';
+import {
+    affecterPC,
+    ouvrirAffectationInitiale,
+    rattacherEcranParCode,
+    retirerPoste,
+    repondreErreurAffectation,
+} from '../services/affectationService.js';
 
 const prisma = new PrismaClient();
 
@@ -25,7 +33,8 @@ router.get('/', authenticateToken, ensureActiveUser, asyncHandler(async (req, re
     const userRole = req.user?.role;
     const userId = req.user?.userId;
 
-    let where = {};
+    // Les postes supprimés (suppression logique) ne sont plus listés.
+    let where = { date_suppression: null };
     if (userRole === 'USER') {
         const currentUser = await prisma.users.findUnique({
             where: { id_user: userId },
@@ -36,7 +45,7 @@ router.get('/', authenticateToken, ensureActiveUser, asyncHandler(async (req, re
             return res.status(404).json({ error: 'Utilisateur introuvable.' });
         }
 
-        where = { id_n: currentUser.id_n };
+        where.id_n = currentUser.id_n;
     }
 
     // 1. On récupère les données avec les relations incluses
@@ -45,6 +54,7 @@ router.get('/', authenticateToken, ensureActiveUser, asyncHandler(async (req, re
         include: {
             local: true,  
             marque: true, 
+            ecran_actuel: { select: { id_ecran: true, statut: true } },
             _count: {
                 select: {
                     documents_lies: true,
@@ -65,11 +75,13 @@ router.get('/', authenticateToken, ensureActiveUser, asyncHandler(async (req, re
             nom_marque: materiel.marque ? materiel.marque.nom_marque : 'Non assigné',
             url: materiel.marque ? materiel.marque.url : 'Non assigné',
             documents_count: materiel._count?.documents_lies || 0,
+            id_ecran: materiel.ecran_actuel?.id_ecran || null,
             // On supprime les objets internes pour nettoyer la réponse finale
             local: undefined, 
             marque: undefined,
             _count: undefined,
             documents_lies: undefined,
+            ecran_actuel: undefined,
         };
     });
     
@@ -82,7 +94,7 @@ router.get('/', authenticateToken, ensureActiveUser, asyncHandler(async (req, re
 // Accessible à tout utilisateur actif authentifié (liste minimale, sans données d'équipement sensibles)
 router.get('/technicians', authenticateToken, ensureActiveUser, asyncHandler(async (req, res) => {
     const technicians = await prisma.Materiels.findMany({
-        where: { equipe: 'Informatique DSI' },
+        where: { equipe: 'Informatique DSI', date_suppression: null },
         select: { id_n: true, utilisateur: true, equipe: true, local: { select: { nom_local: true } } },
         orderBy: { id_n: 'asc' },
     });
@@ -117,7 +129,7 @@ router.get('/:id', authenticateToken, ensureActiveUser, asyncHandler(async (req,
     const userRole = req.user?.role;
     const userId = req.user?.userId;
 
-    let where = { id_materiels: materielId };
+    let where = { id_materiels: materielId, date_suppression: null };
     if (userRole === 'USER') {
         const currentUser = await prisma.users.findUnique({
             where: { id_user: userId },
@@ -227,29 +239,92 @@ router.post('/', authenticateToken, ensureActiveUser, asyncHandler(async (req, r
         }
     }
 
-    // 3. CRÉATION DU MATÉRIEL
+    // 3. CRÉATION DU MATÉRIEL, de son affectation initiale et de son écran.
+    // L'écran est géré par la table ecrans : on retire ses champs de la fiche,
+    // rattacherEcranParCode remplit ensuite les colonnes de transition.
+    const { ecran, code_ecran, date_ecran, ...dataMateriel } = dataToCreate;
+
     try {
-        // Utiliser createMany au lieu de create pour éviter les problèmes de relation
-        const materiel = await prisma.materiels.createMany({
-            data: [dataToCreate],
+        const createdMateriel = await prisma.$transaction(async (tx) => {
+            const materiel = await tx.materiels.create({ data: dataMateriel });
+            await ouvrirAffectationInitiale(tx, materiel, req.user?.id_n);
+            await rattacherEcranParCode(tx, materiel.id_materiels, { code_ecran, modele: ecran, date_ecran }, req.user?.id_n, 'Création du poste');
+            return tx.materiels.findUnique({ where: { id_materiels: materiel.id_materiels } });
         });
-        
-        // Récupérer le matériel créé pour le retourner
-        const createdMateriel = await prisma.materiels.findFirst({
-            where: { code_pc: dataToCreate.code_pc },
-            orderBy: { id_materiels: 'desc' }
-        });
-        
+
         res.status(201).json({ message: 'Matériel ajouté avec succès', materiel: createdMateriel });
     } catch (error) {
-        console.error("Erreur lors de la création du matériel:", error);
-        
         if (error.code === 'P2002') {
-            return res.status(400).json({ error: "Contrainte d'unicité violée (ex: id_n ou code_pc déjà utilisé)." });
+            console.error("Erreur lors de la création du matériel:", error);
+            return res.status(400).json({ error: "Cet utilisateur a déjà un poste (N° Matricule déjà utilisé)." });
         }
-        // Renvoyer le message d'erreur réel pour le débogage
-        res.status(500).json({ error: `Erreur interne lors de la création: ${error.message}` });
+        repondreErreurAffectation(res, error);
     }
+}));
+
+// GET /api/materiels_all/affectation/beneficiaires
+// Liste légère des utilisateurs pour le choix du bénéficiaire d'une
+// affectation (évite /api/users qui renvoie les mots de passe mail).
+router.get('/affectation/beneficiaires', authenticateToken, ensureActiveUser, requireRole(UserRole.IT_ADMIN, UserRole.DIRECTION), asyncHandler(async (req, res) => {
+    const users = await prisma.users.findMany({
+        select: {
+            id_n: true,
+            is_active: true,
+            materiel: { select: { id_materiels: true, utilisateur: true, equipe: true, code_pc: true } },
+            emails: { select: { email: true, is_primary: true } },
+        },
+        orderBy: { id_n: 'asc' },
+    });
+
+    res.json(users.map(u => ({
+        id_n: u.id_n,
+        is_active: u.is_active,
+        nom: u.materiel?.utilisateur || null,
+        equipe: u.materiel?.equipe || null,
+        email: (u.emails.find(e => e.is_primary) || u.emails[0])?.email || null,
+        poste: u.materiel ? { id_materiels: u.materiel.id_materiels, code_pc: u.materiel.code_pc } : null,
+    })));
+}));
+
+// POST /api/materiels_all/:id/affecter
+// Body : { id_n (null = stock), utilisateur, equipe, id_local?, motif?, etat_remise?, commentaire? }
+router.post('/:id/affecter', authenticateToken, ensureActiveUser, requireRole(UserRole.IT_ADMIN, UserRole.DIRECTION), asyncHandler(async (req, res) => {
+    const id_materiels = parseInt(req.params.id, 10);
+    if (isNaN(id_materiels)) {
+        return res.status(400).json({ error: "L'identifiant fourni n'est pas valide." });
+    }
+
+    const { id_n, utilisateur, equipe, id_local, motif, etat_remise, commentaire } = req.body;
+    const cibleIdN = id_n === null || id_n === undefined || id_n === '' ? null : parseInt(id_n, 10);
+    if (Number.isNaN(cibleIdN)) {
+        return res.status(400).json({ error: 'N° Matricule invalide.' });
+    }
+    const localId = id_local === undefined ? undefined : (id_local === null || id_local === '' ? null : parseInt(id_local, 10));
+
+    try {
+        const materiel = await prisma.$transaction((tx) => affecterPC(tx, {
+            id_materiels, id_n: cibleIdN, utilisateur, equipe, id_local: localId, motif, etat_remise, commentaire,
+        }, req.user?.id_n));
+        res.json({ message: cibleIdN ? 'PC réaffecté avec succès.' : 'PC mis en stock.', materiel });
+    } catch (error) {
+        repondreErreurAffectation(res, error);
+    }
+}));
+
+// GET /api/materiels_all/:id/affectations
+// Historique des affectations du poste : PC et écrans passés par ce poste.
+router.get('/:id/affectations', authenticateToken, ensureActiveUser, requireRole(UserRole.IT_ADMIN, UserRole.DIRECTION), asyncHandler(async (req, res) => {
+    const id_materiels = parseInt(req.params.id, 10);
+    if (isNaN(id_materiels)) {
+        return res.status(400).json({ error: "L'identifiant fourni n'est pas valide." });
+    }
+
+    const affectations = await prisma.affectationMateriel.findMany({
+        where: { id_materiels },
+        include: { ecran: { select: { code_ecran: true, modele: true } } },
+        orderBy: [{ date_debut: 'desc' }, { id_affectation: 'desc' }],
+    });
+    res.json(affectations);
 }));
 
 // 4. PUT update materiel (URL complète: /api/materiels_all/:id)
@@ -266,10 +341,14 @@ router.put('/:id', authenticateToken, ensureActiveUser, asyncHandler(async (req,
         ...rawData 
     } = req.body;
 
+    // id_n (bénéficiaire) et les champs écran ne sont plus modifiables ici :
+    // ils passent par POST /:id/affecter et POST /api/ecrans/:id/affecter, qui
+    // tracent l'affectation. Les modifier directement renommait l'utilisateur
+    // dans Users et ne laissait aucun historique.
     const dataToUpdate = {};
     const fields = [
-        'utilisateur', 'id_n', 'equipe', 'date_pc', 'date_ecran', 'caracteristiques', 
-        'code_pc', 'ecran', 'code_ecran', 'hdmi', 'clavier', 'lan', 
+        'utilisateur', 'equipe', 'date_pc', 'caracteristiques',
+        'code_pc', 'hdmi', 'clavier', 'lan',
         'usb', 'etat_pc', 'salle', 'mdp_pc', 'mdp_admin', 
         'etat_batterie', 'commentaire', 'est_actif', 'id_marque', 'id_local', 
         'date_modification'
@@ -308,41 +387,15 @@ router.put('/:id', authenticateToken, ensureActiveUser, asyncHandler(async (req,
         if (!localExists) return res.status(400).json({ error: `Local ID ${dataToUpdate.id_local} inexistant.` });
     }
 
-    if (dataToUpdate.id_n !== undefined && dataToUpdate.id_n !== null) {
-        const existingMateriel = await prisma.materiels.findUnique({
-            where: { id_materiels: parseInt(id) },
-        });
-        const oldIdN = existingMateriel?.id_n;
-
-        if (dataToUpdate.id_n !== oldIdN) {
-            if (oldIdN !== null && oldIdN !== undefined) {
-                const oldUser = await prisma.Users.findUnique({ where: { id_n: oldIdN } });
-                if (oldUser) {
-                    const conflict = await prisma.Users.findUnique({ where: { id_n: dataToUpdate.id_n } });
-                    if (conflict && conflict.id_user !== oldUser.id_user) {
-                        console.log(`⚠️ Conflit Users.id_n: ${dataToUpdate.id_n} existe déjà (user ${conflict.id_user}), mise à jour ignorée`);
-                    } else {
-                        await prisma.Users.update({
-                            where: { id_n: oldIdN },
-                            data: { id_n: dataToUpdate.id_n },
-                        });
-                        console.log(`✅ Users.id_n mis à jour: ${oldIdN} -> ${dataToUpdate.id_n}`);
-                    }
-                }
-            }
-        }
-    }
-
     try {
         const materiel = await prisma.materiels.update({
             where: { id_materiels: parseInt(id) },
             data: dataToUpdate,
         });
-        
-        res.json({ message: 'Matériel mis à jour (id_n synchronisé)', materiel });
+
+        res.json({ message: 'Matériel mis à jour', materiel });
     } catch (error) {
         console.error("Erreur Prisma détaillée:", error);
-        if (error.code === 'P2002') return res.status(400).json({ error: "Cet id_n est déjà assigné à un autre matériel." });
         res.status(500).json({ error: `Erreur interne lors de la mise à jour: ${error.message}` });
     }
 }));
@@ -356,10 +409,14 @@ router.delete('/:id', authenticateToken, ensureActiveUser, asyncHandler(async (r
         return res.status(403).json({ error: 'Accès interdit : permission insuffisante.' });
     }
 
-    await prisma.Materiels.delete({
-        where: { id_materiels: parseInt(id) },
-    });
-    res.status(200).json({ message: 'Matériel supprimé avec succès.' });
+    // Suppression logique : la fiche, son historique et ses affectations sont
+    // conservés ; l'écran repart en stock et le matricule est libéré.
+    try {
+        await prisma.$transaction((tx) => retirerPoste(tx, parseInt(id, 10), req.user?.id_n));
+        res.status(200).json({ message: 'Matériel supprimé avec succès.' });
+    } catch (error) {
+        repondreErreurAffectation(res, error);
+    }
 }));
 
 export default router; // N'oubliez pas d'exporter votre routeur à la fin

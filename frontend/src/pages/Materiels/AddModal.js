@@ -233,7 +233,7 @@ const AddModal = ({ onClose, onMaterialAdded }) => {
                         </div>
                         <div>
                             <h2 className="add-modal-title" style={{ color: 'white' }}>
-                                Ajout d'un nouveau Matériel
+                                Ajout d'un nouveau poste
                             </h2>
                             <p className="add-modal-subtitle" style={{ color: 'rgba(255,255,255,0.7)' }}>
                                 Remplissez les informations ci-dessous
@@ -438,7 +438,7 @@ const AddModal = ({ onClose, onMaterialAdded }) => {
                         e.target.style.transform = 'translateY(0)';
                         e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)';
                     }}>
-                        <FaUserPlus /> Ajouter le Matériel
+                        <FaUserPlus /> Ajouter le poste
                     </button>
                 </div>
             </form>

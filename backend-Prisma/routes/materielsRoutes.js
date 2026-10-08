@@ -10,9 +10,9 @@ router.get('/', authenticateToken, ensureActiveUser, async (req, res) => {
     const userRole = req.user?.role;
     const userId = req.user?.id_n;
 
-    let where = {};
+    let where = { date_suppression: null };
     if (userRole === 'USER') {
-      where = { id_n: userId };
+      where.id_n = userId;
     }
 
     const materiels = await prisma.Materiels.findMany({ where });

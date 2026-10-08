@@ -20,10 +20,11 @@ router.get('/', async (req, res) => {
   try {
     
     // --- CORRECTION 1: Utilisation de prisma.materiels au pluriel ---
-    const totalMaterielsCount = await prisma.materiels.count(); 
+    const totalMaterielsCount = await prisma.materiels.count({ where: { date_suppression: null } }); 
 
     // --- CORRECTION 2 & 3: Utilisation de prisma.materiels au pluriel & include correct ---
     const materielsDetails = await prisma.materiels.findMany({ 
+      where: { date_suppression: null },
       orderBy: {
         // Le champ id_n existe dans le schéma, on le garde.
         id_n: 'asc', 
@@ -60,32 +61,23 @@ router.get('/', async (req, res) => {
 });
 
 // Nouvelle route : GET /api/materiels/stats-ecrans
+// Lit la table ecrans (écrans affectés, en stock ou en réparation ; les écrans
+// réformés sont exclus). Format inchangé pour DashboardEcran : une ligne par
+// écran avec son modèle dans `ecran`, plus son statut.
 router.get('/stats-ecrans', async (req, res) => {
     try {
-        // --- CORRECTION 4: Utilisation de prisma.materiels au pluriel ---
-        const totalEcrans = await prisma.materiels.count({
+        const ecrans = await prisma.ecran.findMany({
             where: {
-                ecran: {
-                    not: null, 
-                },
+                modele: { not: null },
+                statut: { not: 'REFORME' },
             },
+            select: { modele: true, statut: true },
         });
 
-        // --- CORRECTION 5: Utilisation de prisma.materiels au pluriel ---
-        const materielsAvecEcrans = await prisma.materiels.findMany({
-            where: {
-                ecran: {
-                    not: null,
-                },
-            },
-            select: {
-                ecran: true, 
-            },
-        });
-
-        const formattedData = materielsAvecEcrans.map(item => ({
-            ecran: item.ecran,
-            nombre_total_lignes: totalEcrans 
+        const formattedData = ecrans.map(item => ({
+            ecran: item.modele,
+            statut: item.statut,
+            nombre_total_lignes: ecrans.length
         }));
 
         res.json(formattedData);
@@ -112,6 +104,8 @@ router.get('/capacite-ssd', async (req, res) => {
                 COUNT(*) AS nombre_total
             FROM
                 materiels
+            WHERE
+                date_suppression IS NULL
             GROUP BY
                 capacite_stockage
             ORDER BY
@@ -145,6 +139,7 @@ router.get('/count-equipe', async (req, res) => {
       SELECT m.equipe, l.nom_local, COUNT(*) as nombre_equipe 
       FROM materiels m
       LEFT JOIN locaux l ON m.id_local = l.id_local
+      WHERE m.date_suppression IS NULL
       GROUP BY m.equipe, l.nom_local
     `;
     
@@ -191,6 +186,7 @@ router.get('/equipe-details', async (req, res) => {
       FROM materiels m
       LEFT JOIN locaux l ON m.id_local = l.id_local
       LEFT JOIN marques mr ON m.id_marque = mr.id_marque
+      WHERE m.date_suppression IS NULL
       ORDER BY m.equipe, m.utilisateur
     `;
     
@@ -234,6 +230,7 @@ router.get('/count-by-local', async (req, res) => {
       SELECT l.nom_local, COUNT(m.id_materiels) as nombre_materiels
       FROM materiels m
       LEFT JOIN locaux l ON m.id_local = l.id_local
+      WHERE m.date_suppression IS NULL
       GROUP BY l.nom_local
       ORDER BY nombre_materiels DESC
     `;

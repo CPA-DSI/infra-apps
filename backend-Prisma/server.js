@@ -130,6 +130,7 @@ import configMensuelRoutes from './routes/configMensuelRoutes.js';
 import importRouter from './routes/import.js';
 import documentRoutes from './routes/documentRoutes.js';
 import userDashboardRoutes from './routes/userDashboardRoutes.js';
+import ecransRoutes from './routes/ecransRoutes.js';
 
 app.use('/api/auth', authRoutes); 
 app.use('/api/materiels', materielRoutes);
@@ -153,6 +154,7 @@ app.use('/api/config', configMensuelRoutes); // ✅ Ajout du routeur mensuel
 app.use('/api/email', emailSendRoutes);
 app.use('/api/import', importRouter); // <-- IMPORTANT: le chemin doit correspondre
 app.use('/api/documents', documentRoutes);
+app.use('/api/ecrans', ecransRoutes);
 
 app.get('/', (req, res) => {
     res.status(200).json({ service: "API Gestion Matériel", status: "Online", robot: "Intégré (Quotidien & Hebdomadaire)" });
