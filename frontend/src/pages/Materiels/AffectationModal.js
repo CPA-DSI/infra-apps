@@ -89,7 +89,8 @@ const AffectationModal = ({ mode, materiel, onClose, onDone }) => {
     const beneficiaireOptions = useMemo(() => [
         ...(materiel.id_n ? [{ value: STOCK, label: '📦 Mettre en stock (aucun bénéficiaire)' }] : []),
         ...beneficiaires
-            .filter(b => !b.poste && b.is_active)
+            // Pas de filtre sur is_active : l'import Excel crée les utilisateurs inactifs.
+            .filter(b => !b.poste)
             .map(b => ({ value: String(b.id_n), label: `${b.id_n} - ${b.nom || b.email || 'Sans nom'}` })),
     ], [beneficiaires, materiel.id_n]);
 
