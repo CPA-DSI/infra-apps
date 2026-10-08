@@ -421,14 +421,14 @@ const HistoriqueModal = ({ isOpen, onClose, materielId, materielData, onHistoriq
                                             Ancien état <span style={{ color: '#94a3b8', fontWeight: '400' }}>(optionnel)</span>
                                         </label>
                                         <div style={{ flex: 1 }}>
-                                            <input
-                                                type="text"
+                                            <textarea
                                                 name="ancienne_valeur"
                                                 value={formData.ancienne_valeur}
                                                 onChange={handleInputChange}
                                                 placeholder="Ancien état du matériel"
+                                                rows={3}
                                                 style={{
-                                                    width: '100%', padding: '10px 14px', borderRadius: '10px', border: `1px solid ${formErrors.ancienne_valeur ? '#ef4444' : '#d1d5db'}`, fontSize: '0.95rem', transition: 'all 0.2s ease', outline: 'none'
+                                                    width: '100%', padding: '10px 14px', borderRadius: '10px', border: `1px solid ${formErrors.ancienne_valeur ? '#ef4444' : '#d1d5db'}`, fontSize: '0.95rem', transition: 'all 0.2s ease', outline: 'none', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box'
                                                 }}
                                             />
                                             {formErrors.ancienne_valeur && (
@@ -446,14 +446,14 @@ const HistoriqueModal = ({ isOpen, onClose, materielId, materielData, onHistoriq
                                              Nouvel état <span style={{ color: '#ef4444' }}>*</span>
                                         </label>
                                         <div style={{ flex: 1 }}>
-                                            <input
-                                                type="text"
+                                            <textarea
                                                 name="nouvelle_valeur"
                                                 value={formData.nouvelle_valeur}
                                                 onChange={handleInputChange}
                                                 placeholder="Nouvel état du matériel"
+                                                rows={3}
                                                 style={{
-                                                    width: '100%', padding: '10px 14px', borderRadius: '10px', border: `1px solid ${formErrors.nouvelle_valeur ? '#ef4444' : '#d1d5db'}`, fontSize: '0.95rem', transition: 'all 0.2s ease', outline: 'none'
+                                                    width: '100%', padding: '10px 14px', borderRadius: '10px', border: `1px solid ${formErrors.nouvelle_valeur ? '#ef4444' : '#d1d5db'}`, fontSize: '0.95rem', transition: 'all 0.2s ease', outline: 'none', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box'
                                                 }}
                                             />
                                             {formErrors.nouvelle_valeur && (
