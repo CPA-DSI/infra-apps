@@ -47,5 +47,8 @@ export const statusConfig = {
     'Moyen':      { emoji: '⚠️', color: '#92400e', bg: '#fef3c7', border: '#fde68a' },
     'Mauvais':    { emoji: '❗', color: '#9f1239', bg: '#fee2e2', border: '#fecaca' },
     'Disponible': { emoji: '📦', color: '#4d7c0f', bg: '#ecfdf5', border: '#a7f3d0' },
-    'HS':         { emoji: '❌', color: '#991b1b', bg: '#fee2e2', border: '#fecaca' }
+    'HS':         { emoji: '❌', color: '#991b1b', bg: '#fee2e2', border: '#fecaca' },
+    // Posés par la mise en stock d'un PC (cf. affecterPC côté backend)
+    'Stock':      { emoji: '📥', color: '#374151', bg: '#e5e7eb', border: '#d1d5db' },
+    'Sans poste': { emoji: '🚫', color: '#92400e', bg: '#fef3c7', border: '#fde68a' }
 };

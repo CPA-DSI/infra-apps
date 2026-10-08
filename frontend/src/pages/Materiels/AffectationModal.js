@@ -91,7 +91,7 @@ const AffectationModal = ({ mode, materiel, onClose, onDone }) => {
         ...beneficiaires
             // Pas de filtre sur is_active : l'import Excel crée les utilisateurs inactifs.
             .filter(b => !b.poste)
-            .map(b => ({ value: String(b.id_n), label: `${b.id_n} - ${b.nom || b.email || 'Sans nom'}` })),
+            .map(b => ({ value: String(b.id_n), label: `${b.id_n} - ${b.nom || b.email || 'Sans nom'}${b.poste_vide ? ' (sans poste)' : ''}` })),
     ], [beneficiaires, materiel.id_n]);
 
     const posteOptions = useMemo(() => [
@@ -228,7 +228,12 @@ const AffectationModal = ({ mode, materiel, onClose, onDone }) => {
                                             {locaux.map(l => <option key={l.id_local} value={l.id_local}>{l.nom_local}</option>)}
                                         </select>
                                     </Field>
-                                    {materiel.id_ecran && (
+                                    {cible === STOCK ? (
+                                        <div style={{ fontSize: '0.8rem', color: '#1E40AF', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                            <FaInfoCircle /> {materiel.utilisateur} gardera une fiche vide (« Sans poste »)
+                                            {materiel.id_ecran ? ` et l'écran ${materiel.code_ecran} partira en stock.` : '.'}
+                                        </div>
+                                    ) : materiel.id_ecran && (
                                         <div style={{ fontSize: '0.8rem', color: '#1E40AF', display: 'flex', gap: '8px', alignItems: 'center' }}>
                                             <FaInfoCircle /> L'écran {materiel.code_ecran} reste sur ce poste et suit le PC.
                                         </div>

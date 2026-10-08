@@ -9,6 +9,8 @@ import { UserRole } from '../constants/roles.js';
 import { encryptPassMail } from '../services/passMailCrypto.js';
 import {
     affecterPC,
+    ETAT_REMIS_EN_SERVICE,
+    ETAT_SANS_POSTE,
     ouvrirAffectationInitiale,
     rattacherEcranParCode,
     retirerPoste,
@@ -62,7 +64,8 @@ router.get('/', authenticateToken, ensureActiveUser, asyncHandler(async (req, re
             },
         },
         orderBy: {
-            id_n: 'asc' // Remplacez 'nom' par le champ souhaité (ex: 'id', 'date_achat', etc.)
+            // Les postes en stock (id_n null) en tête, sinon PostgreSQL les relègue en dernière page
+            id_n: { sort: 'asc', nulls: 'first' }
         }
     });
 
@@ -270,7 +273,7 @@ router.get('/affectation/beneficiaires', authenticateToken, ensureActiveUser, re
         select: {
             id_n: true,
             is_active: true,
-            materiel: { select: { id_materiels: true, utilisateur: true, equipe: true, code_pc: true } },
+            materiel: { select: { id_materiels: true, utilisateur: true, equipe: true, code_pc: true, est_vide: true } },
             emails: { select: { email: true, is_primary: true } },
         },
         orderBy: { id_n: 'asc' },
@@ -282,7 +285,9 @@ router.get('/affectation/beneficiaires', authenticateToken, ensureActiveUser, re
         nom: u.materiel?.utilisateur || null,
         equipe: u.materiel?.equipe || null,
         email: (u.emails.find(e => e.is_primary) || u.emails[0])?.email || null,
-        poste: u.materiel ? { id_materiels: u.materiel.id_materiels, code_pc: u.materiel.code_pc } : null,
+        // Un poste vide n'est pas un poste : l'utilisateur peut recevoir un PC.
+        poste: u.materiel && !u.materiel.est_vide ? { id_materiels: u.materiel.id_materiels, code_pc: u.materiel.code_pc } : null,
+        poste_vide: Boolean(u.materiel?.est_vide),
     })));
 }));
 
@@ -373,6 +378,18 @@ router.put('/:id', authenticateToken, ensureActiveUser, asyncHandler(async (req,
     // Valeur par défaut pour utilisateur obligatoire
     if (dataToUpdate.utilisateur !== undefined && (!dataToUpdate.utilisateur || dataToUpdate.utilisateur === null)) {
         dataToUpdate.utilisateur = 'Non défini';
+    }
+
+    // Un poste vide dont on saisit le PC redevient un poste normal, actif.
+    if (dataToUpdate.code_pc || dataToUpdate.caracteristiques) {
+        const actuel = await prisma.materiels.findUnique({ where: { id_materiels: parseInt(id) }, select: { est_vide: true } });
+        if (actuel?.est_vide) {
+            dataToUpdate.est_vide = false;
+            dataToUpdate.est_actif = true;
+            if (!dataToUpdate.etat_pc || dataToUpdate.etat_pc === ETAT_SANS_POSTE) {
+                dataToUpdate.etat_pc = ETAT_REMIS_EN_SERVICE;
+            }
+        }
     }
 
     console.log("--- Début du diagnostic et synchronisation ---");

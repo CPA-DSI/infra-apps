@@ -422,11 +422,14 @@ const DetailsModal = ({ isOpen, onClose, data, canManage = false }) => {
                     }}>
                         {canManage && (
                             <>
+                                {/* Un poste vide n'a pas de PC à réaffecter */}
+                                {!data.est_vide && (
                                 <button type="button" onClick={() => setAffectationMode('pc')} style={{
                                     marginRight: 'auto', background: 'linear-gradient(135deg, #4F46E5, #6366F1)', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '12px', fontWeight: '500', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer'
                                 }}>
                                     <FaExchangeAlt /> Réaffecter le PC
                                 </button>
+                                )}
                                 <button type="button" onClick={() => setAffectationMode('ecran')} style={{
                                     background: 'linear-gradient(135deg, #0EA5E9, #38BDF8)', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '12px', fontWeight: '500', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer'
                                 }}>

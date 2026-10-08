@@ -763,7 +763,8 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
 
         for (const row of rowsAMettreAJour) {
             try {
-                await prisma.materiels.update({ where: { id_n: row.data.id_n }, data: row.data });
+                // La ligne importée décrit un PC : un poste vide redevient un poste normal.
+                await prisma.materiels.update({ where: { id_n: row.data.id_n }, data: { ...row.data, est_vide: false } });
                 successCount++;
             } catch (rowError) {
                 errors.push({ index: row.index, utilisateur: row.utilisateur, error: rowError.message });

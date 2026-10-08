@@ -20,11 +20,12 @@ router.get('/', async (req, res) => {
   try {
     
     // --- CORRECTION 1: Utilisation de prisma.materiels au pluriel ---
-    const totalMaterielsCount = await prisma.materiels.count({ where: { date_suppression: null } }); 
+    // Les postes vides (utilisateur sans PC) ne sont pas des matériels.
+    const totalMaterielsCount = await prisma.materiels.count({ where: { date_suppression: null, est_vide: false } });
 
     // --- CORRECTION 2 & 3: Utilisation de prisma.materiels au pluriel & include correct ---
     const materielsDetails = await prisma.materiels.findMany({ 
-      where: { date_suppression: null },
+      where: { date_suppression: null, est_vide: false },
       orderBy: {
         // Le champ id_n existe dans le schéma, on le garde.
         id_n: 'asc', 

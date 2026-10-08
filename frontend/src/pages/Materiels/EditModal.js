@@ -365,7 +365,9 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
                                     { value: 'Moyen', label: '⚠️ Moyen' },
                                     { value: 'Mauvais', label: '❗ Mauvais' },
                                     { value: 'Disponible', label: '📦 Disponible' },
-                                    { value: 'HS', label: '❌ HS' }
+                                    { value: 'HS', label: '❌ HS' },
+                                    { value: 'Stock', label: '📥 Stock' },
+                                    { value: 'Sans poste', label: '🚫 Sans poste' }
                                 ]}
                                 formData={formData}
                                 handleChange={handleChange}

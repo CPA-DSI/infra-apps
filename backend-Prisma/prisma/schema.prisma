@@ -88,7 +88,10 @@ model Materiels {
   id_local          Int?
   date_suppression  DateTime?            @map("date_suppression") @db.Timestamp(6)
   est_actif         Boolean              @default(true) @map("est_actif")
-  historique        HistoriqueMateriel[]
+  // Poste vide : ligne gardée pour l'utilisateur quand son PC part en stock
+  // (cf. affecterPC). Elle est remplacée dès qu'un PC lui est réaffecté.
+  est_vide          Boolean              @default(false) @map("est_vide")
+  historique       HistoriqueMateriel[]
   local             Locaux?              @relation(fields: [id_local], references: [id_local])
   marque            Marques?             @relation(fields: [id_marque], references: [id_marque])
   user              Users?               @relation(fields: [id_n], references: [id_n], onDelete: NoAction)

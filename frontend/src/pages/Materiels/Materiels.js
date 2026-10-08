@@ -241,7 +241,13 @@ const filteredMateriels = useMemo(() => {
         const searchMatch = 
             id_n_string.toLowerCase().includes(lowerCaseSearch) || equipe.toLowerCase().includes(lowerCaseSearch) || utilisateur.toLowerCase().includes(lowerCaseSearch) || codePc.toLowerCase().includes(lowerCaseSearch) || salle.toLowerCase().includes(lowerCaseSearch) || nom_local.toLowerCase().includes(lowerCaseSearch) || caracteristiques.toLowerCase().includes(lowerCaseSearch) || etat_pc.toLowerCase().includes(lowerCaseSearch) || nom_marque.toLowerCase().includes(lowerCaseSearch) || est_actif.toLowerCase().includes(lowerCaseSearch);
 
-        const etatMatch = !filterEtat || etat_pc === filterEtat;
+        // 'Stock' : poste sans bénéficiaire (id_n null), y compris ceux mis en stock
+        // avant que la mise en stock ne pose etat_pc = 'Stock'.
+        // 'Sans poste' : utilisateur dont le PC est parti en stock (fiche vide)
+        const etatMatch = !filterEtat
+            || (filterEtat === 'Stock' ? materiel.id_n == null
+                : filterEtat === 'Sans poste' ? Boolean(materiel.est_vide)
+                : etat_pc === filterEtat);
         const equipeMatch = !filterEquipe || equipe === filterEquipe;
         const nomLocalMatch = !filterNomLocal || nom_local === filterNomLocal;
         const marqueMatch = !filterMarque || nom_marque === filterMarque;
@@ -446,7 +452,13 @@ const renderActions = useCallback((row) => (
 
 // --- Colonnes du tableau ---
 const columns = useMemo(() => [
-    { name: 'N°', selector: row => row.id_n, sortable: true, width: '60px', grow: 1 },
+    { name: 'N°', selector: row => row.id_n, sortable: true, width: '75px', grow: 1, cell: row => (
+        row.id_n == null
+            ? <span className="badge bg-secondary" title="Poste en stock">Stock</span>
+            : row.est_vide
+                ? <span title="Utilisateur sans PC (PC mis en stock)">{row.id_n} <span className="badge bg-warning text-dark">Sans poste</span></span>
+                : row.id_n
+    ) },
     { name: 'Utilisateur', selector: row => row.utilisateur, sortable: true, minWidth: '120px', grow: 1 },
     { name: 'Équipe', selector: row => row.equipe, sortable: true, minWidth: '120px', grow: 1 },
     { name: 'Date PC', selector: row => row.date_pc, sortable: true, width: '110px', grow: 0, cell: row => formatDate(row.date_pc) },
@@ -455,7 +467,7 @@ const columns = useMemo(() => [
     { name: 'Caractéristiques', selector: row => row.caracteristiques, minWidth: '300px', grow: 3 },
     { name: 'État', selector: row => row.etat_pc, sortable: true, grow: 1, center: true, cell: renderStatus },
     { name: 'Local(s)', selector: row => row.nom_local || 'Non attribué', sortable: true, minWidth: '90px', grow: 1 },
-    { name: 'Status', selector: row => row.est_actif, sortable: true, minWidth: '130px', grow: 1, center: true, cell: renderEstActif, ignoreRowClick: true, allowOverflow: true, button: true },
+    { name: 'Status', selector: row => row.est_actif, sortable: true, minWidth: '150px', grow: 1, center: true, cell: renderEstActif, ignoreRowClick: true, allowOverflow: true, button: true },
     { name: 'Nb Doc.', selector: row => row.documents_count, sortable: true, minWidth: '90px', grow: 1, center: true, cell: renderDocumentsCount, ignoreRowClick: true, allowOverflow: true, button: true },
     { name: 'Actions', cell: renderActions, ignoreRowClick: true, allowOverflow: true, button: true, width: '130px', grow: 0, center: true },
 ], [formatDate, renderMarque, renderStatus, renderEstActif, renderDocumentsCount, renderActions]);
@@ -1006,6 +1018,8 @@ return (
                             <option value="Mauvais">Mauvais</option>
                             <option value="HS">HS</option>
                             <option value="Disponible">Disponible</option>
+                            <option value="Stock">Stock</option>
+                            <option value="Sans poste">Sans poste</option>
                         </Form.Select>
                     </div>
 

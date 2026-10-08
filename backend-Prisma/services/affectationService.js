@@ -21,6 +21,12 @@ const LIBELLES_STATUT = {
 
 export const LIBELLE_STOCK = 'Stock';
 
+// Valeurs de materiels.etat_pc posées par la mise en stock.
+export const ETAT_STOCK = 'Stock';
+export const ETAT_SANS_POSTE = 'Sans poste';
+// État repris par un PC qui sort du stock (même valeur que le bouton Status).
+export const ETAT_REMIS_EN_SERVICE = 'Bon';
+
 export class AffectationError extends Error {
     constructor(message, status = 400, details = undefined) {
         super(message);
@@ -98,9 +104,37 @@ const deplacerEcran = async (tx, ecran, cibleId, statut, ctx) => {
     });
 };
 
+// mouvements.id_materiels référence materiels.id_n avec ON UPDATE CASCADE :
+// retirer le matricule d'une fiche met ses mouvements à null. On les relève
+// avant pour les rattacher ensuite à la fiche qui reprend le matricule.
+const releverMouvements = async (tx, id_n) => {
+    if (!id_n) return [];
+    const mouvements = await tx.mouvement.findMany({ where: { id_materiels: id_n }, select: { id_mouvement: true } });
+    return mouvements.map(m => m.id_mouvement);
+};
+
+const rattacherMouvements = async (tx, ids, id_n) => {
+    if (ids.length === 0) return;
+    await tx.mouvement.updateMany({ where: { id_mouvement: { in: ids } }, data: { id_materiels: id_n } });
+};
+
+// Retire le poste vide d'un utilisateur qui reçoit un PC et libère son
+// matricule. Renvoie l'écran qu'il portait, que l'appelant doit replacer.
+const supprimerPosteVide = async (tx, posteVide, now, auteur) => {
+    await fermerAffectationEnCours(tx, { type_affectation: 'PC', id_materiels: posteVide.id_materiels }, now);
+    await tx.materiels.update({
+        where: { id_materiels: posteVide.id_materiels },
+        data: { est_actif: false, date_suppression: now, id_n: null, ecran: null, code_ecran: null, date_ecran: null },
+    });
+    await tracer(tx, posteVide.id_materiels, 'Poste vide', 'Remplacé par un PC réaffecté', auteur);
+    return posteVide.ecran_actuel;
+};
+
 /**
  * Réaffecte un PC (la fiche poste) à un autre bénéficiaire, ou le met en stock
- * si id_n est null. L'écran rattaché au poste suit le PC.
+ * si id_n est null. L'écran rattaché au poste suit le PC, sauf en cas de mise
+ * en stock : l'écran part alors en stock et l'utilisateur garde une fiche vide
+ * (est_vide), remplacée dès qu'un PC lui est réaffecté.
  */
 export const affecterPC = async (tx, { id_materiels, id_n, utilisateur, equipe, id_local, motif, etat_remise, commentaire }, auteurIdN) => {
     const materiel = await tx.materiels.findUnique({
@@ -110,21 +144,27 @@ export const affecterPC = async (tx, { id_materiels, id_n, utilisateur, equipe, 
     if (!materiel || materiel.date_suppression) {
         throw new AffectationError('Matériel introuvable.', 404);
     }
+    if (materiel.est_vide) {
+        throw new AffectationError('Ce poste est vide : il n\'y a pas de PC à réaffecter.');
+    }
 
     const cibleIdN = id_n ?? null;
     if (cibleIdN === materiel.id_n) {
         throw new AffectationError(cibleIdN ? 'Ce PC est déjà affecté à cet utilisateur.' : 'Ce PC est déjà en stock.');
     }
 
+    let posteVide = null;
     if (cibleIdN !== null) {
         const user = await tx.users.findUnique({
             where: { id_n: cibleIdN },
-            select: { id_n: true, materiel: { select: { id_materiels: true, code_pc: true } } },
+            select: { id_n: true, materiel: { include: { ecran_actuel: true } } },
         });
         if (!user) {
             throw new AffectationError(`Aucun utilisateur avec le matricule ${cibleIdN}.`, 404);
         }
-        if (user.materiel) {
+        if (user.materiel?.est_vide) {
+            posteVide = user.materiel;
+        } else if (user.materiel) {
             throw new AffectationError(
                 `L'utilisateur ${cibleIdN} a déjà le poste ${user.materiel.code_pc || `#${user.materiel.id_materiels}`}. Mettez-le d'abord en stock ou réaffectez-le.`,
                 409,
@@ -141,8 +181,25 @@ export const affecterPC = async (tx, { id_materiels, id_n, utilisateur, equipe, 
 
     const now = new Date();
     const auteur = await resoudreAuteur(tx, auteurIdN);
+    const miseEnStock = cibleIdN === null;
+
+    // Mouvements de l'utilisateur qui garde une fiche : celui qui perd son PC
+    // (mise en stock) ou celui dont le poste vide va être remplacé.
+    const idNConserve = miseEnStock ? materiel.id_n : (posteVide ? cibleIdN : null);
+    const mouvementsConserves = await releverMouvements(tx, idNConserve);
+
+    // Le matricule est unique : le poste vide doit le libérer avant le PC.
+    const ecranPosteVide = posteVide ? await supprimerPosteVide(tx, posteVide, now, auteur) : null;
 
     await fermerAffectationEnCours(tx, { type_affectation: 'PC', id_materiels }, now);
+
+    // Un PC en stock est inactif, état « Stock » ; il redevient actif quand il
+    // est réaffecté.
+    const statutPC = miseEnStock
+        ? { est_actif: false, etat_pc: ETAT_STOCK }
+        : materiel.id_n === null
+            ? { est_actif: true, ...(materiel.etat_pc === ETAT_STOCK ? { etat_pc: ETAT_REMIS_EN_SERVICE } : {}) }
+            : {};
 
     const misAJour = await tx.materiels.update({
         where: { id_materiels },
@@ -151,6 +208,7 @@ export const affecterPC = async (tx, { id_materiels, id_n, utilisateur, equipe, 
             utilisateur: nom,
             equipe: equipeFinale,
             ...(id_local !== undefined ? { id_local } : {}),
+            ...statutPC,
             date_modification: now,
         },
     });
@@ -170,9 +228,23 @@ export const affecterPC = async (tx, { id_materiels, id_n, utilisateur, equipe, 
     });
 
     if (materiel.ecran_actuel) {
-        await deplacerEcran(tx, materiel.ecran_actuel, id_materiels, 'AFFECTE', {
-            now, auteur, motif: 'Suit le PC',
+        if (miseEnStock) {
+            await deplacerEcran(tx, materiel.ecran_actuel, null, 'EN_STOCK', { now, auteur, motif: 'PC mis en stock' });
+            await syncColonnesEcran(tx, id_materiels);
+        } else {
+            await deplacerEcran(tx, materiel.ecran_actuel, id_materiels, 'AFFECTE', {
+                now, auteur, motif: 'Suit le PC',
+            });
+        }
+    }
+
+    // L'écran du poste vide rejoint le PC s'il n'en a pas, sinon part en stock.
+    if (ecranPosteVide) {
+        const versPC = !materiel.ecran_actuel;
+        await deplacerEcran(tx, ecranPosteVide, versPC ? id_materiels : null, versPC ? 'AFFECTE' : 'EN_STOCK', {
+            now, auteur, motif: versPC ? 'Repris du poste vide' : 'Poste vide remplacé',
         });
+        if (versPC) await syncColonnesEcran(tx, id_materiels);
     }
 
     await tracer(
@@ -182,6 +254,33 @@ export const affecterPC = async (tx, { id_materiels, id_n, utilisateur, equipe, 
         avecMotif(`Affecté à : ${decrireBeneficiaire(cibleIdN, nom)}`, motif),
         auteur
     );
+
+    // L'utilisateur qui perd son PC garde une fiche, vide, pour rester visible
+    // dans la liste et pouvoir recevoir un autre PC.
+    if (miseEnStock && materiel.id_n) {
+        const vide = await tx.materiels.create({
+            data: {
+                id_n: materiel.id_n,
+                utilisateur: materiel.utilisateur,
+                equipe: materiel.equipe,
+                caracteristiques: '',
+                id_local: materiel.id_local,
+                est_vide: true,
+                est_actif: false,
+                etat_pc: ETAT_SANS_POSTE,
+                date_modification: now,
+            },
+        });
+        await tracer(
+            tx,
+            vide.id_materiels,
+            null,
+            avecMotif(`Poste vide : PC ${materiel.code_pc || `#${id_materiels}`} mis en stock`, motif),
+            auteur
+        );
+    }
+
+    await rattacherMouvements(tx, mouvementsConserves, idNConserve);
 
     return misAJour;
 };
