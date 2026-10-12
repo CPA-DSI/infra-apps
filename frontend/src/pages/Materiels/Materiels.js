@@ -431,7 +431,14 @@ const columns = useMemo(() => [
                 ? <span title="Utilisateur sans PC (PC mis en stock ou réaffecté)">{row.id_n} <span className="badge bg-warning text-dark">Sans poste</span></span>
                 : row.id_n
     ) },
-    { name: 'Utilisateur', selector: row => row.utilisateur, sortable: true, minWidth: '120px', grow: 1 },
+    { name: 'Utilisateur', selector: row => row.utilisateur, sortable: true, minWidth: '120px', grow: 1, cell: row => (
+        <div>
+            <div>{row.utilisateur}</div>
+            {!row.id_ecran && !row.est_vide && (
+                <small className="text-muted fst-italic" title="Aucun écran affecté à ce poste">Sans écran</small>
+            )}
+        </div>
+    ) },
     { name: 'Équipe', selector: row => row.equipe, sortable: true, minWidth: '120px', grow: 1 },
     { name: 'Date PC', selector: row => row.date_pc, sortable: true, width: '110px', grow: 0, cell: row => formatDate(row.date_pc) },
     { name: 'Date Écran', selector: row => row.date_ecran, sortable: true, width: '110px', grow: 0, cell: row => formatDate(row.date_ecran) },
