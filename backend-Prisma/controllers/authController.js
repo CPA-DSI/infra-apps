@@ -370,46 +370,35 @@ export const forceChangePassword = async (req, res) => {
     return res.status(401).json({ error: 'Utilisateur non authentifié.' });
   }
 
-  const { p1, p2 } = req.body;
-  if (!p1 && !p2) {
-    return res.status(400).json({ error: 'Veuillez saisir au moins un nouveau mot de passe.' });
+  // Le nouveau mot de passe s'applique à tous les emails de l'utilisateur
+  // (principal et secondaire). La confirmation est vérifiée côté frontend.
+  const { password } = req.body;
+  const passwordError = validatePasswordStrength(password);
+  if (passwordError) {
+    return res.status(400).json({ error: passwordError });
   }
 
   try {
-    const passwordError = validatePasswordStrength(p1) || validatePasswordStrength(p2);
-    if (passwordError) {
-      return res.status(400).json({ error: passwordError });
-    }
-
     const userEmails = await prisma.userEmail.findMany({ where: { user_id: userId } });
-    const updates = [];
-    const primary = userEmails.find((e) => e.is_primary);
-    const secondary = userEmails.find((e) => !e.is_primary);
-
-    if (primary && p1) {
-      updates.push(
-        prisma.userEmail.update({
-          where: { id_uEmail: primary.id_uEmail },
-          data: { password: await bcrypt.hash(p1, 12), password_enc: encryptSecret(p1) },
-        }),
-      );
-    }
-    if (secondary && p2) {
-      updates.push(
-        prisma.userEmail.update({
-          where: { id_uEmail: secondary.id_uEmail },
-          data: { password: await bcrypt.hash(p2, 12), password_enc: encryptSecret(p2) },
-        }),
-      );
+    if (!userEmails.length) {
+      return res.status(400).json({ error: "Aucun email associé à ce compte. Contactez l'administrateur." });
     }
 
-    if (updates.length) {
-      await Promise.all(updates);
-      await prisma.users.update({
+    const hash = await bcrypt.hash(password, 12);
+    const passwordEnc = encryptSecret(password);
+
+    await prisma.$transaction([
+      ...userEmails.map((e) =>
+        prisma.userEmail.update({
+          where: { id_uEmail: e.id_uEmail },
+          data: { password: hash, password_enc: passwordEnc },
+        }),
+      ),
+      prisma.users.update({
         where: { id_user: userId },
         data: { must_change_password: false },
-      });
-    }
+      }),
+    ]);
 
     return res.status(200).json({ message: 'Mot de passe modifié avec succès.' });
   } catch (error) {

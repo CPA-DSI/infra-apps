@@ -4,7 +4,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import pkg from '@prisma/client';
 const { PrismaClient } = pkg;
-import { createCronTasks, syncCronStatus } from './cron-worker.js';
+import { reloadCronTasks, getCronTasksState } from './cron-worker.js';
 import path from 'path';
 import fs from 'fs';
 import { authenticateToken, ensureActiveUser, requirePermission } from './middleware/authMiddleware.js';
@@ -21,13 +21,8 @@ try {
     process.exit(1);
 }
 
-const prisma = new PrismaClient(); // 1. Créer l'instance
-
-// 2. Créer les deux tâches cron (quotidienne et hebdomadaire)
-const { dailyTask, weeklyTask } = createCronTasks(prisma);
-
-// 3. Synchroniser le statut au démarrage
-syncCronStatus(prisma, dailyTask, weeklyTask); 
+const prisma = new PrismaClient();
+// Les robots d'envoi sont planifiés au démarrage du serveur (voir app.listen).
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -61,24 +56,32 @@ app.use((req, res, next) => {
     next();
 });
 
-// --- 3. ROUTES DE CONTRÔLE DU ROBOT QUOTIDIEN ---
+// --- 3. ROUTES DE CONTRÔLE DES ROBOTS D'ENVOI ---
 
 app.get('/api/cron/status', authenticateToken, ensureActiveUser, requirePermission(PERMISSIONS.CONFIG_READ), async (req, res) => {
-    // Récupérer les config des deux tables
-    const configQuotidien = await prisma.configEmailQuotidien.findUnique({ where: { id: 1 } });
-    const configHebdo = await prisma.configEmailHebdomadaire.findUnique({ where: { id: 1 } });
-    
-    res.json({ 
-        running: configQuotidien?.cron_actif || false,
-        runningWeekly: configHebdo?.cron_actif_hebdo || false
-    });
+    try {
+        const [configQuotidien, configHebdo, configMensuel] = await Promise.all([
+            prisma.configEmailQuotidien.findUnique({ where: { id: 1 } }),
+            prisma.configEmailHebdomadaire.findUnique({ where: { id: 1 } }),
+            prisma.configEmailMensuel.findUnique({ where: { id: 1 } }),
+        ]);
+
+        res.json({
+            running: configQuotidien?.cron_actif || false,
+            runningWeekly: configHebdo?.cron_actif_hebdo || false,
+            runningMonthly: configMensuel?.cron_actif || false,
+            tasks: getCronTasksState(),
+        });
+    } catch (error) {
+        console.error('Erreur GET /api/cron/status:', error);
+        res.status(500).json({ error: "Erreur lors de la lecture de l'état du robot" });
+    }
 });
 
 app.post('/api/cron/toggle', authenticateToken, ensureActiveUser, requirePermission(PERMISSIONS.CONFIG_WRITE), async (req, res) => {
     const { action, type } = req.body;
     const isActive = action === 'start';
-    
-    // type peut être 'quotidien' ou 'hebdomadaire'
+    // type : 'quotidien' (défaut), 'hebdomadaire' ou 'mensuel'
     const cronType = type || 'quotidien';
 
     try {
@@ -88,21 +91,26 @@ app.post('/api/cron/toggle', authenticateToken, ensureActiveUser, requirePermiss
                 update: { cron_actif: isActive },
                 create: { id: 1, cron_actif: isActive, email_dest: '', email_exp: '', email_pass: '', objet_mail: '', message_mail: '', heure_envoi: '17:15' }
             });
-
-            if (isActive) dailyTask.start(); else dailyTask.stop();
-            res.json({ running: isActive, type: 'quotidien' });
-        } else {
-            // Hebdomadaire - utiliser la nouvelle table
+        } else if (cronType === 'hebdomadaire') {
             await prisma.configEmailHebdomadaire.upsert({
                 where: { id: 1 },
                 update: { cron_actif_hebdo: isActive },
                 create: { id: 1, cron_actif_hebdo: isActive, email_dest: '', email_exp: '', email_pass: '', type_envoi: 'hebdomadaire', jour_envoi: 1, heure_envoi: '17:15', objet_mail_hebdo: '', message_mail_hebdo: '' }
             });
-
-            if (isActive) weeklyTask.start(); else weeklyTask.stop();
-            res.json({ running: isActive, type: 'hebdomadaire' });
+        } else if (cronType === 'mensuel') {
+            await prisma.configEmailMensuel.upsert({
+                where: { id: 1 },
+                update: { cron_actif: isActive },
+                create: { id: 1, cron_actif: isActive, email_dest: '', email_exp: '', email_pass: '', objet_mail: '', message_mail: '', jour_envoi: 1, heure_envoi: '17:15' }
+            });
+        } else {
+            return res.status(400).json({ error: 'Type de robot inconnu' });
         }
+
+        await reloadCronTasks(prisma);
+        res.json({ running: isActive, type: cronType });
     } catch (error) {
+        console.error('Erreur POST /api/cron/toggle:', error);
         res.status(500).json({ error: "Erreur lors du changement d'état du robot" });
     }
 });
@@ -180,8 +188,8 @@ if (process.env.NODE_ENV !== 'production') {
 app.listen(PORT, async () => {
     try {
         await prisma.$connect();
-        // Synchroniser les statuts au démarrage
-        await syncCronStatus(prisma, dailyTask, weeklyTask);
+        // Planifier les robots d'envoi selon les configs en base
+        await reloadCronTasks(prisma);
         console.log('✅ Base de données connectée.');
         console.log(`🚀 Serveur actif sur http://localhost:${PORT}`);
     } catch (error) {

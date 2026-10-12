@@ -185,7 +185,7 @@ const FirstLoginPasswordChange = () => {
     setIsSubmitting(true);
 
     try {
-      await forceChangePassword(newPassword, confirmPassword);
+      await forceChangePassword(newPassword);
 
       setMustChangePassword(false);
 

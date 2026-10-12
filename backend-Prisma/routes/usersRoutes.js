@@ -4,9 +4,11 @@ import bcrypt from 'bcryptjs';
 import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
 import { PERMISSIONS } from '../constants/roles.js';
 import { encryptPassMail, decryptPassMail, encryptSecret, decryptSecret } from '../services/passMailCrypto.js';
+import { validateIdParam } from '../middleware/validateIdParam.js';
 
 const prisma = new PrismaClient();
 const router = express.Router();
+router.param('id', validateIdParam);
 
 
 // GET /api/users

@@ -21,18 +21,6 @@ export const getHistoriqueArriveesWithFilters = async (params = {}) => {
   }
 };
 
-// Récupérer les statistiques pour le graphique
-export const getHistoriqueStats = async (params = {}) => {
-  try {
-    const { periode = 'month', annee = new Date().getFullYear() } = params;
-    const response = await apiClient.get(`/historique/stats?periode=${periode}&annee=${annee}`);
-    return response.data;
-  } catch (error) {
-    console.error('Erreur dans getHistoriqueStats:', error);
-    throw new Error(getErrorMessage(error));
-  }
-};
-
 export const getHistoriqueArrivees = async () => {
   try {
     const response = await apiClient.get('/historique_arrive');

@@ -18,9 +18,10 @@ export const updatePasswords = async (oldPassword, p1, p2) => {
   }
 };
 
-export const forceChangePassword = async (p1, p2) => {
+// Le nouveau mot de passe est appliqué à tous les emails de l'utilisateur.
+export const forceChangePassword = async (password) => {
   try {
-    const response = await apiClient.post('/auth/force-change-password', { p1, p2 });
+    const response = await apiClient.post('/auth/force-change-password', { password });
     return response.data;
   } catch (error) {
     throw new Error(getErrorMessage(error));

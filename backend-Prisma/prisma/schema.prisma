@@ -213,6 +213,14 @@ model Ticket {
   @@map("tickets")
 }
 
+// Compteur annuel des numéros de ticket (incrément atomique, voir ticketRoutes.js)
+model TicketCounter {
+  annee         Int @id
+  dernierNumero Int @map("dernier_numero")
+
+  @@map("ticket_counter")
+}
+
 // Informations de fermeture des tickets
 model TicketFermeture {
   id              Int      @id @default(autoincrement())

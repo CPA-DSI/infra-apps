@@ -16,10 +16,12 @@ import {
     retirerPoste,
     repondreErreurAffectation,
 } from '../services/affectationService.js';
+import { validateIdParam } from '../middleware/validateIdParam.js';
 
 const prisma = new PrismaClient();
 
 const router = express.Router();
+router.param('id', validateIdParam);
 
 const asyncHandler = fn => (req, res, next) => {
     Promise.resolve(fn(req, res, next)).catch(next);

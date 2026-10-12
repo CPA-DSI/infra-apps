@@ -5,8 +5,10 @@ import prisma from '../prismaClient.js';
 import { authenticateToken, ensureActiveUser, requireRole } from '../middleware/authMiddleware.js';
 import { UserRole } from '../constants/roles.js';
 import { STATUTS_ECRAN, affecterEcran, repondreErreurAffectation } from '../services/affectationService.js';
+import { validateIdParam } from '../middleware/validateIdParam.js';
 
 const router = express.Router();
+router.param('id', validateIdParam);
 
 const asyncHandler = fn => (req, res, next) => {
     Promise.resolve(fn(req, res, next)).catch(next);

@@ -1,179 +1,66 @@
 // cron-Worker.js - Gestion des envois quotidiens, hebdomadaires et mensuels
+//
+// Chaque robot actif tourne chaque minute et compare le jour/l'heure courants, dans le
+// fuseau CRON_TIMEZONE (Europe/Paris par défaut), à ceux de sa config.
+// On n'utilise pas d'expression cron précise ("15 17 * * 5") : dans node-cron 4.2.1, le
+// calcul de la prochaine exécution est faux pour les jours de semaine et, avec un
+// fuseau, pour les jours du mois (il saute au 1er janvier) et l'envoi n'aurait jamais lieu.
+// reloadCronTasks() doit être appelée après toute modification d'une config email
+// ou d'un état actif/inactif : elle détruit les tâches existantes et les recrée.
 import cron from 'node-cron';
-import nodemailer from 'nodemailer';
-import ExcelJS from 'exceljs';
+import { generateExcelReport, sendEmail, getCurrentDate, getCurrentMonth } from './services/reportService.js';
 
-// Fonction utilitaire pour obtenir la date actuelle formatée
-const getCurrentDate = () => {
-    const now = new Date();
-    return now.toLocaleDateString('fr-FR', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-    }).replace(/\//g, '-');
+export const CRON_TIMEZONE = process.env.CRON_TIMEZONE || 'Europe/Paris';
+
+// Tâches actuellement planifiées, par type
+const tasks = { quotidien: null, hebdomadaire: null, mensuel: null };
+
+// Parse "HH:MM" ou "H:MM" -> { hours, minutes }, ou null si invalide
+export const parseHeureEnvoi = (heure) => {
+    const match = /^(\d{1,2}):(\d{2})$/.exec(String(heure ?? '').trim());
+    if (!match) return null;
+    const hours = Number(match[1]);
+    const minutes = Number(match[2]);
+    if (hours > 23 || minutes > 59) return null;
+    return { hours, minutes };
 };
 
-// Fonction utilitaire pour obtenir le mois actuel formaté
-const getCurrentMonth = () => {
-    const now = new Date();
-    return now.toLocaleDateString('fr-FR', {
-        year: 'numeric',
-        month: 'long'
-    });
-};
+const WEEKDAYS = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
 
-// Fonction utilitaire pour ajuster la largeur des colonnes automatiquement
-export const autoSizeColumns = (worksheet) => {
-    worksheet.columns.forEach(column => {
-        let maxLength = 0;
-        column.eachCell({ includeEmpty: true }, (cell) => {
-            const columnLength = cell.value ? cell.value.toString().length : 10;
-            if (columnLength > maxLength) maxLength = columnLength;
-        });
-        column.width = maxLength < 12 ? 12 : maxLength + 3;
-    });
-};
-
-// Fonction pour générer le rapport Excel
-const generateExcelReport = async (prisma) => {
-    const now = new Date();
-    const fullDateTime = `${now.toLocaleDateString('fr-FR').replace(/\//g, '-')}_${now.getHours()}h${String(now.getMinutes()).padStart(2, '0')}`;
-
-    const [historiqueArrivees, tousLesMouvements, tousLesProduits] = await Promise.all([
-        prisma.HistoriqueArrive.findMany({ orderBy: { date_arrivee: 'desc' }, include: { produit: true } }),
-        prisma.Mouvement.findMany({ 
-            orderBy: { date_mouvement: 'desc' }, 
-            include: { produits: true, localSource: true, localDestination: true } 
-        }),
-        prisma.Produits.findMany({ orderBy: { nom_produit: 'asc' } })
-    ]);
-
-    const workbook = new ExcelJS.Workbook();
-    const headerStyle = {
-        font: { bold: true, color: { argb: 'FFFFFF' } },
-        fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: '4472C4' } }
+// Date/heure courante décomposée dans le fuseau du robot
+const getZonedNow = (date) => {
+    const parts = Object.fromEntries(
+        new Intl.DateTimeFormat('en-US', {
+            timeZone: CRON_TIMEZONE, hourCycle: 'h23',
+            year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'short', hour: 'numeric', minute: 'numeric',
+        })
+            .formatToParts(date)
+            .map(p => [p.type, p.value])
+    );
+    const year = Number(parts.year);
+    const month = Number(parts.month);
+    return {
+        weekday: WEEKDAYS[parts.weekday],
+        day: Number(parts.day),
+        lastDay: new Date(Date.UTC(year, month, 0)).getUTCDate(),
+        hours: Number(parts.hour),
+        minutes: Number(parts.minute),
     };
-
-    // --- FEUILLE 0 : SOMMAIRE ---
-    const sheet0 = workbook.addWorksheet('Sommaire', { views: [{ showGridLines: false }] });
-    sheet0.addRow(['RAPPORT LOGISTIQUE GLOBAL']).font = { bold: true, size: 16 };
-    sheet0.addRow(['Généré le : ' + fullDateTime]);
-    sheet0.addRow([]);
-
-    const totalProduits = tousLesProduits.length;
-    const produitsEnAlerte = tousLesProduits.filter(p => (p.quantite_en_stock || 0) <= (p.seuil_alerte || 0)).length;
-    const mouvementsEntrees = tousLesMouvements.filter(m => m.type_mouvement === 'ENTREE' || m.type_mouvement === 'ENTREE_QUANTITE');
-    const volumeEntrees = mouvementsEntrees.reduce((sum, m) => sum + (m.quantite || 0), 0);
-    const mouvementsSorties = tousLesMouvements.filter(m => m.type_mouvement === 'SORTIE');
-    const volumeSorties = mouvementsSorties.reduce((sum, m) => sum + (m.quantite || 0), 0);
-
-    sheet0.addRow(['Résumé du Stock :']).font = { bold: true, underline: true };
-    sheet0.addRow(['• Total de références produits :', totalProduits]);
-    const alerteRow = sheet0.addRow(['• Produits sous le seuil d\'alerte :', produitsEnAlerte]);
-    if (produitsEnAlerte > 0) alerteRow.getCell(2).font = { color: { argb: 'FF0000' }, bold: true };
-
-    sheet0.addRow([]);
-    sheet0.addRow(['Activité des flux (Volumes) :']).font = { bold: true, underline: true };
-    sheet0.addRow(['• Volume total d\'ENTRÉES :', `${volumeEntrees} articles (${mouvementsEntrees.length} opérations)`]).getCell(2).font = { color: { argb: '008000' }, bold: true };
-    sheet0.addRow(['• Volume total de SORTIES :', `${volumeSorties} articles (${mouvementsSorties.length} opérations)`]).getCell(2).font = { color: { argb: 'FF0000' }, bold: true };
-
-    sheet0.addRow([]);
-    sheet0.addRow(['Navigation rapide :']).font = { bold: true };
-    const links = [
-        { text: '→ Voir l\'inventaire des Produits', sheet: 'État des Produits' },
-        { text: '→ Voir l\'historique des Arrivées', sheet: 'Historique Arrivées' },
-        { text: '→ Voir les Mouvements de stock', sheet: 'Mouvements Généraux' }
-    ];
-    links.forEach(l => {
-        const row = sheet0.addRow([l.text]);
-        row.getCell(1).value = { text: l.text, hyperlink: `#'${l.sheet}'!A1` };
-        row.getCell(1).font = { color: { argb: '0563C1' }, underline: true };
-    });
-    autoSizeColumns(sheet0);
-
-    // --- FEUILLE 1 : Historique Arrivées ---
-    const sheet1 = workbook.addWorksheet('Historique Arrivées');
-    sheet1.columns = [{ header: 'Produit', key: 'nom' }, { header: 'Qté Ajoutée', key: 'qte' }, { header: 'Ancien Stock', key: 'ancien' }, { header: 'Date Arrivée', key: 'date' }];
-    sheet1.getRow(1).eachCell(cell => cell.style = headerStyle);
-    historiqueArrivees.forEach(h => sheet1.addRow({ nom: h.produit?.nom_produit, qte: h.quantite_arrivee, ancien: h.ancienne_quantite_stock, date: h.date_arrivee.toLocaleString() }));
-    autoSizeColumns(sheet1);
-
-    // --- FEUILLE 2 : Mouvements Généraux ---
-    const sheet2 = workbook.addWorksheet('Mouvements Généraux');
-    sheet2.columns = [
-        { header: 'Date', key: 'date' }, { header: 'Produit', key: 'prod' }, { header: 'Type', key: 'type' }, 
-        { header: 'Quantité', key: 'qte' }, { header: 'Source', key: 'source' }, { header: 'Destination', key: 'dest' }, 
-        { header: 'Utilisateur', key: 'user' }, { header: 'Motif', key: 'motif' }
-    ];
-    sheet2.getRow(1).eachCell(cell => cell.style = headerStyle);
-    tousLesMouvements.forEach(m => {
-        const row = sheet2.addRow({
-            date: m.date_mouvement.toLocaleDateString(), prod: m.produits?.nom_produit || 'N/A', type: m.type_mouvement,
-            qte: m.quantite, source: m.localSource?.nom_local || '---', dest: m.localDestination?.nom_local || '---',
-            user: m.nom_utilisateur, motif: m.motif || '-'
-        });
-        const type = m.type_mouvement?.toUpperCase();
-        if (type?.includes('ENTREE')) row.eachCell(cell => cell.font = { color: { argb: '008000' }, bold: true });
-        else if (type === 'SORTIE') row.eachCell(cell => cell.font = { color: { argb: 'FF0000' }, bold: true });
-    });
-    autoSizeColumns(sheet2);
-
-    // --- FEUILLE 3 : État des Produits ---
-    const sheet3 = workbook.addWorksheet('État des Produits');
-    sheet3.columns = [{ header: 'Nom Produit', key: 'nom' }, { header: 'Stock Actuel', key: 'stock' }, { header: 'Seuil Alerte', key: 'seuil' }, { header: 'Dernière Mise à jour', key: 'last' }];
-    sheet3.getRow(1).eachCell(cell => cell.style = headerStyle);
-    tousLesProduits.forEach(p => {
-        const row = sheet3.addRow({ nom: p.nom_produit, stock: p.quantite_en_stock || 0, seuil: p.seuil_alerte || 0, last: p.last_date ? p.last_date.toLocaleDateString() : 'N/A' });
-        if ((p.quantite_en_stock || 0) <= (p.seuil_alerte || 0)) {
-            row.getCell('stock').font = { color: { argb: 'FF0000' }, bold: true };
-            row.getCell('nom').font = { color: { argb: 'FF0000' } };
-        }
-    });
-    autoSizeColumns(sheet3);
-
-    return workbook.xlsx.writeBuffer();
-};
-
-// Fonction pour envoyer un email
-const sendEmail = async (config, subject, text, buffer, filename) => {
-    const transporter = nodemailer.createTransport({
-        host: "smtp.ionos.fr", port: 465, secure: true,
-        auth: { user: config.email_exp, pass: config.email_pass }
-    });
-
-    await transporter.sendMail({
-        from: `"Rapport Automatique" <${config.email_exp}>`,
-        to: config.email_dest,
-        subject: subject,
-        text: text,
-        attachments: [{ filename: filename, content: buffer }]
-    });
 };
 
 // ============================================================
-// CRON JOB QUOTIDIEN
+// DÉFINITION DES ROBOTS
 // ============================================================
-export const createDailyCronTask = (prisma) => {
-    return cron.schedule('*/1 * * * 1-5', async () => {
-        try {
-            const config = await prisma.configEmailQuotidien.findUnique({ where: { id: 1 } });
-            
-            // Vérifier si l'envoi quotidien est activé
-            if (!config || !config.cron_actif || !config.heure_envoi) {
-                return; 
-            }
-
-            const [configHours, configMinutes] = config.heure_envoi.split(':');
-            const now = new Date();
-            const currentHours = now.getHours().toString().padStart(2, '0');
-            const currentMinutes = now.getMinutes().toString().padStart(2, '0');
-
-            if (currentHours !== configHours || currentMinutes !== configMinutes) return;
-
-            console.log(`[${now.toLocaleString()}] 🟢 Démarrage de l'envoi QUOTIDIEN...`);
-
+const ROBOTS = {
+    quotidien: {
+        label: 'QUOTIDIEN',
+        loadConfig: (prisma) => prisma.configEmailQuotidien.findUnique({ where: { id: 1 } }),
+        isActive: (config) => config.cron_actif,
+        // Du lundi au vendredi
+        isDueToday: (config, now) => now.weekday >= 1 && now.weekday <= 5,
+        describe: (config) => `du lundi au vendredi à ${config.heure_envoi}`,
+        send: async (prisma, config) => {
             const buffer = await generateExcelReport(prisma);
-            
             await sendEmail(
                 config,
                 config.objet_mail || `Rapport Quotidien des Stocks - ${getCurrentDate()}`,
@@ -181,43 +68,20 @@ export const createDailyCronTask = (prisma) => {
                 buffer,
                 `Rapport_Quotidien_${getCurrentDate()}.xlsx`
             );
-
-            console.log(`[${new Date().toLocaleString()}] ✅ Rapport QUOTIDIEN envoyé à ${config.email_dest}`);
-        } catch (e) {
-            console.error("❌ Erreur critique Cron Quotidien:", e);
-        }
-    }, { scheduled: false });
-};
-
-// ============================================================
-// CRON JOB HEBDOMADAIRE
-// ============================================================
-export const createWeeklyCronTask = (prisma) => {
-    return cron.schedule('*/1 * * * *', async () => {
-        try {
-            const config = await prisma.configEmailHebdomadaire.findUnique({ where: { id: 1 } });
-            
-            // Vérifier si l'envoi hebdomadaire est activé
-            if (!config || !config.cron_actif_hebdo || !config.heure_envoi) {
-                return;
-            }
-
-            const [configHours, configMinutes] = config.heure_envoi.split(':');
-            const now = new Date();
-            const currentDayOfWeek = now.getDay(); // 0 = Dimanche, 1 = Lundi, ..., 6 = Samedi
-            const currentHours = now.getHours().toString().padStart(2, '0');
-            const currentMinutes = now.getMinutes().toString().padStart(2, '0');
-            const targetDay = config.jour_envoi || 1; // Par défaut, Lundi
-
-            // Vérifier si c'est le bon jour et la bonne heure
-            if (currentDayOfWeek !== targetDay || currentHours !== configHours || currentMinutes !== configMinutes) {
-                return;
-            }
-
-            console.log(`[${now.toLocaleString()}] 🔵 Démarrage de l'envoi HEBDOMADAIRE...`);
-
+        },
+    },
+    hebdomadaire: {
+        label: 'HEBDOMADAIRE',
+        loadConfig: (prisma) => prisma.configEmailHebdomadaire.findUnique({ where: { id: 1 } }),
+        isActive: (config) => config.cron_actif_hebdo,
+        // jour_envoi : 0 = Dimanche, 1 = Lundi, ..., 6 = Samedi (même convention que cron)
+        isDueToday: (config, now) => {
+            const jour = Number.isInteger(config.jour_envoi) && config.jour_envoi >= 0 && config.jour_envoi <= 6 ? config.jour_envoi : 1;
+            return now.weekday === jour;
+        },
+        describe: (config) => `jour ${config.jour_envoi ?? 1} de la semaine à ${config.heure_envoi}`,
+        send: async (prisma, config) => {
             const buffer = await generateExcelReport(prisma);
-            
             await sendEmail(
                 config,
                 config.objet_mail_hebdo || `Rapport Hebdomadaire des Stocks - ${getCurrentDate()}`,
@@ -225,44 +89,18 @@ export const createWeeklyCronTask = (prisma) => {
                 buffer,
                 `Rapport_Hebdomadaire_${getCurrentDate()}.xlsx`
             );
-
-            console.log(`[${now.toLocaleString()}] ✅ Rapport HEBDOMADAIRE envoyé à ${config.email_dest}`);
-        } catch (e) {
-            console.error("❌ Erreur critique Cron Hebdomadaire:", e);
-        }
-    }, { scheduled: false });
-};
-
-// ============================================================
-// CRON JOB MENSUEL (NOUVEAU)
-// ============================================================
-export const createMonthlyCronTask = (prisma) => {
-    return cron.schedule('*/1 * * * *', async () => {
-        try {
-            const config = await prisma.configEmailMensuel.findUnique({ where: { id: 1 } });
-            
-            // Vérifier si l'envoi mensuel est activé
-            if (!config || !config.cron_actif || !config.heure_envoi) {
-                return;
-            }
-
-            const [configHours, configMinutes] = config.heure_envoi.split(':');
-            const now = new Date();
-            const currentDayOfMonth = now.getDate(); // 1-31
-            const currentHours = now.getHours().toString().padStart(2, '0');
-            const currentMinutes = now.getMinutes().toString().padStart(2, '0');
-            const targetDay = config.jour_envoi || 1; // Par défaut, le 1er du mois
-
-            // Vérifier si c'est le bon jour du mois et la bonne heure
-            if (currentDayOfMonth !== targetDay || currentHours !== configHours || currentMinutes !== configMinutes) {
-                return;
-            }
-
+        },
+    },
+    mensuel: {
+        label: 'MENSUEL',
+        loadConfig: (prisma) => prisma.configEmailMensuel.findUnique({ where: { id: 1 } }),
+        isActive: (config) => config.cron_actif,
+        // Le jour configuré, ou le dernier jour du mois pour les mois plus courts (ex. 31 -> 30 ou 28/29)
+        isDueToday: (config, now) => now.day === Math.min(getMonthlyDay(config), now.lastDay),
+        describe: (config) => `le ${getMonthlyDay(config)} du mois à ${config.heure_envoi}`,
+        send: async (prisma, config) => {
             const monthName = getCurrentMonth();
-            console.log(`[${now.toLocaleString()}] 🟣 Démarrage de l'envoi MENSUEL (${monthName})...`);
-
             const buffer = await generateExcelReport(prisma);
-            
             await sendEmail(
                 config,
                 config.objet_mail || `Rapport Mensuel des Stocks - ${monthName}`,
@@ -270,89 +108,80 @@ export const createMonthlyCronTask = (prisma) => {
                 buffer,
                 `Rapport_Mensuel_${getCurrentDate()}.xlsx`
             );
+        },
+    },
+};
 
-            console.log(`[${now.toLocaleString()}] ✅ Rapport MENSUEL envoyé à ${config.email_dest}`);
+function getMonthlyDay(config) {
+    const jour = Number(config.jour_envoi);
+    return Number.isInteger(jour) && jour >= 1 && jour <= 31 ? jour : 1;
+}
+
+// ============================================================
+// PLANIFICATION
+// ============================================================
+const scheduleRobot = (prisma, type, config) => {
+    const robot = ROBOTS[type];
+    if (!parseHeureEnvoi(config.heure_envoi)) {
+        console.warn(`⚠️ Robot d'envoi ${robot.label} : heure d'envoi invalide (${config.heure_envoi}), non planifié.`);
+        return null;
+    }
+
+    const task = cron.createTask('* * * * *', async ({ date }) => {
+        try {
+            // Relire la config à chaque minute (heure, destinataires, état actif)
+            const current = await robot.loadConfig(prisma);
+            if (!current || !robot.isActive(current)) return;
+
+            const heure = parseHeureEnvoi(current.heure_envoi);
+            const now = getZonedNow(date);
+            if (!heure || heure.hours !== now.hours || heure.minutes !== now.minutes) return;
+            if (!robot.isDueToday(current, now)) return;
+
+            console.log(`[${new Date().toLocaleString('fr-FR', { timeZone: CRON_TIMEZONE })}] Démarrage de l'envoi ${robot.label}...`);
+            await robot.send(prisma, current);
+            console.log(`✅ Rapport ${robot.label} envoyé à ${current.email_dest}`);
         } catch (e) {
-            console.error("❌ Erreur critique Cron Mensuel:", e);
+            console.error(`❌ Erreur critique Cron ${robot.label}:`, e);
         }
-    }, { scheduled: false });
+    }, { timezone: CRON_TIMEZONE, name: `rapport-${type}`, noOverlap: true });
+
+    task.start();
+    console.log(`🚀 Robot d'envoi ${robot.label} : ACTIF (${robot.describe(config)}, ${CRON_TIMEZONE})`);
+    return task;
 };
 
-// ============================================================
-// FONCTION PRINCIPALE DE CRÉATION DES TÂCHES
-// ============================================================
-export const createCronTasks = (prisma) => {
-    const dailyTask = createDailyCronTask(prisma);
-    const weeklyTask = createWeeklyCronTask(prisma);
-    const monthlyTask = createMonthlyCronTask(prisma);
-    
-    return {
-        dailyTask,
-        weeklyTask,
-        monthlyTask
-    };
-};
-
-// Fonction de synchronisation du statut des cron jobs
-export async function syncCronStatus(prisma, dailyTask, weeklyTask, monthlyTask) {
-    try {
-        // Récupérer la config quotidienne
-        const configQuotidien = await prisma.configEmailQuotidien.findUnique({ where: { id: 1 } });
-        
-        // Récupérer la config hebdomadaire
-        const configHebdo = await prisma.configEmailHebdomadaire.findUnique({ where: { id: 1 } });
-        
-        // Récupérer la config mensuelle
-        const configMensuel = await prisma.configEmailMensuel.findUnique({ where: { id: 1 } });
-        
-        // Synchroniser le job quotidien
-        if (configQuotidien?.cron_actif) {
-            dailyTask.start();
-            console.log("🚀 Robot d'envoi QUOTIDIEN rétabli : ACTIF");
-        } else {
-            console.log("💤 Robot d'envoi QUOTIDIEN au démarrage : INACTIF");
+// (Re)crée toutes les tâches à partir des configs en base
+export async function reloadCronTasks(prisma) {
+    for (const type of Object.keys(ROBOTS)) {
+        if (tasks[type]) {
+            await tasks[type].destroy();
+            tasks[type] = null;
         }
-
-        // Synchroniser le job hebdomadaire
-        if (configHebdo?.cron_actif_hebdo) {
-            weeklyTask.start();
-            console.log("🚀 Robot d'envoi HEBDOMADAIRE rétabli : ACTIF");
-        } else {
-            console.log("💤 Robot d'envoi HEBDOMADAIRE au démarrage : INACTIF");
+        try {
+            const config = await ROBOTS[type].loadConfig(prisma);
+            if (config && ROBOTS[type].isActive(config)) {
+                tasks[type] = scheduleRobot(prisma, type, config);
+            } else {
+                console.log(`💤 Robot d'envoi ${ROBOTS[type].label} : INACTIF`);
+            }
+        } catch (err) {
+            console.error(`Erreur lors de la synchro du Robot ${ROBOTS[type].label}:`, err);
         }
-
-        // Synchroniser le job mensuel (NOUVEAU)
-        if (configMensuel?.cron_actif) {
-            monthlyTask.start();
-            console.log(`🚀 Robot d'envoi MENSUEL rétabli : ACTIF (Jour ${configMensuel.jour_envoi || 1} à ${configMensuel.heure_envoi})`);
-        } else {
-            console.log("💤 Robot d'envoi MENSUEL au démarrage : INACTIF");
-        }
-    } catch (err) {
-        console.error("Erreur lors de la synchro du Robot:", err);
     }
 }
 
-// Fonction pour arrêter tous les jobs
-export function stopAllCronTasks(dailyTask, weeklyTask, monthlyTask) {
-    if (dailyTask) {
-        dailyTask.stop();
-        console.log("⏹️ Job QUOTIDIEN arrêté");
-    }
-    if (weeklyTask) {
-        weeklyTask.stop();
-        console.log("⏹️ Job HEBDOMADAIRE arrêté");
-    }
-    if (monthlyTask) {
-        monthlyTask.stop();
-        console.log("⏹️ Job MENSUEL arrêté");
+// Arrête toutes les tâches (ex. arrêt du serveur)
+export async function stopAllCronTasks() {
+    for (const type of Object.keys(tasks)) {
+        if (tasks[type]) {
+            await tasks[type].destroy();
+            tasks[type] = null;
+        }
     }
 }
 
-// Fonction pour redémarrer tous les jobs avec les nouvelles configs
-export async function restartAllCronTasks(prisma, dailyTask, weeklyTask, monthlyTask) {
-    console.log("🔄 Redémarrage de tous les jobs Cron...");
-    stopAllCronTasks(dailyTask, weeklyTask, monthlyTask);
-    await syncCronStatus(prisma, dailyTask, weeklyTask, monthlyTask);
-    console.log("✅ Tous les jobs Cron ont été redémarrés");
+// État réel des tâches : true si le robot est planifié dans ce processus
+export function getCronTasksState() {
+    return Object.fromEntries(Object.entries(tasks).map(([type, task]) => [type, Boolean(task)]));
 }

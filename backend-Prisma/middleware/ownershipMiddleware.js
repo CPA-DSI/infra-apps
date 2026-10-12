@@ -1,7 +1,3 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
-
 export const requireTicketOwnership = async (req, res, next) => {
   const userRole = req.user?.role;
   const userId = req.user?.id_n;
@@ -19,18 +15,24 @@ export const requireTicketOwnership = async (req, res, next) => {
     return res.status(400).json({ error: 'ID ticket invalide.' });
   }
 
-  const ticket = await prisma.ticket.findUnique({
-    where: { idTicket: ticketId },
-    select: { idDemandeur: true, idAssigne: true },
-  });
+  try {
+    // Client Prisma partagé, injecté par server.js
+    const ticket = await req.prisma.ticket.findUnique({
+      where: { idTicket: ticketId },
+      select: { idDemandeur: true, idAssigne: true },
+    });
 
-  if (!ticket) {
-    return res.status(404).json({ error: 'Ticket non trouve.' });
-  }
+    if (!ticket) {
+      return res.status(404).json({ error: 'Ticket non trouve.' });
+    }
 
-  const isOwner = ticket.idDemandeur === userId || ticket.idAssigne === userId;
-  if (!isOwner) {
-    return res.status(403).json({ error: 'Acces interdit : ticket non autorise.' });
+    const isOwner = ticket.idDemandeur === userId || ticket.idAssigne === userId;
+    if (!isOwner) {
+      return res.status(403).json({ error: 'Acces interdit : ticket non autorise.' });
+    }
+  } catch (error) {
+    console.error('Erreur requireTicketOwnership:', error);
+    return res.status(500).json({ error: 'Une erreur est survenue côté serveur.' });
   }
 
   next();

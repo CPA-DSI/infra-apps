@@ -116,6 +116,17 @@ export const getMonthlyConfigStatus = async () => {
   }
 };
 
+// --- ÉTAT DES ROBOTS D'ENVOI ---
+
+export const getCronStatus = async () => {
+  try {
+    const response = await apiClient.get('/cron/status');
+    return response.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+};
+
 export const sendTestEmail = async () => {
   try {
     const response = await apiClient.post('/email/send-test-quotidien');

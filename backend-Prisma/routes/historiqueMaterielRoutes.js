@@ -2,8 +2,10 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken, ensureActiveUser } from '../middleware/authMiddleware.js';
+import { validateIdParam } from '../middleware/validateIdParam.js';
 
 const router = express.Router();
+router.param('id', validateIdParam);
 const prisma = new PrismaClient();
 
 const asyncHandler = fn => (req, res, next) => {

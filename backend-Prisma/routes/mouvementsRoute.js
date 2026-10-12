@@ -6,8 +6,10 @@ import { importMouvementsFromBuffer } from '../services/importMouvements.js';
 import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
 import { PERMISSIONS } from '../constants/roles.js';
 import { creerNouveauProduit, ProduitDejaExistantError } from '../services/produitsService.js';
+import { validateIdParam } from '../middleware/validateIdParam.js';
 
 const router = express.Router();
+router.param('id', validateIdParam);
 
 router.use(authenticateToken, ensureActiveUser);
 

@@ -1,8 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Form, Button, Alert, Card, Row, Col } from 'react-bootstrap';
-import { updateMonthlyEmailConfig, sendTestEmailMensuel } from '../../services/api';
-import { API_BASE_URL } from '../../config/api';
+import { updateMonthlyEmailConfig, sendTestEmailMensuel, getCronStatus } from '../../services/api';
 import Swal from 'sweetalert2';
 import { FaEnvelope, FaLock, FaClock, FaPaperPlane, FaSave, FaCog, FaCalendarAlt, FaEye, FaEyeSlash } from 'react-icons/fa';
 import './EmailConfigPage.css';
@@ -41,9 +40,8 @@ export default function EmailConfigMonthlyPage({ initialConfig, onConfigUpdate }
   }, [initialConfig]);
 
   useEffect(() => {
-      fetch(`${API_BASE_URL}/api/cron/status`)
-          .then(res => res.json())
-          .then(data => setIsRunning(data.running))
+      getCronStatus()
+          .then(data => setIsRunning(data.runningMonthly || false))
           .catch(err => console.warn("Le serveur Robot n'est pas encore démarré."));
   }, []);
 

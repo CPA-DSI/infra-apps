@@ -3,9 +3,11 @@ import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
 import { PERMISSIONS } from '../constants/roles.js';
+import { validateIdParam } from '../middleware/validateIdParam.js';
 
 const prisma = new PrismaClient();
 const router = express.Router();
+router.param('id', validateIdParam);
 
 router.use(authenticateToken, ensureActiveUser);
 

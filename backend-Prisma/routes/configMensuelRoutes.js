@@ -3,6 +3,8 @@ import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
 import { PERMISSIONS } from '../constants/roles.js';
+import { reloadCronTasks, parseHeureEnvoi } from '../cron-worker.js';
+import { generateExcelReport, sendEmail } from '../services/reportService.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -67,6 +69,10 @@ router.post('/mensuel', requirePermission(PERMISSIONS.CONFIG_WRITE), async (req,
       include_materiels,
       include_produits
     } = req.body;
+
+    if (heure_envoi && !parseHeureEnvoi(heure_envoi)) {
+      return res.status(400).json({ error: "Heure d'envoi invalide (format attendu HH:MM)" });
+    }
     
     // Vérifier si une config existe déjà
     const existingConfig = await prisma.configEmailMensuel.findUnique({
@@ -112,7 +118,8 @@ router.post('/mensuel', requirePermission(PERMISSIONS.CONFIG_WRITE), async (req,
         }
       });
     }
-    
+
+    await reloadCronTasks(prisma);
     res.json(config);
   } catch (error) {
     console.error('Erreur POST /mensuel:', error);
@@ -133,6 +140,7 @@ router.delete('/mensuel', requirePermission(PERMISSIONS.CONFIG_WRITE), async (re
         where: { id: 1 }
       });
     }
+    await reloadCronTasks(prisma);
     res.json({ message: 'Configuration mensuelle supprimée' });
   } catch (error) {
     console.error('Erreur DELETE /mensuel:', error);
@@ -174,28 +182,16 @@ router.post('/mensuel/test', requirePermission(PERMISSIONS.CONFIG_WRITE), async 
       return res.status(400).json({ error: 'Configuration email incomplète' });
     }
     
-    // Importer les services nécessaires
-    const { generateExcelReport } = await import('../services/excelService.js');
-    const { sendEmailWithExcel } = await import('../services/emailService.js');
-    
-    // Générer le rapport Excel
     const excelBuffer = await generateExcelReport(prisma);
-    
     const monthName = new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-    
-    // Envoyer l'email
-    await sendEmailWithExcel({
-      to: config.email_dest.split(',').map(email => email.trim()),
-      subject: `[TEST] ${config.objet_mail || `Rapport Mensuel - ${monthName}`}`,
-      text: config.message_mail || `Bonjour, veuillez trouver ci-joint le rapport mensuel des stocks.`,
-      html: `<p>${config.message_mail || `Bonjour, veuillez trouver ci-joint le rapport mensuel des stocks.`}</p><p><strong>Ceci est un email de test</strong></p>`,
-      from: config.email_exp,
-      password: config.email_pass,
-      attachments: [{
-        filename: `rapport_mensuel_test_${new Date().toISOString().slice(0,10)}.xlsx`,
-        content: excelBuffer
-      }]
-    });
+
+    await sendEmail(
+      config,
+      `[TEST] ${config.objet_mail || `Rapport Mensuel - ${monthName}`}`,
+      config.message_mail || `Bonjour, veuillez trouver ci-joint le rapport mensuel des stocks.`,
+      excelBuffer,
+      `rapport_mensuel_test_${new Date().toISOString().slice(0,10)}.xlsx`
+    );
     
     res.json({ message: 'Email de test mensuel envoyé avec succès' });
   } catch (error) {

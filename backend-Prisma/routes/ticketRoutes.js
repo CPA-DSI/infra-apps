@@ -4,9 +4,11 @@ import { PrismaClient } from '@prisma/client';
 import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
 import { requireTicketOwnership } from '../middleware/ownershipMiddleware.js';
 import { UserRole } from '../constants/roles.js';
+import { validateIdParam } from '../middleware/validateIdParam.js';
 
 const prisma = new PrismaClient();
 const router = express.Router();
+router.param('id', validateIdParam);
 
 // GET /api/tickets : Récupère tous les tickets
 router.get('/', authenticateToken, ensureActiveUser, async (req, res) => {
@@ -91,6 +93,18 @@ router.get('/:id', authenticateToken, ensureActiveUser, requireTicketOwnership, 
   }
 });
 
+// Numéro de ticket suivant pour l'année en cours, incrémenté atomiquement en base
+// (table ticket_counter) pour éviter les doublons lors de créations simultanées.
+const nextNumeroTicket = async () => {
+  const currentYear = new Date().getFullYear();
+  const [{ dernier_numero }] = await prisma.$queryRaw`
+    INSERT INTO "ticket_counter" ("annee", "dernier_numero")
+    VALUES (${currentYear}, 1)
+    ON CONFLICT ("annee") DO UPDATE SET "dernier_numero" = "ticket_counter"."dernier_numero" + 1
+    RETURNING "dernier_numero"`;
+  return `TICK-${currentYear}-${String(dernier_numero).padStart(6, '0')}`;
+};
+
 // POST /api/tickets : Crée un nouveau ticket
 router.post('/', authenticateToken, ensureActiveUser, async (req, res) => {
   const {
@@ -130,26 +144,7 @@ router.post('/', authenticateToken, ensureActiveUser, async (req, res) => {
     console.log("Nom Assigné sauvegardé:", nomAssigne);
 
     // 3. Génération automatique du numéro de ticket : TICK-{ANNEE}-{SEQUENCE:6}
-    const currentYear = new Date().getFullYear();
-    const lastTicket = await prisma.ticket.findFirst({
-      where: {
-        numeroTicket: {
-          startsWith: `TICK-${currentYear}-`
-        }
-      },
-      orderBy: {
-        idTicket: 'desc'
-      }
-    });
-
-    let nextSequence = 1;
-    if (lastTicket) {
-      const parts = lastTicket.numeroTicket.split('-');
-      if (parts.length === 3) {
-        nextSequence = parseInt(parts[2], 10) + 1;
-      }
-    }
-    const numeroTicket = `TICK-${currentYear}-${nextSequence.toString().padStart(6, '0')}`;
+    const numeroTicket = await nextNumeroTicket();
 
     const newTicket = await prisma.ticket.create({
       data: {

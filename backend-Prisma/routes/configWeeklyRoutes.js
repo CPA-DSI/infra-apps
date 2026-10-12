@@ -2,6 +2,7 @@ import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
 import { PERMISSIONS } from '../constants/roles.js';
+import { reloadCronTasks, parseHeureEnvoi } from '../cron-worker.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -60,6 +61,10 @@ router.post('/hebdomadaire', requirePermission(PERMISSIONS.CONFIG_WRITE), asyncH
     delete data.updated_at;
     
     // Données à sauvegarder (seuls les champs pertinents pour hebdomadaire)
+    if (data.heure_envoi && !parseHeureEnvoi(data.heure_envoi)) {
+        return res.status(400).json({ error: "Heure d'envoi invalide (format attendu HH:MM)" });
+    }
+
     const configData = {
         email_dest: data.email_dest || '',
         email_exp: data.email_exp || '',
@@ -84,7 +89,8 @@ router.post('/hebdomadaire', requirePermission(PERMISSIONS.CONFIG_WRITE), asyncH
             ...configData
         },
     });
-    
+
+    await reloadCronTasks(prisma);
     res.status(200).json(config);
 }));
 
@@ -97,6 +103,7 @@ router.delete('/hebdomadaire', requirePermission(PERMISSIONS.CONFIG_WRITE), asyn
         // Ignorer l'erreur si l'entrée n'existe pas
     });
     
+    await reloadCronTasks(prisma);
     res.status(200).json({ message: 'Configuration hebdomadaire réinitialisée' });
 }));
 
