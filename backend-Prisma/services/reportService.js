@@ -57,6 +57,34 @@ export const toPublicEmailConfig = (config) => {
 export const getNewEmailPass = (value) =>
     typeof value === 'string' && value.trim() !== '' ? value : undefined;
 
+// Décalage (ms) entre CRON_TIMEZONE et UTC à l'instant `date`
+const getTimezoneOffsetMs = (date) => {
+    const p = getZonedParts(date);
+    const asUtc = Date.UTC(Number(p.year), Number(p.month) - 1, Number(p.day), Number(p.hour), Number(p.minute));
+    return asUtc - Math.floor(date.getTime() / 60000) * 60000;
+};
+
+/**
+ * Premier jour couvert par un rapport périodique, en date calendaire (minuit
+ * UTC, comme les colonnes @db.Date) du fuseau CRON_TIMEZONE :
+ * - hebdomadaire : même jour la semaine précédente (J-7) ;
+ * - mensuel : même jour le mois précédent (borné au dernier jour de ce mois).
+ * Le jour de l'envoi précédent est inclus : un mouvement saisi ce jour-là
+ * après l'envoi n'est ainsi jamais perdu. Renvoie null pour tout l'historique.
+ */
+export const getDebutPeriode = (periode, now = new Date()) => {
+    const p = getZonedParts(now);
+    const annee = Number(p.year), mois = Number(p.month) - 1, jour = Number(p.day);
+    if (periode === 'hebdomadaire') {
+        return new Date(Date.UTC(annee, mois, jour - 7));
+    }
+    if (periode === 'mensuel') {
+        const dernierJourMoisPrecedent = new Date(Date.UTC(annee, mois, 0)).getUTCDate();
+        return new Date(Date.UTC(annee, mois - 1, Math.min(jour, dernierJourMoisPrecedent)));
+    }
+    return null;
+};
+
 // Fonction utilitaire pour ajuster la largeur des colonnes automatiquement
 export const autoSizeColumns = (worksheet) => {
     worksheet.columns.forEach(column => {
@@ -70,12 +98,23 @@ export const autoSizeColumns = (worksheet) => {
 };
 
 // Fonction pour générer le rapport Excel
-export const generateExcelReport = async (prisma) => {
+// - depuis : date calendaire (cf. getDebutPeriode) limitant les arrivées et les
+//   mouvements à la période ; null => tout l'historique.
+// - includeProduits : ajoute la feuille "État des Produits" (photo du stock).
+export const generateExcelReport = async (prisma, { depuis = null, includeProduits = true } = {}) => {
     const fullDateTime = getCurrentDateTime();
 
+    // date_mouvement est un @db.Date (comparé à minuit UTC) ; date_arrivee est
+    // un horodatage : on le compare à minuit dans le fuseau CRON_TIMEZONE.
+    const filtreMouvements = depuis ? { date_mouvement: { gte: depuis } } : undefined;
+    const filtreArrivees = depuis
+        ? { date_arrivee: { gte: new Date(depuis.getTime() - getTimezoneOffsetMs(depuis)) } }
+        : undefined;
+
     const [historiqueArrivees, tousLesMouvements, tousLesProduits] = await Promise.all([
-        prisma.historiqueArrive.findMany({ orderBy: { date_arrivee: 'desc' }, include: { produit: true } }),
-        prisma.mouvement.findMany({ 
+        prisma.historiqueArrive.findMany({ where: filtreArrivees, orderBy: { date_arrivee: 'desc' }, include: { produit: true } }),
+        prisma.mouvement.findMany({
+            where: filtreMouvements,
             orderBy: { date_mouvement: 'desc' }, 
             include: { produits: true, localSource: true, localDestination: true } 
         }),
@@ -92,6 +131,9 @@ export const generateExcelReport = async (prisma) => {
     const sheet0 = workbook.addWorksheet('Sommaire', { views: [{ showGridLines: false }] });
     sheet0.addRow(['RAPPORT LOGISTIQUE GLOBAL']).font = { bold: true, size: 16 };
     sheet0.addRow(['Généré le : ' + fullDateTime]);
+    sheet0.addRow([depuis
+        ? `Période : arrivées et mouvements depuis le ${depuis.toLocaleDateString('fr-FR', { timeZone: 'UTC' })}`
+        : 'Période : tout l\'historique']);
     sheet0.addRow([]);
 
     const totalProduits = tousLesProduits.length;
@@ -114,7 +156,7 @@ export const generateExcelReport = async (prisma) => {
     sheet0.addRow([]);
     sheet0.addRow(['Navigation rapide :']).font = { bold: true };
     const links = [
-        { text: '→ Voir l\'inventaire des Produits', sheet: 'État des Produits' },
+        ...(includeProduits ? [{ text: '→ Voir l\'inventaire des Produits', sheet: 'État des Produits' }] : []),
         { text: '→ Voir l\'historique des Arrivées', sheet: 'Historique Arrivées' },
         { text: '→ Voir les Mouvements de stock', sheet: 'Mouvements Généraux' }
     ];
@@ -153,17 +195,19 @@ export const generateExcelReport = async (prisma) => {
     autoSizeColumns(sheet2);
 
     // --- FEUILLE 3 : État des Produits ---
-    const sheet3 = workbook.addWorksheet('État des Produits');
-    sheet3.columns = [{ header: 'Nom Produit', key: 'nom' }, { header: 'Stock Actuel', key: 'stock' }, { header: 'Seuil Alerte', key: 'seuil' }, { header: 'Dernière Mise à jour', key: 'last' }];
-    sheet3.getRow(1).eachCell(cell => cell.style = headerStyle);
-    tousLesProduits.forEach(p => {
-        const row = sheet3.addRow({ nom: p.nom_produit, stock: p.quantite_en_stock || 0, seuil: p.seuil_alerte || 0, last: p.last_date ? formatDate(p.last_date) : 'N/A' });
-        if ((p.quantite_en_stock || 0) <= (p.seuil_alerte || 0)) {
-            row.getCell('stock').font = { color: { argb: 'FF0000' }, bold: true };
-            row.getCell('nom').font = { color: { argb: 'FF0000' } };
-        }
-    });
-    autoSizeColumns(sheet3);
+    if (includeProduits) {
+        const sheet3 = workbook.addWorksheet('État des Produits');
+        sheet3.columns = [{ header: 'Nom Produit', key: 'nom' }, { header: 'Stock Actuel', key: 'stock' }, { header: 'Seuil Alerte', key: 'seuil' }, { header: 'Dernière Mise à jour', key: 'last' }];
+        sheet3.getRow(1).eachCell(cell => cell.style = headerStyle);
+        tousLesProduits.forEach(p => {
+            const row = sheet3.addRow({ nom: p.nom_produit, stock: p.quantite_en_stock || 0, seuil: p.seuil_alerte || 0, last: p.last_date ? formatDate(p.last_date) : 'N/A' });
+            if ((p.quantite_en_stock || 0) <= (p.seuil_alerte || 0)) {
+                row.getCell('stock').font = { color: { argb: 'FF0000' }, bold: true };
+                row.getCell('nom').font = { color: { argb: 'FF0000' } };
+            }
+        });
+        autoSizeColumns(sheet3);
+    }
 
     return workbook.xlsx.writeBuffer();
 };

@@ -1,12 +1,11 @@
 //ticketRoutes.js
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../prismaClient.js';
 import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
 import { requireTicketOwnership, isTicketAdmin } from '../middleware/ownershipMiddleware.js';
 import { PERMISSIONS } from '../constants/roles.js';
 import { validateIdParam } from '../middleware/validateIdParam.js';
 
-const prisma = new PrismaClient();
 const router = express.Router();
 router.param('id', validateIdParam);
 
@@ -147,7 +146,8 @@ router.post('/', authenticateToken, ensureActiveUser, async (req, res) => {
     // 1. Validation et conversion sécurisée des IDs
     const materielId = parseInt(idMateriels);
     const demandeurId = canImpersonate ? parseInt(idDemandeur) : req.user?.id_n;
-    const assigneId = idAssigne ? parseInt(idAssigne) : null;
+    // L'assignation est gérée par la DSI : un USER ne peut pas choisir l'assigné.
+    const assigneId = canImpersonate && idAssigne ? parseInt(idAssigne) : null;
 
     // 2. Vérification de sécurité pour éviter le NaN dans Prisma
     if (isNaN(materielId) || isNaN(demandeurId)) {
@@ -180,7 +180,7 @@ router.post('/', authenticateToken, ensureActiveUser, async (req, res) => {
         priorite: priorite || "MOYENNE",
         // Sauvegarde des noms
         nomDemandeur: nomDemandeur || "",
-        nomAssigne: nomAssigne || "",
+        nomAssigne: canImpersonate ? (nomAssigne || "") : "",
 
         materiels: {
           connect: { id_materiels: materielId }
@@ -424,14 +424,26 @@ router.put('/:id', authenticateToken, ensureActiveUser, requireTicketOwnership, 
       });
     }
 
-    const updatedTicket = await prisma.ticket.update({
-      where: { idTicket: parseInt(id) },
-      data: updateData,
-      include: {
-        demandeur: true,
-        assigneA: true,
-        materiels: { include: { local: true } },
+    // Rouvrir un ticket (RESOLU/FERME -> NOUVEAU/EN_COURS) supprime sa fiche de
+    // fermeture : sinon la contrainte unique sur ticketId fait échouer (409)
+    // toute fermeture ultérieure.
+    const STATUTS_FERMES = ['RESOLU', 'FERME'];
+    const rouverture = STATUTS_FERMES.includes(existingTicket.statut)
+      && updateData.statut && !STATUTS_FERMES.includes(updateData.statut);
+
+    const updatedTicket = await prisma.$transaction(async (tx) => {
+      if (rouverture) {
+        await tx.ticketFermeture.deleteMany({ where: { ticketId: existingTicket.idTicket } });
       }
+      return tx.ticket.update({
+        where: { idTicket: parseInt(id) },
+        data: updateData,
+        include: {
+          demandeur: true,
+          assigneA: true,
+          materiels: { include: { local: true } },
+        }
+      });
     });
 
     // Formater la réponse avec les noms

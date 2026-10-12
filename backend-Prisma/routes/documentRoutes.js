@@ -1,5 +1,5 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../prismaClient.js';
 import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
 import { PERMISSIONS } from '../constants/roles.js';
 import multer from 'multer';
@@ -9,7 +9,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { validateIdParam } from '../middleware/validateIdParam.js';
 
-const prisma = new PrismaClient();
 const router = express.Router();
 router.param('id', validateIdParam);
 router.param('pjId', validateIdParam);

@@ -201,14 +201,21 @@ const AddModal = ({ onClose, onMaterialAdded }) => {
             onClose();
 
         } catch (err) {
+            // Pas de setError ici : `error` remplace tout le formulaire (erreurs de
+            // chargement). Une erreur d'envoi (400, 409...) doit laisser le
+            // formulaire modifiable pour que l'utilisateur corrige sa saisie.
             console.error("Erreur lors de l'ajout du matériel:", err);
-            setError(err.message); 
             showNotification(`Erreur: ${err.message}`, 'error');
         }
     };
 
     if (error) { 
-        return <div className="add-modal-overlay">Erreur de chargement: {error}</div>;
+        return (
+            <div className="add-modal-overlay">
+                Erreur de chargement: {error}
+                <button type="button" onClick={onClose}>Fermer</button>
+            </div>
+        );
     }
 
     return (

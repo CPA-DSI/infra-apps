@@ -2,11 +2,10 @@
 
 // Remplacez 'const express = require(...)' par 'import express from ...'
 import express from 'express'; // Utilisez 'import' au lieu de 'require'
-import { PrismaClient } from '@prisma/client';
+import prisma from '../prismaClient.js';
 import { authenticateToken, ensureActiveUser, requireRole } from '../middleware/authMiddleware.js';
 import { UserRole } from '../constants/roles.js';
 
-const prisma = new PrismaClient();
 const router = express.Router();
 
 // Middleware pour gérer les erreurs de manière centralisée (facultatif mais recommandé)

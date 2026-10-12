@@ -7,6 +7,7 @@ import DataTable from 'react-data-table-component';
 import { Form, Spinner, Row, Col, Alert } from 'react-bootstrap';
 import { FaPlus, FaTimes, FaImage, FaTrash, FaEdit, FaExclamationTriangle, FaCheckCircle } from 'react-icons/fa';
 import { fetchAMarques, createMarque, updateMarque, deleteMarque } from '../../services/api';
+import { escapeHtml } from '../../utils/escapeHtml';
 import './AddMarque.css';
 
 const MySwal = withReactContent(Swal);
@@ -356,7 +357,7 @@ try {
         title: 'Confirmation de suppression',
         html: `
             <div style="text-align: left;">
-                <p>Voulez-vous vraiment supprimer la marque <strong>"${marque.nom_marque}"</strong> ?</p>
+                <p>Voulez-vous vraiment supprimer la marque <strong>"${escapeHtml(marque.nom_marque)}"</strong> ?</p>
                 ${marque.url ? '<p class="text-muted small mt-2">⚠️ La suppression du logo sera également définitive.</p>' : ''}
             </div>
         `,

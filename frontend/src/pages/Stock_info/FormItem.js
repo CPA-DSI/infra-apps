@@ -7,6 +7,7 @@ import withReactContent from 'sweetalert2-react-content';
 
 import { fetchProduits, fetchLocaux, fetchMateriels, createMouvement } from '../../services/api';
 import { FaBox, FaMapMarkerAlt, FaUser, FaCalendarAlt, FaArrowRight, FaArrowLeft, FaPlus, FaMinus, FaFileAlt, FaCheck, FaExclamationTriangle } from 'react-icons/fa';
+import { escapeHtml } from '../../utils/escapeHtml';
 
 import './HomeStock.css';
 
@@ -303,7 +304,7 @@ const FormItem = ({ initialData = {}, onSave, onClose, isModal = true }) => {
                     icon: 'warning',
                     title: 'Produit déjà existant',
                     html: `
-                        <p>Le produit <strong>"${newProductName}"</strong> existe déjà dans votre inventaire.</p>
+                        <p>Le produit <strong>"${escapeHtml(newProductName)}"</strong> existe déjà dans votre inventaire.</p>
                         <br>
                         <p>Pour ajouter des exemplaires de ce produit, veuillez utiliser le type de mouvement :</p>
                         <p style="color: #3b82f6; font-weight: bold;">📦 Entrée Quantité Produit</p>

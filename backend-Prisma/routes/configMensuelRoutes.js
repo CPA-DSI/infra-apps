@@ -1,13 +1,12 @@
 // routes/configMensuelRoutes.js
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../prismaClient.js';
 import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
 import { PERMISSIONS } from '../constants/roles.js';
 import { reloadCronTasks, parseHeureEnvoi } from '../cron-worker.js';
-import { generateExcelReport, sendEmail, getCurrentDate, getCurrentMonth, toPublicEmailConfig, getNewEmailPass } from '../services/reportService.js';
+import { generateExcelReport, getDebutPeriode, sendEmail, getCurrentDate, getCurrentMonth, toPublicEmailConfig, getNewEmailPass } from '../services/reportService.js';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 router.use(authenticateToken, ensureActiveUser);
 
@@ -187,7 +186,11 @@ router.post('/mensuel/test', requirePermission(PERMISSIONS.CONFIG_WRITE), async 
       return res.status(400).json({ error: 'Configuration email incomplète' });
     }
     
-    const excelBuffer = await generateExcelReport(prisma);
+    // Même contenu que l'envoi automatique mensuel
+    const excelBuffer = await generateExcelReport(prisma, {
+      depuis: getDebutPeriode('mensuel'),
+      includeProduits: config.include_produits !== false,
+    });
     const monthName = getCurrentMonth();
 
     await sendEmail(

@@ -1,12 +1,11 @@
 // backend/routes/import.js
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../prismaClient.js';
 import bcrypt from 'bcryptjs';
 import { authenticateToken, ensureActiveUser, requirePermission, requireRole } from '../middleware/authMiddleware.js';
 import { PERMISSIONS, UserRole } from '../constants/roles.js';
 import { ouvrirAffectationInitiale, rattacherEcranParCode } from '../services/affectationService.js';
 
-const prisma = new PrismaClient();
 const router = express.Router();
 
 router.use(authenticateToken, ensureActiveUser);
@@ -374,24 +373,9 @@ const extractSiteFromItem = (item) => {
         }
     }
 
-    // 4. Chercher la première valeur string qui n'est pas un email, une date ou un nombre
-    for (const key of Object.keys(item)) {
-        const value = item[key];
-        if (typeof value === 'string' && value.trim() !== '') {
-            const trimmed = value.trim();
-            // Vérifier que ce n'est pas un email, une date, un nombre ou une longue chaîne
-            if (!trimmed.includes('@') &&
-                !/^\d{4}-\d{2}-\d{2}/.test(trimmed) &&
-                !/^\d{2}\/\d{2}\/\d{4}/.test(trimmed) &&
-                !/^\d+$/.test(trimmed) &&
-                trimmed.length <= 30 &&
-                !trimmed.includes('Go') &&
-                !trimmed.includes('RAM')) {
-                return trimmed;
-            }
-        }
-    }
-
+    // Pas de site deviné à partir d'une valeur quelconque de la ligne : sans
+    // colonne Site/Local, le matériel n'est rattaché à aucun local plutôt que
+    // de créer en base un local au nom fantaisiste (nom, modèle, équipe...).
     return null;
 };
 
@@ -731,9 +715,11 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
                 const etat_batterie = cleanString(findFieldValue(item, allKeys, ['Etat de la batterie', 'État de la batterie', 'etat_batterie', 'EtatBatterie', 'Battery', 'Etat de la battérie']));
                 const commentaire = cleanString(findFieldValue(item, allKeys, ['Commentaire', 'commentaire', 'Comment', 'Remarque']));
 
-                // Est actif (par défaut true si la colonne est absente/vide)
+                // Est actif : colonne absente/vide => undefined. Prisma ignore alors
+                // le champ : défaut true à la création, valeur inchangée en mise à
+                // jour (un PC désactivé n'est pas réactivé par un réimport).
                 const estActifValue = findFieldValue(item, allKeys, ['est_actif', 'Est_actif', 'EstActif', 'actif', 'Actif']);
-                const est_actif = estActifValue !== null ? convertBoolean(estActifValue) : true;
+                const est_actif = estActifValue !== null ? convertBoolean(estActifValue) : undefined;
 
                 // --- Préparation des données (troncature pour respecter les limites @db.VarChar(n)) ---
                 const data = {

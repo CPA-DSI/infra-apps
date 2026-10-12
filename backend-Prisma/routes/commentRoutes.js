@@ -1,12 +1,11 @@
 
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../prismaClient.js';
 import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
 import { PERMISSIONS } from '../constants/roles.js';
 import { validateIdParam } from '../middleware/validateIdParam.js';
 import { checkTicketAccess, isTicketAdmin } from '../middleware/ownershipMiddleware.js';
 
-const prisma = new PrismaClient();
 const router = express.Router();
 router.param('id', validateIdParam);
 

@@ -19,6 +19,7 @@ import './Mouvements.css';
 import './HomeStock.css';
 
 import { getMouvements, deleteMouvement, importMouvements } from '../../services/api';
+import { escapeHtml } from '../../utils/escapeHtml';
 
 // --- Styles CSS intégrés (style modern-header comme Materiels.js) ---
 // Les styles ont été déplacés vers Mouvements.css
@@ -222,8 +223,8 @@ const Mouvements = () => {
         Swal.fire({
             title: 'Confirmation de suppression',
             html: `Supprimer définitivement ce mouvement ?<br><br>
-                <strong>Produit :</strong> ${produit}<br>
-                <strong>Type :</strong> ${typeMouvement}<br>
+                <strong>Produit :</strong> ${escapeHtml(produit)}<br>
+                <strong>Type :</strong> ${escapeHtml(typeMouvement)}<br>
                 <strong>Date :</strong> ${dateFormatee}`,
             icon: 'warning',
             showCancelButton: true,

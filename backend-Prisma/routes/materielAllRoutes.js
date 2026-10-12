@@ -1,7 +1,7 @@
 // src/routes/materielAllRoutes.js 
 import express from 'express'; // Utilisez 'import' au lieu de 'require'
 //const { prisma } = require('../server.js'); // Le chemin relatif vers server.js
-import { PrismaClient } from '@prisma/client'; 
+import prisma from '../prismaClient.js';
 
 import bcrypt from 'bcryptjs';
 import { authenticateToken, ensureActiveUser, requireRole } from '../middleware/authMiddleware.js';
@@ -18,7 +18,6 @@ import {
 } from '../services/affectationService.js';
 import { validateIdParam } from '../middleware/validateIdParam.js';
 
-const prisma = new PrismaClient();
 
 const router = express.Router();
 router.param('id', validateIdParam);

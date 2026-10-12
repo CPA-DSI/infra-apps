@@ -1,12 +1,11 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../prismaClient.js';
 import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
 import { PERMISSIONS } from '../constants/roles.js';
 import { reloadCronTasks, parseHeureEnvoi } from '../cron-worker.js';
 import { toPublicEmailConfig, getNewEmailPass } from '../services/reportService.js';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // Middleware pour gérer les erreurs de manière centralisée
 const asyncHandler = fn => (req, res, next) => {

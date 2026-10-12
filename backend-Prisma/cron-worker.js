@@ -1,7 +1,7 @@
 // cron-Worker.js - Gestion des envois quotidiens, hebdomadaires et mensuels
 //
 // Chaque robot actif tourne chaque minute et compare le jour/l'heure courants, dans le
-// fuseau CRON_TIMEZONE (Europe/Paris par défaut), à ceux de sa config.
+// fuseau CRON_TIMEZONE (Indian/Antananarivo par défaut), à ceux de sa config.
 // On n'utilise pas d'expression cron précise ("15 17 * * 5") : dans node-cron 4.2.1, le
 // calcul de la prochaine exécution est faux pour les jours de semaine et, avec un
 // fuseau, pour les jours du mois (il saute au 1er janvier) et l'envoi n'aurait jamais lieu.
@@ -10,7 +10,7 @@
 // Les rechargements sont sérialisés (un seul à la fois) pour ne jamais laisser deux
 // tâches actives pour le même robot (=> double envoi).
 import cron from 'node-cron';
-import { generateExcelReport, sendEmail, getCurrentDate, getCurrentMonth } from './services/reportService.js';
+import { generateExcelReport, getDebutPeriode, sendEmail, getCurrentDate, getCurrentMonth } from './services/reportService.js';
 import { CRON_TIMEZONE } from './constants/cron.js';
 
 export { CRON_TIMEZONE };
@@ -99,7 +99,10 @@ const ROBOTS = {
         },
         describe: (config) => `jour ${config.jour_envoi ?? 1} de la semaine à ${config.heure_envoi}`,
         send: async (prisma, config) => {
-            const buffer = await generateExcelReport(prisma);
+            const buffer = await generateExcelReport(prisma, {
+                depuis: getDebutPeriode('hebdomadaire'),
+                includeProduits: config.include_produits !== false,
+            });
             await sendEmail(
                 config,
                 config.objet_mail_hebdo || `Rapport Hebdomadaire des Stocks - ${getCurrentDate()}`,
@@ -118,7 +121,10 @@ const ROBOTS = {
         describe: (config) => `le ${getMonthlyDay(config)} du mois à ${config.heure_envoi}`,
         send: async (prisma, config) => {
             const monthName = getCurrentMonth();
-            const buffer = await generateExcelReport(prisma);
+            const buffer = await generateExcelReport(prisma, {
+                depuis: getDebutPeriode('mensuel'),
+                includeProduits: config.include_produits !== false,
+            });
             await sendEmail(
                 config,
                 config.objet_mail || `Rapport Mensuel des Stocks - ${monthName}`,

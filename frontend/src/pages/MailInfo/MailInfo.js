@@ -22,6 +22,7 @@ import ExpandableEmailRow from './ExpandableEmailRow';
 import SearchableSelect from './SearchableSelect';
 import { STATS_CONFIG, PAGINATION_OPTIONS } from './mailInfoTableConfig';
 import { useUserImportExport } from './useUserImportExport';
+import { escapeHtml } from '../../utils/escapeHtml';
 
 import './Mail.css';
 
@@ -311,7 +312,7 @@ const UsersManager = () => {
 
         Swal.fire({
             title: 'Êtes-vous sûr ?',
-            html: `Cette action va <strong>${actionLabel}</strong> le compte de <strong>${user.materiel?.utilisateur || 'cet utilisateur'}</strong>.`,
+            html: `Cette action va <strong>${actionLabel}</strong> le compte de <strong>${escapeHtml(user.materiel?.utilisateur || 'cet utilisateur')}</strong>.`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: actionColor,

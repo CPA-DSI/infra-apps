@@ -1,13 +1,12 @@
 // routes/produitsRoutes.js
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../prismaClient.js';
 import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
 import { PERMISSIONS } from '../constants/roles.js';
 import { validateIdParam } from '../middleware/validateIdParam.js';
 import { ajusterStockVers, enregistrerHistorique, StockError } from '../services/stockService.js';
 import { toDateOnly } from '../services/dateOnly.js';
 
-const prisma = new PrismaClient();
 
 const router = express.Router();
 router.param('id', validateIdParam);

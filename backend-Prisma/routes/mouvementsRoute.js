@@ -348,7 +348,9 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
         console.error("Erreur lors de la transaction du mouvement:", err.message);
         let statusCode = err instanceof StockError ? err.status : 400;
         if (err.message.includes("introuvable")) statusCode = 404;
-        res.status(statusCode).json({ error: 'Erreur de traitement du mouvement', message: err.message });
+        // Le message détaillé (ex. "Stock insuffisant...") est mis dans `error` :
+        // c'est le champ lu en premier par getErrorMessage côté frontend.
+        res.status(statusCode).json({ error: err.message, message: err.message });
     }
 });
 

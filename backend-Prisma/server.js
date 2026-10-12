@@ -2,8 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import pkg from '@prisma/client';
-const { PrismaClient } = pkg;
+import prisma from './prismaClient.js';
 import { reloadCronTasks, getCronTasksState } from './cron-worker.js';
 import path from 'path';
 import fs from 'fs';
@@ -22,7 +21,6 @@ try {
     process.exit(1);
 }
 
-const prisma = new PrismaClient();
 // Les robots d'envoi sont planifiés au démarrage du serveur (voir app.listen).
 
 const app = express();

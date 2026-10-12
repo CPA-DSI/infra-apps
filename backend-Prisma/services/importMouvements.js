@@ -3,7 +3,7 @@ import prisma from '../prismaClient.js';
 import * as XLSX from 'xlsx';
 import { creerNouveauProduit, trouverProduitParNom } from './produitsService.js';
 import { creerMouvement, TYPES_MOUVEMENT } from './stockService.js';
-import { dateOnlyFromParts, todayDateOnly, toDateOnly, formatDateOnly } from './dateOnly.js';
+import { dateOnlyFromParts, toDateOnly, formatDateOnly } from './dateOnly.js';
 
 /**
  * Crée un jeu de caches isolé pour un import.
@@ -21,6 +21,9 @@ function createCaches() {
 
 /**
  * Convertit une date Excel (nombre) ou une chaîne en date calendaire.
+ * Renvoie null si la date est vide, invalide ou hors plage (2000-2100) : la
+ * ligne est alors rejetée. Utiliser la date du jour ferait passer un réimport
+ * du même fichier un autre jour à travers la détection des doublons.
  *
  * Toutes les dates renvoyées sont à minuit UTC (Date.UTC) : la colonne
  * mouvements.date_mouvement est un @db.Date, et une date construite en heure
@@ -29,7 +32,7 @@ function createCaches() {
 function excelDateToJSDate(excelDate, warnings) {
     // Si null, undefined ou vide
     if (!excelDate || excelDate === '' || excelDate === ' ') {
-        return todayDateOnly();
+        return null;
     }
 
     // Si c'est déjà une date valide
@@ -48,10 +51,8 @@ function excelDateToJSDate(excelDate, warnings) {
             return date;
         }
 
-        // Si la date est dans le futur ou trop ancienne, utiliser la date du jour
-        console.warn(`⚠️ Date hors plage: ${isNaN(date) ? excelDate : date.toISOString()}, utilisation de la date du jour`);
         if (warnings) warnings.push(`date hors plage ("${excelDate}")`);
-        return todayDateOnly();
+        return null;
     }
 
     // Si c'est une chaîne
@@ -113,10 +114,8 @@ function excelDateToJSDate(excelDate, warnings) {
         }
     }
 
-    // Si tout échoue, utiliser la date du jour
-    console.warn(`⚠️ Date invalide: "${excelDate}", utilisation de la date du jour`);
     if (warnings) warnings.push(`date invalide ("${excelDate}")`);
-    return todayDateOnly();
+    return null;
 }
 
 /**
@@ -358,11 +357,9 @@ function getNormalizedData(donnees) {
         let typeMouvement = cleanString(normalizedRow.type_mouvement);
         typeMouvement = typeMouvement.replace(/[▼▲]/g, '').trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
         
-        // Si le type est vide, le mettre en SORTIE par défaut
-        if (!typeMouvement) {
-            typeMouvement = 'SORTIE';
-        }
-        
+        // Un type vide n'est pas remplacé par défaut : la ligne est rejetée
+        // comme type non reconnu (une SORTIE implicite décrémenterait le stock).
+
         const quantiteParsee = parseInt(normalizedRow.quantite, 10);
 
         return {
@@ -549,30 +546,13 @@ async function traiterMouvement(row, caches, errorDetails, contexteDoublons) {
     const localSourceId = row.localSourceNom ? await getLocalIfExists(row.localSourceNom, caches) : null;
     const localDestinationId = row.localDestinationNom ? await getLocalIfExists(row.localDestinationNom, caches) : null;
 
-    // Traiter la date (date calendaire à minuit UTC)
-    let dateMouvement;
-    let dateCorrigeeRaison = null;
-    if (row.dateMouvement && row.dateMouvement !== '' && row.dateMouvement !== ' ') {
-        const dateWarnings = [];
-        dateMouvement = excelDateToJSDate(row.dateMouvement, dateWarnings);
-        if (dateWarnings.length > 0) {
-            dateCorrigeeRaison = dateWarnings[0];
-        }
-        if (!dateMouvement || isNaN(dateMouvement.getTime()) || dateMouvement.getUTCFullYear() < 2000 || dateMouvement.getUTCFullYear() > 2100) {
-            dateMouvement = todayDateOnly();
-            dateCorrigeeRaison = dateCorrigeeRaison || `date invalide ("${row.dateMouvement}")`;
-            console.warn(`  ⚠️ Date invalide pour "${row.produitNom}", utilisation de la date du jour`);
-        }
-    } else {
-        dateMouvement = todayDateOnly();
-        dateCorrigeeRaison = 'date manquante';
-    }
-
-    if (dateCorrigeeRaison && errorDetails) {
-        errorDetails.push(
-            `⚠️ Date corrigée automatiquement pour "${row.produitNom}" (${dateCorrigeeRaison}) : ` +
-            `date du jour (${formatDateOnly(dateMouvement)}) utilisée à la place.`
-        );
+    // Traiter la date (date calendaire à minuit UTC). Une date manquante ou
+    // invalide rejette la ligne (voir excelDateToJSDate).
+    const dateWarnings = [];
+    const dateMouvement = excelDateToJSDate(row.dateMouvement, dateWarnings);
+    if (!dateMouvement || isNaN(dateMouvement.getTime())) {
+        const raison = dateWarnings[0] || 'date manquante';
+        throw new Error(`Date du mouvement non reconnue pour "${row.produitNom}" (${raison}) : ligne ignorée`);
     }
 
     console.log(`  📅 Date pour "${row.produitNom}": ${formatDateOnly(dateMouvement)} (depuis "${row.dateMouvement}")`);
@@ -699,7 +679,7 @@ export async function importMouvementsFromBuffer(buffer, filename) {
             console.log(`📅 Exemple de date brute: "${firstDate}" (type: ${typeof firstDate})`);
             
             if (typeof firstDate === 'number') {
-                console.log(`📅 Date Excel en nombre: ${firstDate} (correspond au ${formatDateOnly(excelDateToJSDate(firstDate))})`);
+                console.log(`📅 Date Excel en nombre: ${firstDate} (correspond au ${excelDateToJSDate(firstDate) ? formatDateOnly(excelDateToJSDate(firstDate)) : 'date invalide'})`);
             }
             
             const normalizedFirstRow = normalizeColumnNames(firstRow);

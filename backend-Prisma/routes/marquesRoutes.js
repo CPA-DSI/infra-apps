@@ -1,11 +1,10 @@
 // marquesRoutes.js (Version conforme à votre schéma Prisma)
 
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../prismaClient.js';
 import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
 import { PERMISSIONS } from '../constants/roles.js';
 
-const prisma = new PrismaClient();
 const router = express.Router();
 
 // Matériels pris en compte dans les statistiques : ni supprimés (soft delete),
