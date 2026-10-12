@@ -8,7 +8,7 @@ import { PERMISSIONS } from '../constants/roles.js';
 import { ProduitDejaExistantError } from '../services/produitsService.js';
 import {
     StockError, TYPES_MOUVEMENT, creerMouvement, creerProduitAvecStock,
-    annulerEffetMouvement, modifierEffetMouvement
+    annulerEffetMouvement, modifierEffetMouvement, verrouillerMouvement
 } from '../services/stockService.js';
 import { toDateOnly, todayDateOnly } from '../services/dateOnly.js';
 import { validateIdParam } from '../middleware/validateIdParam.js';
@@ -374,17 +374,7 @@ router.put('/:id', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res)
   try {
     const mouvementId = parseInt(id, 10);
 
-    // Récupérer l'ancien mouvement avant modification
-    const ancienMouvement = await prisma.mouvement.findUnique({
-      where: { id_mouvement: mouvementId },
-      include: { produits: true }
-    });
-
-    if (!ancienMouvement) {
-      return res.status(404).json({ error: `Mouvement avec l'id ${id} introuvable.` });
-    }
-
-    // Préparer les données de mise à jour
+    // Validation du corps (ne dépend pas de l'état en base)
     const dataToUpdate = {};
 
     if (date_mouvement) {
@@ -395,24 +385,15 @@ router.put('/:id', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res)
       dataToUpdate.date_mouvement = parsedDate;
     }
 
-    const ancienneQuantite = ancienMouvement.quantite;
-    const nouvelleQuantite = quantite !== undefined ? Number(quantite) : ancienneQuantite;
-    const ancienType = ancienMouvement.type_mouvement;
-    const nouveauType = type_mouvement || ancienType;
-    const ancienProduitId = ancienMouvement.id_produit;
-    const nouveauProduitId = id_produit !== undefined ? parseOptionalId(id_produit) : ancienProduitId;
-    const nouvelleDate = dataToUpdate.date_mouvement || ancienMouvement.date_mouvement;
-
-    // Validation des nouveaux champs
-    if (!Number.isInteger(nouvelleQuantite) || nouvelleQuantite <= 0) {
+    if (quantite !== undefined && (!Number.isInteger(Number(quantite)) || Number(quantite) <= 0)) {
       return res.status(400).json({ error: "La quantité doit être un nombre positif." });
     }
 
-    if (!TYPES_MOUVEMENT.includes(nouveauType)) {
+    if (type_mouvement && !TYPES_MOUVEMENT.includes(type_mouvement)) {
       return res.status(400).json({ error: "Type de mouvement invalide." });
     }
 
-    if (!Number.isInteger(nouveauProduitId)) {
+    if (id_produit !== undefined && !Number.isInteger(parseOptionalId(id_produit))) {
       return res.status(400).json({ error: "L'ID du produit est requis et doit être valide." });
     }
 
@@ -426,8 +407,20 @@ router.put('/:id', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res)
       idsOptionnels[champ] = parsed;
     }
 
-    // Transaction pour mettre à jour le mouvement et ajuster le stock (+ historique)
+    // Transaction : l'ancien mouvement est relu sous verrou, sinon deux
+    // modifications simultanées calculent leur delta sur le même état.
+    let ancienneQuantite;
+    let nouvelleQuantite;
     const updatedMouvement = await prisma.$transaction(async (tx) => {
+      const ancienMouvement = await verrouillerMouvement(tx, mouvementId);
+
+      ancienneQuantite = ancienMouvement.quantite;
+      nouvelleQuantite = quantite !== undefined ? Number(quantite) : ancienneQuantite;
+      const ancienType = ancienMouvement.type_mouvement;
+      const nouveauType = type_mouvement || ancienType;
+      const ancienProduitId = ancienMouvement.id_produit;
+      const nouveauProduitId = id_produit !== undefined ? parseOptionalId(id_produit) : ancienProduitId;
+      const nouvelleDate = dataToUpdate.date_mouvement || ancienMouvement.date_mouvement;
       const produitChange = ancienProduitId !== nouveauProduitId;
 
       if (produitChange || ancienType !== nouveauType || ancienneQuantite !== nouvelleQuantite) {
@@ -484,17 +477,11 @@ router.delete('/:id', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, r
   try {
     const mouvementId = parseInt(id, 10);
 
-    const mouvement = await prisma.mouvement.findUnique({
-      where: { id_mouvement: mouvementId }
-    });
-
-    if (!mouvement) {
-      return res.status(404).json({ error: `Mouvement avec l'id ${id} introuvable.` });
-    }
-
     // Transaction : annulation de l'effet sur le stock (historisée) puis suppression.
     // Une ENTREE ne peut plus être supprimée si son retrait rendrait le stock négatif.
+    // Le mouvement est relu sous verrou (cf. PUT).
     const deletedMouvement = await prisma.$transaction(async (tx) => {
+      const mouvement = await verrouillerMouvement(tx, mouvementId);
       await annulerEffetMouvement(tx, mouvement, `Suppression du mouvement #${mouvementId}`);
       return tx.mouvement.delete({
         where: { id_mouvement: mouvementId },

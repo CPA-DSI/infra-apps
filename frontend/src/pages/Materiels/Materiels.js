@@ -428,7 +428,7 @@ const columns = useMemo(() => [
         row.id_n == null
             ? <span className="badge bg-secondary" title="Poste en stock">Stock</span>
             : row.est_vide
-                ? <span title="Utilisateur sans PC (PC mis en stock)">{row.id_n} <span className="badge bg-warning text-dark">Sans poste</span></span>
+                ? <span title="Utilisateur sans PC (PC mis en stock ou réaffecté)">{row.id_n} <span className="badge bg-warning text-dark">Sans poste</span></span>
                 : row.id_n
     ) },
     { name: 'Utilisateur', selector: row => row.utilisateur, sortable: true, minWidth: '120px', grow: 1 },

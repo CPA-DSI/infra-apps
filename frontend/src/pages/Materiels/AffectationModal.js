@@ -233,9 +233,11 @@ const AffectationModal = ({ mode, materiel, onClose, onDone }) => {
                                             <FaInfoCircle /> {materiel.utilisateur} gardera une fiche vide (« Sans poste »)
                                             {materiel.id_ecran ? ` et l'écran ${materiel.code_ecran} partira en stock.` : '.'}
                                         </div>
-                                    ) : materiel.id_ecran && (
+                                    ) : (materiel.id_n || materiel.id_ecran) && (
                                         <div style={{ fontSize: '0.8rem', color: '#1E40AF', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                            <FaInfoCircle /> L'écran {materiel.code_ecran} reste sur ce poste et suit le PC.
+                                            <FaInfoCircle />
+                                            {materiel.id_n && ` ${materiel.utilisateur} gardera une fiche vide (« Sans poste »).`}
+                                            {materiel.id_ecran && ` L'écran ${materiel.code_ecran} reste sur ce poste et suit le PC.`}
                                         </div>
                                     )}
                                 </>

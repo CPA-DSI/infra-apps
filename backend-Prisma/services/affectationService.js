@@ -130,11 +130,31 @@ const supprimerPosteVide = async (tx, posteVide, now, auteur) => {
     return posteVide.ecran_actuel;
 };
 
+// Crée la fiche vide (« Sans poste ») de l'utilisateur qui perd son PC, pour
+// qu'il reste visible dans la liste et puisse recevoir un autre PC.
+const creerPosteVide = async (tx, materiel, now, auteur, description) => {
+    const vide = await tx.materiels.create({
+        data: {
+            id_n: materiel.id_n,
+            utilisateur: materiel.utilisateur,
+            equipe: materiel.equipe,
+            caracteristiques: '',
+            id_local: materiel.id_local,
+            est_vide: true,
+            est_actif: false,
+            etat_pc: ETAT_SANS_POSTE,
+            date_modification: now,
+        },
+    });
+    await tracer(tx, vide.id_materiels, null, description, auteur);
+};
+
 /**
  * Réaffecte un PC (la fiche poste) à un autre bénéficiaire, ou le met en stock
  * si id_n est null. L'écran rattaché au poste suit le PC, sauf en cas de mise
- * en stock : l'écran part alors en stock et l'utilisateur garde une fiche vide
- * (est_vide), remplacée dès qu'un PC lui est réaffecté.
+ * en stock : l'écran part alors en stock. Dans les deux cas l'ancien titulaire
+ * garde une fiche vide (est_vide), remplacée dès qu'un PC lui est réaffecté,
+ * et conserve ses mouvements.
  */
 export const affecterPC = async (tx, { id_materiels, id_n, utilisateur, equipe, id_local, motif, etat_remise, commentaire }, auteurIdN) => {
     const materiel = await tx.materiels.findUnique({
@@ -183,10 +203,15 @@ export const affecterPC = async (tx, { id_materiels, id_n, utilisateur, equipe, 
     const auteur = await resoudreAuteur(tx, auteurIdN);
     const miseEnStock = cibleIdN === null;
 
-    // Mouvements de l'utilisateur qui garde une fiche : celui qui perd son PC
-    // (mise en stock) ou celui dont le poste vide va être remplacé.
-    const idNConserve = miseEnStock ? materiel.id_n : (posteVide ? cibleIdN : null);
-    const mouvementsConserves = await releverMouvements(tx, idNConserve);
+    // Mouvements des utilisateurs qui gardent une fiche : l'ancien titulaire
+    // (mise en stock ou réaffectation) et la cible dont le poste vide va être
+    // remplacé. Sans ce relevé, le changement de materiels.id_n (ON UPDATE
+    // CASCADE) ferait passer les mouvements de l'ancien titulaire à la cible.
+    const idNsConserves = [materiel.id_n, posteVide ? cibleIdN : null].filter(Boolean);
+    const mouvementsConserves = [];
+    for (const idN of idNsConserves) {
+        mouvementsConserves.push({ idN, ids: await releverMouvements(tx, idN) });
+    }
 
     // Le matricule est unique : le poste vide doit le libérer avant le PC.
     const ecranPosteVide = posteVide ? await supprimerPosteVide(tx, posteVide, now, auteur) : null;
@@ -255,32 +280,19 @@ export const affecterPC = async (tx, { id_materiels, id_n, utilisateur, equipe, 
         auteur
     );
 
-    // L'utilisateur qui perd son PC garde une fiche, vide, pour rester visible
-    // dans la liste et pouvoir recevoir un autre PC.
-    if (miseEnStock && materiel.id_n) {
-        const vide = await tx.materiels.create({
-            data: {
-                id_n: materiel.id_n,
-                utilisateur: materiel.utilisateur,
-                equipe: materiel.equipe,
-                caracteristiques: '',
-                id_local: materiel.id_local,
-                est_vide: true,
-                est_actif: false,
-                etat_pc: ETAT_SANS_POSTE,
-                date_modification: now,
-            },
-        });
-        await tracer(
-            tx,
-            vide.id_materiels,
-            null,
-            avecMotif(`Poste vide : PC ${materiel.code_pc || `#${id_materiels}`} mis en stock`, motif),
-            auteur
-        );
+    // L'utilisateur qui perd son PC (mise en stock ou réaffectation) garde une
+    // fiche vide. Créée après la mise à jour du PC, qui libère son matricule.
+    if (materiel.id_n) {
+        const pc = `PC ${materiel.code_pc || `#${id_materiels}`}`;
+        const description = miseEnStock
+            ? `Poste vide : ${pc} mis en stock`
+            : `Poste vide : ${pc} réaffecté à ${decrireBeneficiaire(cibleIdN, nom)}`;
+        await creerPosteVide(tx, materiel, now, auteur, avecMotif(description, motif));
     }
 
-    await rattacherMouvements(tx, mouvementsConserves, idNConserve);
+    for (const { idN, ids } of mouvementsConserves) {
+        await rattacherMouvements(tx, ids, idN);
+    }
 
     return misAJour;
 };

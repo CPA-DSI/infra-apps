@@ -238,23 +238,33 @@ router.post('/import', authenticateToken, ensureActiveUser, requirePermission(PE
             let role = normalizeRole(item.role);
             let is_active = normalizeStatus(item.is_active);
 
+            // Une cellule vide (ou une colonne absente) signifie « ne rien changer » :
+            // pass_mail vaut null quand il n'est pas fourni.
+            const cell = (value) => (value === undefined || value === null ? '' : String(value).trim());
             const desiredEmails = [];
-            if (item.email_1 && String(item.email_1).trim()) {
+            if (cell(item.email_1)) {
                 desiredEmails.push({
-                    email: String(item.email_1).trim().toLowerCase(),
-                    pass_mail: item.pass_mail_1 || '',
+                    email: cell(item.email_1).toLowerCase(),
+                    pass_mail: cell(item.pass_mail_1) || null,
                     is_primary: true
                 });
             }
-            if (item.email_2 && String(item.email_2).trim()) {
+            if (cell(item.email_2)) {
                 desiredEmails.push({
-                    email: String(item.email_2).trim().toLowerCase(),
-                    pass_mail: item.pass_mail_2 || '',
+                    email: cell(item.email_2).toLowerCase(),
+                    pass_mail: cell(item.pass_mail_2) || null,
                     is_primary: false
                 });
             }
 
             const existingUser = await prisma.Users.findUnique({ where: { id_n }, include: { emails: true } });
+
+            // Seul l'email secondaire est fourni : il devient principal si le compte
+            // n'en garde aucun autre (sinon l'utilisateur n'aurait pas d'email principal).
+            const secondaireSeul = desiredEmails.length === 1 && !desiredEmails[0].is_primary ? desiredEmails[0] : null;
+            if (secondaireSeul && !(existingUser?.emails || []).some(e => e.is_primary && e.email !== secondaireSeul.email)) {
+                secondaireSeul.is_primary = true;
+            }
 
             if (existingUser) {
                 // Un utilisateur ne peut pas modifier son propre rôle ni son propre statut
@@ -267,9 +277,20 @@ router.post('/import', authenticateToken, ensureActiveUser, requirePermission(PE
                     errors.push(`${rowLabel}: votre propre rôle/statut ne peut pas être modifié (valeurs actuelles conservées).`);
                 }
 
+                // Un email existant n'est supprimé que s'il est remplacé par un autre
+                // dans le même emplacement (principal / secondaire). Une ligne sans
+                // email ne vide donc jamais le compte, qui garde au moins un email.
                 const currentEmails = existingUser.emails || [];
+                if (desiredEmails.length === 0 && currentEmails.length > 0) {
+                    stats.warnings++;
+                    errors.push(`${rowLabel}: aucun email fourni, emails existants conservés.`);
+                }
                 const desiredValues = desiredEmails.map(e => e.email);
-                const toDelete = currentEmails.filter(e => !desiredValues.includes(e.email));
+                const slot1Fourni = Boolean(cell(item.email_1));
+                const slot2Fourni = Boolean(cell(item.email_2));
+                const toDelete = currentEmails.filter(e =>
+                    !desiredValues.includes(e.email) && (e.is_primary ? slot1Fourni : slot2Fourni)
+                );
 
                 // Suppression des emails retirés + mise à jour dans une même transaction
                 await prisma.$transaction(async (tx) => {
@@ -287,14 +308,14 @@ router.post('/import', authenticateToken, ensureActiveUser, requirePermission(PE
                                     upsert: desiredEmails.map(e => ({
                                         where: { email: e.email },
                                         update: {
-                                            pass_mail: encryptPassMail(e.pass_mail),
+                                            ...(e.pass_mail ? { pass_mail: encryptPassMail(e.pass_mail) } : {}),
                                             is_primary: e.is_primary
                                         },
                                         create: {
                                             email: e.email,
                                             password: defaultPasswordHash,
                                             password_enc: defaultPasswordEnc,
-                                            pass_mail: encryptPassMail(e.pass_mail),
+                                            pass_mail: encryptPassMail(e.pass_mail || ''),
                                             is_primary: e.is_primary,
                                             is_verified: false
                                         }
@@ -315,7 +336,7 @@ router.post('/import', authenticateToken, ensureActiveUser, requirePermission(PE
                                 email: e.email,
                                 password: defaultPasswordHash,
                                 password_enc: defaultPasswordEnc,
-                                pass_mail: encryptPassMail(e.pass_mail),
+                                pass_mail: encryptPassMail(e.pass_mail || ''),
                                 is_primary: e.is_primary,
                                 is_verified: false
                             }))

@@ -54,6 +54,22 @@ async function verrouillerProduit(tx, idProduit) {
 }
 
 /**
+ * Verrouille la ligne du mouvement jusqu'à la fin de la transaction et la
+ * renvoie (relue après le verrou). Deux modifications / suppressions
+ * simultanées du même mouvement sont ainsi sérialisées : la seconde calcule son
+ * delta à partir de l'état laissé par la première.
+ * Ordre des verrous : mouvement puis produit (cf. verrouillerProduit).
+ */
+export async function verrouillerMouvement(tx, idMouvement, include = undefined) {
+    const rows = await tx.$queryRaw`
+        SELECT id_mouvement FROM mouvements WHERE id_mouvement = ${idMouvement} FOR UPDATE`;
+    if (!rows[0]) {
+        throw new StockError(`Mouvement avec l'id ${idMouvement} introuvable.`, 404);
+    }
+    return tx.mouvement.findUnique({ where: { id_mouvement: idMouvement }, include });
+}
+
+/**
  * Écrit une ligne d'historique de stock (historique_arrive).
  */
 export async function enregistrerHistorique(tx, { idProduit, delta, dateHistorique = null, ancienneQuantite = null, ancienneDate = null, remarque = null }) {
@@ -280,6 +296,7 @@ export default {
     StockError,
     TYPES_MOUVEMENT,
     sensMouvement,
+    verrouillerMouvement,
     enregistrerHistorique,
     appliquerVariationStock,
     ajusterStockVers,
