@@ -9,6 +9,7 @@ import path from 'path';
 import fs from 'fs';
 import { authenticateToken, ensureActiveUser, requirePermission } from './middleware/authMiddleware.js';
 import { PERMISSIONS } from './constants/roles.js';
+import { createCsrfGuard, CSRF_HEADER_NAME } from './middleware/csrfMiddleware.js';
 import { assertPassMailEncryptionKeyConfigured } from './services/passMailCrypto.js';
 
 // Échoue immédiatement au démarrage si PASS_MAIL_ENCRYPTION_KEY est absente/invalide,
@@ -36,9 +37,13 @@ const allowedOrigins = process.env.CORS_ORIGIN
 app.use(cors({
     origin: allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', CSRF_HEADER_NAME],
     credentials: true
 }));
+
+// Protection CSRF : toute requête mutante sur /api doit venir d'une origine
+// autorisée et porter l'en-tête X-Requested-With (voir middleware/csrfMiddleware.js).
+app.use('/api', createCsrfGuard(allowedOrigins));
 
 app.use(cookieParser());
 
@@ -46,10 +51,10 @@ app.use(express.json({ limit: '1mb' }));
 
 // Le dossier uploads est exclu de Git (contenu utilisateur) : on le recrée au démarrage
 // pour éviter les 500 de Multer si le déploiement ne l'a pas conservé.
+// Il n'est volontairement PAS servi en statique : les fichiers ne sont accessibles
+// que via les routes authentifiées /api/documents/:id/fichier et /api/documents/pj/:pjId/fichier.
 const uploadsDir = path.join(process.cwd(), 'uploads');
 fs.mkdirSync(uploadsDir, { recursive: true });
-
-app.use('/uploads', express.static(uploadsDir));
 
 app.use((req, res, next) => {
     req.prisma = prisma;

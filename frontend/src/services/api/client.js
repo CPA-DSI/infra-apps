@@ -3,16 +3,26 @@ import { API_BASE_URL } from '../../config/api';
 
 const BASE = `${API_BASE_URL}/api`;
 
+// En-tête exigé par l'API sur toute requête mutante (protection CSRF, voir
+// backend-Prisma/middleware/csrfMiddleware.js). À ajouter aussi à tout fetch direct.
+export const CSRF_HEADERS = {
+  'X-Requested-With': 'XMLHttpRequest',
+};
+
 export const apiClient = axios.create({
   baseURL: BASE,
   headers: {
     'Content-Type': 'application/json',
+    ...CSRF_HEADERS,
   },
   withCredentials: true,
 });
 
 export const apiClientUpload = axios.create({
   baseURL: BASE,
+  headers: {
+    ...CSRF_HEADERS,
+  },
   withCredentials: true,
 });
 

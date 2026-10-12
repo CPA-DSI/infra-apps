@@ -8,6 +8,10 @@ import { PERMISSIONS } from '../constants/roles.js';
 const prisma = new PrismaClient();
 const router = express.Router();
 
+// Matériels pris en compte dans les statistiques : ni supprimés (soft delete),
+// ni fiches "Sans poste" (est_vide).
+const MATERIELS_ACTIFS = { date_suppression: null, est_vide: false };
+
 router.use(authenticateToken, ensureActiveUser);
 
 // Route GET toutes les marques COMPLÈTES (avec URL)
@@ -84,7 +88,8 @@ router.get('/with-count', requirePermission(PERMISSIONS.STOCKS_READ), async (req
     const marquesWithCount = await Promise.all(marques.map(async (marque) => {
       const nombre_equipements = await prisma.materiels.count({
         where: {
-          id_marque: marque.id_marque
+          id_marque: marque.id_marque,
+          ...MATERIELS_ACTIFS
         }
       });
       
@@ -117,6 +122,7 @@ router.get('/stats-equipes-etats', requirePermission(PERMISSIONS.STOCKS_READ), a
     // Récupérer tous les équipements avec leurs équipes et états
     // 🔥 CORRECTION : Utiliser le bon nom de champ (etat_pc au lieu de etat)
     const materiels = await prisma.materiels.findMany({
+      where: MATERIELS_ACTIFS,
       select: {
         id_materiels: true,
         equipe: true,
@@ -182,6 +188,7 @@ router.get('/materiels-by-local', requirePermission(PERMISSIONS.STOCKS_READ), as
         id_local: true,
         nom_local: true,
         materiels: {
+          where: MATERIELS_ACTIFS,
           select: {
             id_materiels: true
           }
@@ -275,89 +282,94 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
       cleanUrl = url.trim();
     }
     
-    // Créer la nouvelle marque
-    const nouvelleMarque = await prisma.marques.create({
-      data: { 
-        nom_marque: nom_marque.trim(),
-        url: cleanUrl,
-        date_modification: new Date(),
-      },
-    });
-    
-    console.log('✅ Marque créée avec succès:', nouvelleMarque);
-    
-    let materielsUpdated = 0;
-    let updateDetails = [];
-    
-    // Mettre à jour les matériels qui ont id_marque = null
-    if (updateMateriels) {
-      console.log(`🔍 Recherche des matériels sans marque (id_marque = null) correspondant à "${nouvelleMarque.nom_marque}"...`);
-      
-      const searchPattern = nouvelleMarque.nom_marque.toLowerCase();
-      
-      // Récupérer tous les matériels avec id_marque = null
-      const materielsSansMarque = await prisma.materiels.findMany({
-        where: {
-          id_marque: null
+    // Création de la marque + association des matériels : tout ou rien
+    const { nouvelleMarque, materielsUpdated, updateDetails } = await prisma.$transaction(async (prisma) => {
+      // Créer la nouvelle marque
+      const nouvelleMarque = await prisma.marques.create({
+        data: { 
+          nom_marque: nom_marque.trim(),
+          url: cleanUrl,
+          date_modification: new Date(),
         },
-        select: {
-          id_materiels: true,
-          caracteristiques: true,
-          code_pc: true
-        }
       });
+    
+      console.log('✅ Marque créée avec succès:', nouvelleMarque);
+    
+      let materielsUpdated = 0;
+      let updateDetails = [];
+    
+      // Mettre à jour les matériels qui ont id_marque = null
+      if (updateMateriels) {
+        console.log(`🔍 Recherche des matériels sans marque (id_marque = null) correspondant à "${nouvelleMarque.nom_marque}"...`);
       
-      console.log(`📊 ${materielsSansMarque.length} matériel(s) sans marque trouvé(s)`);
+        const searchPattern = nouvelleMarque.nom_marque.toLowerCase();
       
-      // Filtrer les matériels qui correspondent à la marque
-      const materielsACorrespondre = materielsSansMarque.filter(materiel => {
-        switch(matchingField) {
-          case 'caracteristiques':
-            return materiel.caracteristiques && 
-                   materiel.caracteristiques.toLowerCase().includes(searchPattern);
-          
-          case 'code_pc':
-            return materiel.code_pc && 
-                   materiel.code_pc.toLowerCase().includes(searchPattern);
-          
-          case 'tout':
-            return (materiel.caracteristiques && materiel.caracteristiques.toLowerCase().includes(searchPattern)) ||
-                   (materiel.code_pc && materiel.code_pc.toLowerCase().includes(searchPattern));
-          
-          default:
-            return materiel.caracteristiques && 
-                   materiel.caracteristiques.toLowerCase().includes(searchPattern);
-        }
-      });
-      
-      if (materielsACorrespondre.length > 0) {
-        console.log(`🎯 ${materielsACorrespondre.length} matériel(s) potentiel(s) à mettre à jour`);
-        
-        const updateResult = await prisma.materiels.updateMany({
+        // Récupérer tous les matériels avec id_marque = null
+        const materielsSansMarque = await prisma.materiels.findMany({
           where: {
-            id_materiels: {
-              in: materielsACorrespondre.map(m => m.id_materiels)
-            }
+            id_marque: null
           },
-          data: {
-            id_marque: nouvelleMarque.id_marque,
-            date_modification: new Date()
+          select: {
+            id_materiels: true,
+            caracteristiques: true,
+            code_pc: true
           }
         });
+      
+        console.log(`📊 ${materielsSansMarque.length} matériel(s) sans marque trouvé(s)`);
+      
+        // Filtrer les matériels qui correspondent à la marque
+        const materielsACorrespondre = materielsSansMarque.filter(materiel => {
+          switch(matchingField) {
+            case 'caracteristiques':
+              return materiel.caracteristiques && 
+                     materiel.caracteristiques.toLowerCase().includes(searchPattern);
+          
+            case 'code_pc':
+              return materiel.code_pc && 
+                     materiel.code_pc.toLowerCase().includes(searchPattern);
+          
+            case 'tout':
+              return (materiel.caracteristiques && materiel.caracteristiques.toLowerCase().includes(searchPattern)) ||
+                     (materiel.code_pc && materiel.code_pc.toLowerCase().includes(searchPattern));
+          
+            default:
+              return materiel.caracteristiques && 
+                     materiel.caracteristiques.toLowerCase().includes(searchPattern);
+          }
+        });
+      
+        if (materielsACorrespondre.length > 0) {
+          console.log(`🎯 ${materielsACorrespondre.length} matériel(s) potentiel(s) à mettre à jour`);
         
-        materielsUpdated = updateResult.count;
+          const updateResult = await prisma.materiels.updateMany({
+            where: {
+              id_materiels: {
+                in: materielsACorrespondre.map(m => m.id_materiels)
+              }
+            },
+            data: {
+              id_marque: nouvelleMarque.id_marque,
+              date_modification: new Date()
+            }
+          });
         
-        updateDetails = materielsACorrespondre.map(m => ({
-          id_materiels: m.id_materiels,
-          caracteristiques: m.caracteristiques,
-          raison: `Correspondance avec "${matchingField}" contenant "${nouvelleMarque.nom_marque}"`
-        }));
+          materielsUpdated = updateResult.count;
         
-        console.log(`✅ ${materielsUpdated} matériel(s) mis à jour avec la marque "${nouvelleMarque.nom_marque}"`);
-      } else {
-        console.log(`ℹ️ Aucun matériel sans marque ne correspond à "${nouvelleMarque.nom_marque}"`);
+          updateDetails = materielsACorrespondre.map(m => ({
+            id_materiels: m.id_materiels,
+            caracteristiques: m.caracteristiques,
+            raison: `Correspondance avec "${matchingField}" contenant "${nouvelleMarque.nom_marque}"`
+          }));
+        
+          console.log(`✅ ${materielsUpdated} matériel(s) mis à jour avec la marque "${nouvelleMarque.nom_marque}"`);
+        } else {
+          console.log(`ℹ️ Aucun matériel sans marque ne correspond à "${nouvelleMarque.nom_marque}"`);
+        }
       }
-    }
+
+      return { nouvelleMarque, materielsUpdated, updateDetails };
+    });
     
     res.status(201).json({
       id_marque: nouvelleMarque.id_marque,
@@ -540,24 +552,27 @@ router.delete('/:id_marque', requirePermission(PERMISSIONS.STOCKS_WRITE), async 
     
     const materielsCount = marque._count.materiels;
     
-    if (materielsCount > 0) {
-      console.log(`⚠️ La marque "${marque.nom_marque}" est utilisée par ${materielsCount} matériel(s). Mise à jour en cours...`);
+    // Détachement des matériels + suppression de la marque : tout ou rien
+    await prisma.$transaction(async (tx) => {
+      if (materielsCount > 0) {
+        console.log(`⚠️ La marque "${marque.nom_marque}" est utilisée par ${materielsCount} matériel(s). Mise à jour en cours...`);
+        
+        await tx.materiels.updateMany({
+          where: {
+            id_marque: parseInt(id_marque)
+          },
+          data: {
+            id_marque: null,
+            date_modification: new Date()
+          }
+        });
+        
+        console.log(`✅ ${materielsCount} matériel(s) mis à jour (id_marque passé à NULL)`);
+      }
       
-      await prisma.materiels.updateMany({
-        where: {
-          id_marque: parseInt(id_marque)
-        },
-        data: {
-          id_marque: null,
-          date_modification: new Date()
-        }
+      await tx.marques.delete({
+        where: { id_marque: parseInt(id_marque) },
       });
-      
-      console.log(`✅ ${materielsCount} matériel(s) mis à jour (id_marque passé à NULL)`);
-    }
-    
-    await prisma.marques.delete({
-      where: { id_marque: parseInt(id_marque) },
     });
     
     const message = materielsCount > 0 
@@ -588,10 +603,20 @@ router.delete('/:id_marque', requirePermission(PERMISSIONS.STOCKS_WRITE), async 
 // Route pour supprimer une marque et remplacer par une autre marque par défaut
 router.delete('/:id_marque/replace/:default_marque_id', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) => {
   const { id_marque, default_marque_id } = req.params;
+  const idMarque = Number(id_marque);
+  const idMarqueDefaut = Number(default_marque_id);
+
+  if (!Number.isInteger(idMarque) || idMarque <= 0 || !Number.isInteger(idMarqueDefaut) || idMarqueDefaut <= 0) {
+    return res.status(400).json({ error: 'Identifiants de marque invalides.' });
+  }
+  // On ne peut pas réaffecter les matériels à la marque que l'on supprime
+  if (idMarque === idMarqueDefaut) {
+    return res.status(400).json({ error: 'La marque de remplacement doit être différente de la marque supprimée.' });
+  }
   
   try {
     const marqueToDelete = await prisma.marques.findUnique({
-      where: { id_marque: parseInt(id_marque) }
+      where: { id_marque: idMarque }
     });
     
     if (!marqueToDelete) {
@@ -599,31 +624,30 @@ router.delete('/:id_marque/replace/:default_marque_id', requirePermission(PERMIS
     }
     
     const defaultMarque = await prisma.marques.findUnique({
-      where: { id_marque: parseInt(default_marque_id) }
+      where: { id_marque: idMarqueDefaut }
     });
     
     if (!defaultMarque) {
       return res.status(404).json({ error: 'Marque par défaut non trouvée.' });
     }
     
-    const materielsCount = await prisma.materiels.count({
-      where: { id_marque: parseInt(id_marque) }
-    });
-    
-    if (materielsCount > 0) {
-      console.log(`⚠️ Mise à jour de ${materielsCount} matériel(s) vers la marque par défaut "${defaultMarque.nom_marque}"`);
-      
-      await prisma.materiels.updateMany({
-        where: { id_marque: parseInt(id_marque) },
+    // Réaffectation des matériels + suppression de la marque : tout ou rien
+    const materielsCount = await prisma.$transaction(async (tx) => {
+      const { count } = await tx.materiels.updateMany({
+        where: { id_marque: idMarque },
         data: { 
-          id_marque: parseInt(default_marque_id),
+          id_marque: idMarqueDefaut,
           date_modification: new Date()
         }
       });
-    }
-    
-    await prisma.marques.delete({
-      where: { id_marque: parseInt(id_marque) }
+      if (count > 0) {
+        console.log(`⚠️ ${count} matériel(s) réaffecté(s) à la marque par défaut "${defaultMarque.nom_marque}"`);
+      }
+      
+      await tx.marques.delete({
+        where: { id_marque: idMarque }
+      });
+      return count;
     });
     
     res.status(200).json({

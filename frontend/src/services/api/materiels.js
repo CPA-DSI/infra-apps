@@ -140,6 +140,17 @@ export const updateMateriel = async (id, materielData) => {
   }
 };
 
+// Bascule Actif / Inactif d'un poste (PC en stock et fiches « Sans poste »
+// refusés : leur statut suit l'affectation).
+export const updateMaterielStatut = async (id, est_actif) => {
+  try {
+    const response = await apiClient.patch(`/materiels_all/${id}/statut`, { est_actif });
+    return response.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+};
+
 // --- Affectations ---
 
 export const fetchBeneficiaires = async () => {

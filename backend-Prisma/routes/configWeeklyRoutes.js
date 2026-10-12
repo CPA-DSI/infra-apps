@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
 import { PERMISSIONS } from '../constants/roles.js';
 import { reloadCronTasks, parseHeureEnvoi } from '../cron-worker.js';
+import { toPublicEmailConfig, getNewEmailPass } from '../services/reportService.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -31,7 +32,7 @@ router.get('/hebdomadaire', requirePermission(PERMISSIONS.CONFIG_READ), asyncHan
             id: 1,
             email_dest: '',
             email_exp: '',
-            email_pass: '',
+            hasPassword: false,
             type_envoi: 'hebdomadaire',
             jour_envoi: 1,
             heure_envoi: '17:15',
@@ -47,7 +48,8 @@ router.get('/hebdomadaire', requirePermission(PERMISSIONS.CONFIG_READ), asyncHan
         return;
     }
     
-    res.json(config);
+    // Ne jamais renvoyer le mot de passe SMTP
+    res.json(toPublicEmailConfig(config));
 }));
 
 // --- CREATE/UPDATE: POST /api/config/hebdomadaire ---
@@ -68,11 +70,9 @@ router.post('/hebdomadaire', requirePermission(PERMISSIONS.CONFIG_WRITE), asyncH
     const configData = {
         email_dest: data.email_dest || '',
         email_exp: data.email_exp || '',
-        email_pass: data.email_pass || '',
         type_envoi: 'hebdomadaire',
         jour_envoi: data.jour_envoi !== undefined ? parseInt(data.jour_envoi) : 1,
         heure_envoi: data.heure_envoi || '17:15',
-        cron_actif_hebdo: data.cron_actif_hebdo || false,
         objet_mail_hebdo: data.objet_mail_hebdo || 'Rapport Hebdomadaire des Stocks',
         message_mail_hebdo: data.message_mail_hebdo || 'Bonjour, veuillez trouver ci-joint le rapport hebdomadaire des stocks.',
         actif: data.actif !== undefined ? data.actif : true,
@@ -81,17 +81,24 @@ router.post('/hebdomadaire', requirePermission(PERMISSIONS.CONFIG_WRITE), asyncH
         include_produits: data.include_produits !== undefined ? data.include_produits : true
     };
     
+    // Mot de passe vide/absent : on conserve celui déjà enregistré
+    const emailPass = getNewEmailPass(data.email_pass);
+    // État du robot : modifié uniquement s'il est fourni
+    const cronActif = data.cron_actif_hebdo !== undefined ? (data.cron_actif_hebdo === true || data.cron_actif_hebdo === 'true') : undefined;
+
     const config = await prisma.configEmailHebdomadaire.upsert({
         where: { id: 1 },
-        update: configData,
+        update: { ...configData, email_pass: emailPass, cron_actif_hebdo: cronActif },
         create: {
             id: 1,
-            ...configData
+            ...configData,
+            email_pass: emailPass ?? '',
+            cron_actif_hebdo: cronActif ?? false
         },
     });
 
     await reloadCronTasks(prisma);
-    res.status(200).json(config);
+    res.status(200).json(toPublicEmailConfig(config));
 }));
 
 // --- DELETE: DELETE /api/config/hebdomadaire ---

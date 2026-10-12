@@ -11,6 +11,19 @@ const ensureJwtSecret = () => {
   return true;
 };
 
+// Options communes du cookie de session (connexion, session glissante, déconnexion).
+// Front et API étant sur des domaines différents, SameSite=None est nécessaire en
+// production ; la protection CSRF est assurée par middleware/csrfMiddleware.js.
+export const getAuthCookieOptions = ({ withMaxAge = true } = {}) => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  return {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
+    ...(withMaxAge ? { maxAge: TOKEN_MAX_AGE_MS } : {}),
+  };
+};
+
 export const authenticateToken = (req, res, next) => {
   const token = req.cookies?.token;
 
@@ -39,18 +52,11 @@ export const authenticateToken = (req, res, next) => {
       must_change_password: decoded.must_change_password,
     };
 
-    // Session glissante : chaque requête authentifiée prolonge la session
-    // de TOKEN_EXPIRES_IN, pour ne déconnecter que les utilisateurs
-    // réellement inactifs.
+    // Payload conservé pour la session glissante : le cookie est réémis par
+    // ensureActiveUser, après relecture du rôle en base (un changement de rôle
+    // ou une rétrogradation s'applique ainsi dès la requête suivante).
     const { iat, exp, ...payload } = decoded;
-    const refreshedToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: TOKEN_EXPIRES_IN });
-    const isProduction = process.env.NODE_ENV === 'production';
-    res.cookie('token', refreshedToken, {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'none' : 'lax',
-      maxAge: TOKEN_MAX_AGE_MS,
-    });
+    req.tokenPayload = payload;
 
     next();
   });
@@ -66,17 +72,27 @@ export const ensureActiveUser = async (req, res, next) => {
 
     const user = await prisma.users.findUnique({
       where: { id_user: userId },
-      select: { is_active: true },
+      select: { is_active: true, role: true },
     });
 
     if (!user || !user.is_active) {
-      const isProduction = process.env.NODE_ENV === 'production';
-      res.clearCookie('token', {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? 'none' : 'lax',
-      });
+      res.clearCookie('token', getAuthCookieOptions({ withMaxAge: false }));
       return res.status(403).json({ error: 'Demandez à l\'administrateur d\'activer votre compte' });
+    }
+
+    // Le rôle fait foi en base, pas dans le token
+    req.user.role = user.role;
+
+    // Session glissante : chaque requête authentifiée prolonge la session
+    // de TOKEN_EXPIRES_IN, pour ne déconnecter que les utilisateurs
+    // réellement inactifs. Le cookie réémis porte le rôle lu en base.
+    if (req.tokenPayload) {
+      const refreshedToken = jwt.sign(
+        { ...req.tokenPayload, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: TOKEN_EXPIRES_IN },
+      );
+      res.cookie('token', refreshedToken, getAuthCookieOptions());
     }
 
     next();

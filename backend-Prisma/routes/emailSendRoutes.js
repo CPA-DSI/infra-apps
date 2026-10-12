@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import nodemailer from 'nodemailer';
 import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
 import { PERMISSIONS } from '../constants/roles.js';
-import { generateExcelReport, sendEmail } from '../services/reportService.js';
+import { generateExcelReport, sendEmail, getCurrentDateTime } from '../services/reportService.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -27,8 +27,7 @@ router.post('/send-report', asyncHandler(async (req, res) => {
 
     if (!config || !config.email_exp) return res.status(400).json({ message: "Configuration email manquante." });
 
-    const now = new Date();
-    const fullDateTime = `${now.toLocaleDateString('fr-FR').replace(/\//g, '-')}_${now.getHours()}h${String(now.getMinutes()).padStart(2, '0')}`;
+    const fullDateTime = getCurrentDateTime();
 
     const buffer = await generateExcelReport(prisma);
     await sendEmail(
@@ -50,9 +49,12 @@ router.post('/send-test-quotidien', asyncHandler(async (req, res) => {
     if (!config || !config.email_exp || !config.email_dest) {
         return res.status(400).json({ message: "Configuration email quotidienne manquante. Veuillez d'abord sauvegarder la configuration." });
     }
+    // Le mot de passe SMTP est toujours lu en base, jamais fourni par le client
+    if (!config.email_pass) {
+        return res.status(400).json({ message: "Mot de passe SMTP non configuré. Veuillez le saisir puis sauvegarder la configuration." });
+    }
 
-    const now = new Date();
-    const fullDateTime = `${now.toLocaleDateString('fr-FR').replace(/\//g, '-')}_${now.getHours()}h${String(now.getMinutes()).padStart(2, '0')}`;
+    const fullDateTime = getCurrentDateTime();
 
     const transporter = nodemailer.createTransport({
         host: "smtp.ionos.fr", port: 465, secure: true,
@@ -76,9 +78,12 @@ router.post('/send-test-hebdomadaire', asyncHandler(async (req, res) => {
     if (!config || !config.email_exp || !config.email_dest) {
         return res.status(400).json({ message: "Configuration email hebdomadaire manquante. Veuillez d'abord sauvegarder la configuration." });
     }
+    // Le mot de passe SMTP est toujours lu en base, jamais fourni par le client
+    if (!config.email_pass) {
+        return res.status(400).json({ message: "Mot de passe SMTP non configuré. Veuillez le saisir puis sauvegarder la configuration." });
+    }
 
-    const now = new Date();
-    const fullDateTime = `${now.toLocaleDateString('fr-FR').replace(/\//g, '-')}_${now.getHours()}h${String(now.getMinutes()).padStart(2, '0')}`;
+    const fullDateTime = getCurrentDateTime();
 
     const transporter = nodemailer.createTransport({
         host: "smtp.ionos.fr", port: 465, secure: true,
@@ -105,9 +110,12 @@ router.post('/send-test-mensuel', asyncHandler(async (req, res) => {
             message: "Configuration email mensuelle manquante. Veuillez d'abord sauvegarder la configuration." 
         });
     }
+    // Le mot de passe SMTP est toujours lu en base, jamais fourni par le client
+    if (!config.email_pass) {
+        return res.status(400).json({ message: "Mot de passe SMTP non configuré. Veuillez le saisir puis sauvegarder la configuration." });
+    }
 
-    const now = new Date();
-    const fullDateTime = `${now.toLocaleDateString('fr-FR').replace(/\//g, '-')}_${now.getHours()}h${String(now.getMinutes()).padStart(2, '0')}`;
+    const fullDateTime = getCurrentDateTime();
 
     const transporter = nodemailer.createTransport({
         host: "smtp.ionos.fr", 
@@ -123,10 +131,10 @@ router.post('/send-test-mensuel', asyncHandler(async (req, res) => {
         await transporter.sendMail({
             from: `"Logistique Test" <${config.email_exp}>`,
             to: config.email_dest,
-            subject: config.objet_mail_mensuel ? 
-                `${config.objet_mail_mensuel} - TEST` : 
+            subject: config.objet_mail ? 
+                `${config.objet_mail} - TEST` : 
                 `Rapport Mensuel - TEST ${fullDateTime}`,
-            text: config.message_mail_mensuel || 
+            text: config.message_mail || 
                 "Ceci est un email de test pour vérifier la configuration mensuelle."
         });
 

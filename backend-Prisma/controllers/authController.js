@@ -5,7 +5,8 @@ import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import { encryptSecret } from '../services/passMailCrypto.js';
-import { TOKEN_EXPIRES_IN, TOKEN_MAX_AGE_MS } from '../config/authToken.js';
+import { TOKEN_EXPIRES_IN } from '../config/authToken.js';
+import { getAuthCookieOptions } from '../middleware/authMiddleware.js';
 
 const APP_URL = process.env.APP_URL || null;
 
@@ -163,13 +164,7 @@ export const login = async (req, res) => {
       { expiresIn: TOKEN_EXPIRES_IN },
     );
 
-    const isProduction = process.env.NODE_ENV === 'production';
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'none' : 'lax',
-      maxAge: TOKEN_MAX_AGE_MS,
-    });
+    res.cookie('token', token, getAuthCookieOptions());
 
     return res.status(200).json({
       message: 'Connexion réussie',
@@ -294,12 +289,7 @@ export const getMe = async (req, res) => {
 
 export const logout = async (req, res) => {
   try {
-    const isProduction = process.env.NODE_ENV === 'production';
-    res.clearCookie('token', {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'none' : 'lax',
-    });
+    res.clearCookie('token', getAuthCookieOptions({ withMaxAge: false }));
 
     return res.status(200).json({ message: 'Déconnexion réussie.' });
   } catch (error) {

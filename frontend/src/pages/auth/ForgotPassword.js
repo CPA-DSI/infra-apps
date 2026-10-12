@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Tilt from 'react-parallax-tilt';
 import Swal from 'sweetalert2';
 import { API_BASE_URL } from '../../config/api';
+import { CSRF_HEADERS } from '../../services/api/client';
 import { FaEnvelope, FaSpinner, FaLongArrowAltLeft } from 'react-icons/fa';
 
 // --- IMPORTS CSS ---
@@ -80,6 +81,7 @@ const ForgotPassword = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...CSRF_HEADERS,
         },
         body: JSON.stringify({ email }),
       });

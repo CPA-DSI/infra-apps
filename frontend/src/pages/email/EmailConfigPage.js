@@ -25,7 +25,8 @@ export default function EmailConfigPage({ initialConfig, onConfigUpdate }) {
   const [form, setForm] = useState({
     email_dest: '',
     email_exp: '',
-    email_pass: '',
+    email_pass: '', // Jamais renvoyé par le serveur : vide = mot de passe inchangé
+    hasPassword: false,
     objet_mail: `Rapport Quotidien des Stocks - ${getCurrentDate()}`,
     message_mail: `Bonjour, veuillez trouver ci-joint le rapport des stocks du ${getCurrentDate()}.`,
     heure_envoi: '17:15',
@@ -62,9 +63,11 @@ export default function EmailConfigPage({ initialConfig, onConfigUpdate }) {
     setLoading(true);
 
     try {
-      await updateDailyEmailConfig(form);
+      const saved = await updateDailyEmailConfig(form);
 
-      onConfigUpdate?.(form);
+      // Le serveur renvoie la config sans mot de passe (hasPassword à la place)
+      setForm(prev => ({ ...prev, ...saved, email_pass: '' }));
+      onConfigUpdate?.(saved);
 
       Toast.fire({
         icon: 'success',
@@ -82,7 +85,7 @@ export default function EmailConfigPage({ initialConfig, onConfigUpdate }) {
   };
 
   const handleSendTest = async () => {
-    if (!form.email_exp || !form.email_dest || !form.email_pass || !form.heure_envoi) {
+    if (!form.email_exp || !form.email_dest || (!form.email_pass && !form.hasPassword) || !form.heure_envoi) {
       setMessage({ type: 'warning', text: 'Veuillez remplir tous les champs avant de tester.' });
       return;
     }
@@ -165,7 +168,7 @@ export default function EmailConfigPage({ initialConfig, onConfigUpdate }) {
                       <FaLock /> Mot de passe
                     </Form.Label>
                     <div className="position-relative">
-                      <Form.Control type={showPassword ? 'text' : 'password'} name="email_pass" value={form.email_pass} onChange={handleChange} className="modern-input pe-5" placeholder="••••••••••••" required />
+                      <Form.Control type={showPassword ? 'text' : 'password'} name="email_pass" value={form.email_pass} onChange={handleChange} className="modern-input pe-5" placeholder={form.hasPassword ? '•••••• (inchangé)' : '••••••••••••'} autoComplete="new-password" required={!form.hasPassword} />
                       <button type="button" className="btn btn-link position-absolute top-50 end-0 translate-middle-y text-muted" style={{ background: 'none', border: 'none', padding: '0.5rem' }} onClick={() => setShowPassword(!showPassword)}>
                         {showPassword ? <FaEyeSlash /> : <FaEye />}
                       </button>

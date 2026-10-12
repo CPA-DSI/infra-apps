@@ -61,7 +61,20 @@ const parseExcelFile = async (file) => {
         return new Date(excelEpoch.getTime() + (serial * msPerDay));
     };
 
-    const parseDateOrNull = (v) => {
+    // Les colonnes date_pc / date_ecran sont des @db.Date : on envoie le jour
+    // au format 'YYYY-MM-DD' et non un Date sérialisé en UTC (minuit local à
+    // +03 devenait la veille à 21h UTC, donc la veille en base). Le décalage
+    // de +12h ramène sur le bon jour local les dates à minuit local, à minuit
+    // UTC (numéro de série Excel) et celles que SheetJS place à 23:59:xx.
+    const toJourISO = (date) => {
+        if (!(date instanceof Date) || isNaN(date.getTime())) return null;
+        const d = new Date(date.getTime() + 12 * 60 * 60 * 1000);
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${d.getFullYear()}-${mm}-${dd}`;
+    };
+
+    const parseDateBrute = (v) => {
         const n = normalizeCell(v);
         if (n === null) return null;
 
@@ -136,6 +149,8 @@ const parseExcelFile = async (file) => {
         console.warn(`Format de date non supporté: ${s}`);
         return null;
     };
+
+    const parseDateOrNull = (v) => toJourISO(parseDateBrute(v));
 
     const items = rawRows.map((r) => {
         const utilisateur = normalizeCell(getByKeys(r, [
@@ -501,6 +516,7 @@ export const useMaterielImportExport = ({ materiels, filteredMateriels, filterNo
             const successCount = stats.success || 0;
             const failCount = stats.failed || 0;
             const warningCount = stats.warnings || 0;
+            const skippedCount = stats.skipped || 0;
 
             let title = 'Import terminé !';
             let successText = `${successCount} matériel(s) importé(s) avec succès.`;
@@ -514,11 +530,39 @@ export const useMaterielImportExport = ({ materiels, filteredMateriels, filterNo
             if (warningCount > 0) {
                 successText += `\n${warningCount} avertissement(s).`;
             }
+            if (skippedCount > 0) {
+                successText += `\n${skippedCount} ligne(s) ignorée(s).`;
+            }
+
+            // Détail ligne par ligne (doublons, matricule invalide, fiche non
+            // identifiable, échecs d'écriture, écrans non rattachés).
+            const details = [
+                ...(response.data.skipped || []).map(s => ({ ...s, type: 'Ignorée', message: s.raison })),
+                ...(response.data.errors || []).map(e => ({ ...e, ligne: e.index != null ? e.index + 2 : null, type: 'Échec', message: e.error })),
+                ...(response.data.warnings || []).map(w => ({ ...w, ligne: w.index != null ? w.index + 2 : null, type: 'Avertissement', message: w.error })),
+            ];
 
             await MySwal.fire({
-                icon: successCount > 0 ? 'success' : 'warning',
+                icon: successCount > 0 && failCount === 0 && skippedCount === 0 ? 'success' : 'warning',
                 title,
-                text: successText,
+                html: (
+                    <div style={{ textAlign: 'left' }}>
+                        <div style={{ whiteSpace: 'pre-line', textAlign: 'center', marginBottom: details.length ? '12px' : 0 }}>{successText}</div>
+                        {details.length > 0 && (
+                            <ul style={{ maxHeight: '260px', overflowY: 'auto', fontSize: '0.8rem', paddingLeft: '18px', margin: 0 }}>
+                                {details.map((d, idx) => (
+                                    <li key={idx} style={{ marginBottom: '4px' }}>
+                                        <strong>{d.type}</strong>
+                                        {d.ligne ? ` — ligne ${d.ligne}` : ''}
+                                        {d.utilisateur && d.utilisateur !== 'unknown' ? ` (${d.utilisateur})` : ''}
+                                        {` : ${d.message}`}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+                ),
+                width: details.length > 0 ? 700 : undefined,
                 confirmButtonText: 'OK'
             });
 

@@ -1,7 +1,9 @@
 // backend/services/importMouvements.js
 import prisma from '../prismaClient.js';
 import * as XLSX from 'xlsx';
-import { creerNouveauProduit, ProduitDejaExistantError } from './produitsService.js';
+import { creerNouveauProduit, trouverProduitParNom } from './produitsService.js';
+import { creerMouvement, TYPES_MOUVEMENT } from './stockService.js';
+import { dateOnlyFromParts, todayDateOnly, toDateOnly, formatDateOnly } from './dateOnly.js';
 
 /**
  * Crée un jeu de caches isolé pour un import.
@@ -18,131 +20,103 @@ function createCaches() {
 }
 
 /**
- * Convertit une date Excel (nombre) ou une chaîne en Date JavaScript
- * Version CORRIGÉE et ROBUSTE
+ * Convertit une date Excel (nombre) ou une chaîne en date calendaire.
+ *
+ * Toutes les dates renvoyées sont à minuit UTC (Date.UTC) : la colonne
+ * mouvements.date_mouvement est un @db.Date, et une date construite en heure
+ * locale (new Date(y, m, d)) sur un serveur en +03 serait stockée à J-1.
  */
 function excelDateToJSDate(excelDate, warnings) {
     // Si null, undefined ou vide
     if (!excelDate || excelDate === '' || excelDate === ' ') {
-        return new Date();
+        return todayDateOnly();
     }
-    
+
     // Si c'est déjà une date valide
     if (excelDate instanceof Date && !isNaN(excelDate)) {
-        return excelDate;
+        return toDateOnly(excelDate);
     }
-    
+
     // Si c'est un nombre (format Excel - jours depuis 1900)
     if (typeof excelDate === 'number') {
-        // Excel considère que 1900-01-01 = 1, donc on soustrait 1
-        const epoch = new Date(1899, 11, 30);
-        const date = new Date(epoch.getTime() + excelDate * 86400000);
-        
+        // Excel : le jour 1 est le 01/01/1900 (avec le faux 29/02/1900), d'où
+        // l'origine au 30/12/1899. La partie décimale (heure) est ignorée.
+        const date = new Date(Date.UTC(1899, 11, 30) + Math.floor(excelDate) * 86400000);
+
         // Vérifier que la date est plausible (entre 2000 et 2100)
-        if (date.getFullYear() >= 2000 && date.getFullYear() <= 2100) {
+        if (date.getUTCFullYear() >= 2000 && date.getUTCFullYear() <= 2100) {
             return date;
         }
-        
-        // Si la date est trop ancienne, essayer de la corriger
-        // Certaines versions d'Excel ont un bug de conversion
-        if (date.getFullYear() < 1900) {
-            // Essayer de parser comme chaîne
-            const strDate = String(excelDate);
-            const match = strDate.match(/(\d{4})-(\d{2})-(\d{2})/);
-            if (match) {
-                const year = parseInt(match[1], 10);
-                const month = parseInt(match[2], 10) - 1;
-                const day = parseInt(match[3], 10);
-                if (year >= 2000 && year <= 2100) {
-                    return new Date(year, month, day);
-                }
-            }
-        }
-        
+
         // Si la date est dans le futur ou trop ancienne, utiliser la date du jour
-        if (date.getFullYear() < 2000 || date.getFullYear() > 2100) {
-            console.warn(`⚠️ Date hors plage: ${date.toISOString()}, utilisation de la date du jour`);
-            if (warnings) warnings.push(`date hors plage ("${excelDate}")`);
-            return new Date();
-        }
-        
-        return date;
+        console.warn(`⚠️ Date hors plage: ${isNaN(date) ? excelDate : date.toISOString()}, utilisation de la date du jour`);
+        if (warnings) warnings.push(`date hors plage ("${excelDate}")`);
+        return todayDateOnly();
     }
-    
+
     // Si c'est une chaîne
     if (typeof excelDate === 'string') {
         const cleanDate = excelDate.trim();
-        
-        // Format: "2025-01-16 00:00:00" (AAAA-MM-JJ HH:MM:SS)
-        let match = cleanDate.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})$/);
+
+        // Format: "2025-01-16 00:00:00" (AAAA-MM-JJ HH:MM:SS) ou "2025-01-16" (AAAA-MM-JJ)
+        // L'heure éventuelle est ignorée (colonne date seule).
+        let match = cleanDate.match(/^(\d{4})-(\d{2})-(\d{2})(?:\s+\d{2}:\d{2}:\d{2})?$/);
         if (match) {
             const year = parseInt(match[1], 10);
             const month = parseInt(match[2], 10) - 1;
             const day = parseInt(match[3], 10);
-            const hours = parseInt(match[4], 10);
-            const minutes = parseInt(match[5], 10);
-            const seconds = parseInt(match[6], 10);
-            
+
             if (year >= 2000 && year <= 2100) {
-                return new Date(year, month, day, hours, minutes, seconds);
+                const date = dateOnlyFromParts(year, month, day);
+                if (date) return date;
             }
         }
-        
-        // Format: "2025-01-16" (AAAA-MM-JJ)
-        match = cleanDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-        if (match) {
-            const year = parseInt(match[1], 10);
-            const month = parseInt(match[2], 10) - 1;
-            const day = parseInt(match[3], 10);
-            
-            if (year >= 2000 && year <= 2100) {
-                return new Date(year, month, day);
-            }
-        }
-        
+
         // Format: "16/01/2025" (JJ/MM/AAAA)
         const parts = cleanDate.split('/');
         if (parts.length === 3) {
             const day = parseInt(parts[0], 10);
             const month = parseInt(parts[1], 10) - 1;
             let year = parseInt(parts[2], 10);
-            
+
             if (year < 100) {
                 year += 2000;
             }
-            
+
             if (year >= 2000 && year <= 2100 && !isNaN(day) && !isNaN(month)) {
-                return new Date(year, month, day);
+                const date = dateOnlyFromParts(year, month, day);
+                if (date) return date;
             }
         }
-        
+
         // Format: "16-01-2025" (JJ-MM-AAAA)
         const partsDash = cleanDate.split('-');
         if (partsDash.length === 3 && partsDash[0].length <= 2) {
             const day = parseInt(partsDash[0], 10);
             const month = parseInt(partsDash[1], 10) - 1;
             let year = parseInt(partsDash[2], 10);
-            
+
             if (year < 100) {
                 year += 2000;
             }
-            
+
             if (year >= 2000 && year <= 2100 && !isNaN(day) && !isNaN(month)) {
-                return new Date(year, month, day);
+                const date = dateOnlyFromParts(year, month, day);
+                if (date) return date;
             }
         }
-        
+
         // Essayer de parser avec Date (dernier recours)
-        const date = new Date(cleanDate);
-        if (!isNaN(date) && date.getFullYear() >= 2000 && date.getFullYear() <= 2100) {
+        const date = toDateOnly(cleanDate);
+        if (date && date.getUTCFullYear() >= 2000 && date.getUTCFullYear() <= 2100) {
             return date;
         }
     }
-    
+
     // Si tout échoue, utiliser la date du jour
     console.warn(`⚠️ Date invalide: "${excelDate}", utilisation de la date du jour`);
     if (warnings) warnings.push(`date invalide ("${excelDate}")`);
-    return new Date();
+    return todayDateOnly();
 }
 
 /**
@@ -255,59 +229,33 @@ function normalizeColumnNames(row) {
 }
 
 /**
- * Récupère un produit existant ou le crée s'il n'existe pas
+ * Levée quand la création d'un produit échoue dans la transaction d'une ligne
+ * (typiquement : un import concurrent vient de créer le même produit, la
+ * contrainte unique produits_nom_produit_norm_key a fait échouer l'INSERT et
+ * la transaction PostgreSQL est alors inutilisable). La ligne est rejouée une
+ * fois : le produit sera alors trouvé.
  */
-async function getProduit(nom, caches = createCaches()) {
-    if (!nom || nom.trim() === '') {
-        throw new Error('Le nom du produit est requis');
+class ConflitCreationProduitError extends Error {
+    constructor(nomProduit, cause) {
+        super(`Création du produit "${nomProduit}" impossible: ${cause?.message || cause}`);
+        this.name = 'ConflitCreationProduitError';
+        this.cause = cause;
     }
+}
 
+/**
+ * Récupère l'id d'un produit existant (cache puis base), sans le créer.
+ * La création éventuelle est faite dans la transaction de la ligne
+ * (voir traiterMouvement) pour ne jamais laisser de produit orphelin si la
+ * ligne échoue.
+ */
+async function trouverProduitImport(client, nom, caches) {
     const nomTrim = nom.trim();
-    const { produitCache } = caches;
-
-    if (produitCache.has(nomTrim)) {
-        return produitCache.get(nomTrim);
+    if (caches.produitCache.has(nomTrim)) {
+        return caches.produitCache.get(nomTrim);
     }
-
-    let produit = await prisma.produits.findFirst({
-        where: {
-            nom_produit: {
-                equals: nomTrim,
-                mode: 'insensitive'
-            }
-        }
-    });
-
-    if (!produit) {
-        try {
-            // Stock initial à 0 : la quantité réelle de la ligne est appliquée
-            // ensuite par traiterMouvement(). Le seuil d'alerte, lui, est
-            // calculé dès la création pour que les produits importés ne se
-            // retrouvent pas sans alerte de stock bas.
-            produit = await creerNouveauProduit(prisma, {
-                nomProduit: nomTrim,
-                quantiteInitiale: 0
-            });
-            console.log(`🆕 Produit créé: "${nomTrim}" (ID: ${produit.id_produit}, seuil: ${produit.seuil_alerte})`);
-        } catch (error) {
-            if (error instanceof ProduitDejaExistantError) {
-                // Un autre import concurrent vient de créer ce produit
-                // (contrainte unique produits_nom_produit_norm_key) : on
-                // récupère la ligne qu'il vient de créer.
-                produit = await prisma.produits.findUnique({
-                    where: { id_produit: error.existingProductId }
-                });
-                console.log(`✅ Produit créé entre-temps par un autre import: "${nomTrim}" (ID: ${produit.id_produit})`);
-            } else {
-                throw error;
-            }
-        }
-    } else {
-        console.log(`✅ Produit trouvé: "${nomTrim}" (ID: ${produit.id_produit})`);
-    }
-
-    produitCache.set(nomTrim, produit.id_produit);
-    return produit.id_produit;
+    const produit = await trouverProduitParNom(client, nomTrim);
+    return produit ? produit.id_produit : null;
 }
 
 /**
@@ -436,17 +384,37 @@ function getNormalizedData(donnees) {
 
 /**
  * Fonction principale d'importation
+ *
+ * Chaque ligne est traitée dans sa propre transaction (création éventuelle du
+ * produit + stock + historique + mouvement) : une ligne en erreur n'écrit rien,
+ * en particulier aucun produit orphelin. Les lignes valides restent importées
+ * (import partiel, comme auparavant).
+ *
+ * Doublons : une ligne identique (date, produit, type, quantité, utilisateur,
+ * motif) à un mouvement DÉJÀ présent en base avant cet import est ignorée et
+ * comptée dans `doublons` (ré-import du même fichier => stock non doublé).
+ * Des lignes identiques au sein d'un même fichier restent importées (elles
+ * peuvent être légitimes) : la k-ième occurrence n'est ignorée que si la base
+ * contenait déjà au moins k mouvements identiques.
  */
 export async function importerMouvements(donnees) {
     console.log(`📊 Début de l'importation de ${donnees.length} mouvements...`);
-    
+
     let count = 0;
     let errors = 0;
+    let doublons = 0;
     const errorDetails = [];
+    const doublonDetails = [];
 
     // Caches isolés à cette exécution : évite toute contamination avec un
     // autre import qui s'exécuterait en parallèle sur le même serveur.
     const caches = createCaches();
+
+    // Contexte de détection des doublons propre à cet import
+    const contexteDoublons = {
+        idsCrees: [],               // mouvements créés par CET import (exclus de la comparaison)
+        doublonsParCle: new Map()   // nb de lignes déjà ignorées par clé de doublon
+    };
 
     const normalizedData = getNormalizedData(donnees);
 
@@ -455,28 +423,8 @@ export async function importerMouvements(donnees) {
         console.log(`  ⚠️ ${normalizedData.length - filteredData.length} lignes ignorées (nom de produit vide)`);
     }
 
-    console.log('\n🔍 Étape 1: Création/vérification des produits...');
-    const produitsUniques = new Set();
-    const typesMouvements = new Set();
-    
-    for (const row of filteredData) {
-        if (row.produitNom) {
-            produitsUniques.add(row.produitNom);
-        }
-        if (row.typeMouvement) {
-            typesMouvements.add(row.typeMouvement);
-        }
-    }
-    
-    for (const nomProduit of produitsUniques) {
-        try {
-            await getProduit(nomProduit, caches);
-        } catch (error) {
-            console.error(`❌ Erreur pour le produit "${nomProduit}": ${error.message}`);
-        }
-    }
-    
-    console.log(`  ✅ ${produitsUniques.size} produits vérifiés/créés`);
+    console.log('\n🔍 Étape 1: Analyse des types de mouvements...');
+    const typesMouvements = new Set(filteredData.map(row => row.typeMouvement).filter(Boolean));
     console.log(`  📊 Types de mouvements détectés: ${Array.from(typesMouvements).join(', ')}`);
 
     console.log('\n📍 Étape 2: Récupération des locaux existants...');
@@ -489,7 +437,7 @@ export async function importerMouvements(donnees) {
             locauxUniques.add(row.localDestinationNom);
         }
     }
-    
+
     let locauxTrouves = 0;
     let locauxIgnorees = 0;
     for (const nomLocal of locauxUniques) {
@@ -506,15 +454,26 @@ export async function importerMouvements(donnees) {
     console.log(`  📊 ${filteredData.length} mouvements à importer`);
 
     for (const row of filteredData) {
+        if (!TYPES_MOUVEMENT.includes(row.typeMouvement)) {
+            // Type inconnu : la ligne n'est PAS importée, elle compte comme une erreur
+            errors++;
+            errorDetails.push(
+                `${row.typeMouvement || 'INCONNU'} - ${row.produitNom}: type de mouvement non reconnu ` +
+                `(attendu: ${TYPES_MOUVEMENT.join(', ')})`
+            );
+            console.warn(`  ⚠️ Type de mouvement non reconnu: "${row.typeMouvement}" pour "${row.produitNom}"`);
+            continue;
+        }
         try {
-            if (row.typeMouvement === 'ENTREE' || row.typeMouvement === 'ENTREE_QUANTITE') {
-                await traiterMouvement(row, true, caches, errorDetails);
-            } else if (row.typeMouvement === 'SORTIE') {
-                await traiterMouvement(row, false, caches, errorDetails);
+            const resultat = await traiterMouvementAvecReessai(row, caches, errorDetails, contexteDoublons);
+            if (resultat.doublon) {
+                doublons++;
+                doublonDetails.push(
+                    `${row.typeMouvement} - ${row.produitNom} (${formatDateOnly(resultat.dateMouvement)}, qté ${row.quantite}, ${row.nomUtilisateur}) : déjà présent en base, ignoré`
+                );
             } else {
-                console.warn(`  ⚠️ Type de mouvement non reconnu: "${row.typeMouvement}" pour "${row.produitNom}"`);
+                count++;
             }
-            count++;
         } catch (error) {
             errors++;
             errorDetails.push(`${row.typeMouvement || 'INCONNU'} - ${row.produitNom}: ${error.message}`);
@@ -536,38 +495,61 @@ export async function importerMouvements(donnees) {
     console.log(`📊 RÉSUMÉ DE L'IMPORTATION`);
     console.log('='.repeat(50));
     console.log(`✅ Importations réussies: ${count}`);
+    console.log(`♻️ Doublons ignorés: ${doublons}`);
     console.log(`❌ Erreurs: ${errors}`);
     console.log(`📊 Total lignes: ${donnees.length}`);
-    
+
     if (errorDetails.length > 0) {
         console.log('\n📋 Détails des erreurs:');
         errorDetails.forEach(err => console.log(`  - ${err}`));
     }
     console.log('='.repeat(50));
 
-    return { 
-        success: count > 0, 
-        imported: count, 
-        errors: errors, 
+    return {
+        // Un import dont toutes les lignes sont des doublons n'est pas un échec
+        success: count > 0 || doublons > 0,
+        imported: count,
+        errors: errors,
         errorDetails,
+        doublons,
+        doublonDetails,
         total: donnees.length,
         autoEntriesCreated: 0
     };
 }
 
 /**
- * Traite un mouvement individuel
+ * Rejoue une fois une ligne dont la création de produit a échoué
+ * (création concurrente du même produit par un autre import).
  */
-async function traiterMouvement(row, isEntree, caches, errorDetails) {
+async function traiterMouvementAvecReessai(row, caches, errorDetails, contexteDoublons) {
+    try {
+        return await traiterMouvement(row, caches, errorDetails, contexteDoublons);
+    } catch (error) {
+        if (!(error instanceof ConflitCreationProduitError)) throw error;
+        console.warn(`  ⚠️ ${error.message} — nouvelle tentative`);
+        try {
+            return await traiterMouvement(row, caches, null, contexteDoublons);
+        } catch (secondError) {
+            throw secondError instanceof ConflitCreationProduitError ? (secondError.cause || secondError) : secondError;
+        }
+    }
+}
+
+/**
+ * Traite un mouvement individuel (dans une transaction dédiée).
+ * Retourne { doublon: true, dateMouvement } si la ligne est un doublon d'un
+ * mouvement déjà en base, sinon { doublon: false, mouvement, dateMouvement }.
+ */
+async function traiterMouvement(row, caches, errorDetails, contexteDoublons) {
     if (!Number.isInteger(row.quantite) || row.quantite <= 0) {
         throw new Error(`Quantité invalide ("${row.quantiteBrute}") pour "${row.produitNom}"`);
     }
 
-    const produitId = await getProduit(row.produitNom, caches);
     const localSourceId = row.localSourceNom ? await getLocalIfExists(row.localSourceNom, caches) : null;
     const localDestinationId = row.localDestinationNom ? await getLocalIfExists(row.localDestinationNom, caches) : null;
 
-    // Traiter la date
+    // Traiter la date (date calendaire à minuit UTC)
     let dateMouvement;
     let dateCorrigeeRaison = null;
     if (row.dateMouvement && row.dateMouvement !== '' && row.dateMouvement !== ' ') {
@@ -576,25 +558,25 @@ async function traiterMouvement(row, isEntree, caches, errorDetails) {
         if (dateWarnings.length > 0) {
             dateCorrigeeRaison = dateWarnings[0];
         }
-        if (!dateMouvement || isNaN(dateMouvement.getTime()) || dateMouvement.getFullYear() < 2000 || dateMouvement.getFullYear() > 2100) {
-            dateMouvement = new Date();
+        if (!dateMouvement || isNaN(dateMouvement.getTime()) || dateMouvement.getUTCFullYear() < 2000 || dateMouvement.getUTCFullYear() > 2100) {
+            dateMouvement = todayDateOnly();
             dateCorrigeeRaison = dateCorrigeeRaison || `date invalide ("${row.dateMouvement}")`;
             console.warn(`  ⚠️ Date invalide pour "${row.produitNom}", utilisation de la date du jour`);
         }
     } else {
-        dateMouvement = new Date();
+        dateMouvement = todayDateOnly();
         dateCorrigeeRaison = 'date manquante';
     }
 
     if (dateCorrigeeRaison && errorDetails) {
         errorDetails.push(
             `⚠️ Date corrigée automatiquement pour "${row.produitNom}" (${dateCorrigeeRaison}) : ` +
-            `date du jour (${dateMouvement.toISOString().split('T')[0]}) utilisée à la place.`
+            `date du jour (${formatDateOnly(dateMouvement)}) utilisée à la place.`
         );
     }
 
-    console.log(`  📅 Date pour "${row.produitNom}": ${dateMouvement.toISOString().split('T')[0]} (depuis "${row.dateMouvement}")`);
-    
+    console.log(`  📅 Date pour "${row.produitNom}": ${formatDateOnly(dateMouvement)} (depuis "${row.dateMouvement}")`);
+
     let materielId = null;
     if (row.materielStr) {
         const materielWarnings = [];
@@ -607,79 +589,76 @@ async function traiterMouvement(row, isEntree, caches, errorDetails) {
         }
     }
 
-    const mouvement = await prisma.$transaction(async (tx) => {
-        // SELECT ... FOR UPDATE : verrouille la ligne du produit le temps de la
-        // transaction pour éviter que deux imports/mouvements concurrents sur le
-        // même produit lisent le même stock avant que l'un des deux ne l'ait mis
-        // à jour (ce qui pouvait mener à un stock négatif malgré le contrôle ci-dessous).
-        const rows = await tx.$queryRaw`SELECT * FROM produits WHERE id_produit = ${produitId} FOR UPDATE`;
-        const produit = rows[0];
+    const nomProduit = row.produitNom.trim();
+    const motif = row.motif || null;
 
-        if (!produit) {
-            throw new Error(`Produit avec ID ${produitId} introuvable`);
-        }
+    const resultat = await prisma.$transaction(async (tx) => {
+        let produitId = await trouverProduitImport(tx, nomProduit, caches);
+        let cleDoublon = null;
 
-        const stockActuel = produit.quantite_en_stock ?? 0;
-        console.log(`  Stock actuel de "${row.produitNom}": ${stockActuel}`);
-
-        if (isEntree) {
-            await tx.produits.update({
-                where: { id_produit: produitId },
-                data: {
-                    quantite_en_stock: { increment: row.quantite },
-                    last_date: dateMouvement
-                }
-            });
-
-            await tx.historiqueArrive.create({
-                data: {
+        if (produitId) {
+            // Détection des doublons par rapport aux mouvements déjà en base
+            // (hors mouvements créés par cet import).
+            cleDoublon = [produitId, formatDateOnly(dateMouvement), row.typeMouvement, row.quantite, row.nomUtilisateur, motif].join('|');
+            const existants = await tx.mouvement.count({
+                where: {
                     id_produit: produitId,
-                    quantite_arrivee: row.quantite,
-                    date_arrivee: dateMouvement,
-                    ancienne_quantite_stock: stockActuel,
-                    ancienne_date_stock: produit.last_date || null,
-                    remarque: row.motif ? row.motif.substring(0, 255) : null
+                    date_mouvement: dateMouvement,
+                    type_mouvement: row.typeMouvement,
+                    quantite: row.quantite,
+                    nom_utilisateur: row.nomUtilisateur,
+                    motif,
+                    id_mouvement: { notIn: contexteDoublons.idsCrees }
                 }
             });
-            console.log(`  ✅ HistoriqueArrive créé pour "${row.produitNom}" (+${row.quantite})`);
-            console.log(`  ✅ Entrée: +${row.quantite} -> nouveau stock: ${stockActuel + row.quantite}`);
-
-        } else {
-            if (stockActuel < row.quantite) {
-                throw new Error(
-                    `Stock insuffisant pour "${row.produitNom}". ` +
-                    `Disponible: ${stockActuel}, Demandé: ${row.quantite}`
-                );
+            const dejaIgnores = contexteDoublons.doublonsParCle.get(cleDoublon) || 0;
+            if (existants > dejaIgnores) {
+                return { doublon: true, produitId, cleDoublon };
             }
-
-            await tx.produits.update({
-                where: { id_produit: produitId },
-                data: {
-                    quantite_en_stock: { decrement: row.quantite },
-                    last_date: dateMouvement
-                }
-            });
-            console.log(`  ✅ Sortie: -${row.quantite} -> nouveau stock: ${stockActuel - row.quantite}`);
+        } else {
+            // Produit inconnu : créé DANS la transaction de la ligne (annulé si la ligne échoue).
+            // Stock initial à 0 : la quantité réelle est appliquée par creerMouvement().
+            // Le seuil d'alerte est calculé dès la création.
+            try {
+                const produit = await creerNouveauProduit(tx, { nomProduit, quantiteInitiale: 0 });
+                produitId = produit.id_produit;
+                console.log(`🆕 Produit créé: "${nomProduit}" (ID: ${produitId}, seuil: ${produit.seuil_alerte})`);
+            } catch (error) {
+                throw new ConflitCreationProduitError(nomProduit, error);
+            }
         }
 
-        return await tx.mouvement.create({
-            data: {
-                id_produit: produitId,
-                date_mouvement: dateMouvement,
-                type_mouvement: row.typeMouvement,
-                quantite: row.quantite,
+        // Stock (décrément atomique pour une sortie) + historique + mouvement
+        const mouvement = await creerMouvement(tx, {
+            idProduit: produitId,
+            typeMouvement: row.typeMouvement,
+            quantite: row.quantite,
+            dateMouvement,
+            remarqueHistorique: motif,
+            donnees: {
                 id_local_source: localSourceId,
                 id_local_destination: localDestinationId,
                 id_materiels: materielId,
-                motif: row.motif,
+                motif,
                 remarque: row.remarque || null,
                 nom_utilisateur: row.nomUtilisateur
             }
         });
+        return { doublon: false, produitId, mouvement };
     });
-    
-    console.log(`  ✅ Mouvement créé (ID: ${mouvement.id_mouvement})`);
-    return mouvement;
+
+    // Mise en cache uniquement après validation de la transaction
+    caches.produitCache.set(nomProduit, resultat.produitId);
+
+    if (resultat.doublon) {
+        contexteDoublons.doublonsParCle.set(resultat.cleDoublon, (contexteDoublons.doublonsParCle.get(resultat.cleDoublon) || 0) + 1);
+        console.log(`  ♻️ Doublon ignoré pour "${row.produitNom}" (${formatDateOnly(dateMouvement)}, ${row.typeMouvement}, ${row.quantite})`);
+        return { doublon: true, dateMouvement };
+    }
+
+    contexteDoublons.idsCrees.push(resultat.mouvement.id_mouvement);
+    console.log(`  ✅ Mouvement créé (ID: ${resultat.mouvement.id_mouvement})`);
+    return { doublon: false, mouvement: resultat.mouvement, dateMouvement };
 }
 
 /**
@@ -720,7 +699,7 @@ export async function importMouvementsFromBuffer(buffer, filename) {
             console.log(`📅 Exemple de date brute: "${firstDate}" (type: ${typeof firstDate})`);
             
             if (typeof firstDate === 'number') {
-                console.log(`📅 Date Excel en nombre: ${firstDate} (correspond au ${new Date(1899, 11, 30 + firstDate).toISOString().split('T')[0]})`);
+                console.log(`📅 Date Excel en nombre: ${firstDate} (correspond au ${formatDateOnly(excelDateToJSDate(firstDate))})`);
             }
             
             const normalizedFirstRow = normalizeColumnNames(firstRow);
@@ -740,16 +719,23 @@ export async function importMouvementsFromBuffer(buffer, filename) {
         
         const result = await importerMouvements(data);
         
+        const complements = [];
+        if (result.doublons > 0) complements.push(`${result.doublons} doublon(s) ignoré(s)`);
+        if (result.errors > 0) complements.push(`${result.errors} erreur(s)`);
+        const suffixe = complements.length > 0 ? ` — ${complements.join(', ')}` : '';
+
         return {
             success: result.success,
             imported: result.imported,
             errors: result.errors,
             errorDetails: result.errorDetails,
+            doublons: result.doublons,
+            doublonDetails: result.doublonDetails,
             total: data.length,
             autoEntriesCreated: result.autoEntriesCreated || 0,
-            message: result.imported > 0 
-                ? `${result.imported} mouvements importés sur ${data.length} (${result.autoEntriesCreated || 0} entrées automatiques)`
-                : 'Aucun mouvement n\'a pu être importé'
+            message: result.success
+                ? `${result.imported} mouvements importés sur ${data.length}${suffixe}`
+                : `Aucun mouvement n'a pu être importé${suffixe}`
         };
 
     } catch (error) {
@@ -761,7 +747,7 @@ export async function importMouvementsFromBuffer(buffer, filename) {
 export default {
     importMouvementsFromBuffer,
     importerMouvements,
-    getProduit,
+    trouverProduitImport,
     getLocalIfExists,
     getMaterielByIdN,
     normalizeColumnNames

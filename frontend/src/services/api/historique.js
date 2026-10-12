@@ -39,32 +39,8 @@ export const getHistoriqueArriveeById = async (id) => {
   }
 };
 
-export const createHistoriqueArrivee = async (data) => {
-  try {
-    const response = await apiClient.post('/historique_arrive', data);
-    return response.data;
-  } catch (error) {
-    throw new Error(getErrorMessage(error));
-  }
-};
-
-export const updateHistoriqueArrivee = async (id, data) => {
-  try {
-    const response = await apiClient.put(`/historique_arrive/${id}`, data);
-    return response.data;
-  } catch (error) {
-    throw new Error(getErrorMessage(error));
-  }
-};
-
-export const deleteHistoriqueArrivee = async (id) => {
-  try {
-    const response = await apiClient.delete(`/historique_arrive/${id}`);
-    return response.data;
-  } catch (error) {
-    throw new Error(getErrorMessage(error));
-  }
-};
+// Pas de création / modification / suppression directe de l'historique des
+// arrivées : il est écrit côté serveur avec chaque variation de stock.
 
 // --- HISTORIQUE DES MATÉRIELS ---
 

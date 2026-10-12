@@ -2,25 +2,60 @@
 // Partagé par le robot d'envoi (cron-worker.js) et les routes d'envoi manuel/test.
 import nodemailer from 'nodemailer';
 import ExcelJS from 'exceljs';
+import { CRON_TIMEZONE } from '../constants/cron.js';
 
-// Fonction utilitaire pour obtenir la date actuelle formatée
+// Toutes les dates du rapport (noms de fichiers, "Généré le", colonnes) sont exprimées
+// dans le fuseau CRON_TIMEZONE et non dans celui du serveur.
+const getZonedParts = (date = new Date()) => Object.fromEntries(
+    new Intl.DateTimeFormat('fr-FR', {
+        timeZone: CRON_TIMEZONE, hourCycle: 'h23',
+        year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
+    })
+        .formatToParts(date)
+        .map(p => [p.type, p.value])
+);
+
+// Formate une date en "JJ/MM/AAAA" dans le fuseau du robot
+export const formatDate = (date) => date
+    ? new Date(date).toLocaleDateString('fr-FR', { timeZone: CRON_TIMEZONE })
+    : '';
+
+// Formate une date en "JJ/MM/AAAA HH:MM:SS" dans le fuseau du robot
+export const formatDateTime = (date) => date
+    ? new Date(date).toLocaleString('fr-FR', { timeZone: CRON_TIMEZONE })
+    : '';
+
+// Fonction utilitaire pour obtenir la date actuelle formatée (JJ-MM-AAAA)
 export const getCurrentDate = () => {
-    const now = new Date();
-    return now.toLocaleDateString('fr-FR', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-    }).replace(/\//g, '-');
+    const p = getZonedParts();
+    return `${p.day}-${p.month}-${p.year}`;
+};
+
+// Date et heure actuelles pour les noms de fichiers (JJ-MM-AAAA_17h05)
+export const getCurrentDateTime = () => {
+    const p = getZonedParts();
+    return `${p.day}-${p.month}-${p.year}_${Number(p.hour)}h${p.minute}`;
 };
 
 // Fonction utilitaire pour obtenir le mois actuel formaté
 export const getCurrentMonth = () => {
-    const now = new Date();
-    return now.toLocaleDateString('fr-FR', {
+    return new Intl.DateTimeFormat('fr-FR', {
+        timeZone: CRON_TIMEZONE,
         year: 'numeric',
         month: 'long'
-    });
+    }).format(new Date());
 };
+
+// Config email renvoyée au client : jamais le mot de passe SMTP, seulement s'il est défini
+export const toPublicEmailConfig = (config) => {
+    if (!config) return config;
+    const { email_pass, ...rest } = config;
+    return { ...rest, hasPassword: Boolean(email_pass) };
+};
+
+// Mot de passe SMTP envoyé par le client : undefined si vide/absent (=> conserver l'existant)
+export const getNewEmailPass = (value) =>
+    typeof value === 'string' && value.trim() !== '' ? value : undefined;
 
 // Fonction utilitaire pour ajuster la largeur des colonnes automatiquement
 export const autoSizeColumns = (worksheet) => {
@@ -36,8 +71,7 @@ export const autoSizeColumns = (worksheet) => {
 
 // Fonction pour générer le rapport Excel
 export const generateExcelReport = async (prisma) => {
-    const now = new Date();
-    const fullDateTime = `${now.toLocaleDateString('fr-FR').replace(/\//g, '-')}_${now.getHours()}h${String(now.getMinutes()).padStart(2, '0')}`;
+    const fullDateTime = getCurrentDateTime();
 
     const [historiqueArrivees, tousLesMouvements, tousLesProduits] = await Promise.all([
         prisma.historiqueArrive.findMany({ orderBy: { date_arrivee: 'desc' }, include: { produit: true } }),
@@ -95,7 +129,7 @@ export const generateExcelReport = async (prisma) => {
     const sheet1 = workbook.addWorksheet('Historique Arrivées');
     sheet1.columns = [{ header: 'Produit', key: 'nom' }, { header: 'Qté Ajoutée', key: 'qte' }, { header: 'Ancien Stock', key: 'ancien' }, { header: 'Date Arrivée', key: 'date' }];
     sheet1.getRow(1).eachCell(cell => cell.style = headerStyle);
-    historiqueArrivees.forEach(h => sheet1.addRow({ nom: h.produit?.nom_produit, qte: h.quantite_arrivee, ancien: h.ancienne_quantite_stock, date: h.date_arrivee.toLocaleString() }));
+    historiqueArrivees.forEach(h => sheet1.addRow({ nom: h.produit?.nom_produit, qte: h.quantite_arrivee, ancien: h.ancienne_quantite_stock, date: formatDateTime(h.date_arrivee) }));
     autoSizeColumns(sheet1);
 
     // --- FEUILLE 2 : Mouvements Généraux ---
@@ -108,7 +142,7 @@ export const generateExcelReport = async (prisma) => {
     sheet2.getRow(1).eachCell(cell => cell.style = headerStyle);
     tousLesMouvements.forEach(m => {
         const row = sheet2.addRow({
-            date: m.date_mouvement.toLocaleDateString(), prod: m.produits?.nom_produit || 'N/A', type: m.type_mouvement,
+            date: formatDate(m.date_mouvement), prod: m.produits?.nom_produit || 'N/A', type: m.type_mouvement,
             qte: m.quantite, source: m.localSource?.nom_local || '---', dest: m.localDestination?.nom_local || '---',
             user: m.nom_utilisateur, motif: m.motif || '-'
         });
@@ -123,7 +157,7 @@ export const generateExcelReport = async (prisma) => {
     sheet3.columns = [{ header: 'Nom Produit', key: 'nom' }, { header: 'Stock Actuel', key: 'stock' }, { header: 'Seuil Alerte', key: 'seuil' }, { header: 'Dernière Mise à jour', key: 'last' }];
     sheet3.getRow(1).eachCell(cell => cell.style = headerStyle);
     tousLesProduits.forEach(p => {
-        const row = sheet3.addRow({ nom: p.nom_produit, stock: p.quantite_en_stock || 0, seuil: p.seuil_alerte || 0, last: p.last_date ? p.last_date.toLocaleDateString() : 'N/A' });
+        const row = sheet3.addRow({ nom: p.nom_produit, stock: p.quantite_en_stock || 0, seuil: p.seuil_alerte || 0, last: p.last_date ? formatDate(p.last_date) : 'N/A' });
         if ((p.quantite_en_stock || 0) <= (p.seuil_alerte || 0)) {
             row.getCell('stock').font = { color: { argb: 'FF0000' }, bold: true };
             row.getCell('nom').font = { color: { argb: 'FF0000' } };

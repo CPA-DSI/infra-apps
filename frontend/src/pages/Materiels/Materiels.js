@@ -5,7 +5,7 @@ import DataTable from 'react-data-table-component';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import { useAuth } from '../../contexts/AuthContext';
-import { apiClient } from '../../services/api';
+import { apiClient, updateMaterielStatut } from '../../services/api';
 import { Button, Form, InputGroup, Spinner, Card, Alert } from 'react-bootstrap';
 import { FaEye, FaEdit, FaTrash, FaFileExcel, FaSearch, FaSync, FaTimes, FaDesktop, FaFileImport, FaPlus, FaUpload, FaCheckCircle, FaFileUpload, FaHistory, FaInfoCircle, FaInbox, FaUsers, FaMapMarkerAlt, FaCalendarAlt, FaUserCircle, FaBatteryFull, FaTags } from 'react-icons/fa';
 /// --- Importations des Modales ---
@@ -173,37 +173,8 @@ const handleToggleEstActif = useCallback(async (row) => {
     ));
 
     try {
-        const { utilisateur, ...safeUpdateData } = row;
-        const updateData = { ...safeUpdateData, est_actif: newVal };
-        updateData.etat_pc = newVal ? 'Bon' : 'Disponible';
-        delete updateData.id_materiels;
-        delete updateData.id_n;
-        delete updateData.equipe;
-        delete updateData.date_pc;
-        delete updateData.date_ecran;
-        delete updateData.caracteristiques;
-        delete updateData.code_pc;
-        delete updateData.ecran;
-        delete updateData.code_ecran;
-        delete updateData.hdmi;
-        delete updateData.clavier;
-        delete updateData.lan;
-        delete updateData.usb;
-        delete updateData.salle;
-        delete updateData.mdp_pc;
-        delete updateData.mdp_admin;
-        delete updateData.etat_batterie;
-        delete updateData.commentaire;
-        delete updateData.id_marque;
-        delete updateData.id_local;
-        delete updateData.date_modification;
-        delete updateData.url;
-        delete updateData.marque;
-        delete updateData.local;
-        delete updateData.user;
-        delete updateData.nom_marque;
-        delete updateData.nom_local;
-        await apiClient.put(`/materiels_all/${row.id_materiels}`, updateData);
+        // Route dédiée : le PUT n'accepte plus est_actif (suivi par l'affectation).
+        await updateMaterielStatut(row.id_materiels, newVal);
         await fetchMateriels();
     } catch (error) {
         console.error("Erreur lors de la mise à jour de est_actif:", error);
@@ -213,7 +184,7 @@ const handleToggleEstActif = useCallback(async (row) => {
         MySwal.fire({
             icon: 'error',
             title: 'Erreur',
-            text: 'Impossible de modifier le statut.',
+            text: error.message || 'Impossible de modifier le statut.',
             timer: 2000,
             showConfirmButton: false
         });
@@ -291,9 +262,10 @@ const renderEstActif = useCallback((row) => {
         const bg = isActive ? '#d1fae5' : '#fee2e2';
         const border = isActive ? '#10b981' : '#ef4444';
         
-        if (userRole === 'USER') {
+        // PC en stock et fiches « Sans poste » : statut piloté par l'affectation.
+        if (userRole === 'USER' || row.est_vide || row.id_n == null) {
             return (
-                <span style={{ 
+                <span title={userRole === 'USER' ? undefined : "Statut piloté par l'affectation (« Réaffecter le PC »)"} style={{ 
                     backgroundColor: bg, color: color, border: `1px solid ${border}`, padding: "4px 12px", borderRadius: "20px", fontSize: "0.7rem", fontWeight: "600", display: "inline-flex", alignItems: "center", gap: "6px"
                 }}>
                     <span style={{ fontSize: '0.8rem' }}>{isActive ? '✅' : '❌'}</span>

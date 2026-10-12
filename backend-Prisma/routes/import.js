@@ -19,8 +19,10 @@ const BCRYPT_ROUNDS = 10;
 const DEFAULT_PASSWORD = 'User123456';
 
 // Fonction pour convertir les dates Excel (nombre de jours depuis 1900-01-01)
+// Époque au 30/12/1899 (et non 31/12) : Excel compte le 29/02/1900 inexistant,
+// ce qui décalait toutes les dates d'un jour (45000 = 15/03/2023).
 const excelDateToJSDate = (excelDate) => {
-    const excelEpoch = new Date(Date.UTC(1899, 11, 31));
+    const excelEpoch = new Date(Date.UTC(1899, 11, 30));
     const msPerDay = 24 * 60 * 60 * 1000;
     const result = new Date(excelEpoch.getTime() + (excelDate * msPerDay));
     return result;
@@ -144,12 +146,14 @@ const validateDate = (dateValue) => {
                 }
             }
             
-            // 7. Dernier essai avec new Date()
+            // 7. Dernier essai avec new Date() : la chaîne est lue en heure
+            // locale (serveur en +03), on garde le jour local et on le pose à
+            // minuit UTC pour la colonne @db.Date (sinon veille en base).
             date = new Date(cleanDateString);
             if (!isNaN(date.getTime())) {
-                const year = date.getUTCFullYear();
+                const year = date.getFullYear();
                 if (year >= 1990 && year <= 2100) {
-                    return date;
+                    return new Date(Date.UTC(year, date.getMonth(), date.getDate()));
                 }
             }
 
@@ -162,7 +166,9 @@ const validateDate = (dateValue) => {
         }
         
         if (dateValue instanceof Date) {
-            return dateValue;
+            return isNaN(dateValue.getTime())
+                ? null
+                : new Date(Date.UTC(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate()));
         }
         
         return null;
@@ -532,6 +538,18 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
         const userCache = new Map();
         const createdUsers = [];
         const preparedRows = [];
+        // Lignes écartées avant écriture (doublons, matricule invalide, fiche
+        // non identifiable) : renvoyées au frontend avec leur motif.
+        // ligne = numéro de ligne Excel (en-tête en ligne 1).
+        const skipped = [];
+        const ignorer = (index, utilisateur, raison) => {
+            console.warn(`[IGNORÉ] Item ${index}: ${raison}`);
+            skipped.push({ index, ligne: index + 2, utilisateur, raison });
+        };
+        const idNsVus = new Map();
+        const clesSansMatriculeVues = new Map();
+        const postesRapprochesVus = new Map();
+        let updatedCount = 0;
 
         // Amorçage des caches en 3 requêtes (au lieu d'une requête par nouvelle
         // valeur rencontrée pendant la boucle) : la grande majorité des lignes
@@ -569,41 +587,95 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
                     }
                 }
 
-                // --- Matricule (id_n) : plusieurs orthographes de colonne possibles,
-                // puis à défaut la première valeur numérique plausible de la ligne
-                // (en excluant la plage 40000-50000, réservée à d'autres codes).
+                // --- Matricule (id_n) : uniquement depuis une colonne matricule.
+                // Plus de repli sur « la première valeur numérique de la ligne »
+                // (id_local, année... pouvaient être pris pour un matricule et
+                // écraser la fiche d'un autre utilisateur).
                 let id_n = null;
+                let matriculeBrut = null;
                 const matriculeKeys = ['N° Matricule', 'N°Matricule', 'Matricule', 'matricule', 'id_n', 'idN', 'Id_n', 'ID_N'];
                 for (const key of allKeys) {
                     if (!matriculeKeys.some(k => k.toLowerCase() === key.toLowerCase())) continue;
                     const value = item[key];
                     if (value === undefined || value === null || value === '') continue;
+                    matriculeBrut = value;
                     if (typeof value === 'number') { id_n = value; break; }
                     if (typeof value === 'string') {
                         const parsed = parseInt(value.trim());
                         if (!isNaN(parsed) && parsed > 0) { id_n = parsed; break; }
                     }
                 }
-                if (!id_n) {
-                    for (const key of allKeys) {
-                        const value = item[key];
-                        if (typeof value === 'number' && value > 0 && value < 999999 && (value < 40000 || value > 50000)) {
-                            id_n = value;
-                            break;
-                        }
-                    }
+                const ligneUtilisateur = item['Utilisateur'] || item.utilisateur || 'unknown';
+                if (matriculeBrut !== null && !(Number.isInteger(id_n) && id_n > 0)) {
+                    ignorer(i, ligneUtilisateur, `Matricule invalide : « ${matriculeBrut} ».`);
+                    continue;
                 }
 
                 // --- Utilisateur / équipe ---
                 const nomUtilisateur = cleanString(findFieldValue(item, allKeys, ['Utilisateur', 'utilisateur', 'USER', 'User'])) || 'Utilisateur inconnu';
                 const equipe = cleanString(findFieldValue(item, allKeys, ['equipe', 'TEAM', 'Team'])) || 'Autres';
+                const code_pc = cleanString(findFieldValue(item, allKeys, ['Code PC', 'Code_PC', 'code_pc', 'CodePc']));
 
-                if (!id_n) {
-                    id_n = await generateIdN();
+                // --- Doublons et rapprochement ---
+                // Avec matricule : un même matricule ne doit apparaître qu'une fois
+                // dans le fichier (createMany/skipDuplicates ignorait les suivants
+                // en silence). Sans matricule : on cherche la fiche existante par
+                // code PC, sinon par nom + équipe, pour la mettre à jour au lieu de
+                // créer un nouvel utilisateur à chaque ré-import.
+                let posteRapproche = null;
+                if (id_n) {
+                    if (idNsVus.has(id_n)) {
+                        ignorer(i, ligneUtilisateur, `Matricule ${id_n} en double dans le fichier (déjà présent ligne ${idNsVus.get(id_n) + 2}).`);
+                        continue;
+                    }
+                    idNsVus.set(id_n, i);
+                } else {
+                    const nomConnu = nomUtilisateur !== 'Utilisateur inconnu';
+                    if (!code_pc && !nomConnu) {
+                        ignorer(i, ligneUtilisateur, 'Ni matricule, ni code PC, ni nom d\'utilisateur : impossible d\'identifier la fiche.');
+                        continue;
+                    }
+                    const cleFichier = code_pc
+                        ? `pc:${code_pc.toLowerCase()}`
+                        : `nom:${nomUtilisateur.toLowerCase()}|${equipe.toLowerCase()}`;
+                    if (clesSansMatriculeVues.has(cleFichier)) {
+                        ignorer(i, ligneUtilisateur, `${code_pc ? `Code PC ${code_pc}` : `${nomUtilisateur} (${equipe})`} en double dans le fichier (déjà présent ligne ${clesSansMatriculeVues.get(cleFichier) + 2}).`);
+                        continue;
+                    }
+                    clesSansMatriculeVues.set(cleFichier, i);
+
+                    const candidats = await prisma.materiels.findMany({
+                        where: code_pc
+                            ? { code_pc: { equals: code_pc, mode: 'insensitive' }, date_suppression: null }
+                            : {
+                                utilisateur: { equals: nomUtilisateur, mode: 'insensitive' },
+                                equipe: { equals: equipe, mode: 'insensitive' },
+                                date_suppression: null,
+                            },
+                        select: { id_materiels: true, id_n: true, utilisateur: true },
+                        take: 2,
+                    });
+                    if (candidats.length > 1) {
+                        ignorer(i, ligneUtilisateur, `Plusieurs fiches correspondent (${code_pc ? `code PC ${code_pc}` : `${nomUtilisateur} / ${equipe}`}) : renseignez le matricule.`);
+                        continue;
+                    }
+                    if (candidats.length === 1) {
+                        posteRapproche = candidats[0];
+                        if (postesRapprochesVus.has(posteRapproche.id_materiels)) {
+                            ignorer(i, ligneUtilisateur, `Fiche déjà mise à jour par la ligne ${postesRapprochesVus.get(posteRapproche.id_materiels) + 2} du fichier.`);
+                            continue;
+                        }
+                        postesRapprochesVus.set(posteRapproche.id_materiels, i);
+                        // La fiche existante garde son bénéficiaire (affectation).
+                        id_n = posteRapproche.id_n;
+                    } else {
+                        // Nouvelle fiche : matricule tiré de la séquence.
+                        id_n = await generateIdN();
+                    }
                 }
 
                 // --- Création/récupération de l'utilisateur ---
-                if (id_n && !userCache.has(id_n)) {
+                if (id_n && !posteRapproche && !userCache.has(id_n)) {
                     const result = await findOrCreateUser(id_n, nomUtilisateur, equipe, localName, firstEmailState);
                     if (result) {
                         userCache.set(id_n, result.user.id_user);
@@ -646,7 +718,6 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
                 }
 
                 // --- Autres champs ---
-                const code_pc = cleanString(findFieldValue(item, allKeys, ['Code PC', 'Code_PC', 'code_pc', 'CodePc']));
                 const ecran = cleanString(findFieldValue(item, allKeys, ['Marque Écran', 'Marque_Ecran', 'marque_ecran', 'Ecran']));
                 const code_ecran = cleanString(findFieldValue(item, allKeys, ['Code Écran', 'Code_Ecran', 'code_ecran', 'CodeEcran']));
                 const hdmi = convertBoolean(findFieldValue(item, allKeys, ['HDMI', 'hdmi']));
@@ -693,7 +764,8 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
                 // table ecrans après l'écriture des matériels (cf. plus bas).
                 preparedRows.push({
                     index: i,
-                    utilisateur: item['Utilisateur'] || item.utilisateur || 'unknown',
+                    utilisateur: ligneUtilisateur,
+                    posteRapproche,
                     data,
                     ecran: {
                         code_ecran: truncate(code_ecran, 200),
@@ -717,6 +789,7 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
         // déjà existant (à mettre à jour) de celles à créer, puis crée toutes les
         // nouvelles lignes en un seul aller-retour au lieu d'un upsert par ligne.
         const idNsAVerifier = preparedRows
+            .filter(r => !r.posteRapproche)
             .map(r => r.data.id_n)
             .filter(id => id !== null && id !== undefined);
 
@@ -730,8 +803,11 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
 
         const rowsACreer = [];
         const rowsAMettreAJour = [];
+        const rowsRapprochees = [];
         for (const row of preparedRows) {
-            if (row.data.id_n !== null && idNsExistants.has(row.data.id_n)) {
+            if (row.posteRapproche) {
+                rowsRapprochees.push(row);
+            } else if (row.data.id_n !== null && idNsExistants.has(row.data.id_n)) {
                 rowsAMettreAJour.push(row);
             } else {
                 rowsACreer.push(row);
@@ -740,12 +816,25 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
 
         if (rowsACreer.length > 0) {
             try {
+                // Les doublons de matricule sont écartés (et signalés) plus haut ;
+                // skipDuplicates ne sert plus que de filet face à un import
+                // concurrent : les lignes alors ignorées sont aussi signalées.
                 const created = await prisma.materiels.createMany({
                     data: rowsACreer.map(r => r.data),
                     skipDuplicates: true
                 });
                 successCount += created.count;
                 console.log(`[SUCCÈS] ✅ ${created.count} matériel(s) créé(s) en un lot`);
+                if (created.count < rowsACreer.length) {
+                    const nbIgnorees = rowsACreer.length - created.count;
+                    console.warn(`[IGNORÉ] ${nbIgnorees} ligne(s) non créée(s) : matricule créé entre-temps.`);
+                    skipped.push({
+                        index: null,
+                        ligne: null,
+                        utilisateur: null,
+                        raison: `${nbIgnorees} ligne(s) non créée(s) : matricule déjà utilisé par un import simultané. Relancez l'import pour les mettre à jour.`
+                    });
+                }
             } catch (batchError) {
                 // Une ligne du lot est invalide : on retente une par une pour isoler
                 // la ligne fautive plutôt que de perdre tout le lot.
@@ -766,6 +855,31 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
                 // La ligne importée décrit un PC : un poste vide redevient un poste normal.
                 await prisma.materiels.update({ where: { id_n: row.data.id_n }, data: { ...row.data, est_vide: false } });
                 successCount++;
+                updatedCount++;
+            } catch (rowError) {
+                errors.push({ index: row.index, utilisateur: row.utilisateur, error: rowError.message });
+            }
+        }
+
+        // Lignes sans matricule rapprochées d'une fiche existante (code PC ou
+        // nom + équipe) : mise à jour par id_materiels. Le bénéficiaire
+        // (id_n, utilisateur) ne change que par l'affectation ; un PC en stock
+        // garde aussi son équipe et son statut.
+        for (const row of rowsRapprochees) {
+            try {
+                const maj = { ...row.data };
+                delete maj.id_n;
+                delete maj.utilisateur;
+                if (row.posteRapproche.id_n === null) {
+                    delete maj.equipe;
+                    delete maj.est_actif;
+                }
+                await prisma.materiels.update({
+                    where: { id_materiels: row.posteRapproche.id_materiels, date_suppression: null },
+                    data: { ...maj, est_vide: false }
+                });
+                successCount++;
+                updatedCount++;
             } catch (rowError) {
                 errors.push({ index: row.index, utilisateur: row.utilisateur, error: rowError.message });
             }
@@ -775,17 +889,24 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
         // Une transaction par ligne : un conflit d'écran (code déjà sur un autre
         // poste) n'est qu'un avertissement et n'annule pas l'import de la fiche.
         const warnings = [];
-        const idNsImportes = preparedRows.map(r => r.data.id_n).filter(id => id !== null && id !== undefined);
-        const postesImportes = idNsImportes.length > 0
+        const idNsImportes = preparedRows.filter(r => !r.posteRapproche).map(r => r.data.id_n).filter(id => id !== null && id !== undefined);
+        const idsRapproches = preparedRows.filter(r => r.posteRapproche).map(r => r.posteRapproche.id_materiels);
+        const postesImportes = idNsImportes.length > 0 || idsRapproches.length > 0
             ? await prisma.materiels.findMany({
-                where: { id_n: { in: idNsImportes }, date_suppression: null },
+                where: {
+                    OR: [{ id_n: { in: idNsImportes } }, { id_materiels: { in: idsRapproches } }],
+                    date_suppression: null
+                },
                 select: { id_materiels: true, id_n: true, utilisateur: true }
             })
             : [];
-        const posteParIdN = new Map(postesImportes.map(m => [m.id_n, m]));
+        const posteParIdN = new Map(postesImportes.filter(m => m.id_n !== null).map(m => [m.id_n, m]));
+        const posteParId = new Map(postesImportes.map(m => [m.id_materiels, m]));
 
         for (const row of preparedRows) {
-            const poste = row.data.id_n !== null ? posteParIdN.get(row.data.id_n) : null;
+            const poste = row.posteRapproche
+                ? posteParId.get(row.posteRapproche.id_materiels)
+                : (row.data.id_n !== null ? posteParIdN.get(row.data.id_n) : null);
             if (!poste) {
                 if (row.ecran.code_ecran) {
                     warnings.push({ index: row.index, utilisateur: row.utilisateur, error: `Écran ${row.ecran.code_ecran} non rattaché : poste sans matricule.` });
@@ -799,7 +920,7 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
                         select: { id_affectation: true }
                     });
                     if (!affectationExistante) {
-                        await ouvrirAffectationInitiale(tx, { ...poste, id_n: row.data.id_n }, req.user?.id_n, 'Import Excel');
+                        await ouvrirAffectationInitiale(tx, poste, req.user?.id_n, 'Import Excel');
                     }
                     await rattacherEcranParCode(tx, poste.id_materiels, row.ecran, req.user?.id_n, 'Import Excel');
                 });
@@ -816,13 +937,19 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
         } else {
             message = `${successCount}/${items.length} éléments importés avec succès (${userCreatedCount} utilisateurs, ${localCreatedCount} locaux)`;
         }
+        if (skipped.length > 0) {
+            message += `, ${skipped.length} ligne(s) ignorée(s)`;
+        }
 
         return res.status(200).json({
             success: successCount > 0,
             stats: {
                 success: successCount,
+                created: successCount - updatedCount,
+                updated: updatedCount,
                 failed: errors.length,
-                warnings: warnings.length
+                warnings: warnings.length,
+                skipped: skipped.length
             },
             insertedCount: successCount,
             userCreatedCount: userCreatedCount,
@@ -830,6 +957,7 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
             total: items.length,
             errors: errors,
             warnings: warnings,
+            skipped: skipped,
             createdUsers: createdUsers,
             message
         });

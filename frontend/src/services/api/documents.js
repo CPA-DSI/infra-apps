@@ -1,4 +1,17 @@
 import { apiClient, apiClientUpload, getErrorMessage } from './client';
+import { API_BASE_URL } from '../../config/api';
+
+// URLs de téléchargement authentifié (le dossier /uploads n'est plus public).
+// inline=true : affichage dans le navigateur (aperçu PDF/images uniquement).
+export const getDocumentFileUrl = (documentId, { inline = false } = {}) => {
+  if (!documentId) return null;
+  return `${API_BASE_URL}/api/documents/${documentId}/fichier${inline ? '?inline=1' : ''}`;
+};
+
+export const getPieceJointeFileUrl = (pjId, { inline = false } = {}) => {
+  if (!pjId) return null;
+  return `${API_BASE_URL}/api/documents/pj/${pjId}/fichier${inline ? '?inline=1' : ''}`;
+};
 
 export const fetchDocuments = async () => {
   try {

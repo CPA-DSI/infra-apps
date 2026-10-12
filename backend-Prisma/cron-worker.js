@@ -7,13 +7,29 @@
 // fuseau, pour les jours du mois (il saute au 1er janvier) et l'envoi n'aurait jamais lieu.
 // reloadCronTasks() doit être appelée après toute modification d'une config email
 // ou d'un état actif/inactif : elle détruit les tâches existantes et les recrée.
+// Les rechargements sont sérialisés (un seul à la fois) pour ne jamais laisser deux
+// tâches actives pour le même robot (=> double envoi).
 import cron from 'node-cron';
 import { generateExcelReport, sendEmail, getCurrentDate, getCurrentMonth } from './services/reportService.js';
+import { CRON_TIMEZONE } from './constants/cron.js';
 
-export const CRON_TIMEZONE = process.env.CRON_TIMEZONE || 'Europe/Paris';
+export { CRON_TIMEZONE };
 
 // Tâches actuellement planifiées, par type
 const tasks = { quotidien: null, hebdomadaire: null, mensuel: null };
+
+// Dernier créneau envoyé par robot ("AAAA-MM-JJ HH:MM" dans CRON_TIMEZONE) :
+// empêche d'envoyer deux fois le même créneau dans ce processus.
+const lastSendKeys = { quotidien: null, hebdomadaire: null, mensuel: null };
+
+// File d'attente des rechargements (mutex par chaîne de promesses)
+let reloadQueue = Promise.resolve();
+const runExclusive = (fn) => {
+    const run = reloadQueue.then(fn);
+    // La file continue même si une opération échoue
+    reloadQueue = run.catch(() => {});
+    return run;
+};
 
 // Parse "HH:MM" ou "H:MM" -> { hours, minutes }, ou null si invalide
 export const parseHeureEnvoi = (heure) => {
@@ -40,6 +56,8 @@ const getZonedNow = (date) => {
     const year = Number(parts.year);
     const month = Number(parts.month);
     return {
+        year,
+        month,
         weekday: WEEKDAYS[parts.weekday],
         day: Number(parts.day),
         lastDay: new Date(Date.UTC(year, month, 0)).getUTCDate(),
@@ -138,6 +156,15 @@ const scheduleRobot = (prisma, type, config) => {
             if (!heure || heure.hours !== now.hours || heure.minutes !== now.minutes) return;
             if (!robot.isDueToday(current, now)) return;
 
+            // Anti-doublon : vérification et marquage sans await entre les deux
+            const pad = (n) => String(n).padStart(2, '0');
+            const sendKey = `${now.year}-${pad(now.month)}-${pad(now.day)} ${pad(now.hours)}:${pad(now.minutes)}`;
+            if (lastSendKeys[type] === sendKey) {
+                console.warn(`⚠️ Robot d'envoi ${robot.label} : créneau ${sendKey} déjà envoyé, envoi ignoré.`);
+                return;
+            }
+            lastSendKeys[type] = sendKey;
+
             console.log(`[${new Date().toLocaleString('fr-FR', { timeZone: CRON_TIMEZONE })}] Démarrage de l'envoi ${robot.label}...`);
             await robot.send(prisma, current);
             console.log(`✅ Rapport ${robot.label} envoyé à ${current.email_dest}`);
@@ -151,15 +178,25 @@ const scheduleRobot = (prisma, type, config) => {
     return task;
 };
 
-// (Re)crée toutes les tâches à partir des configs en base
-export async function reloadCronTasks(prisma) {
+// Détruit la tâche d'un robot sans jamais lever d'erreur
+const destroyTask = async (type) => {
+    const task = tasks[type];
+    tasks[type] = null;
+    if (!task) return;
+    try {
+        await task.destroy();
+    } catch (err) {
+        console.error(`Erreur lors de l'arrêt du Robot ${ROBOTS[type].label}:`, err);
+    }
+};
+
+const doReloadCronTasks = async (prisma) => {
     for (const type of Object.keys(ROBOTS)) {
-        if (tasks[type]) {
-            await tasks[type].destroy();
-            tasks[type] = null;
-        }
+        await destroyTask(type);
         try {
             const config = await ROBOTS[type].loadConfig(prisma);
+            // Sécurité : aucune tâche existante ne doit être écrasée sans être détruite
+            await destroyTask(type);
             if (config && ROBOTS[type].isActive(config)) {
                 tasks[type] = scheduleRobot(prisma, type, config);
             } else {
@@ -169,16 +206,22 @@ export async function reloadCronTasks(prisma) {
             console.error(`Erreur lors de la synchro du Robot ${ROBOTS[type].label}:`, err);
         }
     }
+};
+
+// (Re)crée toutes les tâches à partir des configs en base.
+// Les appels concurrents (toggle + sauvegarde de config) s'exécutent l'un après l'autre.
+// Ne lève jamais d'erreur : les échecs sont journalisés par robot.
+export function reloadCronTasks(prisma) {
+    return runExclusive(() => doReloadCronTasks(prisma));
 }
 
 // Arrête toutes les tâches (ex. arrêt du serveur)
-export async function stopAllCronTasks() {
-    for (const type of Object.keys(tasks)) {
-        if (tasks[type]) {
-            await tasks[type].destroy();
-            tasks[type] = null;
+export function stopAllCronTasks() {
+    return runExclusive(async () => {
+        for (const type of Object.keys(tasks)) {
+            await destroyTask(type);
         }
-    }
+    });
 }
 
 // État réel des tâches : true si le robot est planifié dans ce processus

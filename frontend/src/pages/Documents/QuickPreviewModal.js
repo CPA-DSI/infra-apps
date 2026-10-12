@@ -4,6 +4,8 @@ import { Modal, Button, Spinner } from 'react-bootstrap';
 import { FaTimes, FaDownload, FaFileAlt, FaFilePdf, FaFileWord, FaFileExcel, FaFileImage } from 'react-icons/fa';
 import mammoth from 'mammoth';
 import * as XLSX from 'xlsx';
+import DOMPurify from 'dompurify';
+import { apiClient } from '../../services/api/client';
 
 // --- Helpers ---
 const getExtension = (filename = '') => {
@@ -146,12 +148,10 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
       setEditedRows([]);
       setCsvPage(0);
       setIsEditing(false);
-      fetch(currentFile.url)
+      // apiClient : cookie de session + en-têtes communs (route de téléchargement authentifiée)
+      apiClient.get(currentFile.url, { responseType: 'text' })
         .then(res => {
-          if (!res.ok) throw new Error('Erreur réseau');
-          return res.text();
-        })
-        .then(text => {
+          const text = res.data;
           setCsvContent(text);
           const separator = detectSeparator(text);
           setCsvSeparator(separator);
@@ -178,15 +178,14 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
     setXlsxPage(0);
     setIsLoading(true);
 
-    fetch(currentFile.url)
+    apiClient.get(currentFile.url, { responseType: 'arraybuffer' })
       .then(res => {
-        if (!res.ok) throw new Error('Erreur réseau');
-        return res.arrayBuffer();
-      })
-      .then(buffer => {
+        const buffer = res.data;
         if (isWordFile) {
+          // Le HTML produit depuis un fichier déposé par un utilisateur est assaini
+          // avant injection dans la page (dangerouslySetInnerHTML)
           mammoth.convertToHtml({ arrayBuffer: buffer })
-            .then(result => setDocxHtml(result.value))
+            .then(result => setDocxHtml(DOMPurify.sanitize(result.value)))
             .catch(() => setDocxError(true))
             .finally(() => setIsLoading(false));
         }
@@ -308,7 +307,7 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
               </div>
             ) : (
               <iframe
-                src={currentFile.url}
+                src={currentFile.previewUrl || currentFile.url}
                 width="100%"
                 height="600px"
                 style={{ border: 'none', borderRadius: '8px' }}
@@ -347,7 +346,7 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
               </div>
             ) : (
               <img
-                src={currentFile.url}
+                src={currentFile.previewUrl || currentFile.url}
                 alt="Aperçu de l'image"
                 style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain', borderRadius: '8px' }}
                 onLoad={handleImgLoad}

@@ -2,7 +2,7 @@ import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
-import { PERMISSIONS } from '../constants/roles.js';
+import { PERMISSIONS, UserRole } from '../constants/roles.js';
 import { encryptPassMail, decryptPassMail, encryptSecret, decryptSecret } from '../services/passMailCrypto.js';
 import { validateIdParam } from '../middleware/validateIdParam.js';
 
@@ -235,8 +235,8 @@ router.post('/import', authenticateToken, ensureActiveUser, requirePermission(PE
                 continue;
             }
 
-            const role = normalizeRole(item.role);
-            const is_active = normalizeStatus(item.is_active);
+            let role = normalizeRole(item.role);
+            let is_active = normalizeStatus(item.is_active);
 
             const desiredEmails = [];
             if (item.email_1 && String(item.email_1).trim()) {
@@ -257,38 +257,52 @@ router.post('/import', authenticateToken, ensureActiveUser, requirePermission(PE
             const existingUser = await prisma.Users.findUnique({ where: { id_n }, include: { emails: true } });
 
             if (existingUser) {
+                // Un utilisateur ne peut pas modifier son propre rôle ni son propre statut
+                // (pas d'auto-rétrogradation ni d'auto-désactivation via l'import).
+                if (existingUser.id_user === req.user?.userId
+                    && (role !== existingUser.role || is_active !== existingUser.is_active)) {
+                    role = existingUser.role;
+                    is_active = existingUser.is_active;
+                    stats.warnings++;
+                    errors.push(`${rowLabel}: votre propre rôle/statut ne peut pas être modifié (valeurs actuelles conservées).`);
+                }
+
                 const currentEmails = existingUser.emails || [];
                 const desiredValues = desiredEmails.map(e => e.email);
                 const toDelete = currentEmails.filter(e => !desiredValues.includes(e.email));
-                if (toDelete.length) {
-                    await prisma.userEmail.deleteMany({ where: { id_uEmail: { in: toDelete.map(e => e.id_uEmail) } } });
-                }
 
-                await prisma.Users.update({
-                    where: { id_n },
-                    data: {
-                        role,
-                        is_active,
-                        ...(desiredEmails.length ? {
-                            emails: {
-                                upsert: desiredEmails.map(e => ({
-                                    where: { email: e.email },
-                                    update: {
-                                        pass_mail: encryptPassMail(e.pass_mail),
-                                        is_primary: e.is_primary
-                                    },
-                                    create: {
-                                        email: e.email,
-                                        password: defaultPasswordHash,
-                                        password_enc: defaultPasswordEnc,
-                                        pass_mail: encryptPassMail(e.pass_mail),
-                                        is_primary: e.is_primary,
-                                        is_verified: false
-                                    }
-                                }))
-                            }
-                        } : {})
+                // Suppression des emails retirés + mise à jour dans une même transaction
+                await prisma.$transaction(async (tx) => {
+                    if (toDelete.length) {
+                        await tx.userEmail.deleteMany({ where: { id_uEmail: { in: toDelete.map(e => e.id_uEmail) } } });
                     }
+
+                    await tx.users.update({
+                        where: { id_n },
+                        data: {
+                            role,
+                            is_active,
+                            ...(desiredEmails.length ? {
+                                emails: {
+                                    upsert: desiredEmails.map(e => ({
+                                        where: { email: e.email },
+                                        update: {
+                                            pass_mail: encryptPassMail(e.pass_mail),
+                                            is_primary: e.is_primary
+                                        },
+                                        create: {
+                                            email: e.email,
+                                            password: defaultPasswordHash,
+                                            password_enc: defaultPasswordEnc,
+                                            pass_mail: encryptPassMail(e.pass_mail),
+                                            is_primary: e.is_primary,
+                                            is_verified: false
+                                        }
+                                    }))
+                                }
+                            } : {})
+                        }
+                    });
                 });
             } else {
                 await prisma.Users.create({
@@ -324,7 +338,9 @@ router.post('/import', authenticateToken, ensureActiveUser, requirePermission(PE
 // PUT /api/users/:id
 router.put('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMISSIONS.USERS_WRITE), async (req, res) => {
     try {
-        const { materiel, id_user, emails, email_1, pass_mail_1, password_1, is_verified_1, email_2, pass_mail_2, password_2, is_verified_2, ...userDataToUpdate } = req.body;
+        // Champs lus explicitement : aucune autre clé du body n'est transmise à Prisma
+        // (id_user, materiel, must_change_password... sont ignorés).
+        const { id_n, role, is_active, emails, email_1, pass_mail_1, password_1, is_verified_1, email_2, pass_mail_2, password_2, is_verified_2 } = req.body;
 
         const currentUser = await prisma.Users.findUnique({
             where: { id_user: parseInt(req.params.id) },
@@ -333,6 +349,38 @@ router.put('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMIS
 
         if (!currentUser) {
             return res.status(404).json({ message: "Utilisateur non trouvé." });
+        }
+
+        // Le N° (id_n) n'est pas modifiable : l'interface l'envoie en lecture seule.
+        if (id_n !== undefined && id_n !== null && id_n !== '' && Number(id_n) !== currentUser.id_n) {
+            return res.status(400).json({ message: "Le N° de l'utilisateur ne peut pas être modifié." });
+        }
+
+        // Liste blanche des champs du compte modifiables via cette route
+        const userDataToUpdate = {};
+
+        if (role !== undefined) {
+            if (!Object.values(UserRole).includes(role)) {
+                return res.status(400).json({ message: "Rôle invalide." });
+            }
+            userDataToUpdate.role = role;
+        }
+
+        if (is_active !== undefined) {
+            if (typeof is_active !== 'boolean') {
+                return res.status(400).json({ message: "Le champ is_active doit être un booléen." });
+            }
+            userDataToUpdate.is_active = is_active;
+        }
+
+        // Un utilisateur ne peut pas changer son propre rôle ni son propre statut
+        // (évite l'auto-désactivation / l'auto-rétrogradation qui bloquerait le compte).
+        const isSelf = currentUser.id_user === req.user?.userId;
+        if (isSelf && (
+            (userDataToUpdate.role !== undefined && userDataToUpdate.role !== currentUser.role) ||
+            (userDataToUpdate.is_active !== undefined && userDataToUpdate.is_active !== currentUser.is_active)
+        )) {
+            return res.status(403).json({ message: "Vous ne pouvez pas modifier votre propre rôle ou statut." });
         }
 
         let desiredEmails = [];
@@ -374,45 +422,48 @@ router.put('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMIS
         const desiredEmailValues = hashedEmails.map(e => e.email);
         const toDelete = currentEmails.filter(e => !desiredEmailValues.includes(e.email));
 
-        if (toDelete.length) {
-            await prisma.userEmail.deleteMany({
-                where: { id_uEmail: { in: toDelete.map(e => e.id_uEmail) } }
-            });
-        }
+        // Suppression des emails retirés + mise à jour du compte dans une même transaction
+        const updated = await prisma.$transaction(async (tx) => {
+            if (toDelete.length) {
+                await tx.userEmail.deleteMany({
+                    where: { id_uEmail: { in: toDelete.map(e => e.id_uEmail) } }
+                });
+            }
 
-        const updated = await prisma.Users.update({
-            where: { id_user: parseInt(req.params.id) },
-            data: {
-                ...userDataToUpdate,
-                ...(hashedEmails.length ? {
-                    emails: {
-                        upsert: hashedEmails.map(e => {
-                            const updateData = {
-                                pass_mail: e.pass_mail,
-                                is_primary: e.is_primary,
-                                is_verified: e.is_verified
-                            };
-                            if (e.hashedPassword) {
-                                updateData.password = e.hashedPassword;
-                                updateData.password_enc = e.passwordEnc;
-                            }
-                            return {
-                                where: { email: e.email },
-                                update: updateData,
-                                create: {
-                                    email: e.email,
-                                    password: e.hashedPassword || defaultPasswordHash,
-                                    password_enc: e.passwordEnc || defaultPasswordEnc,
+            return tx.users.update({
+                where: { id_user: parseInt(req.params.id) },
+                data: {
+                    ...userDataToUpdate,
+                    ...(hashedEmails.length ? {
+                        emails: {
+                            upsert: hashedEmails.map(e => {
+                                const updateData = {
                                     pass_mail: e.pass_mail,
                                     is_primary: e.is_primary,
                                     is_verified: e.is_verified
+                                };
+                                if (e.hashedPassword) {
+                                    updateData.password = e.hashedPassword;
+                                    updateData.password_enc = e.passwordEnc;
                                 }
-                            };
-                        })
-                    }
-                } : {})
-            },
-            include: { emails: true }
+                                return {
+                                    where: { email: e.email },
+                                    update: updateData,
+                                    create: {
+                                        email: e.email,
+                                        password: e.hashedPassword || defaultPasswordHash,
+                                        password_enc: e.passwordEnc || defaultPasswordEnc,
+                                        pass_mail: e.pass_mail,
+                                        is_primary: e.is_primary,
+                                        is_verified: e.is_verified
+                                    }
+                                };
+                            })
+                        }
+                    } : {})
+                },
+                include: { emails: true }
+            });
         });
 
         const sanitizedEmails = sanitizeEmails(updated.emails);
@@ -436,6 +487,11 @@ router.patch('/:id/status', authenticateToken, ensureActiveUser, requirePermissi
         const id_user = parseInt(req.params.id);
         if (isNaN(id_user)) {
             return res.status(400).json({ message: "ID utilisateur invalide." });
+        }
+
+        // Un utilisateur ne peut pas (dés)activer son propre compte.
+        if (id_user === req.user?.userId) {
+            return res.status(403).json({ message: "Vous ne pouvez pas modifier votre propre statut." });
         }
 
         const updated = await prisma.Users.update({
@@ -472,30 +528,34 @@ router.delete('/:id', authenticateToken, ensureActiveUser, requirePermission(PER
             return res.status(404).json({ message: "Utilisateur non trouvé." });
         }
 
-        await prisma.ticket.updateMany({
-            where: { idDemandeur: user.id_n },
-            data: { idDemandeur: null }
-        });
+        // Détachement des tickets + suppressions liées dans une même transaction :
+        // en cas d'échec, rien n'est supprimé à moitié.
+        await prisma.$transaction(async (tx) => {
+            await tx.ticket.updateMany({
+                where: { idDemandeur: user.id_n },
+                data: { idDemandeur: null }
+            });
 
-        await prisma.ticket.updateMany({
-            where: { idAssigne: user.id_n },
-            data: { idAssigne: null }
-        });
+            await tx.ticket.updateMany({
+                where: { idAssigne: user.id_n },
+                data: { idAssigne: null }
+            });
 
-        await prisma.ticketFermeture.deleteMany({
-            where: { fermePar: user.id_n }
-        });
+            await tx.ticketFermeture.deleteMany({
+                where: { fermePar: user.id_n }
+            });
 
-        await prisma.historiqueCommentaire.deleteMany({
-            where: { idAuteur: user.id_n }
-        });
+            await tx.historiqueCommentaire.deleteMany({
+                where: { idAuteur: user.id_n }
+            });
 
-        await prisma.userEmail.deleteMany({
-            where: { user_id: id_user }
-        });
+            await tx.userEmail.deleteMany({
+                where: { user_id: id_user }
+            });
 
-        await prisma.Users.delete({
-            where: { id_user }
+            await tx.users.delete({
+                where: { id_user }
+            });
         });
         res.json({ message: "Utilisateur supprimé avec succès" });
     } catch (error) {

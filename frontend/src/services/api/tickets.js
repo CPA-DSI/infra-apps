@@ -58,7 +58,7 @@ export const getCommentaireById = async (commentId) => {
   return response.data;
 };
 
-// 'commentData' doit contenir : contenu, idTicket, idAuteur
+// 'commentData' doit contenir : contenu, idTicket (l'auteur est l'utilisateur connecté, déduit côté serveur)
 export const addCommentaire = async (commentData) => {
   const response = await apiClient.post('/commentaires', commentData);
   return response.data;
@@ -79,9 +79,10 @@ export const fetchCommentairesByTicket = async (ticketId) => {
   return response.data;
 };
 
-export const closeTicket = async (ticketId, solution = '', motif = '', fermePar, dureeResolution) => {
+// Réservé IT_ADMIN/DIRECTION (permission tickets:close) ; 'fermé par' est déduit côté serveur.
+export const closeTicket = async (ticketId, solution = '', motif = '', dureeResolution) => {
   try {
-    const response = await apiClient.put(`/tickets/${ticketId}/close`, { solution, motif, fermePar, dureeResolution });
+    const response = await apiClient.put(`/tickets/${ticketId}/close`, { solution, motif, dureeResolution });
     return response.data;
   } catch (error) {
     throw new Error(getErrorMessage(error));

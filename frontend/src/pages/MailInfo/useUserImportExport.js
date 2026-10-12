@@ -50,6 +50,8 @@ const normalizeStatus = (v) => {
 
 // Reprend les colonnes de exportToExcel (MailInfo.js) pour permettre de
 // réimporter directement un fichier précédemment exporté (édité entre-temps).
+// Renvoie { items, lignesSansNumero } : les lignes sans N° exploitable ne sont
+// pas envoyées mais sont signalées (numéros de ligne Excel, en-tête en ligne 1).
 const parseExcelFile = async (file) => {
     const arrayBuffer = await file.arrayBuffer();
     const workbook = XLSX.read(arrayBuffer, { type: 'array', cellDates: true });
@@ -63,7 +65,8 @@ const parseExcelFile = async (file) => {
         throw new Error('Aucune donnée trouvée dans le fichier Excel.');
     }
 
-    return rawRows.map((r) => {
+    const lignesSansNumero = [];
+    const items = rawRows.map((r, index) => {
         const id_n = parseIntOrNull(getByKeys(r, ['N°', 'id_n', 'ID', 'Matricule', 'N° Matricule']));
         const role = normalizeRole(getByKeys(r, ['Rôle', 'Role', 'role']));
         const is_active = normalizeStatus(getByKeys(r, ['Statut', 'Status', 'statut']));
@@ -72,9 +75,18 @@ const parseExcelFile = async (file) => {
         const email_2 = normalizeCell(getByKeys(r, ['Email Secondaire', 'email_2', 'Email secondaire']));
         const pass_mail_2 = normalizeCell(getByKeys(r, ['Mot de passe 2', 'pass_mail_2']));
 
+        if (id_n === null) lignesSansNumero.push(index + 2);
         return { id_n, role, is_active, email_1, pass_mail_1, email_2, pass_mail_2 };
     }).filter(item => item.id_n !== null);
+
+    return { items, lignesSansNumero };
 };
+
+const messageLignesSansNumero = (lignes) => (
+    lignes.length > 0
+        ? `${lignes.length} ligne(s) sans N° valide ignorée(s) : ligne(s) ${lignes.slice(0, 20).join(', ')}${lignes.length > 20 ? '…' : ''}.`
+        : null
+);
 
 // Détecte, côté client, les doublons qui feront rejeter des lignes par le
 // backend (N° en double, ou email partagé par plusieurs N°) : purement
@@ -182,7 +194,7 @@ export const useUserImportExport = ({ onImported }) => {
                 // Avertissement précoce (avant l'envoi au serveur) sur les doublons
                 // qui seront de toute façon rejetés par le backend.
                 try {
-                    const items = await parseExcelFile(file);
+                    const { items } = await parseExcelFile(file);
                     setImportWarnings(detectDuplicateWarnings(items));
                 } catch {
                     setImportWarnings([]);
@@ -264,7 +276,8 @@ export const useUserImportExport = ({ onImported }) => {
         try {
             setImportProgress(10);
 
-            const items = await parseExcelFile(importFile);
+            const { items, lignesSansNumero } = await parseExcelFile(importFile);
+            const avertissementSansNumero = messageLignesSansNumero(lignesSansNumero);
 
             if (!items || items.length === 0) {
                 throw new Error('Aucune donnée valide à importer (colonne N° manquante ou vide).');
@@ -285,7 +298,8 @@ export const useUserImportExport = ({ onImported }) => {
             setImportSuccess(true);
             const stats = response.data.stats || {};
             setImportSuccessStats(stats);
-            setImportErrors(response.data.errors || []);
+            const erreursServeur = response.data.errors || [];
+            setImportErrors(avertissementSansNumero ? [avertissementSansNumero, ...erreursServeur] : erreursServeur);
 
             if (onImported) await onImported();
 
@@ -301,6 +315,9 @@ export const useUserImportExport = ({ onImported }) => {
             } else if (failCount > 0) {
                 successText += `\n${failCount} échec(s). Voir le détail ci-dessous.`;
             }
+            if (avertissementSansNumero) {
+                successText += `\n${avertissementSansNumero}`;
+            }
 
             await MySwal.fire({
                 icon: successCount > 0 ? 'success' : 'warning',
@@ -312,7 +329,7 @@ export const useUserImportExport = ({ onImported }) => {
             // On ne referme/réinitialise automatiquement que si tout s'est bien passé :
             // sinon on garde le panneau ouvert pour que le détail des échecs (importErrors)
             // reste visible tant que l'utilisateur ne l'a pas fermé lui-même.
-            if (failCount === 0) {
+            if (failCount === 0 && !avertissementSansNumero) {
                 setShowImportSection(false);
                 resetImportState();
             }

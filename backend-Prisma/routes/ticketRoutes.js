@@ -2,8 +2,8 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
-import { requireTicketOwnership } from '../middleware/ownershipMiddleware.js';
-import { UserRole } from '../constants/roles.js';
+import { requireTicketOwnership, isTicketAdmin } from '../middleware/ownershipMiddleware.js';
+import { PERMISSIONS } from '../constants/roles.js';
 import { validateIdParam } from '../middleware/validateIdParam.js';
 
 const prisma = new PrismaClient();
@@ -105,6 +105,26 @@ const nextNumeroTicket = async () => {
   return `TICK-${currentYear}-${String(dernier_numero).padStart(6, '0')}`;
 };
 
+// Vérifie le matériel rattaché à un ticket : il doit exister et ne pas être
+// supprimé (suppression logique, date_suppression). Les PC en stock et les
+// fiches « Sans poste » (est_actif = false) restent acceptés : c'est le seul
+// matériel d'un utilisateur sans PC. Pour un USER, le matériel doit être le sien.
+// Retourne { status, error }, ou null si le matériel est valide.
+const validateMaterielTicket = async (materielId, user) => {
+  const materiel = await prisma.materiels.findFirst({
+    where: { id_materiels: materielId, date_suppression: null },
+    select: { id_materiels: true, id_n: true },
+  });
+
+  if (!materiel) {
+    return { status: 400, error: "Le matériel sélectionné n'existe pas ou a été supprimé." };
+  }
+  if (!isTicketAdmin(user?.role) && materiel.id_n !== user?.id_n) {
+    return { status: 403, error: "Vous ne pouvez créer un ticket que sur votre propre matériel." };
+  }
+  return null;
+};
+
 // POST /api/tickets : Crée un nouveau ticket
 router.post('/', authenticateToken, ensureActiveUser, async (req, res) => {
   const {
@@ -122,8 +142,7 @@ router.post('/', authenticateToken, ensureActiveUser, async (req, res) => {
   try {
     // Seuls IT_ADMIN/DIRECTION peuvent créer un ticket au nom d'un autre utilisateur ;
     // un USER voit son idDemandeur forcé à son propre id_n.
-    const userRole = req.user?.role;
-    const canImpersonate = userRole === UserRole.IT_ADMIN || userRole === UserRole.DIRECTION;
+    const canImpersonate = isTicketAdmin(req.user?.role);
 
     // 1. Validation et conversion sécurisée des IDs
     const materielId = parseInt(idMateriels);
@@ -137,7 +156,12 @@ router.post('/', authenticateToken, ensureActiveUser, async (req, res) => {
       });
     }
 
-    console.log("Tentative de connexion avec Materiel ID:", materielId); 
+    const materielInvalide = await validateMaterielTicket(materielId, req.user);
+    if (materielInvalide) {
+      return res.status(materielInvalide.status).json({ error: materielInvalide.error });
+    }
+
+    console.log("Tentative de connexion avec Materiel ID:", materielId);
     console.log("Tentative de connexion avec Demandeur ID:", demandeurId); 
     console.log("Tentative de connexion avec Assigne ID:", assigneId);
     console.log("Nom Demandeur sauvegardé:", nomDemandeur);
@@ -151,7 +175,8 @@ router.post('/', authenticateToken, ensureActiveUser, async (req, res) => {
         numeroTicket,
         titre: titre,
         description: description,
-        statut: statut || "NOUVEAU",
+        // Le statut est géré par la DSI : un USER crée toujours un ticket NOUVEAU
+        statut: canImpersonate ? (statut || "NOUVEAU") : "NOUVEAU",
         priorite: priorite || "MOYENNE",
         // Sauvegarde des noms
         nomDemandeur: nomDemandeur || "",
@@ -200,8 +225,8 @@ router.post('/', authenticateToken, ensureActiveUser, async (req, res) => {
   }
 });
 
-// PUT /api/tickets/:id/assign : Assigne un ticket à un technicien DSI
-router.put('/:id/assign', authenticateToken, ensureActiveUser, requireTicketOwnership, async (req, res) => {
+// PUT /api/tickets/:id/assign : Assigne un ticket à un technicien DSI (réservé IT_ADMIN/DIRECTION)
+router.put('/:id/assign', authenticateToken, ensureActiveUser, requirePermission(PERMISSIONS.TICKETS_CLOSE), async (req, res) => {
   const { id } = req.params;
   const { idAssigne, nomAssigne } = req.body;
 
@@ -247,7 +272,8 @@ router.put('/:id/assign', authenticateToken, ensureActiveUser, requireTicketOwne
 });
 
 // PUT /api/tickets/:id/close : Ferme un ticket (crée un TicketFermeture + met à jour le statut)
-router.put('/:id/close', authenticateToken, ensureActiveUser, requireTicketOwnership, async (req, res) => {
+// Réservé aux rôles ayant la permission tickets:close (IT_ADMIN/DIRECTION)
+router.put('/:id/close', authenticateToken, ensureActiveUser, requirePermission(PERMISSIONS.TICKETS_CLOSE), async (req, res) => {
   const { id } = req.params;
   const { solution, motif, dureeResolution } = req.body;
 
@@ -275,28 +301,34 @@ router.put('/:id/close', authenticateToken, ensureActiveUser, requireTicketOwner
       return res.status(403).json({ error: "Utilisateur non autorisé à fermer ce ticket." });
     }
 
-    // Créer l'enregistrement de fermeture (contrainte unique sur ticketId)
-    await prisma.ticketFermeture.create({
-      data: {
-        ticketId: ticketId,
-        solution: solution.trim(),
-        motif: motif ? motif.trim() : null,
-        dureeResolution: dureeResolution ? parseInt(dureeResolution, 10) : null,
-        fermePar: user.id_n,
-      }
-    });
+    const dureeMinutes = dureeResolution ? parseInt(dureeResolution, 10) : null;
 
-    const updatedTicket = await prisma.ticket.update({
-      where: { idTicket: ticketId },
-      data: {
-        statut: 'RESOLU',
-      },
-      include: {
-        demandeur: { include: { materiel: true } },
-        assigneA: { include: { materiel: true } },
-        materiels: { include: { local: true } },
-        fermeture: true,
-      },
+    // Fermeture + changement de statut dans une même transaction : pas de
+    // TicketFermeture orphelin si la mise à jour du ticket échoue.
+    const updatedTicket = await prisma.$transaction(async (tx) => {
+      // Créer l'enregistrement de fermeture (contrainte unique sur ticketId)
+      await tx.ticketFermeture.create({
+        data: {
+          ticketId: ticketId,
+          solution: solution.trim(),
+          motif: motif ? motif.trim() : null,
+          dureeResolution: Number.isNaN(dureeMinutes) ? null : dureeMinutes,
+          fermePar: user.id_n,
+        }
+      });
+
+      return tx.ticket.update({
+        where: { idTicket: ticketId },
+        data: {
+          statut: 'RESOLU',
+        },
+        include: {
+          demandeur: { include: { materiel: true } },
+          assigneA: { include: { materiel: true } },
+          materiels: { include: { local: true } },
+          fermeture: true,
+        },
+      });
     });
 
     const formattedTicket = {
@@ -334,10 +366,24 @@ router.put('/:id', authenticateToken, ensureActiveUser, requireTicketOwnership, 
       priorite, 
       idMateriels,
       idAssigne,
-      solution,
       nomDemandeur,   // Nouveau champ
       nomAssigne      // Nouveau champ
   } = req.body;
+
+  const isAdmin = isTicketAdmin(req.user?.role);
+
+  // Un USER ne peut modifier que le titre, la description et la priorité de son
+  // ticket : statut, assignation, matériel et demandeur sont gérés par la DSI.
+  // La solution passe par PUT /:id/close (TicketFermeture).
+  if (!isAdmin) {
+    const champsInterdits = ['statut', 'idAssigne', 'nomAssigne', 'idMateriels', 'idDemandeur', 'nomDemandeur']
+      .filter(champ => req.body[champ] !== undefined);
+    if (champsInterdits.length > 0) {
+      return res.status(403).json({
+        error: `Accès interdit : modification non autorisée des champs ${champsInterdits.join(', ')}.`
+      });
+    }
+  }
 
   try {
     // Récupérer le ticket existant pour conserver les valeurs si non fournies
@@ -353,15 +399,30 @@ router.put('/:id', authenticateToken, ensureActiveUser, requireTicketOwnership, 
     const updateData = {
       titre: titre || existingTicket.titre,
       description: description || existingTicket.description,
-      statut: statut || existingTicket.statut,
       priorite: priorite || existingTicket.priorite,
-      idMateriels: idMateriels ? parseInt(idMateriels) : existingTicket.idMateriels,
-      idAssigne: idAssigne !== undefined ? (idAssigne ? parseInt(idAssigne) : null) : existingTicket.idAssigne,
-      solution: solution !== undefined ? solution : existingTicket.solution,
-      // Mettre à jour les noms sauvegardés si fournis
-      nomDemandeur: nomDemandeur !== undefined ? nomDemandeur : existingTicket.nomDemandeur,
-      nomAssigne: nomAssigne !== undefined ? nomAssigne : existingTicket.nomAssigne,
     };
+
+    if (isAdmin) {
+      const materielId = idMateriels ? parseInt(idMateriels) : existingTicket.idMateriels;
+      if (isNaN(materielId)) {
+        return res.status(400).json({ error: "idMateriels doit être un nombre valide." });
+      }
+      if (materielId !== existingTicket.idMateriels) {
+        const materielInvalide = await validateMaterielTicket(materielId, req.user);
+        if (materielInvalide) {
+          return res.status(materielInvalide.status).json({ error: materielInvalide.error });
+        }
+      }
+
+      Object.assign(updateData, {
+        statut: statut || existingTicket.statut,
+        idMateriels: materielId,
+        idAssigne: idAssigne !== undefined ? (idAssigne ? parseInt(idAssigne) : null) : existingTicket.idAssigne,
+        // Mettre à jour les noms sauvegardés si fournis
+        nomDemandeur: nomDemandeur !== undefined ? nomDemandeur : existingTicket.nomDemandeur,
+        nomAssigne: nomAssigne !== undefined ? nomAssigne : existingTicket.nomAssigne,
+      });
+    }
 
     const updatedTicket = await prisma.ticket.update({
       where: { idTicket: parseInt(id) },
@@ -397,8 +458,8 @@ router.put('/:id', authenticateToken, ensureActiveUser, requireTicketOwnership, 
   }
 });
 
-// DELETE /api/tickets/:id
-router.delete('/:id', authenticateToken, ensureActiveUser, requireTicketOwnership, async (req, res) => {
+// DELETE /api/tickets/:id (réservé IT_ADMIN/DIRECTION)
+router.delete('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMISSIONS.TICKETS_CLOSE), async (req, res) => {
   const { id } = req.params;
   try {
     await prisma.ticket.delete({

@@ -1,3 +1,31 @@
+import { UserRole } from '../constants/roles.js';
+
+// IT_ADMIN et DIRECTION voient et gèrent tous les tickets.
+export const isTicketAdmin = (role) => role === UserRole.IT_ADMIN || role === UserRole.DIRECTION;
+
+// Vérifie qu'un utilisateur peut accéder à un ticket : admin, ou demandeur/assigné.
+// Retourne 'ok', 'not_found' ou 'forbidden'. Partagé par les routes tickets et commentaires.
+export const checkTicketAccess = async (prismaClient, user, ticketId) => {
+  if (isTicketAdmin(user?.role)) {
+    const exists = await prismaClient.ticket.findUnique({
+      where: { idTicket: ticketId },
+      select: { idTicket: true },
+    });
+    return exists ? 'ok' : 'not_found';
+  }
+
+  const ticket = await prismaClient.ticket.findUnique({
+    where: { idTicket: ticketId },
+    select: { idDemandeur: true, idAssigne: true },
+  });
+
+  if (!ticket) return 'not_found';
+
+  const userId = user?.id_n;
+  const isOwner = ticket.idDemandeur === userId || ticket.idAssigne === userId;
+  return isOwner ? 'ok' : 'forbidden';
+};
+
 export const requireTicketOwnership = async (req, res, next) => {
   const userRole = req.user?.role;
   const userId = req.user?.id_n;
@@ -6,7 +34,7 @@ export const requireTicketOwnership = async (req, res, next) => {
     return res.status(401).json({ error: 'Utilisateur non authentifié.' });
   }
 
-  if (userRole === 'IT_ADMIN' || userRole === 'DIRECTION') {
+  if (isTicketAdmin(userRole)) {
     return next();
   }
 
@@ -17,17 +45,12 @@ export const requireTicketOwnership = async (req, res, next) => {
 
   try {
     // Client Prisma partagé, injecté par server.js
-    const ticket = await req.prisma.ticket.findUnique({
-      where: { idTicket: ticketId },
-      select: { idDemandeur: true, idAssigne: true },
-    });
+    const access = await checkTicketAccess(req.prisma, req.user, ticketId);
 
-    if (!ticket) {
+    if (access === 'not_found') {
       return res.status(404).json({ error: 'Ticket non trouve.' });
     }
-
-    const isOwner = ticket.idDemandeur === userId || ticket.idAssigne === userId;
-    if (!isOwner) {
+    if (access === 'forbidden') {
       return res.status(403).json({ error: 'Acces interdit : ticket non autorise.' });
     }
   } catch (error) {

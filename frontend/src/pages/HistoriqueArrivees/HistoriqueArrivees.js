@@ -298,7 +298,9 @@ const HistoriqueArrivees = () => {
             'Stock Actuel': item.quantite_en_stock,
             'Date Mouvement': dayjs(item.date_arrivee).format('DD/MM/YYYY HH:mm'),
             'Stock Précédent': item.ancienne_quantite_stock ?? 'N/A',
-            'Date Stock Précédent': item.ancienne_date_stock ? dayjs(item.ancienne_date_stock).format('DD/MM/YYYY') : 'N/A'
+            'Date Stock Précédent': item.ancienne_date_stock ? dayjs(item.ancienne_date_stock).format('DD/MM/YYYY') : 'N/A',
+            // Origine de la ligne (motif d'import, annulation / modification de mouvement, ajustement manuel)
+            'Remarque': item.remarque || ''
         }));
 
         const worksheet = XLSX.utils.json_to_sheet(excelData);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Spinner, Alert } from 'react-bootstrap';
 import Select from 'react-select';
+import dayjs from 'dayjs';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 
@@ -122,7 +123,7 @@ const FormItem = ({ initialData = {}, onSave, onClose, isModal = true }) => {
     const [isLocalSourceReadOnly, setIsLocalSourceReadOnly] = useState(false);
     const [productAvailability, setProductAvailability] = useState({ exists: false, checking: false });
     
-    const defaultDate = new Date().toISOString().split('T')[0];
+    const defaultDate = dayjs().format('YYYY-MM-DD');
     const [formData, setFormData] = useState({
         id_produit: initialData.id_produit || '', id_local_source: initialData.id_local_source || '', id_local_destination: initialData.id_local_destination || '', quantite: initialData.quantite || '', id_materiels: initialData.id_materiels || '', nom_produit: initialData.nom_produit || '', nom_utilisateur: initialData.nom_utilisateur || '', equipe: initialData.equipe || '', date_mouvement: initialData.date_mouvement || defaultDate, type_mouvement: initialData.type_mouvement || '', motif: initialData.motif || '',
     });

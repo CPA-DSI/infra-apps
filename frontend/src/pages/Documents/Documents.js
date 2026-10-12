@@ -18,8 +18,7 @@ import {
 import AddDocModal from './AddDocModal';
 import DocumentDetailModal from './DocumentDetailModal';
 import QuickPreviewModal from './QuickPreviewModal';
-import { fetchDocuments, fetchMateriels, fetchAMarques, fetchProduits, getTickets, deleteDocument } from '../../services/api';
-import { API_BASE_URL } from '../../config/api';
+import { fetchDocuments, fetchMateriels, fetchAMarques, fetchProduits, getTickets, deleteDocument, getDocumentFileUrl, getPieceJointeFileUrl } from '../../services/api';
 import './Documents.css';
 
 const MySwal = withReactContent(Swal);
@@ -313,21 +312,19 @@ function Documents() {
                           ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'txt'].includes(ext);
 
     if (isPreviewable) {
-      const buildFileUrl = (path) => {
-        if (!path) return null;
-        const storagePath = path.startsWith('/') ? path : `/${path}`;
-        return `${API_BASE_URL}${storagePath}`;
-      };
-
-      const mainFile = {
-        url: buildFileUrl(row.chemin_stockage),
+      // Fichiers servis par les routes authentifiées de l'API :
+      // url = téléchargement (pièce jointe), previewUrl = affichage inline (PDF/images)
+      const mainFile = row.chemin_stockage ? {
+        url: getDocumentFileUrl(row.id),
+        previewUrl: getDocumentFileUrl(row.id, { inline: true }),
         type: row.type_mime,
         filename: row.nom_fichier,
-      };
+      } : {};
 
       const attachments = (row.pieces_jointes || [])
         .map((pj) => ({
-          url: buildFileUrl(pj.chemin_stockage),
+          url: getPieceJointeFileUrl(pj.id),
+          previewUrl: getPieceJointeFileUrl(pj.id, { inline: true }),
           type: pj.type_mime,
           filename: pj.nom_fichier,
         }))

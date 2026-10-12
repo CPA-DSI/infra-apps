@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
 import { PERMISSIONS } from '../constants/roles.js';
 import { reloadCronTasks, parseHeureEnvoi } from '../cron-worker.js';
+import { toPublicEmailConfig, getNewEmailPass } from '../services/reportService.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -31,7 +32,7 @@ router.get('/quotidien', requirePermission(PERMISSIONS.CONFIG_READ), asyncHandle
             id: 1,
             email_dest: '',
             email_exp: '',
-            email_pass: '',
+            hasPassword: false,
             objet_mail: 'Rapport Quotidien des Stocks',
             message_mail: 'Bonjour, veuillez trouver ci-joint le rapport des stocks.',
             heure_envoi: '17:15',
@@ -41,7 +42,8 @@ router.get('/quotidien', requirePermission(PERMISSIONS.CONFIG_READ), asyncHandle
         return;
     }
     
-    res.json(config);
+    // Ne jamais renvoyer le mot de passe SMTP
+    res.json(toPublicEmailConfig(config));
 }));
 
 // --- CREATE/UPDATE: POST /api/config/quotidien ---
@@ -62,24 +64,28 @@ router.post('/quotidien', requirePermission(PERMISSIONS.CONFIG_WRITE), asyncHand
     const configData = {
         email_dest: data.email_dest || '',
         email_exp: data.email_exp || '',
-        email_pass: data.email_pass || '',
         objet_mail: data.objet_mail || 'Rapport Quotidien des Stocks',
         message_mail: data.message_mail || 'Bonjour, veuillez trouver ci-joint le rapport des stocks.',
         heure_envoi: data.heure_envoi || '17:15',
-        cron_actif: data.cron_actif !== undefined ? data.cron_actif : false
     };
-    
+    // Mot de passe vide/absent : on conserve celui déjà enregistré
+    const emailPass = getNewEmailPass(data.email_pass);
+    // État du robot : modifié uniquement s'il est fourni
+    const cronActif = data.cron_actif !== undefined ? (data.cron_actif === true || data.cron_actif === 'true') : undefined;
+
     const config = await prisma.configEmailQuotidien.upsert({
         where: { id: 1 },
-        update: configData,
+        update: { ...configData, email_pass: emailPass, cron_actif: cronActif },
         create: {
             id: 1,
-            ...configData
+            ...configData,
+            email_pass: emailPass ?? '',
+            cron_actif: cronActif ?? false
         },
     });
 
     await reloadCronTasks(prisma);
-    res.status(200).json(config);
+    res.status(200).json(toPublicEmailConfig(config));
 }));
 
 // --- DELETE: DELETE /api/config/quotidien ---

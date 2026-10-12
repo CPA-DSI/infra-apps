@@ -25,6 +25,30 @@ import './AddDocModal.css';
 
 const MySwal = withReactContent(Swal);
 
+// --- Formats acceptés : alignés sur la liste blanche de l'API (routes/documentRoutes.js) ---
+const ACCEPTED_FILE_TYPES = {
+  'application/pdf': ['.pdf'],
+  'image/png': ['.png'],
+  'image/jpeg': ['.jpg', '.jpeg'],
+  'image/gif': ['.gif'],
+  'image/webp': ['.webp'],
+  'application/msword': ['.doc'],
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+  'application/vnd.ms-excel': ['.xls'],
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'],
+  'text/plain': ['.txt'],
+  'text/csv': ['.csv'],
+  'application/zip': ['.zip'],
+};
+const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 Mo, comme l'API
+
+// Message lisible pour les fichiers refusés par le dropzone (type ou taille)
+const describeRejections = (rejections = []) => rejections.map(({ file, errors }) => {
+  const tooLarge = errors.some(err => err.code === 'file-too-large');
+  return `${file.name} : ${tooLarge ? 'fichier trop volumineux (20 Mo max)' : 'format non autorisé'}`;
+}).join(' — ');
+
 // --- Catégories alignées sur l'enum Prisma DocumentCategory ---
 const CATEGORY_CONFIG = {
   FACTURE:             { label: 'Facture',              color: '#065f46', bg: '#d1fae5', border: '#a7f3d0' },
@@ -226,7 +250,12 @@ const AddDocModal = ({ show, onClose, onDocumentAdded, onDocumentUpdated, editDo
       setError(null);
     }
   }, []);
-  const mainDropzone = useDropzone({ onDrop: onDropMain, multiple: false });
+  const onDropRejected = useCallback((rejections) => {
+    setError(describeRejections(rejections));
+  }, []);
+  const mainDropzone = useDropzone({
+    onDrop: onDropMain, onDropRejected, multiple: false, accept: ACCEPTED_FILE_TYPES, maxSize: MAX_FILE_SIZE,
+  });
 
   // --- Drag & drop : pièces jointes (optionnelles) ---
   const onDropAtt = useCallback((accepted) => {
@@ -234,15 +263,17 @@ const AddDocModal = ({ show, onClose, onDocumentAdded, onDocumentUpdated, editDo
       setAttachments(prev => [...prev, ...accepted]);
     }
   }, []);
-  const attDropzone = useDropzone({ onDrop: onDropAtt, multiple: true });
+  const attDropzone = useDropzone({
+    onDrop: onDropAtt, onDropRejected, multiple: true, accept: ACCEPTED_FILE_TYPES, maxSize: MAX_FILE_SIZE,
+  });
 
   const removeAttachment = (idx) => setAttachments(prev => prev.filter((_, i) => i !== idx));
 
   const removeExistingPiece = async (pj) => {
-    if (!pj?.id_piece_jointe) return;
+    if (!pj?.id) return;
     try {
-      await deletePieceJointe(pj.id_piece_jointe);
-      setExistingPieces(prev => prev.filter(p => p.id_piece_jointe !== pj.id_piece_jointe));
+      await deletePieceJointe(pj.id);
+      setExistingPieces(prev => prev.filter(p => p.id !== pj.id));
     } catch (err) {
       console.warn('Suppression pièce jointe impossible :', err);
     }
@@ -284,19 +315,25 @@ const AddDocModal = ({ show, onClose, onDocumentAdded, onDocumentUpdated, editDo
       }
 
       // Pièces jointes uploadées après la création / mise à jour (endpoint dédié)
+      const failedAttachments = [];
       if (result && result.id && attachments.length > 0) {
         for (const att of attachments) {
           try { await uploadPieceJointe(result.id, att); }
-          catch (err) { console.warn('Pièce jointe non uploadée :', err); }
+          catch (err) {
+            console.warn('Pièce jointe non uploadée :', err);
+            failedAttachments.push(`${att.name} (${err.message})`);
+          }
         }
       }
 
       MySwal.fire({
-        icon: 'success',
+        icon: failedAttachments.length > 0 ? 'warning' : 'success',
         title: isEdit ? 'Document mis à jour' : 'Document ajouté',
-        text: 'L\'opération a été effectuée avec succès.',
-        timer: 2000,
-        showConfirmButton: false,
+        text: failedAttachments.length > 0
+          ? `Pièce(s) jointe(s) non enregistrée(s) : ${failedAttachments.join(', ')}`
+          : 'L\'opération a été effectuée avec succès.',
+        timer: failedAttachments.length > 0 ? undefined : 2000,
+        showConfirmButton: failedAttachments.length > 0,
       });
       if (onDocumentUpdated) onDocumentUpdated();
       if (onDocumentAdded) onDocumentAdded();
@@ -551,10 +588,10 @@ const AddDocModal = ({ show, onClose, onDocumentAdded, onDocumentUpdated, editDo
                 ) : (
                   <ul className="add-doc-att-list">
                     {existingPieces.map(pj => (
-                      <li key={pj.id_piece_jointe} className="add-doc-att-item">
+                      <li key={pj.id} className="add-doc-att-item">
                         <span className="add-doc-att-ico"><FaFileAlt /></span>
                         <div className="add-doc-att-meta">
-                          <span className="add-doc-att-name">{pj.nom_fichier || pj.fichier_original || `Pièce #${pj.id_piece_jointe}`}</span>
+                          <span className="add-doc-att-name">{pj.nom_fichier || pj.fichier_original || `Pièce #${pj.id}`}</span>
                           <span className="add-doc-att-size">{formatSize(pj.taille)}</span>
                         </div>
                         <button type="button" className="add-doc-file-remove" onClick={() => removeExistingPiece(pj)} aria-label="Supprimer">

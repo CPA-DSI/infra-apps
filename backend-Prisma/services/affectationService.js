@@ -483,9 +483,31 @@ export const retirerPoste = async (tx, id_materiels, auteurIdN) => {
 };
 
 /**
+ * Deux affectations simultanées du même PC / écran : la seconde transaction
+ * bute sur un index unique (affectations_materiels_*_en_cours_key,
+ * materiels_id_n_key, ecrans_id_materiels_key...) ou sur un conflit
+ * d'écriture. On renvoie alors une AffectationError 409 lisible au lieu du
+ * message Prisma brut. Renvoie null si l'erreur n'est pas un tel conflit.
+ */
+export const conflitConcurrent = (error) => {
+    if (error?.code !== 'P2002' && error?.code !== 'P2034') return null;
+    const cible = JSON.stringify(error.meta || {}).toLowerCase();
+    const objet = cible.includes('ecran') ? 'Cet écran' : 'Ce matériel';
+    return new AffectationError(
+        `${objet} vient d'être affecté par quelqu'un d'autre, rechargez la page et réessayez.`,
+        409
+    );
+};
+
+/**
  * Réponse HTTP uniforme pour les erreurs du service.
  */
 export const repondreErreurAffectation = (res, error) => {
+    const conflit = conflitConcurrent(error);
+    if (conflit) {
+        console.warn('Conflit d\'affectation concurrente:', error.code, error.meta);
+        return res.status(conflit.status).json({ error: conflit.message });
+    }
     if (error instanceof AffectationError) {
         return res.status(error.status).json({ error: error.message, ...(error.details || {}) });
     }

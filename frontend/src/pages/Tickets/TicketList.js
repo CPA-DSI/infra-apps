@@ -18,6 +18,7 @@ import CloseTicketModal from './CloseTicketModal';
 import './Tickets.css';
 import { getTickets, deleteTicket, fetchAllMaterielsIt, assignTicket, fetchCommentaires, fetchCommentairesByTicket, addCommentaire, deleteCommentaire } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
+import { hasPermission, PERMISSIONS } from '../../config/api';
 
 const MySwal = withReactContent(Swal);
 
@@ -81,7 +82,10 @@ const ExpandableComments = ({ data }) => {
   const [commentSubmitting, setCommentSubmitting] = useState(false);
 
   const ticketId = data.idTicket;
-  const idAuteur = user?.id_user ?? null;
+  // IT_ADMIN/DIRECTION peuvent supprimer tout commentaire ; un USER seulement les siens
+  // (l'auteur d'un commentaire est identifié par son id_n).
+  const isTicketAdmin = hasPermission(user?.role, PERMISSIONS.TICKETS_CLOSE);
+  const canDeleteComment = (c) => isTicketAdmin || (user?.id_n !== '' && String(c.idAuteur) === String(user?.id_n));
 
   const fetchComments = useCallback(async (id) => {
     setCommentsLoading(true);
@@ -104,13 +108,10 @@ const ExpandableComments = ({ data }) => {
     e.preventDefault();
     const contenu = newComment.trim();
     if (!contenu || !ticketId) return;
-    if (!idAuteur) {
-      MySwal.fire({ icon: 'error', title: 'Erreur', text: 'Utilisateur non identifié.' });
-      return;
-    }
     setCommentSubmitting(true);
     try {
-      await addCommentaire({ contenu, idTicket: ticketId, idAuteur });
+      // L'auteur est l'utilisateur connecté, déduit côté serveur
+      await addCommentaire({ contenu, idTicket: ticketId });
       setNewComment('');
       await fetchComments(ticketId);
     } catch (err) {
@@ -160,7 +161,7 @@ const ExpandableComments = ({ data }) => {
                     {auteurEquipe && <span className="comment-team">{auteurEquipe}</span>}
                     <span className="comment-date">{c.datePubli ? new Date(c.datePubli).toLocaleString('fr-FR') : ''}</span>
                   </span>
-                  {!isClosed && (
+                  {!isClosed && canDeleteComment(c) && (
                     <button type="button" className="comment-delete-btn" onClick={() => handleDeleteComment(c.idCommentaire)} title="Supprimer">
                       <FaTimes size={11} />
                     </button>
@@ -195,6 +196,10 @@ const ExpandableComments = ({ data }) => {
 };
 
 const TicketList = () => {
+  const { user } = useAuth();
+  // Assigner, fermer et supprimer un ticket sont réservés à IT_ADMIN/DIRECTION
+  const canManageTickets = hasPermission(user?.role, PERMISSIONS.TICKETS_CLOSE);
+
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -515,19 +520,21 @@ const TicketList = () => {
               <FaPaperPlane size={14} className="text-warning" style={{ transform: 'rotate(-45deg)' }} />
             </Button>
           )}
-          {!isClosed && !row.idAssigne && (
+          {canManageTickets && !isClosed && !row.idAssigne && (
             <Button variant="light" className="shadow-sm border-0 p-2 rounded-circle" onClick={() => handleAssign(row.idTicket)} title="Assigner">
               <FaUser size={14} className="text-primary" />
             </Button>
           )}
-          {!isClosed && (
+          {canManageTickets && !isClosed && (
             <Button variant="light" className="shadow-sm border-0 p-2 rounded-circle" onClick={() => handleOpenClose(row)} title="Résolu">
               <FaCheckCircle size={14} className="text-success" />
             </Button>
           )}
-          <Button variant="light" className="shadow-sm border-0 p-2 rounded-circle" onClick={() => confirmDelete(row.idTicket)} title="Supprimer">
-            <FaTimes size={14} className="text-danger" />
-          </Button>
+          {canManageTickets && (
+            <Button variant="light" className="shadow-sm border-0 p-2 rounded-circle" onClick={() => confirmDelete(row.idTicket)} title="Supprimer">
+              <FaTimes size={14} className="text-danger" />
+            </Button>
+          )}
         </div>
       );
     };
@@ -548,7 +555,7 @@ const TicketList = () => {
       { name: 'Créé le', cell: (row) => formatDate(row.dateCreation), sortable: true, minWidth: '110px', grow: 0.8, center: true },
       { name: 'Actions', cell: renderActions, ignoreRowClick: true, allowOverflow: true, button: true, width: '200px', grow: 0, center: true },
     ];
-  }, [handleOpenDetails, handleOpenEdit, handleAssign, handleOpenClose, confirmDelete]);
+  }, [handleOpenDetails, handleOpenEdit, handleAssign, handleOpenClose, confirmDelete, canManageTickets]);
 
   const totalTickets = tickets.length;
   const openTickets = tickets.filter((t) => t.statut !== 'FERME' && t.statut !== 'CLOS' && t.statut !== 'RESOLU').length;

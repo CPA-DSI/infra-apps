@@ -137,6 +137,8 @@ const Mouvements = () => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
+    // Rapport du dernier import (doublons ignorés / lignes en erreur)
+    const [importReport, setImportReport] = useState(null);
     
     // --- États pour l'import intégré ---
     const [showImportSection, setShowImportSection] = useState(false);
@@ -238,7 +240,7 @@ const Mouvements = () => {
                     setTimeout(() => setSuccessMessage(null), 3000);
                 } catch (err) {
                     console.error("Erreur suppression :", err);
-                    setError("Impossible de supprimer ce mouvement.");
+                    setError(`Impossible de supprimer ce mouvement. ${err.message || ''}`);
                     setTimeout(() => setError(null), 4000);
                 }
             }
@@ -565,6 +567,19 @@ const handleImportSubmit = useCallback(async () => {
             const successMsg = response.message || 
                 `${response.imported || 0} mouvements importés sur ${response.total || importData.length}`;
             setSuccessMessage(successMsg);
+
+            // Doublons ignorés et lignes en erreur : rapport détaillé conservé jusqu'à fermeture
+            const nbDoublons = response.doublons || 0;
+            const nbErreurs = response.errors || 0;
+            if (nbDoublons > 0 || nbErreurs > 0 || (response.errorDetails && response.errorDetails.length > 0)) {
+                setImportReport({
+                    doublons: nbDoublons,
+                    errors: nbErreurs,
+                    details: [...(response.errorDetails || []), ...(response.doublonDetails || [])],
+                });
+            } else {
+                setImportReport(null);
+            }
             
             // Rafraîchir les données après un court délai
             setTimeout(async () => {
@@ -1150,6 +1165,23 @@ const handleImportSubmit = useCallback(async () => {
                     {/* Messages d'état */}
                     {error && <Alert variant="danger" className="mb-3">{error}</Alert>}
                     {successMessage && <Alert variant="success" className="mb-3">{successMessage}</Alert>}
+                    {importReport && (
+                        <Alert variant="warning" className="mb-3" dismissible onClose={() => setImportReport(null)}>
+                            <div className="fw-semibold mb-1">
+                                Rapport d'import : {importReport.doublons} doublon(s) ignoré(s) (déjà présents en base), {importReport.errors} ligne(s) en erreur
+                            </div>
+                            {importReport.details.length > 0 && (
+                                <ul className="mb-0 small" style={{ maxHeight: '160px', overflowY: 'auto' }}>
+                                    {importReport.details.slice(0, 50).map((detail, idx) => (
+                                        <li key={idx}>{detail}</li>
+                                    ))}
+                                    {importReport.details.length > 50 && (
+                                        <li>… et {importReport.details.length - 50} autre(s)</li>
+                                    )}
+                                </ul>
+                            )}
+                        </Alert>
+                    )}
 
                     {/* Statistiques Dashboard - cliquables pour filtrer la table par type */}
                     <div className="row mb-3 g-2">

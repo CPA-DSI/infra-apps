@@ -11,6 +11,7 @@
     "axios": "^1.13.1",
     "bootstrap": "^5.3.8",
     "dayjs": "^1.11.23",
+    "dompurify": "^3.4.16",
     "file-saver": "^2.0.5",
     "mammoth": "^1.12.2",
     "react": "^19.2.0",

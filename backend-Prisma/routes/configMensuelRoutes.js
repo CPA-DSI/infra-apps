@@ -4,7 +4,7 @@ import { PrismaClient } from '@prisma/client';
 import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
 import { PERMISSIONS } from '../constants/roles.js';
 import { reloadCronTasks, parseHeureEnvoi } from '../cron-worker.js';
-import { generateExcelReport, sendEmail } from '../services/reportService.js';
+import { generateExcelReport, sendEmail, getCurrentDate, getCurrentMonth, toPublicEmailConfig, getNewEmailPass } from '../services/reportService.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -24,8 +24,7 @@ router.get('/mensuel', requirePermission(PERMISSIONS.CONFIG_READ), async (req, r
     
     if (!config) {
       // Retourner une configuration par défaut
-      const today = new Date();
-      const month = today.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+      const month = getCurrentMonth();
       
       config = {
         id: 1,
@@ -45,7 +44,8 @@ router.get('/mensuel', requirePermission(PERMISSIONS.CONFIG_READ), async (req, r
       };
     }
     
-    res.json(config);
+    // Ne jamais renvoyer le mot de passe SMTP
+    res.json(toPublicEmailConfig(config));
   } catch (error) {
     console.error('Erreur GET /mensuel:', error);
     res.status(500).json({ error: 'Erreur lors de la récupération de la configuration mensuelle' });
@@ -74,6 +74,11 @@ router.post('/mensuel', requirePermission(PERMISSIONS.CONFIG_WRITE), async (req,
       return res.status(400).json({ error: "Heure d'envoi invalide (format attendu HH:MM)" });
     }
     
+    // Mot de passe vide/absent : on conserve celui déjà enregistré
+    const emailPass = getNewEmailPass(email_pass);
+    // État du robot : modifié uniquement s'il est fourni
+    const cronActif = cron_actif !== undefined ? (cron_actif === true || cron_actif === 'true') : undefined;
+
     // Vérifier si une config existe déjà
     const existingConfig = await prisma.configEmailMensuel.findUnique({
       where: { id: 1 }
@@ -87,12 +92,12 @@ router.post('/mensuel', requirePermission(PERMISSIONS.CONFIG_WRITE), async (req,
         data: {
           email_dest,
           email_exp,
-          email_pass,
+          email_pass: emailPass,
           objet_mail,
           message_mail,
           heure_envoi,
           jour_envoi: parseInt(jour_envoi) || 1,
-          cron_actif: cron_actif || false,
+          cron_actif: cronActif,
           filtre_equipe: filtre_equipe || null,
           include_materiels: include_materiels !== undefined ? include_materiels : true,
           include_produits: include_produits !== undefined ? include_produits : true,
@@ -106,12 +111,12 @@ router.post('/mensuel', requirePermission(PERMISSIONS.CONFIG_WRITE), async (req,
           id: 1,
           email_dest,
           email_exp,
-          email_pass,
+          email_pass: emailPass ?? '',
           objet_mail,
           message_mail,
           heure_envoi,
           jour_envoi: parseInt(jour_envoi) || 1,
-          cron_actif: cron_actif || false,
+          cron_actif: cronActif ?? false,
           filtre_equipe: filtre_equipe || null,
           include_materiels: include_materiels !== undefined ? include_materiels : true,
           include_produits: include_produits !== undefined ? include_produits : true
@@ -120,7 +125,7 @@ router.post('/mensuel', requirePermission(PERMISSIONS.CONFIG_WRITE), async (req,
     }
 
     await reloadCronTasks(prisma);
-    res.json(config);
+    res.json(toPublicEmailConfig(config));
   } catch (error) {
     console.error('Erreur POST /mensuel:', error);
     res.status(500).json({ error: 'Erreur lors de la sauvegarde de la configuration mensuelle' });
@@ -157,7 +162,7 @@ router.get('/mensuel/status', requirePermission(PERMISSIONS.CONFIG_READ), async 
     });
     res.json({ 
       running: config ? config.cron_actif : false,
-      config: config
+      config: toPublicEmailConfig(config)
     });
   } catch (error) {
     console.error('Erreur GET /mensuel/status:', error);
@@ -183,14 +188,14 @@ router.post('/mensuel/test', requirePermission(PERMISSIONS.CONFIG_WRITE), async 
     }
     
     const excelBuffer = await generateExcelReport(prisma);
-    const monthName = new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    const monthName = getCurrentMonth();
 
     await sendEmail(
       config,
       `[TEST] ${config.objet_mail || `Rapport Mensuel - ${monthName}`}`,
       config.message_mail || `Bonjour, veuillez trouver ci-joint le rapport mensuel des stocks.`,
       excelBuffer,
-      `rapport_mensuel_test_${new Date().toISOString().slice(0,10)}.xlsx`
+      `rapport_mensuel_test_${getCurrentDate()}.xlsx`
     );
     
     res.json({ message: 'Email de test mensuel envoyé avec succès' });

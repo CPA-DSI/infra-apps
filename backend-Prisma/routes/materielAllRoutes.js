@@ -216,41 +216,43 @@ router.post('/', authenticateToken, ensureActiveUser, asyncHandler(async (req, r
 
     console.log("--- Début synchronisation POST ---");
 
-    // 2. SYNCHRONISATION : Création de l'utilisateur si id_n est fourni
-    if (dataToCreate.id_n) {
-        const userExists = await prisma.Users.findUnique({ 
-            where: { id_n: dataToCreate.id_n } 
-        });
-        
-        if (!userExists) {
-            console.log(`🛠️ Création du parent Users ${dataToCreate.id_n} pour l'ajout du matériel.`);
-            
-            // Hachage du mot de passe par défaut
-            const hashedPass = await bcrypt.hash('123456789', 12);
-            
-            await prisma.Users.create({
-                data: {
-                    id_n: dataToCreate.id_n,
-                    emails: {
-                        create: [
-                            { email: `rfc_${dataToCreate.id_n}@rfc-production.com`, password: hashedPass, pass_mail: encryptPassMail('default_pass'), is_primary: true },
-                            { email: `cpa_${dataToCreate.id_n}@cpa-experts.com`, password: hashedPass, pass_mail: encryptPassMail('default_pass'), is_primary: false }
-                        ]
-                    },
-                    role: 'USER'
-                }
-            });
-             console.log("✅ Parent Users créé.");
-        }
-    }
-
-    // 3. CRÉATION DU MATÉRIEL, de son affectation initiale et de son écran.
+    // 2. CRÉATION DU MATÉRIEL, de son affectation initiale et de son écran.
     // L'écran est géré par la table ecrans : on retire ses champs de la fiche,
     // rattacherEcranParCode remplit ensuite les colonnes de transition.
     const { ecran, code_ecran, date_ecran, ...dataMateriel } = dataToCreate;
 
     try {
         const createdMateriel = await prisma.$transaction(async (tx) => {
+            // SYNCHRONISATION : création de l'utilisateur si id_n est fourni,
+            // dans la même transaction pour ne pas laisser d'utilisateur
+            // orphelin si la création du matériel échoue.
+            if (dataToCreate.id_n) {
+                const userExists = await tx.users.findUnique({ 
+                    where: { id_n: dataToCreate.id_n } 
+                });
+                
+                if (!userExists) {
+                    console.log(`🛠️ Création du parent Users ${dataToCreate.id_n} pour l'ajout du matériel.`);
+                    
+                    // Hachage du mot de passe par défaut
+                    const hashedPass = await bcrypt.hash('123456789', 12);
+                    
+                    await tx.users.create({
+                        data: {
+                            id_n: dataToCreate.id_n,
+                            emails: {
+                                create: [
+                                    { email: `rfc_${dataToCreate.id_n}@rfc-production.com`, password: hashedPass, pass_mail: encryptPassMail('default_pass'), is_primary: true },
+                                    { email: `cpa_${dataToCreate.id_n}@cpa-experts.com`, password: hashedPass, pass_mail: encryptPassMail('default_pass'), is_primary: false }
+                                ]
+                            },
+                            role: 'USER'
+                        }
+                    });
+                    console.log("✅ Parent Users créé.");
+                }
+            }
+
             const materiel = await tx.materiels.create({ data: dataMateriel });
             await ouvrirAffectationInitiale(tx, materiel, req.user?.id_n);
             await rattacherEcranParCode(tx, materiel.id_materiels, { code_ecran, modele: ecran, date_ecran }, req.user?.id_n, 'Création du poste');
@@ -259,7 +261,9 @@ router.post('/', authenticateToken, ensureActiveUser, asyncHandler(async (req, r
 
         res.status(201).json({ message: 'Matériel ajouté avec succès', materiel: createdMateriel });
     } catch (error) {
-        if (error.code === 'P2002') {
+        // Un conflit sur l'écran (pris entre-temps par un autre poste) est
+        // traité par repondreErreurAffectation (409).
+        if (error.code === 'P2002' && !JSON.stringify(error.meta || {}).toLowerCase().includes('ecran')) {
             console.error("Erreur lors de la création du matériel:", error);
             return res.status(400).json({ error: "Cet utilisateur a déjà un poste (N° Matricule déjà utilisé)." });
         }
@@ -348,16 +352,28 @@ router.put('/:id', authenticateToken, ensureActiveUser, asyncHandler(async (req,
         ...rawData 
     } = req.body;
 
-    // id_n (bénéficiaire) et les champs écran ne sont plus modifiables ici :
-    // ils passent par POST /:id/affecter et POST /api/ecrans/:id/affecter, qui
-    // tracent l'affectation. Les modifier directement renommait l'utilisateur
-    // dans Users et ne laissait aucun historique.
+    const materielId = parseInt(id, 10);
+
+    // Un poste supprimé (suppression logique) n'est plus modifiable.
+    const actuel = await prisma.materiels.findUnique({
+        where: { id_materiels: materielId },
+        select: { est_vide: true, date_suppression: true },
+    });
+    if (!actuel || actuel.date_suppression) {
+        return res.status(404).json({ error: `Matériel avec l'ID ${materielId} non trouvé.` });
+    }
+
+    // Liste blanche des champs modifiables. id_n (bénéficiaire), utilisateur,
+    // est_actif, est_vide et les champs écran ne sont pas modifiables ici :
+    // ils passent par POST /:id/affecter, PATCH /:id/statut et
+    // POST /api/ecrans/:id/affecter, qui tracent l'affectation. Les modifier
+    // directement renommait l'utilisateur et ne laissait aucun historique.
     const dataToUpdate = {};
     const fields = [
-        'utilisateur', 'equipe', 'date_pc', 'caracteristiques',
+        'equipe', 'date_pc', 'caracteristiques',
         'code_pc', 'hdmi', 'clavier', 'lan',
         'usb', 'etat_pc', 'salle', 'mdp_pc', 'mdp_admin', 
-        'etat_batterie', 'commentaire', 'est_actif', 'id_marque', 'id_local', 
+        'etat_batterie', 'commentaire', 'id_marque', 'id_local', 
         'date_modification'
     ];
 
@@ -377,15 +393,10 @@ router.put('/:id', authenticateToken, ensureActiveUser, asyncHandler(async (req,
         }
     });
 
-    // Valeur par défaut pour utilisateur obligatoire
-    if (dataToUpdate.utilisateur !== undefined && (!dataToUpdate.utilisateur || dataToUpdate.utilisateur === null)) {
-        dataToUpdate.utilisateur = 'Non défini';
-    }
-
-    // Un poste vide dont on saisit le PC redevient un poste normal, actif.
+    // Un poste vide dont on saisit le PC redevient un poste normal, actif
+    // (transition décidée par le serveur, jamais reprise du body).
     if (dataToUpdate.code_pc || dataToUpdate.caracteristiques) {
-        const actuel = await prisma.materiels.findUnique({ where: { id_materiels: parseInt(id) }, select: { est_vide: true } });
-        if (actuel?.est_vide) {
+        if (actuel.est_vide) {
             dataToUpdate.est_vide = false;
             dataToUpdate.est_actif = true;
             if (!dataToUpdate.etat_pc || dataToUpdate.etat_pc === ETAT_SANS_POSTE) {
@@ -407,15 +418,64 @@ router.put('/:id', authenticateToken, ensureActiveUser, asyncHandler(async (req,
     }
 
     try {
+        // date_suppression: null dans le where : un poste supprimé entre-temps
+        // n'est pas modifié (P2025 -> 404).
         const materiel = await prisma.materiels.update({
-            where: { id_materiels: parseInt(id) },
+            where: { id_materiels: materielId, date_suppression: null },
             data: dataToUpdate,
         });
 
         res.json({ message: 'Matériel mis à jour', materiel });
     } catch (error) {
+        if (error.code === 'P2025') {
+            return res.status(404).json({ error: `Matériel avec l'ID ${materielId} non trouvé.` });
+        }
         console.error("Erreur Prisma détaillée:", error);
         res.status(500).json({ error: `Erreur interne lors de la mise à jour: ${error.message}` });
+    }
+}));
+
+// 4bis. PATCH statut actif / inactif (URL complète: /api/materiels_all/:id/statut)
+// Body : { est_actif }. Remplace la bascule « Status » qui passait par le PUT.
+// Un PC en stock ou une fiche « Sans poste » change de statut uniquement via
+// l'affectation (POST /:id/affecter).
+router.patch('/:id/statut', authenticateToken, ensureActiveUser, asyncHandler(async (req, res) => {
+    if (req.user?.role === 'USER') {
+        return res.status(403).json({ error: 'Accès interdit : permission insuffisante.' });
+    }
+
+    const materielId = parseInt(req.params.id, 10);
+    const { est_actif } = req.body;
+    if (typeof est_actif !== 'boolean') {
+        return res.status(400).json({ error: 'Le champ est_actif (booléen) est requis.' });
+    }
+
+    const actuel = await prisma.materiels.findUnique({
+        where: { id_materiels: materielId },
+        select: { id_n: true, est_vide: true, date_suppression: true },
+    });
+    if (!actuel || actuel.date_suppression) {
+        return res.status(404).json({ error: `Matériel avec l'ID ${materielId} non trouvé.` });
+    }
+    if (actuel.est_vide || actuel.id_n === null) {
+        return res.status(400).json({
+            error: actuel.est_vide
+                ? "Cette fiche « Sans poste » n'a pas de PC : utilisez « Réaffecter le PC » pour lui en attribuer un."
+                : "Ce PC est en stock : son statut change en l'affectant à un utilisateur (« Réaffecter le PC »).",
+        });
+    }
+
+    try {
+        const materiel = await prisma.materiels.update({
+            where: { id_materiels: materielId, date_suppression: null },
+            data: { est_actif, etat_pc: est_actif ? ETAT_REMIS_EN_SERVICE : 'Disponible', date_modification: new Date() },
+        });
+        res.json({ message: 'Statut mis à jour', materiel });
+    } catch (error) {
+        if (error.code === 'P2025') {
+            return res.status(404).json({ error: `Matériel avec l'ID ${materielId} non trouvé.` });
+        }
+        throw error;
     }
 }));
 

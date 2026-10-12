@@ -93,7 +93,8 @@ router.get('/stats-ecrans', async (req, res) => {
 router.get('/capacite-ssd', async (req, res) => {
     try {
         // La requête SQL brute pour les stats d'écrans/HDD
-        const query = `
+        // Postes réels uniquement : ni supprimés, ni fiches « Sans poste » (est_vide).
+        const result = await prisma.$queryRaw`
             SELECT
                 CASE
                     WHEN caracteristiques ILIKE '%SSD%' AND REGEXP_REPLACE(caracteristiques, '^(.*?)(\\d+[GM]o\\s*SSD)(.*)$', '\\2') IS NOT NULL
@@ -107,14 +108,12 @@ router.get('/capacite-ssd', async (req, res) => {
                 materiels
             WHERE
                 date_suppression IS NULL
+                AND est_vide = false
             GROUP BY
                 capacite_stockage
             ORDER BY
                 nombre_total DESC;
         `;
-        
-        // Utilisation de $queryRawUnsafe
-        const result = await prisma.$queryRawUnsafe(query); 
 
         // --- CORRECTION BIGINT ---
         // On mappe le résultat pour convertir explicitement 'nombre_total' en String
@@ -136,15 +135,15 @@ router.get('/capacite-ssd', async (req, res) => {
 router.get('/count-equipe', async (req, res) => {
   try {
     // Utilisation d'une jointure SQL car nom_local est dans la table locaux
-    const query = `
+    // Les fiches « Sans poste » (est_vide) ne sont pas des postes : exclues.
+    const result = await prisma.$queryRaw`
       SELECT m.equipe, l.nom_local, COUNT(*) as nombre_equipe 
       FROM materiels m
       LEFT JOIN locaux l ON m.id_local = l.id_local
       WHERE m.date_suppression IS NULL
+        AND m.est_vide = false
       GROUP BY m.equipe, l.nom_local
     `;
-    
-    const result = await prisma.$queryRawUnsafe(query);
     
     // Conversion sécurisée des BigInt en String pour éviter l'erreur 500
     const serializedResult = result.map(item => ({
@@ -163,7 +162,8 @@ router.get('/count-equipe', async (req, res) => {
 // Route GET /api/materiels/equipe-details - Données détaillées par équipe
 router.get('/equipe-details', async (req, res) => {
   try {
-    const query = `
+    // Les fiches « Sans poste » (est_vide) ne sont pas des postes : exclues.
+    const result = await prisma.$queryRaw`
       SELECT 
         m.id_materiels,
         m.utilisateur,
@@ -188,10 +188,9 @@ router.get('/equipe-details', async (req, res) => {
       LEFT JOIN locaux l ON m.id_local = l.id_local
       LEFT JOIN marques mr ON m.id_marque = mr.id_marque
       WHERE m.date_suppression IS NULL
+        AND m.est_vide = false
       ORDER BY m.equipe, m.utilisateur
     `;
-    
-    const result = await prisma.$queryRawUnsafe(query);
     
     // Conversion sécurisée des BigInt en Number et gestion des dates
     const serializedResult = result.map(item => ({
@@ -227,16 +226,16 @@ router.get('/equipe-details', async (req, res) => {
 router.get('/count-by-local', async (req, res) => {
   try {
     // Requête SQL pour grouper les matériels par local
-    const query = `
+    // Les fiches « Sans poste » (est_vide) ne sont pas des postes : exclues.
+    const result = await prisma.$queryRaw`
       SELECT l.nom_local, COUNT(m.id_materiels) as nombre_materiels
       FROM materiels m
       LEFT JOIN locaux l ON m.id_local = l.id_local
       WHERE m.date_suppression IS NULL
+        AND m.est_vide = false
       GROUP BY l.nom_local
       ORDER BY nombre_materiels DESC
     `;
-    
-    const result = await prisma.$queryRawUnsafe(query);
     
     // Conversion sécurisée des BigInt en String
     const serializedResult = result.map(item => ({

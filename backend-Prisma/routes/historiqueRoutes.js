@@ -43,6 +43,7 @@ router.get('/', authenticateToken, ensureActiveUser, asyncHandler(async (req, re
             date_arrivee: item.date_arrivee,
             ancienne_quantite_stock: item.ancienne_quantite_stock,
             ancienne_date_stock: item.ancienne_date_stock,
+            remarque: item.remarque,
             nom_produit: item.produit?.nom_produit || 'Produit inconnu',
             quantite_en_stock: item.produit?.quantite_en_stock || 0
         }));
@@ -85,68 +86,9 @@ router.get('/:id', authenticateToken, ensureActiveUser, asyncHandler(async (req,
     res.status(200).json(arrivee);
 }));
 
-// POST /api/historique_arrive
-router.post('/', authenticateToken, ensureActiveUser, asyncHandler(async (req, res) => {
-    const userRole = req.user?.role;
-    if (userRole === 'USER') {
-        return res.status(403).json({ error: 'Accès interdit : permission insuffisante.' });
-    }
-
-    const { id_produit, quantite_arrivee, ancienne_quantite_stock, ancienne_date_stock } = req.body;
-    
-    if (!id_produit || !quantite_arrivee) {
-        return res.status(400).json({ message: 'Veuillez fournir id_produit et quantite_arrivee' });
-    }
-    
-    const nouvelleArrivee = await prisma.historiqueArrive.create({
-        data: {
-            id_produit,
-            quantite_arrivee,
-            ancienne_quantite_stock,
-            ancienne_date_stock: ancienne_date_stock ? new Date(ancienne_date_stock) : undefined,
-            date_arrivee: new Date()
-        }
-    });
-    
-    res.status(201).json(nouvelleArrivee);
-}));
-
-// PUT /api/historique_arrive/:id
-router.put('/:id', authenticateToken, ensureActiveUser, asyncHandler(async (req, res) => {
-    const { id } = req.params;
-    const userRole = req.user?.role;
-
-    if (userRole === 'USER') {
-        return res.status(403).json({ error: 'Accès interdit : permission insuffisante.' });
-    }
-
-    const { quantite_arrivee, ancienne_quantite_stock, ancienne_date_stock } = req.body;
-    
-    const arriveeMiseAJour = await prisma.historiqueArrive.update({
-        where: { id_arrivage: parseInt(id) },
-        data: {
-            quantite_arrivee,
-            ancienne_quantite_stock,
-            ancienne_date_stock: ancienne_date_stock ? new Date(ancienne_date_stock) : undefined
-        }
-    });
-    
-    res.status(200).json(arriveeMiseAJour);
-}));
-
-// DELETE /api/historique_arrive/:id
-router.delete('/:id', authenticateToken, ensureActiveUser, asyncHandler(async (req, res) => {
-    const { id } = req.params;
-    const userRole = req.user?.role;
-
-    if (userRole === 'USER') {
-        return res.status(403).json({ error: 'Accès interdit : permission insuffisante.' });
-    }
-
-    await prisma.historiqueArrive.delete({ 
-        where: { id_arrivage: parseInt(id) } 
-    });
-    res.status(200).json({ message: `Enregistrement ${id} supprimé avec succès` });
-}));
+// Pas de POST / PUT / DELETE : l'historique des stocks est écrit uniquement
+// par services/stockService.js, dans la même transaction que la variation de
+// stock correspondante (mouvements, import, ajustement de fiche produit).
+// Une écriture directe permettrait de désynchroniser historique et stock.
 
 export default router;

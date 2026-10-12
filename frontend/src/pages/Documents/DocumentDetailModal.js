@@ -3,7 +3,7 @@ import { FaFileAlt, FaTag, FaFileUpload, FaCodeBranch, FaGlobe, FaUser, FaCalend
 // --- Importations des icônes de type de fichier ---
 import { FaFilePdf, FaFileWord, FaFileExcel, FaFileImage } from 'react-icons/fa';
 import { Button } from 'react-bootstrap';
-import { API_BASE_URL } from '../../config/api';
+import { getDocumentFileUrl, getPieceJointeFileUrl } from '../../services/api';
 import './Documents.css';
 
 const CATEGORY_CONFIG = {
@@ -34,11 +34,6 @@ const DocumentDetailModal = ({ show, onClose, doc, relationData, onEdit }) => {
     if (bytes < 1024) return `${bytes} o`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Ko`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
-  };
-
-  const getDownloadUrl = (path) => {
-    if (!path) return '#';
-    return `${API_BASE_URL}${path}`;
   };
 
   const renderAttachmentIcon = (mime) => {
@@ -323,7 +318,7 @@ const DocumentDetailModal = ({ show, onClose, doc, relationData, onEdit }) => {
                   <span className="doc-info-label">Accès</span>
                   <div style={{ marginTop: '6px' }}>
                     {doc.chemin_stockage ? (
-                      <Button size="sm" href={getDownloadUrl(doc.chemin_stockage)} target="_blank" rel="noopener noreferrer" style={{
+                      <Button size="sm" href={getDocumentFileUrl(doc.id, { inline: true })} target="_blank" rel="noopener noreferrer" style={{
                         background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
                         border: 'none',
                         color: 'white',
@@ -516,7 +511,7 @@ const DocumentDetailModal = ({ show, onClose, doc, relationData, onEdit }) => {
                       </span>
                       {pj.chemin_stockage && (
                         <div style={{ marginTop: '6px' }}>
-                          <Button size="sm" href={getDownloadUrl(pj.chemin_stockage)} target="_blank" rel="noopener noreferrer" style={{
+                          <Button size="sm" href={getPieceJointeFileUrl(pj.id, { inline: true })} target="_blank" rel="noopener noreferrer" style={{
                             background: 'linear-gradient(135deg, #ec4899, #f472b6)',
                             border: 'none',
                             color: 'white',

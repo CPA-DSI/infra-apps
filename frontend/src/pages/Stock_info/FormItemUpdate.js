@@ -1,6 +1,7 @@
 // FormItemUpdate.js
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Row, Col, Spinner, Alert } from 'react-bootstrap';
+import dayjs from 'dayjs';
 import { fetchProduits, fetchLocaux, fetchMateriels, updateMouvement } from '../../services/api';
 import './HomeStockUpdate.css';
 // Import des icônes valides
@@ -31,7 +32,7 @@ const FormItemUpdate = ({ initialData = {}, onSave, onClose }) => {
     }
     return {
       id_produit: '', id_local_source: '', id_local_destination: '', id_materiels: '', nom_utilisateur: '',
-      date_mouvement: new Date().toISOString().split('T')[0],
+      date_mouvement: dayjs().format('YYYY-MM-DD'),
       type_mouvement: '', quantite: 1, motif: '',
     };
   };

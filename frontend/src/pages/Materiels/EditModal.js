@@ -170,12 +170,25 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
         e.preventDefault();
         
         try {
+            // Seuls les champs modifiables sont envoyés : matricule, utilisateur,
+            // statut Actif et écran passent par l'affectation (historisée).
             const apiPayload = {
-                ...formData,
+                equipe: formData.equipe,
+                caracteristiques: formData.caracteristiques,
+                code_pc: formData.code_pc,
+                hdmi: formData.hdmi,
+                clavier: formData.clavier,
+                lan: formData.lan,
+                usb: formData.usb,
+                etat_pc: formData.etat_pc,
+                salle: formData.salle,
+                mdp_pc: formData.mdp_pc,
+                mdp_admin: formData.mdp_admin,
+                etat_batterie: formData.etat_batterie,
+                commentaire: formData.commentaire,
                 id_marque: formData.id_marque ? parseInt(formData.id_marque, 10) : null,
                 id_local: formData.id_local ? parseInt(formData.id_local, 10) : null,
                 date_pc: formData.date_pc ? new Date(formData.date_pc) : null,
-                date_ecran: formData.date_ecran ? new Date(formData.date_ecran) : null,
             };
 
             await updateMateriel(formData.id_materiels, apiPayload);
@@ -259,8 +272,9 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
                     }}>
                         <FaInfoCircle style={{ color: '#3B82F6', fontSize: '1.2rem' }} />
                         <span style={{ color: '#1E40AF', fontSize: '0.85rem' }}>
-                            Modifiez les champs souhaités et cliquez sur Sauvegarder. Le matricule et l'écran se changent
-                            depuis le détail du matériel (« Réaffecter le PC » / « Déplacer l'écran ») pour garder l'historique.
+                            Modifiez les champs souhaités et cliquez sur Sauvegarder. Le matricule, l'utilisateur, le statut Actif
+                            et l'écran se changent depuis le détail du matériel (« Réaffecter le PC » / « Déplacer l'écran »)
+                            ou le bouton Status de la liste, pour garder l'historique.
                         </span>
                     </div>
                     
@@ -271,7 +285,7 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
                             <FormItem label="N° Matricule" name="id_n" formData={formData} handleChange={handleChange} disabled icon={getMaterielFieldIcon("id_n")} />
                         </div>
                         <div style={{ gridColumn: '2', gridRow: '1' }}>
-                            <FormItem label="Utilisateur" name="utilisateur" formData={formData} handleChange={handleChange} required icon={getMaterielFieldIcon("utilisateur")} />
+                            <FormItem label="Utilisateur (via « Réaffecter le PC »)" name="utilisateur" formData={formData} handleChange={handleChange} disabled icon={getMaterielFieldIcon("utilisateur")} />
                         </div>
 
                         <div style={{ gridColumn: '1', gridRow: '2' }}>
@@ -395,11 +409,14 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
                                         }} />
                                     )}
                                 </span>
+                                {/* Lecture seule : le statut se change via le bouton Status de la liste. */}
                                 <div
                                     className="add-modal-toggle"
-                                    onClick={() => handleChange({ target: { name: 'est_actif', type: 'checkbox', checked: !formData.est_actif }})}
+                                    title="Statut modifiable depuis le bouton Status de la liste"
                                     style={{
                                         backgroundColor: formData.est_actif ? '#10B981' : '#EF4444',
+                                        opacity: 0.6,
+                                        cursor: 'not-allowed',
                                     }}
                                 >
                                     <div className="add-modal-toggle-knob" style={{

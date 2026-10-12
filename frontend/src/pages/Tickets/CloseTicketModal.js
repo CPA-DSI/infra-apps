@@ -1,18 +1,14 @@
 import React, { useState, useCallback } from 'react';
 import Swal from 'sweetalert2';
 import { FaLock, FaTimes, FaInfoCircle, FaTag, FaCheckCircle, FaClock } from 'react-icons/fa';
-import { closeTicket, addCommentaire, updateTicket } from '../../services/api';
-import { useAuth } from '../../contexts/AuthContext';
+import { closeTicket, addCommentaire } from '../../services/api';
 import './Tickets.css';
 
 const CloseTicketModal = ({ show, ticketId, onClose, onSuccess }) => {
-  const { user } = useAuth();
   const [solution, setSolution] = useState('');
   const [motif, setMotif] = useState('');
   const [dureeResolution, setDureeResolution] = useState('');
   const [submitting, setSubmitting] = useState(false);
-
-  const fermePar = user?.id_user ?? 0;
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
@@ -23,24 +19,18 @@ const CloseTicketModal = ({ show, ticketId, onClose, onSuccess }) => {
 
     setSubmitting(true);
     try {
-      await closeTicket(ticketId, solution, motif, fermePar, dureeResolution ? Number(dureeResolution) : undefined);
+      // La fermeture passe le ticket en RESOLU et enregistre la solution
+      // (TicketFermeture) côté serveur : pas de mise à jour séparée du ticket.
+      await closeTicket(ticketId, solution, motif, dureeResolution ? Number(dureeResolution) : undefined);
 
+      // L'auteur du commentaire est l'utilisateur connecté, déduit côté serveur
+      const contenu = motif
+        ? `🔒 Ticket fermé\nSolution : ${solution}\nMotif : ${motif}`
+        : `🔒 Ticket fermé\nSolution : ${solution}`;
       try {
-        await updateTicket(ticketId, { statut: 'RESOLU', solution: solution.trim() });
-      } catch (updateErr) {
-        console.error('Erreur mise à jour statut ticket:', updateErr);
-      }
-
-      const idAuteur = user?.id_user;
-      if (idAuteur) {
-        const contenu = motif
-          ? `🔒 Ticket fermé\nSolution : ${solution}\nMotif : ${motif}`
-          : `🔒 Ticket fermé\nSolution : ${solution}`;
-        try {
-          await addCommentaire({ contenu, idTicket: ticketId, idAuteur });
-        } catch (cErr) {
-          console.error('Erreur ajout commentaire de clôture:', cErr);
-        }
+        await addCommentaire({ contenu, idTicket: ticketId });
+      } catch (cErr) {
+        console.error('Erreur ajout commentaire de clôture:', cErr);
       }
 
       onSuccess?.();
@@ -63,7 +53,7 @@ const CloseTicketModal = ({ show, ticketId, onClose, onSuccess }) => {
     } finally {
       setSubmitting(false);
     }
-  }, [ticketId, solution, motif, dureeResolution, user, fermePar, onSuccess, onClose]);
+  }, [ticketId, solution, motif, dureeResolution, onSuccess, onClose]);
 
   const handleClose = useCallback(() => {
     setSolution('');

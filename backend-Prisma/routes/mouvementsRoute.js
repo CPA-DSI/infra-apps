@@ -5,7 +5,12 @@ import prisma from '../prismaClient.js';
 import { importMouvementsFromBuffer } from '../services/importMouvements.js';
 import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
 import { PERMISSIONS } from '../constants/roles.js';
-import { creerNouveauProduit, ProduitDejaExistantError } from '../services/produitsService.js';
+import { ProduitDejaExistantError } from '../services/produitsService.js';
+import {
+    StockError, TYPES_MOUVEMENT, creerMouvement, creerProduitAvecStock,
+    annulerEffetMouvement, modifierEffetMouvement
+} from '../services/stockService.js';
+import { toDateOnly, todayDateOnly } from '../services/dateOnly.js';
 import { validateIdParam } from '../middleware/validateIdParam.js';
 
 const router = express.Router();
@@ -117,7 +122,8 @@ router.get('/stats/:year', requirePermission(PERMISSIONS.STOCKS_READ), async (re
       where: {
         date_mouvement: {
           gte: new Date(Date.UTC(targetYear, 0, 1)),
-          lte: new Date(Date.UTC(targetYear + 1, 0, 1)),
+          // borne haute exclusive : le 1er janvier N+1 n'appartient pas à l'année N
+          lt: new Date(Date.UTC(targetYear + 1, 0, 1)),
         },
       },
       select: { date_mouvement: true, type_mouvement: true, quantite: true },
@@ -219,38 +225,37 @@ router.get('/:id', requirePermission(PERMISSIONS.STOCKS_READ), async (req, res) 
 router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) => {
     const {
         id_produit, id_local_source, id_local_destination, quantite, id_materiels,
-        nom_produit, nom_utilisateur, date_mouvement, type_mouvement, motif 
+        nom_produit, nom_utilisateur, date_mouvement, type_mouvement, motif
     } = req.body;
-    
+
     // Conversions
     const id_produit_int = id_produit ? parseInt(id_produit, 10) : null;
     const id_local_source_int = id_local_source ? parseInt(id_local_source, 10) : null;
     const id_local_destination_int = id_local_destination ? parseInt(id_local_destination, 10) : null;
     const id_materiels_int = id_materiels ? parseInt(id_materiels, 10) : null;
     const quantite_int = parseInt(quantite, 10);
-    
+
     // Validation type
-    const ALLOWED_TYPES = ['ENTREE', 'ENTREE_QUANTITE', 'SORTIE'];
-    if (!type_mouvement || !ALLOWED_TYPES.includes(type_mouvement)) {
+    if (!type_mouvement || !TYPES_MOUVEMENT.includes(type_mouvement)) {
         return res.status(400).json({ error: "Type de mouvement invalide.", message: `Le type fourni '${type_mouvement}' n'est pas autorisé.` });
     }
-    
+
     // Validation quantité
     if (isNaN(quantite_int) || quantite_int <= 0) {
         return res.status(400).json({ error: "La quantité doit être un nombre positif." });
     }
-    
-    // Validation date
+
+    // Validation date (colonne @db.Date : date calendaire à minuit UTC pour éviter le J-1)
     let mouvementDate;
     if (date_mouvement) {
-        mouvementDate = new Date(date_mouvement);
-        if (isNaN(mouvementDate.getTime())) {
+        mouvementDate = toDateOnly(date_mouvement);
+        if (!mouvementDate) {
             return res.status(400).json({ error: "La date fournie est invalide." });
         }
     } else {
-        mouvementDate = new Date(); // date par défaut = maintenant
+        mouvementDate = todayDateOnly(); // date par défaut = aujourd'hui
     }
-    
+
     // Validation spécifique selon le type
     if (type_mouvement === 'ENTREE') {
         if (!nom_produit || !nom_produit.trim()) {
@@ -260,113 +265,73 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
             return res.status(400).json({ error: "La destination (local) est requise pour une entrée." });
         }
     }
-    
+
     if ((type_mouvement === 'ENTREE_QUANTITE' || type_mouvement === 'SORTIE') && !id_produit_int) {
         return res.status(400).json({ error: "L'ID du produit est requis pour ce type de mouvement." });
     }
-    
+
     if (type_mouvement === 'SORTIE' && !id_local_source_int) {
         return res.status(400).json({ error: "La source (local) est requise pour une sortie." });
     }
-    
+
     // Vérification existence produit (pour ENTREE)
     if (type_mouvement === 'ENTREE' && nom_produit) {
         const existingProduct = await prisma.produits.findFirst({
             where: { nom_produit: { equals: nom_produit.trim(), mode: 'insensitive' } }
         });
         if (existingProduct) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 error: "Produit déjà existant",
                 message: `Le produit "${nom_produit}" existe déjà. Utilisez le type "Entrée Quantité Produit" pour ajouter du stock.`,
                 existingProductId: existingProduct.id_produit
             });
         }
     }
-    
-    // Transaction
+
+    // Transaction : stock + historique + mouvement passent par stockService
     try {
         const mouvementCree = await prisma.$transaction(async (tx) => {
-            let ancienneQuantiteStock = null;
-            let ancienneDateStock = null;
-            let produitId = id_produit_int;
-            let produitCree = null;
-            
+            const donnees = {
+                id_local_source: id_local_source_int,
+                id_local_destination: id_local_destination_int,
+                id_materiels: id_materiels_int,
+                nom_utilisateur: nom_utilisateur || null,
+                motif: motif || null
+            };
+            const include = {
+                produits: { select: { nom_produit: true, quantite_en_stock: true, seuil_alerte: true } }
+            };
+
             if (type_mouvement === 'ENTREE') {
-                produitCree = await creerNouveauProduit(tx, {
+                // Nouveau produit : stock initial = quantité du mouvement (historisé)
+                const produitCree = await creerProduitAvecStock(tx, {
                     nomProduit: nom_produit,
-                    quantiteInitiale: quantite_int,
-                    dateMouvement: mouvementDate
-                });
-                produitId = produitCree.id_produit;
-                ancienneQuantiteStock = 0;
-            }
-            else if (type_mouvement === 'ENTREE_QUANTITE') {
-                const oldStockData = await tx.produits.findUnique({ 
-                    where: { id_produit: produitId }, 
-                    select: { quantite_en_stock: true, last_date: true, nom_produit: true, seuil_alerte: true } 
-                });
-                if (!oldStockData) throw new Error(`Produit avec l'ID ${produitId} introuvable.`);
-                ancienneQuantiteStock = oldStockData.quantite_en_stock;
-                ancienneDateStock = oldStockData.last_date;
-                await tx.produits.update({ 
-                    where: { id_produit: produitId }, 
-                    data: { quantite_en_stock: { increment: quantite_int }, last_date: mouvementDate }
-                });
-            } 
-            else if (type_mouvement === 'SORTIE') {
-                const produit = await tx.produits.findUnique({ 
-                    where: { id_produit: produitId },
-                    select: { quantite_en_stock: true, nom_produit: true, seuil_alerte: true, last_date: true }
-                });
-                if (!produit) throw new Error(`Produit avec l'ID ${produitId} introuvable.`);
-                if (produit.quantite_en_stock < quantite_int) {
-                    throw new Error(`Stock insuffisant pour "${produit.nom_produit}". Disponible: ${produit.quantite_en_stock}, Demandé: ${quantite_int}`);
-                }
-                ancienneQuantiteStock = produit.quantite_en_stock;
-                ancienneDateStock = produit.last_date;
-                const nouveauStock = produit.quantite_en_stock - quantite_int;
-                await tx.produits.update({ 
-                    where: { id_produit: produitId }, 
-                    data: { quantite_en_stock: { decrement: quantite_int }, last_date: mouvementDate }
-                });
-                if (produit.seuil_alerte && nouveauStock <= produit.seuil_alerte) {
-                    console.log(`⚠️ Stock bas pour "${produit.nom_produit}" : ${nouveauStock} <= seuil ${produit.seuil_alerte}`);
-                }
-            }
-            
-            // Historique pour toutes les opérations (entrées et sorties)
-            if ((type_mouvement === 'ENTREE' || type_mouvement === 'ENTREE_QUANTITE' || type_mouvement === 'SORTIE') && produitId) {
-                await tx.historiqueArrive.create({ 
-                    data: { 
-                        id_produit: produitId, 
-                        quantite_arrivee: type_mouvement === 'SORTIE' ? -quantite_int : quantite_int,
-                        date_arrivee: mouvementDate, 
-                        ancienne_quantite_stock: ancienneQuantiteStock, 
-                        ancienne_date_stock: ancienneDateStock || null 
-                    } 
-                });
-            }
-            
-            // Création du mouvement
-            const mouvement = await tx.Mouvement.create({
-                data: { 
-                    id_produit: produitId,
-                    id_local_source: id_local_source_int,
-                    id_local_destination: id_local_destination_int,
                     quantite: quantite_int,
-                    id_materiels: id_materiels_int,
-                    nom_utilisateur: nom_utilisateur || null,
-                    date_mouvement: mouvementDate,
-                    type_mouvement: type_mouvement,
-                    motif: motif || null
-                },
-                include: {
-                    produits: { select: { nom_produit: true, quantite_en_stock: true, seuil_alerte: true } }
-                }
+                    date: mouvementDate
+                });
+                return tx.mouvement.create({
+                    data: {
+                        ...donnees,
+                        id_produit: produitCree.id_produit,
+                        type_mouvement,
+                        quantite: quantite_int,
+                        date_mouvement: mouvementDate
+                    },
+                    include
+                });
+            }
+
+            // ENTREE_QUANTITE / SORTIE sur un produit existant
+            return creerMouvement(tx, {
+                idProduit: id_produit_int,
+                typeMouvement: type_mouvement,
+                quantite: quantite_int,
+                dateMouvement: mouvementDate,
+                donnees,
+                include
             });
-            return mouvement;
         });
-        
+
         let successMessage = "Mouvement enregistré avec succès.";
         if (type_mouvement === 'ENTREE') {
             successMessage = `Produit "${nom_produit}" créé avec un stock de ${quantite_int} unités et un seuil d'alerte de ${mouvementCree.produits?.seuil_alerte}.`;
@@ -381,25 +346,36 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
             });
         }
         console.error("Erreur lors de la transaction du mouvement:", err.message);
-        let errorMessage = err.message;
-        let statusCode = 400;
+        let statusCode = err instanceof StockError ? err.status : 400;
         if (err.message.includes("introuvable")) statusCode = 404;
-        res.status(statusCode).json({ error: 'Erreur de traitement du mouvement', message: errorMessage });
+        res.status(statusCode).json({ error: 'Erreur de traitement du mouvement', message: err.message });
     }
 });
+
+// Convertit un identifiant optionnel ("" / null => null). Retourne NaN si invalide.
+function parseOptionalId(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const n = Number(value);
+  return Number.isInteger(n) && n > 0 ? n : NaN;
+}
 
 // ----------------------------------------------------
 // UPDATE an existing movement (PUT /:id)
 // ----------------------------------------------------
 router.put('/:id', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) => {
   const { id } = req.params;
-  const { date_mouvement, quantite, id_produit, id_local_source, id_local_destination, id_materiels, type_mouvement, motif, nom_utilisateur, ...rest } = req.body;
+  // Liste blanche des champs modifiables (pas de ...rest : évite l'affectation
+  // de masse sur id_mouvement, created_at, etc.)
+  const {
+    date_mouvement, quantite, id_produit, id_local_source, id_local_destination,
+    id_materiels, type_mouvement, motif, remarque, nom_utilisateur
+  } = req.body;
 
   try {
     const mouvementId = parseInt(id, 10);
-    
+
     // Récupérer l'ancien mouvement avant modification
-    const ancienMouvement = await prisma.Mouvement.findUnique({
+    const ancienMouvement = await prisma.mouvement.findUnique({
       where: { id_mouvement: mouvementId },
       include: { produits: true }
     });
@@ -409,159 +385,94 @@ router.put('/:id', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res)
     }
 
     // Préparer les données de mise à jour
-    const dataToUpdate = { ...rest };
-    
+    const dataToUpdate = {};
+
     if (date_mouvement) {
-      const parsedDate = new Date(date_mouvement);
-      if (isNaN(parsedDate.getTime())) {
+      const parsedDate = toDateOnly(date_mouvement);
+      if (!parsedDate) {
         return res.status(400).json({ error: "La date fournie est invalide." });
       }
       dataToUpdate.date_mouvement = parsedDate;
     }
-    
+
     const ancienneQuantite = ancienMouvement.quantite;
-    const nouvelleQuantite = quantite !== undefined ? parseInt(quantite, 10) : ancienneQuantite;
+    const nouvelleQuantite = quantite !== undefined ? Number(quantite) : ancienneQuantite;
     const ancienType = ancienMouvement.type_mouvement;
     const nouveauType = type_mouvement || ancienType;
     const ancienProduitId = ancienMouvement.id_produit;
-    const nouveauProduitId = id_produit !== undefined ? (id_produit ? parseInt(id_produit, 10) : null) : ancienProduitId;
+    const nouveauProduitId = id_produit !== undefined ? parseOptionalId(id_produit) : ancienProduitId;
     const nouvelleDate = dataToUpdate.date_mouvement || ancienMouvement.date_mouvement;
-    
+
     // Validation des nouveaux champs
-    if (nouvelleQuantite <= 0) {
+    if (!Number.isInteger(nouvelleQuantite) || nouvelleQuantite <= 0) {
       return res.status(400).json({ error: "La quantité doit être un nombre positif." });
     }
-    
-    const ALLOWED_TYPES = ['ENTREE', 'ENTREE_QUANTITE', 'SORTIE'];
-    if (!ALLOWED_TYPES.includes(nouveauType)) {
+
+    if (!TYPES_MOUVEMENT.includes(nouveauType)) {
       return res.status(400).json({ error: "Type de mouvement invalide." });
     }
-    
-    // Vérifier si le produit a changé
-    const produitChange = ancienProduitId !== nouveauProduitId;
-    
-    // Transaction pour mettre à jour le mouvement et ajuster le stock
-    const updatedMouvement = await prisma.$transaction(async (tx) => {
-      
-      // Cas 1: Le produit ou le type a changé
-      if (produitChange || ancienType !== nouveauType) {
-        // Annuler complètement l'ancien mouvement
-        await annulerEffetMouvement(tx, ancienMouvement);
-        // Appliquer le nouveau mouvement
-        await appliquerEffetMouvement(tx, nouveauProduitId, nouveauType, nouvelleQuantite, nouvelleDate);
-      } 
-      // Cas 2: Même produit et même type, mais quantité modifiée
-      else if (ancienneQuantite !== nouvelleQuantite) {
-        // Calculer la différence de quantité
-        const differenceQuantite = nouvelleQuantite - ancienneQuantite;
-        
-        console.log(`📊 Ajustement de quantité pour ${nouveauType}:`);
-        console.log(`   Ancienne quantité: ${ancienneQuantite}`);
-        console.log(`   Nouvelle quantité: ${nouvelleQuantite}`);
-        console.log(`   Différence: ${differenceQuantite}`);
-        
-        // Ajuster le stock en fonction de la différence
-        const produit = await tx.produits.findUnique({
-          where: { id_produit: nouveauProduitId }
-        });
-        
-        if (!produit) {
-          throw new Error(`Produit avec l'ID ${nouveauProduitId} introuvable`);
-        }
-        
-        if (nouveauType === 'ENTREE' || nouveauType === 'ENTREE_QUANTITE') {
-          // Pour une entrée: ajouter la différence (positive ou négative)
-          const nouveauStock = produit.quantite_en_stock + differenceQuantite;
-          if (nouveauStock < 0) {
-            throw new Error(`Impossible de réduire la quantité car cela rendrait le stock négatif pour "${produit.nom_produit}". Stock actuel: ${produit.quantite_en_stock}, Différence: ${differenceQuantite}`);
-          }
-          
-          await tx.produits.update({
-            where: { id_produit: nouveauProduitId },
-            data: { 
-              quantite_en_stock: { increment: differenceQuantite },
-              last_date: nouvelleDate || new Date()
-            }
-          });
-          
-          console.log(`✅ Ajustement ${nouveauType}: ${differenceQuantite >= 0 ? '+' : ''}${differenceQuantite} au produit "${produit.nom_produit}"`);
-        } 
-        else if (nouveauType === 'SORTIE') {
-          // Pour une sortie: soustraire la différence (inverser la logique car on enlève du stock)
-          const ajustementSortie = -differenceQuantite; // Si nouvelleQuantite > ancienneQuantite, on enlève plus
-          
-          if (ajustementSortie > 0) {
-            // On doit enlever plus de stock
-            if (produit.quantite_en_stock < ajustementSortie) {
-              throw new Error(`Stock insuffisant pour "${produit.nom_produit}". Disponible: ${produit.quantite_en_stock}, À enlever: ${ajustementSortie}`);
-            }
-            await tx.produits.update({
-              where: { id_produit: nouveauProduitId },
-              data: { 
-                quantite_en_stock: { decrement: ajustementSortie },
-                last_date: nouvelleDate || new Date()
-              }
-            });
-          } else if (ajustementSortie < 0) {
-            // On doit enlever moins de stock (donc en rajouter)
-            await tx.produits.update({
-              where: { id_produit: nouveauProduitId },
-              data: { 
-                quantite_en_stock: { increment: -ajustementSortie },
-                last_date: nouvelleDate || new Date()
-              }
-            });
-          }
-          
-          console.log(`✅ Ajustement SORTIE: ${ajustementSortie >= 0 ? '-' : '+'}${Math.abs(ajustementSortie)} du produit "${produit.nom_produit}"`);
-        }
-        
-        // Vérifier le seuil d'alerte après ajustement
-        const produitMisAJour = await tx.produits.findUnique({
-          where: { id_produit: nouveauProduitId }
-        });
-        
-        if (produitMisAJour.seuil_alerte && produitMisAJour.quantite_en_stock <= produitMisAJour.seuil_alerte) {
-          console.log(`⚠️ ALERTE: Stock bas pour "${produitMisAJour.nom_produit}" : ${produitMisAJour.quantite_en_stock} <= seuil ${produitMisAJour.seuil_alerte}`);
-        }
+
+    if (!Number.isInteger(nouveauProduitId)) {
+      return res.status(400).json({ error: "L'ID du produit est requis et doit être valide." });
+    }
+
+    const idsOptionnels = {};
+    for (const [champ, valeur] of Object.entries({ id_local_source, id_local_destination, id_materiels })) {
+      if (valeur === undefined) continue;
+      const parsed = parseOptionalId(valeur);
+      if (Number.isNaN(parsed)) {
+        return res.status(400).json({ error: `Le champ ${champ} est invalide.` });
       }
-      
-      // Mettre à jour le mouvement
+      idsOptionnels[champ] = parsed;
+    }
+
+    // Transaction pour mettre à jour le mouvement et ajuster le stock (+ historique)
+    const updatedMouvement = await prisma.$transaction(async (tx) => {
+      const produitChange = ancienProduitId !== nouveauProduitId;
+
+      if (produitChange || ancienType !== nouveauType || ancienneQuantite !== nouvelleQuantite) {
+        await modifierEffetMouvement(tx, ancienMouvement, {
+          idProduit: nouveauProduitId,
+          typeMouvement: nouveauType,
+          quantite: nouvelleQuantite,
+          dateMouvement: nouvelleDate
+        });
+      }
+
+      // Mettre à jour le mouvement (champs explicitement autorisés uniquement)
       if (quantite !== undefined) dataToUpdate.quantite = nouvelleQuantite;
       if (type_mouvement !== undefined) dataToUpdate.type_mouvement = nouveauType;
       if (id_produit !== undefined) dataToUpdate.id_produit = nouveauProduitId;
-      if (id_local_source !== undefined) dataToUpdate.id_local_source = id_local_source ? parseInt(id_local_source, 10) : null;
-      if (id_local_destination !== undefined) dataToUpdate.id_local_destination = id_local_destination ? parseInt(id_local_destination, 10) : null;
-      if (id_materiels !== undefined) dataToUpdate.id_materiels = id_materiels ? parseInt(id_materiels, 10) : null;
+      Object.assign(dataToUpdate, idsOptionnels);
       if (motif !== undefined) dataToUpdate.motif = motif;
+      if (remarque !== undefined) dataToUpdate.remarque = remarque || null;
       if (nom_utilisateur !== undefined) dataToUpdate.nom_utilisateur = nom_utilisateur;
-      
-      const mouvement = await tx.Mouvement.update({
+
+      return tx.mouvement.update({
         where: { id_mouvement: mouvementId },
         data: dataToUpdate,
         include: { produits: true }
       });
-      
-      return mouvement;
     });
-    
+
     let successMessage = "Mouvement mis à jour avec succès";
     if (ancienneQuantite !== nouvelleQuantite) {
       successMessage = `Mouvement mis à jour: Quantité modifiée de ${ancienneQuantite} à ${nouvelleQuantite}. Stock ajusté en conséquence.`;
     }
-    
-    res.json({ 
-      success: true, 
-      message: successMessage, 
-      mouvement: updatedMouvement 
+
+    res.json({
+      success: true,
+      message: successMessage,
+      mouvement: updatedMouvement
     });
-    
+
   } catch (error) {
     console.error('Erreur PUT:', error);
     if (error.code === 'P2025') {
       res.status(404).json({ error: `Mouvement avec l'id ${id} introuvable.` });
     } else {
-      res.status(400).json({ error: error.message || "Erreur lors de la mise à jour du mouvement." });
+      const status = error instanceof StockError ? error.status : 400;
+      res.status(status).json({ error: error.message || "Erreur lors de la mise à jour du mouvement." });
     }
   }
 });
@@ -572,8 +483,8 @@ router.delete('/:id', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, r
 
   try {
     const mouvementId = parseInt(id, 10);
-    
-    const mouvement = await prisma.Mouvement.findUnique({
+
+    const mouvement = await prisma.mouvement.findUnique({
       where: { id_mouvement: mouvementId }
     });
 
@@ -581,148 +492,24 @@ router.delete('/:id', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, r
       return res.status(404).json({ error: `Mouvement avec l'id ${id} introuvable.` });
     }
 
-    // Transaction pour supprimer le mouvement et ajuster le stock
+    // Transaction : annulation de l'effet sur le stock (historisée) puis suppression.
+    // Une ENTREE ne peut plus être supprimée si son retrait rendrait le stock négatif.
     const deletedMouvement = await prisma.$transaction(async (tx) => {
-      // Pour une SORTIE : réintégrer la quantité
-      if (mouvement.type_mouvement === 'SORTIE') {
-        console.log(`📦 RÉINTÉGRATION STOCK: Produit ID ${mouvement.id_produit} +${mouvement.quantite}`);
-        await tx.produits.update({
-          where: { id_produit: mouvement.id_produit },
-          data: { quantite_en_stock: { increment: mouvement.quantite } }
-        });
-      }
-      // Pour une ENTREE ou ENTREE_QUANTITE : soustraire la quantité
-      else if (mouvement.type_mouvement === 'ENTREE' || mouvement.type_mouvement === 'ENTREE_QUANTITE') {
-        console.log(`📦 SOUSTRACTION STOCK: Produit ID ${mouvement.id_produit} -${mouvement.quantite}`);
-        await tx.produits.update({
-          where: { id_produit: mouvement.id_produit },
-          data: { quantite_en_stock: { decrement: mouvement.quantite } }
-        });
-      }
-      
-      // Supprimer le mouvement
-      const deleted = await tx.Mouvement.delete({
+      await annulerEffetMouvement(tx, mouvement, `Suppression du mouvement #${mouvementId}`);
+      return tx.mouvement.delete({
         where: { id_mouvement: mouvementId },
       });
-      
-      return deleted;
     });
-    
-    res.status(200).json({ 
-      message: `Mouvement supprimé avec succès. Stock ajusté.`, 
-      deletedItem: deletedMouvement 
+
+    res.status(200).json({
+      message: `Mouvement supprimé avec succès. Stock ajusté.`,
+      deletedItem: deletedMouvement
     });
   } catch (error) {
     console.error('Erreur DELETE:', error);
-    res.status(500).json({ error: error.message || "Erreur lors de la suppression." });
+    const status = error instanceof StockError ? error.status : 500;
+    res.status(status).json({ error: error.message || "Erreur lors de la suppression." });
   }
 });
-
-// ====================================================
-// FONCTIONS UTILITAIRES POUR LA GESTION DU STOCK
-// ====================================================
-
-// Annuler l'effet d'un mouvement sur le stock
-async function annulerEffetMouvement(tx, mouvement) {
-  console.log(`=== Annulation du mouvement ${mouvement.id_mouvement} (${mouvement.type_mouvement}) ===`);
-  
-  const produit = await tx.produits.findUnique({
-    where: { id_produit: mouvement.id_produit }
-  });
-  
-  if (!produit) {
-    console.error(`❌ Produit avec l'ID ${mouvement.id_produit} introuvable pour annulation`);
-    throw new Error(`Produit avec l'ID ${mouvement.id_produit} introuvable pour annulation`);
-  }
-  
-  console.log(`Produit trouvé: "${produit.nom_produit}" (ID: ${produit.id_produit})`);
-  console.log(`Stock actuel: ${produit.quantite_en_stock}`);
-  console.log(`Quantité du mouvement: ${mouvement.quantite}`);
-  
-  switch (mouvement.type_mouvement) {
-    case 'ENTREE':
-    case 'ENTREE_QUANTITE':
-      // Une entrée/ajustement avait AJOUTÉ du stock, donc on le SOUSTRAIT pour annuler
-      const nouveauStockEntree = produit.quantite_en_stock - mouvement.quantite;
-      console.log(`Annulation ${mouvement.type_mouvement}: ${produit.quantite_en_stock} - ${mouvement.quantite} = ${nouveauStockEntree}`);
-      
-      if (nouveauStockEntree < 0) {
-        throw new Error(`Impossible d'annuler ce mouvement car cela rendrait le stock négatif pour "${produit.nom_produit}"`);
-      }
-      
-      await tx.produits.update({
-        where: { id_produit: mouvement.id_produit },
-        data: { quantite_en_stock: { decrement: mouvement.quantite } }
-      });
-      console.log(`✅ Annulation ${mouvement.type_mouvement}: -${mouvement.quantite} du produit "${produit.nom_produit}"`);
-      break;
-      
-    case 'SORTIE':
-      // Une sortie avait ENLEVÉ du stock, donc on le RÉAJOUTE pour annuler
-      const nouveauStockSortie = produit.quantite_en_stock + mouvement.quantite;
-      console.log(`Annulation SORTIE: ${produit.quantite_en_stock} + ${mouvement.quantite} = ${nouveauStockSortie}`);
-      
-      await tx.produits.update({
-        where: { id_produit: mouvement.id_produit },
-        data: { quantite_en_stock: { increment: mouvement.quantite } }
-      });
-      console.log(`✅ Annulation SORTIE: +${mouvement.quantite} du produit "${produit.nom_produit}"`);
-      break;
-      
-    default:
-      console.log(`Type de mouvement inconnu: ${mouvement.type_mouvement}`);
-  }
-}
-
-// Appliquer l'effet d'un mouvement sur le stock
-async function appliquerEffetMouvement(tx, produitId, typeMouvement, quantite, dateMouvement) {
-  const produit = await tx.produits.findUnique({
-    where: { id_produit: produitId }
-  });
-  
-  if (!produit) {
-    throw new Error(`Produit avec l'ID ${produitId} introuvable pour application`);
-  }
-  
-  switch (typeMouvement) {
-    case 'ENTREE':
-    case 'ENTREE_QUANTITE':
-      await tx.produits.update({
-        where: { id_produit: produitId },
-        data: { 
-          quantite_en_stock: { increment: quantite },
-          last_date: dateMouvement || new Date()
-        }
-      });
-      console.log(`✅ Application ${typeMouvement}: +${quantite} au produit ${produit.nom_produit}`);
-      break;
-      
-    case 'SORTIE':
-      if (produit.quantite_en_stock < quantite) {
-        throw new Error(`Stock insuffisant pour "${produit.nom_produit}". Disponible: ${produit.quantite_en_stock}, Demandé: ${quantite}`);
-      }
-      await tx.produits.update({
-        where: { id_produit: produitId },
-        data: { 
-          quantite_en_stock: { decrement: quantite },
-          last_date: dateMouvement || new Date()
-        }
-      });
-      console.log(`✅ Application SORTIE: -${quantite} du produit ${produit.nom_produit}`);
-      break;
-      
-    default:
-      throw new Error(`Type de mouvement invalide: ${typeMouvement}`);
-  }
-  
-  // Vérifier le seuil d'alerte après l'application
-  const produitMisAJour = await tx.produits.findUnique({
-    where: { id_produit: produitId }
-  });
-  
-  if (produitMisAJour.seuil_alerte && produitMisAJour.quantite_en_stock <= produitMisAJour.seuil_alerte) {
-    console.log(`⚠️ ALERTE: Stock bas pour "${produitMisAJour.nom_produit}" : ${produitMisAJour.quantite_en_stock} <= seuil ${produitMisAJour.seuil_alerte}`);
-  }
-}
 
 export default router;

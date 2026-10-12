@@ -312,7 +312,13 @@ const TicketModal = ({ show, onClose, type, ticketData, onSaveSuccess, onError }
                 throw new Error("Le matériel et le demandeur sont obligatoires.");
             }
 
-            const dataToSubmit = {
+            // Un USER ne peut modifier que le titre, la description et la priorité
+            // de son ticket : statut, assignation et matériel sont gérés par la DSI.
+            const dataToSubmit = (isRestrictedUser && type === 'edit') ? {
+                titre,
+                description,
+                priorite: priorite || "MOYENNE",
+            } : {
                 idMateriels: parseInt(idMateriels, 10),
                 idDemandeur: parseInt(idDemandeur, 10),
                 idAssigne: idAssigne ? parseInt(idAssigne, 10) : null,
@@ -440,12 +446,18 @@ const TicketModal = ({ show, onClose, type, ticketData, onSaveSuccess, onError }
                                     .filter(m => String(m.id_n_proprietaire) === String(formData.idDemandeur))
                                     .map(m => ({ value: m.id_materiels, label: m.nom_materiel }))}
                                 formData={formData} handleChange={handleChange}
-                                disabled={isRestrictedUser && materielsList.length === 1}
+                                disabled={isRestrictedUser && (type === 'edit' || materielsList.length === 1)}
                                 required />
-                            <FormItem label="Assigné à (DSI)" name="idAssigne" type="searchable-select"
-                                options={usersItList.map(t => ({ value: t.id_n, label: t.nom_avec_matricule }))}
-                                formData={formData} handleChange={handleChange} />
-                            <FormItem label="Statut" name="statut" type="select" options={statutOptions} formData={formData} handleChange={handleChange} />
+                            {/* Un USER peut proposer un technicien à la création, pas réassigner ensuite */}
+                            {!(isRestrictedUser && type === 'edit') && (
+                                <FormItem label="Assigné à (DSI)" name="idAssigne" type="searchable-select"
+                                    options={usersItList.map(t => ({ value: t.id_n, label: t.nom_avec_matricule }))}
+                                    formData={formData} handleChange={handleChange} />
+                            )}
+                            {/* Le statut est géré par la DSI (un ticket USER est créé NOUVEAU) */}
+                            {!isRestrictedUser && (
+                                <FormItem label="Statut" name="statut" type="select" options={statutOptions} formData={formData} handleChange={handleChange} />
+                            )}
                             <FormItem label="Priorité" name="priorite" type="select" options={prioriteOptions} formData={formData} handleChange={handleChange} />
                         </div>
                     </div>
