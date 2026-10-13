@@ -1,14 +1,13 @@
-// HistoriqueArriveesChart.js - Version Top N + Tableau scrollable
+// HistoriqueArriveesChart.js - Version Top N
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Container, Card, Spinner, Alert, Badge, Row, Col, 
-  ButtonGroup, Button, Form, Pagination 
+  ButtonGroup, Button, Form 
 } from 'react-bootstrap';
 import Chart from 'react-apexcharts';
 import {
-  FaBoxOpen, FaCubes, FaChartLine, FaWarehouse,
-  FaSort, FaSortUp, FaSortDown, FaSearch
+  FaBoxOpen, FaCubes, FaChartLine, FaWarehouse
 } from 'react-icons/fa';
 import { getHistoriqueArrivees } from '../../services/api';
 import dayjs from 'dayjs';
@@ -49,59 +48,6 @@ const KpiCard = ({ icon: Icon, label, value, color, bg }) => (
     </Card>
 );
 
-// --- Composant de pagination ---
-const CustomPagination = ({ currentPage, totalPages, onPageChange }) => {
-    const pages = [];
-    const maxVisible = 5;
-    
-    let startPage = Math.max(0, currentPage - Math.floor(maxVisible / 2));
-    let endPage = Math.min(totalPages - 1, startPage + maxVisible - 1);
-    
-    if (endPage - startPage < maxVisible - 1) {
-        startPage = Math.max(0, endPage - maxVisible + 1);
-    }
-    
-    for (let i = startPage; i <= endPage; i++) {
-        pages.push(i);
-    }
-    
-    return (
-        <Pagination size="sm" className="mb-0">
-            <Pagination.First 
-                onClick={() => onPageChange(0)} 
-                disabled={currentPage === 0} 
-            />
-            <Pagination.Prev 
-                onClick={() => onPageChange(currentPage - 1)} 
-                disabled={currentPage === 0} 
-            />
-            
-            {startPage > 0 && <Pagination.Ellipsis />}
-            
-            {pages.map(page => (
-                <Pagination.Item
-                    key={page}
-                    active={page === currentPage}
-                    onClick={() => onPageChange(page)}
-                >
-                    {page + 1}
-                </Pagination.Item>
-            ))}
-            
-            {endPage < totalPages - 1 && <Pagination.Ellipsis />}
-            
-            <Pagination.Next 
-                onClick={() => onPageChange(currentPage + 1)} 
-                disabled={currentPage === totalPages - 1} 
-            />
-            <Pagination.Last 
-                onClick={() => onPageChange(totalPages - 1)} 
-                disabled={currentPage === totalPages - 1} 
-            />
-        </Pagination>
-    );
-};
-
 const PERIODS = [
     { label: '7 jours', value: 7 },
     { label: '30 jours', value: 30 },
@@ -123,11 +69,6 @@ const HistoriqueArriveesChart = () => {
     const [error, setError] = useState(null);
     const [period, setPeriod] = useState(0);
     const [topN, setTopN] = useState(20);
-    const [sortField, setSortField] = useState('total_arrivees');
-    const [sortDirection, setSortDirection] = useState('desc');
-    const [searchTerm, setSearchTerm] = useState('');
-    const [tableCurrentPage, setTableCurrentPage] = useState(0);
-    const ITEMS_PER_PAGE = 10;
 
     useEffect(() => {
         const fetchData = async () => {
@@ -196,45 +137,6 @@ const HistoriqueArriveesChart = () => {
         
         return Array.from(map.values());
     }, [filteredData]);
-
-    // Tri et recherche des données pour le tableau
-    const sortedAndFilteredData = useMemo(() => {
-        let data = [...aggregatedData];
-        
-        // Recherche
-        if (searchTerm.trim()) {
-            const term = searchTerm.toLowerCase().trim();
-            data = data.filter(item => 
-                item.nom_produit.toLowerCase().includes(term)
-            );
-        }
-        
-        // Tri
-        data.sort((a, b) => {
-            let aVal = a[sortField];
-            let bVal = b[sortField];
-            
-            if (typeof aVal === 'string') {
-                aVal = aVal.toLowerCase();
-                bVal = bVal.toLowerCase();
-            }
-            
-            if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
-            if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
-            return 0;
-        });
-        
-        return data;
-    }, [aggregatedData, searchTerm, sortField, sortDirection]);
-
-    // Données paginées pour le tableau
-    const paginatedTableData = useMemo(() => {
-        const start = tableCurrentPage * ITEMS_PER_PAGE;
-        const end = start + ITEMS_PER_PAGE;
-        return sortedAndFilteredData.slice(start, end);
-    }, [sortedAndFilteredData, tableCurrentPage]);
-
-    const totalPages = Math.ceil(sortedAndFilteredData.length / ITEMS_PER_PAGE);
 
     // Données pour le graphique (Top N)
     const chartData = useMemo(() => {
@@ -306,24 +208,6 @@ const HistoriqueArriveesChart = () => {
         },
     }), [chartData]);
 
-    // Gestion du tri
-    const handleSort = (field) => {
-        if (sortField === field) {
-            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-        } else {
-            setSortField(field);
-            setSortDirection('desc');
-        }
-        setTableCurrentPage(0);
-    };
-
-    const SortIcon = ({ field }) => {
-        if (sortField !== field) return <FaSort className="text-muted ms-1" size={12} />;
-        return sortDirection === 'asc' 
-            ? <FaSortUp className="text-primary ms-1" size={12} />
-            : <FaSortDown className="text-primary ms-1" size={12} />;
-    };
-
     if (loading) {
         return (
             <Container className="d-flex justify-content-center align-items-center" style={{ height: '400px' }}>
@@ -363,10 +247,7 @@ const HistoriqueArriveesChart = () => {
                         <Button
                             key={p.value}
                             variant={period === p.value ? 'primary' : 'outline-secondary'}
-                            onClick={() => { 
-                                setPeriod(p.value); 
-                                setTableCurrentPage(0);
-                            }}
+                            onClick={() => setPeriod(p.value)}
                             style={{ 
                                 borderRadius: period === p.value ? '8px' : undefined, 
                                 fontWeight: 600, 
@@ -464,156 +345,6 @@ const HistoriqueArriveesChart = () => {
                 </Card.Body>
             </Card>
 
-            {/* Section Tableau */}
-            <Card className="border-0" style={{ borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
-                <Card.Body className="p-4">
-                    <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-                        <div>
-                            <h6 className="fw-bold text-dark mb-0">Liste détaillée des produits</h6>
-                            <p className="text-muted small mb-0">
-                                {sortedAndFilteredData.length} produits trouvés
-                            </p>
-                        </div>
-                        <div className="d-flex align-items-center gap-2">
-                            <div className="position-relative">
-                                <FaSearch className="position-absolute text-muted" style={{ left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
-                                <Form.Control
-                                    size="sm"
-                                    type="text"
-                                    placeholder="Rechercher un produit..."
-                                    value={searchTerm}
-                                    onChange={(e) => {
-                                        setSearchTerm(e.target.value);
-                                        setTableCurrentPage(0);
-                                    }}
-                                    style={{ 
-                                        paddingLeft: '32px', 
-                                        borderRadius: '10px',
-                                        width: '250px',
-                                        border: '1px solid #e2e8f0',
-                                        fontSize: '0.85rem'
-                                    }}
-                                />
-                            </div>
-                            <Badge 
-                                bg="light" 
-                                text="dark" 
-                                className="px-3 py-2 rounded-pill"
-                                style={{ fontSize: '0.72rem', fontWeight: 700, border: '1px solid #e2e8f0' }}
-                            >
-                                {paginatedTableData.length} / {sortedAndFilteredData.length}
-                            </Badge>
-                        </div>
-                    </div>
-
-                    <div className="modern-datatable-wrapper">
-                        <div className="table-responsive">
-                            <table className="modern-datatable">
-                                <thead>
-                                    <tr>
-                                        <th onClick={() => handleSort('nom_produit')}>
-                                            <div className="th-content">
-                                                <span>Produit</span>
-                                                <SortIcon field="nom_produit" />
-                                            </div>
-                                        </th>
-                                        <th className="text-end" onClick={() => handleSort('total_arrivees')}>
-                                            <div className="th-content">
-                                                <span>Total Arrivées</span>
-                                                <SortIcon field="total_arrivees" />
-                                            </div>
-                                        </th>
-                                        <th className="text-end" onClick={() => handleSort('quantite_en_stock_actuel')}>
-                                            <div className="th-content">
-                                                <span>Stock Actuel</span>
-                                                <SortIcon field="quantite_en_stock_actuel" />
-                                            </div>
-                                        </th>
-                                        <th className="text-end" onClick={() => handleSort('stock_precedent')}>
-                                            <div className="th-content">
-                                                <span>Stock Précédent</span>
-                                                <SortIcon field="stock_precedent" />
-                                            </div>
-                                        </th>
-                                        <th className="text-end" onClick={() => handleSort('nombre_mouvements')}>
-                                            <div className="th-content">
-                                                <span>Mouvements</span>
-                                                <SortIcon field="nombre_mouvements" />
-                                            </div>
-                                        </th>
-                                        <th className="text-end">
-                                            <div className="th-content">
-                                                <span>Dernier Arrivage</span>
-                                            </div>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {paginatedTableData.length > 0 ? (
-                                        paginatedTableData.map((item, index) => (
-                                            <tr key={item.id_produit || index}>
-                                                <td>
-                                                    <div className="product-cell">
-                                                        <div className="product-avatar">
-                                                            {item.nom_produit.charAt(0).toUpperCase()}
-                                                        </div>
-                                                        <span className="product-name">{item.nom_produit}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="text-end">
-                                                    <span className="data-pill primary">
-                                                        {item.total_arrivees.toLocaleString()}
-                                                    </span>
-                                                </td>
-                                                <td className="text-end">
-                                                    <span className="data-pill success">
-                                                        {item.quantite_en_stock_actuel.toLocaleString()}
-                                                    </span>
-                                                </td>
-                                                <td className="text-end">
-                                                    <span className="data-value">{item.stock_precedent.toLocaleString()}</span>
-                                                </td>
-                                                <td className="text-end">
-                                                    <span className="movement-badge">
-                                                        {item.nombre_mouvements}
-                                                    </span>
-                                                </td>
-                                                <td className="text-end">
-                                                    <span className="date-value">
-                                                        {item.dernier_arrivage ? dayjs(item.dernier_arrivage).format('DD/MM/YY HH:mm') : '—'}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr className="empty-row">
-                                            <td colSpan="6">
-                                                <div className="empty-state">
-                                                    <div className="empty-icon">📦</div>
-                                                    <p>Aucun produit trouvé</p>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    {sortedAndFilteredData.length > 0 && (
-                        <div className="d-flex justify-content-between align-items-center mt-4">
-                            <div className="text-muted small" style={{ fontSize: '0.8rem' }}>
-                                Affichage de {tableCurrentPage * ITEMS_PER_PAGE + 1} à {Math.min((tableCurrentPage + 1) * ITEMS_PER_PAGE, sortedAndFilteredData.length)} sur {sortedAndFilteredData.length} produits
-                            </div>
-                            <CustomPagination
-                                currentPage={tableCurrentPage}
-                                totalPages={totalPages}
-                                onPageChange={setTableCurrentPage}
-                            />
-                        </div>
-                    )}
-                </Card.Body>
-            </Card>
         </Container>
     );
 };
