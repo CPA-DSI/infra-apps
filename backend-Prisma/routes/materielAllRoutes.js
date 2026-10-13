@@ -11,6 +11,7 @@ import {
     affecterPC,
     ETAT_REMIS_EN_SERVICE,
     ETAT_SANS_POSTE,
+    ETAT_STOCK,
     ouvrirAffectationInitiale,
     rattacherEcranParCode,
     retirerPoste,
@@ -345,10 +346,19 @@ router.put('/:id', requirePermission(PERMISSIONS.MATERIELS_WRITE), asyncHandler(
     // Un poste supprimé (suppression logique) n'est plus modifiable.
     const actuel = await prisma.materiels.findUnique({
         where: { id_materiels: materielId },
-        select: { est_vide: true, date_suppression: true },
+        select: { est_vide: true, date_suppression: true, etat_pc: true },
     });
     if (!actuel || actuel.date_suppression) {
         return res.status(404).json({ error: `Matériel avec l'ID ${materielId} non trouvé.` });
+    }
+
+    // « Stock » et « Sans poste » sont posés par l'affectation (mise en stock :
+    // fiche vide, écran en stock, historique). Les saisir ici ne changeait que
+    // le libellé. Une valeur inchangée reste acceptée (anciennes saisies).
+    if ([ETAT_STOCK, ETAT_SANS_POSTE].includes(req.body.etat_pc) && req.body.etat_pc !== actuel.etat_pc) {
+        return res.status(400).json({
+            error: `L'état « ${req.body.etat_pc} » ne se saisit pas : utilisez « Réaffecter le PC » → « Mettre en stock ».`,
+        });
     }
 
     // Liste blanche des champs modifiables. id_n (bénéficiaire), utilisateur,

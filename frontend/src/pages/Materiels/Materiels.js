@@ -26,11 +26,14 @@ const ETATS = ['Très Bon', 'Bon', 'Moyen', 'Mauvais', 'HS', 'Disponible', 'Stoc
 
 // 'Stock' : poste sans bénéficiaire (id_n null), y compris ceux mis en stock
 // avant que la mise en stock ne pose etat_pc = 'Stock'.
-// 'Sans poste' : utilisateur dont le PC est parti en stock (fiche vide)
+// 'Sans poste' : utilisateur dont le PC est parti en stock (fiche vide),
+// ou poste dont l'état a été passé à « Sans poste » via la modification.
+const isSansPoste = (materiel) => Boolean(materiel.est_vide) || materiel.etat_pc === 'Sans poste';
+
 const matchesEtat = (materiel, etat) => {
     if (!etat) return true;
     if (etat === 'Stock') return materiel.id_n == null;
-    if (etat === 'Sans poste') return Boolean(materiel.est_vide);
+    if (etat === 'Sans poste') return isSansPoste(materiel);
     return (materiel.etat_pc || '') === etat;
 };
 
@@ -155,7 +158,11 @@ const handleDeleteConfirm = useCallback(async (row) => {
 
 const confirmDelete = useCallback((row) => {
     MySwal.fire({
-        title: 'Confirmer la suppression', text: `Supprimer le matériel ${row.code_pc || ''} ? Il disparaîtra de la liste, son écran repartira en stock et son historique sera conservé.`, icon: 'warning',
+        title: 'Confirmer la suppression',
+        text: row.est_vide
+            ? `Supprimer la fiche « Sans poste » de ${row.utilisateur} ? L'utilisateur disparaîtra de la liste, son historique sera conservé.`
+            : `Supprimer le matériel ${row.code_pc || ''} ? Il disparaîtra de la liste, son écran repartira en stock et son historique sera conservé.`,
+        icon: 'warning',
         showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: 'Oui, supprimer', cancelButtonText: 'Annuler'
     }).then((result) => {
         if (result.isConfirmed) {
@@ -383,7 +390,8 @@ const renderMarque = useCallback((row) => {
         );
 }, []);
 
-// Fiche « Sans poste » (utilisateur sans PC) : ni modification ni suppression
+// Fiche « Sans poste » (utilisateur sans PC) : la modifier avec un code PC ou des
+// caractéristiques en refait un poste actif ; la supprimer libère le matricule.
 const renderActions = useCallback((row) => (
         <div className="d-flex gap-1" role="group" aria-label="Actions">
             <Button 
@@ -401,7 +409,6 @@ const renderActions = useCallback((row) => (
             <Button 
                 variant="light" 
                 className="shadow-sm border-0 p-2 rounded-circle" 
-                disabled={Boolean(row.est_vide)}
                 onClick={() => handleEdit(row)} 
                 title="Modifier"
                 style={{ 
@@ -427,7 +434,6 @@ const renderActions = useCallback((row) => (
             <Button 
                 variant="light" 
                 className="shadow-sm border-0 p-2 rounded-circle" 
-                disabled={Boolean(row.est_vide)}
                 onClick={() => confirmDelete(row)} 
                 title="Supprimer"
                 style={{ 
@@ -450,7 +456,7 @@ const columns = useMemo(() => [
     { name: 'Utilisateur', selector: row => row.utilisateur, sortable: true, minWidth: '120px', grow: 1, cell: row => (
         <div>
             <div>{row.utilisateur}</div>
-            {row.est_vide ? (
+            {isSansPoste(row) ? (
                 <small className="text-muted fst-italic" title="Utilisateur sans PC (PC mis en stock ou réaffecté)">Sans poste</small>
             ) : !row.id_ecran && (
                 <small className="text-muted fst-italic" title="Aucun écran affecté à ce poste">Sans écran</small>

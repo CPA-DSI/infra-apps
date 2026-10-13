@@ -747,3 +747,8 @@
 .materiel-etat-tabs + .tab-content {
   display: none;
 }
+
+/* Confirmation SweetAlert ouverte depuis une modale (.add-modal-overlay = z-index 9999). */
+.swal2-container.swal-au-dessus-modale {
+  z-index: 10001;
+}

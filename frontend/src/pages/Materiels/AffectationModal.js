@@ -35,7 +35,9 @@ const Field = ({ label, required, children }) => (
     </div>
 );
 
-const AffectationModal = ({ mode, materiel, onClose, onDone }) => {
+// miseEnStock : ouvre la réaffectation du PC avec « Mettre en stock » déjà
+// choisi (cf. EditModal, état « Stock » / « Sans poste »).
+const AffectationModal = ({ mode, materiel, onClose, onDone, miseEnStock = false }) => {
     const isPC = mode === 'pc';
     const aUnEcran = Boolean(materiel.id_ecran);
 
@@ -50,7 +52,7 @@ const AffectationModal = ({ mode, materiel, onClose, onDone }) => {
     const [ecransDisponibles, setEcransDisponibles] = useState([]);
 
     // Saisie
-    const [cible, setCible] = useState('');            // PC : id_n ou STOCK ; écran : id_materiels ou statut hors poste
+    const [cible, setCible] = useState(isPC && miseEnStock && materiel.id_n ? STOCK : ''); // PC : id_n ou STOCK ; écran : id_materiels ou statut hors poste
     const [ecranChoisi, setEcranChoisi] = useState(''); // écran : poste sans écran -> écran du stock à installer
     const [utilisateur, setUtilisateur] = useState('');
     const [equipe, setEquipe] = useState(materiel.equipe || '');

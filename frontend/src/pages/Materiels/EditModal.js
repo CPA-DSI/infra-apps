@@ -3,10 +3,27 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { fetchALocaux, fetchAMarques, updateMateriel } from '../../services/api';
 import { MySwal } from '../../utils/swal';
+import { escapeHtml } from '../../utils/escapeHtml';
 import { FaVideo, FaNetworkWired, FaUsb, FaPlug, FaCheckCircle, FaTimesCircle, FaTimes, FaEdit, FaSave, FaInfoCircle, FaKeyboard as FaKeyboardIcon } from 'react-icons/fa';
 import FormItem from '../../components/FormItem/FormItem';
 import { getMaterielFieldIcon } from './materielFieldIcons';
+import AffectationModal from './AffectationModal';
 import './Materiels.css';
+
+// États posés par la mise en stock (affectation), jamais enregistrés par le
+// PUT : les choisir ici déclenche la vraie mise en stock.
+const ETATS_MISE_EN_STOCK = ['Stock', 'Sans poste'];
+
+const ETAT_OPTIONS = [
+    { value: 'Très Bon', label: '✅ Très Bon' },
+    { value: 'Bon', label: '👍 Bon' },
+    { value: 'Moyen', label: '⚠️ Moyen' },
+    { value: 'Mauvais', label: '❗ Mauvais' },
+    { value: 'Disponible', label: '📦 Disponible' },
+    { value: 'HS', label: '❌ HS' },
+    { value: 'Stock', label: '📥 Stock' },
+    { value: 'Sans poste', label: '🚫 Sans poste' }
+];
 
 const customSelectStyles = {
     control: (provided) => ({
@@ -79,7 +96,15 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
     const [isLoadingMarques, setIsLoadingMarques] = useState(true);
     const [isLoadingLocaux, setIsLoadingLocaux] = useState(true);
     const [error, setError] = useState(null);
-    
+    const [affectationStock, setAffectationStock] = useState(false);
+
+    // Un PC affecté peut être mis en stock ; sinon « Stock » / « Sans poste »
+    // ne sont proposés que s'ils sont déjà l'état actuel.
+    const peutMettreEnStock = Boolean(data?.id_n) && !data?.est_vide;
+    const etatOptions = ETAT_OPTIONS.filter(o =>
+        !ETATS_MISE_EN_STOCK.includes(o.value) || peutMettreEnStock || o.value === data?.etat_pc
+    );
+
     const showNotification = (message, type = 'success') => {
         MySwal.fire({
             icon: type, title: type === 'success' ? 'Succès' : 'Erreur', text: message, timer: 3000, timerProgressBar: true, showConfirmButton: false, toast: true, position: 'top-end', background: type === 'success' ? '#10b981' : '#ef4444', color: '#ffffff', iconColor: '#ffffff'
@@ -165,7 +190,30 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
+        // « Stock » / « Sans poste » sur un PC affecté : on propose la vraie mise
+        // en stock (fenêtre de réaffectation) au lieu de changer le seul libellé.
+        const miseEnStock = peutMettreEnStock && ETATS_MISE_EN_STOCK.includes(formData.etat_pc);
+        let confirmerStock = false;
+        if (miseEnStock) {
+            const choix = await MySwal.fire({
+                icon: 'question',
+                title: 'Mettre le PC en stock ?',
+                html: `L'état « ${escapeHtml(formData.etat_pc)} » correspond à une mise en stock du PC <b>${escapeHtml(formData.code_pc || `#${formData.id_materiels}`)}</b> : `
+                    + `${escapeHtml(formData.utilisateur)} gardera une fiche « Sans poste »${formData.id_ecran ? ` et l'écran ${escapeHtml(formData.code_ecran)} partira en stock` : ''}.`
+                    + `<br/><br/>Les autres modifications sont enregistrées dans les deux cas.`,
+                showDenyButton: true,
+                showCancelButton: true,
+                confirmButtonText: '📥 Mettre en stock',
+                denyButtonText: "Enregistrer sans changer l'état",
+                cancelButtonText: 'Annuler',
+                // Au-dessus de la modale (.add-modal-overlay = z-index 9999).
+                customClass: { container: 'swal-au-dessus-modale' },
+            });
+            if (choix.isDismissed) return;
+            confirmerStock = choix.isConfirmed;
+        }
+
         try {
             // Seuls les champs modifiables sont envoyés : matricule, utilisateur,
             // statut Actif et écran passent par l'affectation (historisée).
@@ -188,9 +236,17 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
                 date_pc: formData.date_pc ? new Date(formData.date_pc) : null,
             };
 
+            // L'état est alors posé par la mise en stock (ou reste inchangé).
+            if (miseEnStock) delete apiPayload.etat_pc;
+
             await updateMateriel(formData.id_materiels, apiPayload);
+
+            if (confirmerStock) {
+                setAffectationStock(true);
+                return;
+            }
             showNotification("Matériel mis à jour avec succès !", 'success');
-            
+
             if (onUpdateSuccess) {
                 onUpdateSuccess();
             }
@@ -210,6 +266,23 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
 
     if (error) {
         return <div className="add-modal-overlay">Erreur : {error}</div>;
+    }
+
+    // Les autres champs sont déjà enregistrés : fermer ou valider recharge la liste.
+    if (affectationStock) {
+        return (
+            <AffectationModal
+                mode="pc"
+                // Local saisi ici : la réaffectation le renvoie, il ne doit pas être écrasé.
+                materiel={{ ...data, id_local: formData.id_local ? parseInt(formData.id_local, 10) : null }}
+                miseEnStock
+                onClose={onClose}
+                onDone={() => {
+                    if (onUpdateSuccess) onUpdateSuccess();
+                    onClose();
+                }}
+            />
+        );
     }
 
     return (
@@ -370,16 +443,7 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
 
                         <div style={{ gridColumn: '1', gridRow: '9' }}>
                             <FormItem label="État PC" name="etat_pc" type="select" icon={getMaterielFieldIcon("etat_pc")}
-                                options={[
-                                    { value: 'Très Bon', label: '✅ Très Bon' },
-                                    { value: 'Bon', label: '👍 Bon' },
-                                    { value: 'Moyen', label: '⚠️ Moyen' },
-                                    { value: 'Mauvais', label: '❗ Mauvais' },
-                                    { value: 'Disponible', label: '📦 Disponible' },
-                                    { value: 'HS', label: '❌ HS' },
-                                    { value: 'Stock', label: '📥 Stock' },
-                                    { value: 'Sans poste', label: '🚫 Sans poste' }
-                                ]}
+                                options={etatOptions}
                                 formData={formData}
                                 handleChange={handleChange}
                                 onSelectChange={handleSelectChange}
