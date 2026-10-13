@@ -143,3 +143,60 @@ describe('Mouvements de stock : rattachés au matricule de l\'utilisateur, pas �
         expect(await relire(mouvement)).toMatchObject({ id_materiels: 10 });
     });
 });
+
+describe('Corbeille : GET /corbeille et POST /:id/restaurer', () => {
+    const mettreEnStock = () => as(admin).post(`/api/materiels_all/${alice.materiel.id_materiels}/affecter`)
+        .send({ id_n: null });
+
+    it('liste les fiches supprimées avec l\'auteur et le motif ; seuls les PC sont restaurables', async () => {
+        await mettreEnStock();
+        const ficheVide = await prisma.materiels.findUnique({ where: { id_n: 10 } });
+        await as(admin).delete(`/api/materiels_all/${ficheVide.id_materiels}`);
+        await as(admin).delete(`/api/materiels_all/${alice.materiel.id_materiels}`);
+
+        const res = await as(admin).get('/api/materiels_all/corbeille');
+
+        expect(res.status).toBe(200);
+        expect(res.body).toHaveLength(2);
+        const pc = res.body.find(m => m.id_materiels === alice.materiel.id_materiels);
+        const vide = res.body.find(m => m.id_materiels === ficheVide.id_materiels);
+        expect(pc).toMatchObject({ restaurable: true, motif: 'PC sorti de l\'inventaire', supprime_par: '1 - Utilisateur 1' });
+        expect(vide).toMatchObject({ restaurable: false, motif: 'Fiche « Sans poste » supprimée' });
+    });
+
+    it('est réservée aux rôles qui peuvent supprimer', async () => {
+        const res = await as(alice).get('/api/materiels_all/corbeille');
+        expect(res.status).toBe(403);
+    });
+
+    it('restaure un PC sorti de l\'inventaire en stock', async () => {
+        await mettreEnStock();
+        await as(admin).delete(`/api/materiels_all/${alice.materiel.id_materiels}`);
+
+        const res = await as(admin).post(`/api/materiels_all/${alice.materiel.id_materiels}/restaurer`);
+
+        expect(res.status).toBe(200);
+        expect(res.body.materiel).toMatchObject({
+            date_suppression: null, id_n: null, etat_pc: 'Stock', est_actif: false, utilisateur: 'Stock',
+        });
+        const affectation = await prisma.affectationMateriel.findFirst({
+            where: { type_affectation: 'PC', id_materiels: alice.materiel.id_materiels, date_fin: null },
+        });
+        expect(affectation).toMatchObject({ id_n: null, motif: 'Restauré depuis la corbeille' });
+        const liste = await as(admin).get('/api/materiels_all');
+        expect(liste.body.map(m => m.id_materiels)).toContain(alice.materiel.id_materiels);
+    });
+
+    it('refuse de restaurer une fiche « Sans poste » ou un matériel non supprimé', async () => {
+        await mettreEnStock();
+        const ficheVide = await prisma.materiels.findUnique({ where: { id_n: 10 } });
+        await as(admin).delete(`/api/materiels_all/${ficheVide.id_materiels}`);
+
+        const vide = await as(admin).post(`/api/materiels_all/${ficheVide.id_materiels}/restaurer`);
+        expect(vide.status).toBe(400);
+        expect(vide.body.error).toMatch(/Réaffecter le PC/);
+
+        const actif = await as(admin).post(`/api/materiels_all/${admin.materiel.id_materiels}/restaurer`);
+        expect(actif.status).toBe(404);
+    });
+});

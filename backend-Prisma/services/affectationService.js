@@ -482,6 +482,54 @@ export const retirerPoste = async (tx, id_materiels, auteurIdN) => {
 };
 
 /**
+ * Restaure en stock un PC sorti de l'inventaire. Une fiche « Sans poste » ne
+ * se restaure pas : on réaffecte un PC à l'utilisateur, qui reste dans la
+ * liste des bénéficiaires. Le PC revient sans écran ni bénéficiaire.
+ */
+export const restaurerPC = async (tx, id_materiels, auteurIdN) => {
+    const materiel = await tx.materiels.findUnique({ where: { id_materiels } });
+    if (!materiel || !materiel.date_suppression) {
+        throw new AffectationError('Matériel introuvable dans la corbeille.', 404);
+    }
+    if (materiel.est_vide) {
+        throw new AffectationError(
+            'Une fiche « Sans poste » ne se restaure pas : réaffectez un PC à l\'utilisateur (« Réaffecter le PC »).'
+        );
+    }
+
+    const now = new Date();
+    const auteur = await resoudreAuteur(tx, auteurIdN);
+
+    const restaure = await tx.materiels.update({
+        where: { id_materiels },
+        data: {
+            date_suppression: null,
+            id_n: null,
+            utilisateur: LIBELLE_STOCK,
+            equipe: LIBELLE_STOCK,
+            est_actif: false,
+            etat_pc: ETAT_STOCK,
+            date_modification: now,
+        },
+    });
+
+    await tx.affectationMateriel.create({
+        data: {
+            type_affectation: 'PC',
+            id_materiels,
+            id_n: null,
+            nom_utilisateur: LIBELLE_STOCK,
+            date_debut: now,
+            motif: 'Restauré depuis la corbeille',
+            ...auteur,
+        },
+    });
+
+    await tracer(tx, id_materiels, 'Supprimé', 'Restauré en stock', auteur);
+    return restaure;
+};
+
+/**
  * Deux affectations simultanées du même PC / écran : la seconde transaction
  * bute sur un index unique (affectations_materiels_*_en_cours_key,
  * materiels_id_n_key, ecrans_id_materiels_key...) ou sur un conflit

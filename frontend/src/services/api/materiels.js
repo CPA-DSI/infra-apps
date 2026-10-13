@@ -190,3 +190,24 @@ export const deleteMateriel = async (id) => {
   }
 };
 
+// --- Corbeille (fiches supprimées) ---
+
+export const fetchCorbeille = async () => {
+  try {
+    const response = await apiClient.get('/materiels_all/corbeille');
+    return response.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+};
+
+// Seuls les PC sont restaurables : ils reviennent en stock.
+export const restaurerMateriel = async (id) => {
+  try {
+    const response = await apiClient.post(`/materiels_all/${id}/restaurer`);
+    return response.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+};
+

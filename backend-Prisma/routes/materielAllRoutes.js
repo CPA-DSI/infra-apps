@@ -14,6 +14,7 @@ import {
     ETAT_STOCK,
     ouvrirAffectationInitiale,
     rattacherEcranParCode,
+    restaurerPC,
     retirerPoste,
     repondreErreurAffectation,
 } from '../services/affectationService.js';
@@ -124,6 +125,34 @@ router.get('/simple', requirePermission(PERMISSIONS.MATERIELS_READ), asyncHandle
         : { date_suppression: null, id_n: req.user?.id_n };
 
     res.json(await prisma.Materiels.findMany({ where }));
+}));
+
+// 1quater. GET corbeille : fiches supprimées (suppression logique), avec la
+// date, l'auteur et le motif tirés de la dernière ligne d'historique. Seuls
+// les PC (pas les fiches « Sans poste ») sont restaurables.
+router.get('/corbeille', requirePermission(PERMISSIONS.MATERIELS_DELETE), asyncHandler(async (req, res) => {
+    const supprimes = await prisma.materiels.findMany({
+        where: { date_suppression: { not: null } },
+        select: {
+            id_materiels: true, code_pc: true, utilisateur: true, equipe: true,
+            caracteristiques: true, est_vide: true, date_suppression: true,
+            historique: {
+                orderBy: { id_historique: 'desc' },
+                take: 1,
+                select: { nom_utilisateur: true, ancienne_valeur: true, nouvelle_valeur: true },
+            },
+        },
+        orderBy: { date_suppression: 'desc' },
+        take: 200,
+    });
+
+    res.json(supprimes.map(({ historique, ...m }) => ({
+        ...m,
+        supprime_par: historique[0]?.nom_utilisateur ?? null,
+        detail: historique[0]?.ancienne_valeur ?? null,
+        motif: historique[0]?.nouvelle_valeur ?? null,
+        restaurable: !m.est_vide,
+    })));
 }));
 
 // 2. GET materiel by ID (URL complète: /api/materiels_all/:id)
@@ -485,6 +514,17 @@ router.delete('/:id', requirePermission(PERMISSIONS.MATERIELS_DELETE), asyncHand
         res.status(200).json({
             message: sansPoste ? 'Fiche « Sans poste » supprimée.' : 'PC sorti de l\'inventaire.',
         });
+    } catch (error) {
+        repondreErreurAffectation(res, error);
+    }
+}));
+
+// 6. POST restaurer (URL complète: /api/materiels_all/:id/restaurer) : un PC
+// sorti de l'inventaire revient en stock.
+router.post('/:id/restaurer', requirePermission(PERMISSIONS.MATERIELS_DELETE), asyncHandler(async (req, res) => {
+    try {
+        const materiel = await prisma.$transaction((tx) => restaurerPC(tx, parseInt(req.params.id, 10), req.user?.id_n));
+        res.json({ message: 'PC restauré en stock.', materiel });
     } catch (error) {
         repondreErreurAffectation(res, error);
     }

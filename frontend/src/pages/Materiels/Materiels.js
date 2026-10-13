@@ -6,7 +6,7 @@ import { MySwal } from '../../utils/swal';
 import { useAuth } from '../../contexts/AuthContext';
 import { apiClient, updateMaterielStatut } from '../../services/api';
 import { Button, Form, InputGroup, Spinner, Card, Alert, Tabs, Tab } from 'react-bootstrap';
-import { FaEye, FaEdit, FaTrash, FaFileExcel, FaSearch, FaSync, FaTimes, FaDesktop, FaFileImport, FaPlus, FaUpload, FaCheckCircle, FaFileUpload, FaHistory, FaInfoCircle, FaInbox, FaUsers, FaMapMarkerAlt, FaCalendarAlt, FaUserCircle, FaBatteryFull, FaTags } from 'react-icons/fa';
+import { FaEye, FaEdit, FaTrash, FaFileExcel, FaSearch, FaSync, FaTimes, FaDesktop, FaFileImport, FaPlus, FaUpload, FaCheckCircle, FaFileUpload, FaHistory, FaInfoCircle, FaInbox, FaUsers, FaMapMarkerAlt, FaCalendarAlt, FaUserCircle, FaBatteryFull, FaTags, FaTrashRestore } from 'react-icons/fa';
 /// --- Importations des Modales ---
 import AddModal from './AddModal';
 import DetailsModal from './DetailsModal';
@@ -14,6 +14,7 @@ import EditModal from './EditModal';
 import AddMarque from './AddMarque';
 import HistoriqueModal from './HistoriqueModal';
 import EcransModal from './EcransModal';
+import CorbeilleModal from './CorbeilleModal';
 import SearchableSelect from '../../components/SearchableSelect/SearchableSelect';
 import { modernStyles, paginationOptions, statusConfig } from './materielsTableConfig';
 import { useMaterielImportExport } from './useMaterielImportExport';
@@ -59,6 +60,7 @@ const [modalType, setModalType] = useState(null);
 const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 const [isAddMarqueOpen, setIsAddMarqueOpen] = useState(false);
 const [isEcransModalOpen, setIsEcransModalOpen] = useState(false);
+const [isCorbeilleOpen, setIsCorbeilleOpen] = useState(false);
 const [addMarqueKey] = useState(0);
 const [isHistoriqueModalOpen, setIsHistoriqueModalOpen] = useState(false);
 const [selectedMaterielForHistory, setSelectedMaterielForHistory] = useState(null);
@@ -667,6 +669,18 @@ return (
                     <span className="ms-2">Écrans</span>
                 </Button>
                 )}
+
+                {(userRole !== 'USER') && (
+                <Button
+                    className="btn-pill btn-pill-secondary"
+                    onClick={() => setIsCorbeilleOpen(true)}
+                    title="Fiches supprimées ; restauration des PC sortis de l'inventaire"
+                    style={{ borderRadius: '9999px' }}
+                >
+                    <FaTrashRestore size={14} />
+                    <span className="ms-2">Corbeille</span>
+                </Button>
+                )}
             </div>
         </div>
 
@@ -1266,6 +1280,7 @@ return (
         )}
         
         {isEcransModalOpen && <EcransModal onClose={() => setIsEcransModalOpen(false)} />}
+        {isCorbeilleOpen && <CorbeilleModal onClose={() => setIsCorbeilleOpen(false)} onRestored={fetchMateriels} />}
 
         <div style={{ display: isAddMarqueOpen ? 'block' : 'none' }}>
             <AddMarque 
