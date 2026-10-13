@@ -12,6 +12,7 @@ import {
     ETAT_REMIS_EN_SERVICE,
     ETAT_SANS_POSTE,
     ETAT_STOCK,
+    LIBELLE_STOCK,
     ouvrirAffectationInitiale,
     rattacherEcranParCode,
     restaurerPC,
@@ -235,6 +236,20 @@ router.post('/', requirePermission(PERMISSIONS.MATERIELS_WRITE), asyncHandler(as
     // Valeur par défaut pour utilisateur obligatoire
     if (!dataToCreate.utilisateur || dataToCreate.utilisateur === null) {
         dataToCreate.utilisateur = 'Non défini';
+    }
+
+    // Un PC créé en stock n'a ni bénéficiaire ni écran, et est inactif : mêmes
+    // valeurs que la mise en stock par affecterPC.
+    if (dataToCreate.etat_pc === ETAT_STOCK) {
+        Object.assign(dataToCreate, {
+            id_n: null,
+            utilisateur: LIBELLE_STOCK,
+            equipe: LIBELLE_STOCK,
+            est_actif: false,
+            ecran: null,
+            code_ecran: null,
+            date_ecran: null,
+        });
     }
 
     console.log("--- Début synchronisation POST ---");

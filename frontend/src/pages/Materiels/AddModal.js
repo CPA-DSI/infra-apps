@@ -24,6 +24,9 @@ const getFormattedTodayDate = () => {
     return `${today.getFullYear()}-${month}-${day}`;
 };
 
+// Même valeur que ETAT_STOCK / LIBELLE_STOCK côté backend (affectationService).
+const ETAT_STOCK = 'Stock';
+
 const AddModal = ({ onClose, onMaterialAdded }) => {
     const [formData, setFormData] = useState({
         utilisateur: 'Non défini', 
@@ -75,6 +78,25 @@ const AddModal = ({ onClose, onMaterialAdded }) => {
 
     const handleChange = useCallback((e) => {
         const { name, value, type, checked } = e.target;
+
+        // Un PC en stock n'a ni bénéficiaire ni écran et est inactif ; en sortant
+        // de « Stock », on revient aux valeurs par défaut du formulaire.
+        if (name === 'etat_pc') {
+            setFormData(prev => {
+                if (value === ETAT_STOCK) {
+                    return {
+                        ...prev, etat_pc: value, id_n: '', utilisateur: ETAT_STOCK, equipe: ETAT_STOCK,
+                        ecran: '', code_ecran: '', est_actif: false,
+                    };
+                }
+                if (prev.etat_pc === ETAT_STOCK) {
+                    return { ...prev, etat_pc: value, utilisateur: 'Non défini', equipe: 'Autres', est_actif: true };
+                }
+                return { ...prev, etat_pc: value };
+            });
+            setIdError("");
+            return;
+        }
 
         if (name === 'id_n') {
             if (existingIds.includes(value)) {
@@ -167,6 +189,8 @@ const AddModal = ({ onClose, onMaterialAdded }) => {
         loadExistingIds();
     }, []);
 
+    const enStock = formData.etat_pc === ETAT_STOCK;
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (idError) {
@@ -182,7 +206,7 @@ const AddModal = ({ onClose, onMaterialAdded }) => {
             id_marque: formData.id_marque ? parseInt(formData.id_marque, 10) : null,
             id_local: formData.id_local ? parseInt(formData.id_local, 10) : null,
             date_pc: formData.date_pc ? new Date(formData.date_pc) : null,
-            date_ecran: formData.date_ecran ? new Date(formData.date_ecran) : null,
+            date_ecran: formData.date_ecran && !enStock ? new Date(formData.date_ecran) : null,
             caracteristiques: formData.caracteristiques || 'Non spécifié',
             utilisateur: formData.utilisateur || 'Non défini',
         };
@@ -274,14 +298,25 @@ const AddModal = ({ onClose, onMaterialAdded }) => {
                         </span>
                     </div>
                     
+                    {enStock && (
+                        <div style={{
+                            display: 'flex', alignItems: 'center', gap: '10px', background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: '12px', padding: '10px 16px', marginBottom: '20px'
+                        }}>
+                            <FaInfoCircle style={{ color: '#D97706', fontSize: '1.2rem' }} />
+                            <span style={{ color: '#92400E', fontSize: '0.85rem' }}>
+                                PC ajouté en stock : sans utilisateur, sans écran et inactif. Il sera affecté via « Réaffecter le PC ».
+                            </span>
+                        </div>
+                    )}
+
                     <div className="add-modal-form-grid" style={{
                         display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px'
                     }}>
                         <div style={{ gridColumn: '1', gridRow: '1' }}>
-                            <FormItem label="N° Matricule" name="id_n" formData={formData} handleChange={handleChange} required icon={getMaterielFieldIcon("id_n")} />
+                            <FormItem label="N° Matricule" name="id_n" formData={formData} handleChange={handleChange} required={!enStock} disabled={enStock} icon={getMaterielFieldIcon("id_n")} />
                         </div>
                         <div style={{ gridColumn: '2', gridRow: '1' }}>
-                            <FormItem label="Utilisateur" name="utilisateur" formData={formData} handleChange={handleChange} required icon={getMaterielFieldIcon("utilisateur")} />
+                            <FormItem label="Utilisateur" name="utilisateur" formData={formData} handleChange={handleChange} required={!enStock} disabled={enStock} icon={getMaterielFieldIcon("utilisateur")} />
                         </div>
 
                         <div style={{ gridColumn: '1', gridRow: '2' }}>
@@ -292,14 +327,14 @@ const AddModal = ({ onClose, onMaterialAdded }) => {
                         </div>
 
                         <div style={{ gridColumn: '1', gridRow: '3' }}>
-                            <FormItem label="Marque Écran" name="ecran" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("ecran")} />
+                            <FormItem label="Marque Écran" name="ecran" formData={formData} handleChange={handleChange} disabled={enStock} icon={getMaterielFieldIcon("ecran")} />
                         </div>
                         <div style={{ gridColumn: '2', gridRow: '3' }}>
-                            <FormItem label="Code Écran" name="code_ecran" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("code_ecran")} />
+                            <FormItem label="Code Écran" name="code_ecran" formData={formData} handleChange={handleChange} disabled={enStock} icon={getMaterielFieldIcon("code_ecran")} />
                         </div>
 
                         <div style={{ gridColumn: '1', gridRow: '4' }}>
-                            <FormItem label="Équipe" name="equipe" formData={formData} handleChange={handleChange} required icon={getMaterielFieldIcon("equipe")} />
+                            <FormItem label="Équipe" name="equipe" formData={formData} handleChange={handleChange} required={!enStock} disabled={enStock} icon={getMaterielFieldIcon("equipe")} />
                         </div>
                         <div style={{ gridColumn: '1', gridRow: '5' }}>
                             <FormItem label="Date PC" name="date_pc" type="date" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("date_pc")} />
@@ -348,7 +383,7 @@ const AddModal = ({ onClose, onMaterialAdded }) => {
                         </div>
 
                         <div style={{ gridColumn: '1', gridRow: '6' }}>
-                            <FormItem label="Date Écran" name="date_ecran" type="date" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("date_ecran")} />
+                            <FormItem label="Date Écran" name="date_ecran" type="date" formData={formData} handleChange={handleChange} disabled={enStock} icon={getMaterielFieldIcon("date_ecran")} />
                         </div>
                         <div style={{ gridColumn: '2', gridRow: '6' }}>
                             <FormItem label="Mot de passe local" name="mdp_pc" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("mdp_pc")} />
@@ -376,6 +411,7 @@ const AddModal = ({ onClose, onMaterialAdded }) => {
                                     { value: 'Moyen', label: '⚠️ Moyen' },
                                     { value: 'Mauvais', label: '❗ Mauvais' },
                                     { value: 'Disponible', label: '📦 Disponible' },
+                                    { value: ETAT_STOCK, label: '🗄️ Stock' },
                                     { value: 'HS', label: '❌ HS' }
                                 ]}
                                 formData={formData}
@@ -402,9 +438,12 @@ const AddModal = ({ onClose, onMaterialAdded }) => {
                                 </span>
                                 <div
                                     className="add-modal-toggle"
-                                    onClick={() => handleChange({ target: { name: 'est_actif', type: 'checkbox', checked: !formData.est_actif }})}
+                                    onClick={() => !enStock && handleChange({ target: { name: 'est_actif', type: 'checkbox', checked: !formData.est_actif }})}
+                                    title={enStock ? 'Un PC en stock est inactif' : undefined}
                                     style={{
                                         backgroundColor: formData.est_actif ? '#10B981' : '#EF4444',
+                                        opacity: enStock ? 0.5 : 1,
+                                        cursor: enStock ? 'not-allowed' : undefined,
                                     }}
                                 >
                                     <div className="add-modal-toggle-knob" style={{

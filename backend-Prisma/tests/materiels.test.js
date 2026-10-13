@@ -49,6 +49,25 @@ describe('PUT /api/materiels_all/:id — états posés par la mise en stock', ()
     });
 });
 
+describe('POST /api/materiels_all/ — ajout d\'un PC directement en stock', () => {
+    it('ignore matricule, utilisateur et écran, et crée le PC inactif en « Stock »', async () => {
+        const res = await as(admin).post('/api/materiels_all/')
+            .send({
+                etat_pc: 'Stock', id_n: 99, utilisateur: 'Bob', equipe: 'Compta',
+                ecran: 'Dell', code_ecran: 'ECR-STOCK', est_actif: true, code_pc: 'PC-STOCK', caracteristiques: 'i5',
+            });
+
+        expect(res.status).toBe(201);
+        expect(res.body.materiel).toMatchObject({
+            id_n: null, utilisateur: 'Stock', equipe: 'Stock', etat_pc: 'Stock', est_actif: false, code_pc: 'PC-STOCK',
+        });
+        expect(await prisma.users.findUnique({ where: { id_n: 99 } })).toBeNull();
+        expect(await prisma.ecran.findUnique({ where: { code_ecran: 'ECR-STOCK' } })).toBeNull();
+        const affectation = await prisma.affectationMateriel.findFirst({ where: { id_materiels: res.body.materiel.id_materiels } });
+        expect(affectation).toMatchObject({ id_n: null, nom_utilisateur: 'Stock' });
+    });
+});
+
 describe('DELETE /api/materiels_all/:id — fiches « Sans poste » et PC en stock uniquement', () => {
     const mettreEnStock = () => as(admin).post(`/api/materiels_all/${alice.materiel.id_materiels}/affecter`)
         .send({ id_n: null, motif: 'Départ' });
