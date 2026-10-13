@@ -390,8 +390,8 @@ const renderMarque = useCallback((row) => {
         );
 }, []);
 
-// Fiche « Sans poste » (utilisateur sans PC) : la modifier avec un code PC ou des
-// caractéristiques en refait un poste actif ; la supprimer libère le matricule.
+// Fiche « Sans poste » : pas de bouton Modifier (on lui attribue un PC via
+// « Réaffecter le PC ») ; la supprimer libère le matricule.
 const renderActions = useCallback((row) => (
         <div className="d-flex gap-1" role="group" aria-label="Actions">
             <Button 
@@ -405,7 +405,7 @@ const renderActions = useCallback((row) => (
             >
                 <FaEye size={14} className="text-info" />
             </Button>
-            {(userRole !== 'USER') && (
+            {userRole !== 'USER' && !isSansPoste(row) && (
             <Button 
                 variant="light" 
                 className="shadow-sm border-0 p-2 rounded-circle" 
