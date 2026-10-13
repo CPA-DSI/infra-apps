@@ -672,7 +672,7 @@ return (
 
                 {(userRole !== 'USER') && (
                 <Button
-                    className="btn-pill btn-pill-secondary"
+                    className="btn-pill btn-pill-danger"
                     onClick={() => setIsCorbeilleOpen(true)}
                     title="Fiches supprimées ; restauration des PC sortis de l'inventaire"
                     style={{ borderRadius: '9999px' }}
