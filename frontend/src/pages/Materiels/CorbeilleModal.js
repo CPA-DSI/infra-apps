@@ -52,7 +52,8 @@ const CorbeilleModal = ({ onClose, onRestored }) => {
             title: 'Restaurer ce PC ?',
             text: `Le PC ${m.code_pc || `#${m.id_materiels}`} reviendra dans la liste, en stock, sans bénéficiaire ni écran.`,
             icon: 'question',
-            showCancelButton: true, confirmButtonColor: '#0EA5E9', cancelButtonColor: '#64748b', confirmButtonText: 'Oui, restaurer', cancelButtonText: 'Annuler'
+            showCancelButton: true, confirmButtonColor: '#0EA5E9', cancelButtonColor: '#64748b', confirmButtonText: 'Oui, restaurer', cancelButtonText: 'Annuler',
+            customClass: { container: 'swal-au-dessus-modale' }
         });
         if (!result.isConfirmed) return;
 
@@ -61,9 +62,9 @@ const CorbeilleModal = ({ onClose, onRestored }) => {
             const { message } = await restaurerMateriel(m.id_materiels);
             await chargerCorbeille();
             onRestored();
-            MySwal.fire({ icon: 'success', title: 'Restauré !', text: message, timer: 3000, showConfirmButton: false });
+            MySwal.fire({ icon: 'success', title: 'Restauré !', text: message, timer: 3000, showConfirmButton: false, customClass: { container: 'swal-au-dessus-modale' } });
         } catch (err) {
-            MySwal.fire({ icon: 'error', title: 'Erreur', text: `Échec de la restauration : ${err.message}` });
+            MySwal.fire({ icon: 'error', title: 'Erreur', text: `Échec de la restauration : ${err.message}`, customClass: { container: 'swal-au-dessus-modale' } });
         } finally {
             setRestaurationId(null);
         }
