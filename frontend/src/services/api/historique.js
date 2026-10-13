@@ -26,7 +26,7 @@ export const getHistoriqueArrivees = async () => {
     const response = await apiClient.get('/historique_arrive');
     return response.data;
   } catch (error) {
-    throw new Error(error.response?.data?.message || error.message);
+    throw new Error(error.response?.data?.error || error.response?.data?.message || error.message);
   }
 };
 

@@ -185,7 +185,7 @@ const Mouvements = () => {
             console.error("Erreur lors du fetching avec Axios:", error.message);
 
             if (error.response) {
-                setError(`Erreur du serveur: ${error.response.status} - ${error.response.data.message || 'Une erreur est survenue côté serveur.'}`);
+                setError(`Erreur du serveur: ${error.response.status} - ${error.response.data.error || error.response.data.message || 'Une erreur est survenue côté serveur.'}`);
             } else if (error.request) {
                 setError("Problème de connexion au serveur. Vérifiez que l'API est lancée et les paramètres CORS.");
             } else {

@@ -26,9 +26,13 @@ const defaultSelectStyles = {
 };
 
 /**
- * Champ de formulaire générique partagé par les modales Add/Edit (Matériels, ProduitLocaux).
+ * Champ de formulaire générique partagé par les modales Add/Edit (Matériels, ProduitLocaux)
+ * et le formulaire de mouvement de stock (Stock_info).
  * `useNativeSelect` bascule entre un <select> natif et react-select ; `onSelectChange`
  * permet aux appelants qui gèrent leur select séparément (name, option) de s'y brancher.
+ * `showRequiredMark` affiche l'astérisque rouge des champs requis ; `nativeRequired`
+ * ajoute en plus l'attribut HTML `required` aux <input>/<textarea> (validation navigateur).
+ * `min` est transmis aux <input> (utile pour type="number").
  */
 const FormItem = memo(
   ({
@@ -46,7 +50,12 @@ const FormItem = memo(
     selectStyles = defaultSelectStyles,
     isClearable = false,
     noOptionsMessage,
+    showRequiredMark = true,
+    nativeRequired = false,
+    min,
   }) => {
+    const htmlRequired = nativeRequired && required ? true : undefined;
+
     const renderInput = () => {
       if (type === 'select') {
         if (useNativeSelect) {
@@ -99,6 +108,7 @@ const FormItem = memo(
             onChange={handleChange}
             className="add-modal-textarea"
             placeholder={`Entrez ${label.toLowerCase()}`}
+            required={htmlRequired}
           />
         );
       }
@@ -119,8 +129,10 @@ const FormItem = memo(
           value={formData[name] || ''}
           onChange={handleChange}
           className="add-modal-input"
-          placeholder={`Entrez ${label.toLowerCase()}`}
+          placeholder={type === 'date' ? undefined : `Entrez ${label.toLowerCase()}`}
           disabled={disabled}
+          min={min}
+          required={htmlRequired}
         />
       );
     };
@@ -133,7 +145,7 @@ const FormItem = memo(
       <div className="add-modal-form-group">
         <label className="add-modal-label">
           {Icon && <Icon />} {label}
-          {required && <span style={{ color: '#EF4444', marginLeft: '4px' }}>*</span>}
+          {required && showRequiredMark && <span style={{ color: '#EF4444', marginLeft: '4px' }}>*</span>}
         </label>
         {renderInput()}
       </div>

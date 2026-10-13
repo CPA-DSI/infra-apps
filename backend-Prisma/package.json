@@ -7,8 +7,10 @@
   "scripts": {
     "start": "node server.js",
     "postinstall": "prisma generate",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "migrate:dev": "prisma migrate dev"
+    "test": "vitest run",
+    "migrate:dev": "prisma migrate dev",
+    "test:watch": "vitest",
+    "test:db:setup": "node scripts/setup-test-db.js"
   },
   "keywords": [],
   "author": "",
@@ -29,6 +31,8 @@
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
-    "prisma": "^6.19.3"
+    "prisma": "^6.19.3",
+    "supertest": "^7.3.1",
+    "vitest": "^4.1.11"
   }
 }

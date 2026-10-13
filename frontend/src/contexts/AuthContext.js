@@ -1,14 +1,17 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import Swal from 'sweetalert2';
-import withReactContent from 'sweetalert2-react-content';
+import { MySwal } from '../utils/swal';
 import { apiClient, getCurrentUserProfile } from '../services/api';
-
-const MySwal = withReactContent(Swal);
+import { onSessionExpired } from '../services/sessionEvents';
+import { createTabSync } from '../utils/tabSync';
 
 // Doit rester alignée avec la durée de vie du cookie/JWT côté backend
 // (voir TOKEN_MAX_AGE_MS dans backend-Prisma/config/authToken.js).
 const IDLE_TIMEOUT_MS = 10 * 60 * 1000;
 const IDLE_WARNING_MS = 60 * 1000;
+// Limite la diffusion de l'activité aux autres onglets (mousemove/scroll
+// déclenchent des dizaines d'évènements par seconde).
+const ACTIVITY_BROADCAST_INTERVAL_MS = 5 * 1000;
 
 const AuthContext = createContext(null);
 
@@ -17,6 +20,23 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [mustChangePassword, setMustChangePassword] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Copie synchrone de isAuthenticated, lisible depuis les callbacks
+  // asynchrones (intercepteur Axios, messages des autres onglets, modale).
+  const isAuthenticatedRef = useRef(false);
+  // Canal de synchronisation inter-onglets (voir utils/tabSync.js).
+  const tabSyncRef = useRef(null);
+  // Réaction à l'activité signalée par un autre onglet (définie par l'effet d'inactivité).
+  const remoteActivityRef = useRef(null);
+  // Vrai tant que la modale d'avertissement d'inactivité est affichée.
+  const idleWarningOpenRef = useRef(false);
+
+  const clearAuthState = useCallback(() => {
+    isAuthenticatedRef.current = false;
+    setUser(null);
+    setIsAuthenticated(false);
+    setMustChangePassword(false);
+  }, []);
 
     const checkAuth = useCallback(async () => {
     setIsLoading(true);
@@ -51,23 +71,73 @@ export const AuthProvider = ({ children }) => {
         must_change_password: Boolean(data?.must_change_password),
       };
 
+      isAuthenticatedRef.current = true;
       setUser(normalizedUser);
       setIsAuthenticated(true);
       setMustChangePassword(Boolean(normalizedUser.must_change_password));
       return normalizedUser;
     } catch (error) {
-      setUser(null);
-      setIsAuthenticated(false);
-      setMustChangePassword(false);
+      clearAuthState();
       return null;
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [clearAuthState]);
 
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
+
+  // Synchronisation entre onglets : une déconnexion dans un onglet déconnecte
+  // les autres, et l'activité dans un onglet repousse la déconnexion pour
+  // inactivité dans tous les onglets (le cookie de session est commun).
+  useEffect(() => {
+    const tabSync = createTabSync((message) => {
+      if (message.type === 'logout') {
+        if (isAuthenticatedRef.current) {
+          clearAuthState();
+        }
+      } else if (message.type === 'activity') {
+        if (remoteActivityRef.current) {
+          remoteActivityRef.current();
+        }
+      }
+    });
+    tabSyncRef.current = tabSync;
+
+    return () => {
+      tabSync.close();
+      if (tabSyncRef.current === tabSync) {
+        tabSyncRef.current = null;
+      }
+    };
+  }, [clearAuthState]);
+
+  const broadcast = useCallback((message) => {
+    if (tabSyncRef.current) {
+      tabSyncRef.current.post(message);
+    }
+  }, []);
+
+  // Session expirée/invalide signalée par l'intercepteur Axios
+  // (services/api/client.js) : on vide l'état local, ce qui renvoie vers /login
+  // via AppLayout, sans rechargement de la page.
+  useEffect(() => onSessionExpired(() => {
+    if (!isAuthenticatedRef.current) {
+      return;
+    }
+    // La modale d'inactivité éventuelle sera remplacée par le message ci-dessous :
+    // l'effet d'inactivité ne doit pas la refermer lors de son nettoyage.
+    idleWarningOpenRef.current = false;
+    clearAuthState();
+    broadcast({ type: 'logout' });
+    MySwal.fire({
+      icon: 'info',
+      title: 'Session expirée',
+      text: 'Votre session a expiré. Veuillez vous reconnecter.',
+      confirmButtonColor: '#6366f1',
+    });
+  }), [clearAuthState, broadcast]);
 
   const login = useCallback(async (email, password) => {
     const response = await apiClient.post('/auth/login', { email, password });
@@ -81,22 +151,25 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      setUser(null);
-      setIsAuthenticated(false);
+      clearAuthState();
+      broadcast({ type: 'logout' });
     }
-  }, []);
+  }, [clearAuthState, broadcast]);
 
   // Déconnexion automatique après 10 min d'inactivité, avec un avertissement
   // 1 min avant la coupure. Le compte à rebours est ignoré si l'utilisateur
   // est inactif : seule une action explicite sur la modale (ou une activité
-  // avant son ouverture) prolonge la session.
+  // avant son ouverture) prolonge la session. L'activité d'un autre onglet
+  // compte aussi : elle relance le compteur (et referme l'avertissement).
   useEffect(() => {
     if (!isAuthenticated) {
       return undefined;
     }
 
     let idleTimer = null;
-    let warningOpen = false;
+    let disposed = false;
+    let resumedByOtherTab = false;
+    let lastBroadcastAt = 0;
 
     const clearIdleTimer = () => {
       if (idleTimer) {
@@ -110,9 +183,18 @@ export const AuthProvider = ({ children }) => {
       idleTimer = setTimeout(showWarning, IDLE_TIMEOUT_MS - IDLE_WARNING_MS);
     };
 
+    const broadcastActivity = (force = false) => {
+      const now = Date.now();
+      if (force || now - lastBroadcastAt >= ACTIVITY_BROADCAST_INTERVAL_MS) {
+        lastBroadcastAt = now;
+        broadcast({ type: 'activity' });
+      }
+    };
+
     function showWarning() {
-      if (warningOpen) return;
-      warningOpen = true;
+      if (idleWarningOpenRef.current) return;
+      idleWarningOpenRef.current = true;
+      resumedByOtherTab = false;
 
       let remainingSeconds = IDLE_WARNING_MS / 1000;
       let countdownInterval;
@@ -141,10 +223,17 @@ export const AuthProvider = ({ children }) => {
           clearInterval(countdownInterval);
         },
       }).then((result) => {
-        warningOpen = false;
-        if (result.isConfirmed) {
+        idleWarningOpenRef.current = false;
+        // Session déjà terminée entre-temps (autre onglet, session expirée...).
+        if (disposed || !isAuthenticatedRef.current) return;
+
+        if (resumedByOtherTab) {
+          resumedByOtherTab = false;
+          scheduleWarning();
+        } else if (result.isConfirmed) {
           checkAuth();
           scheduleWarning();
+          broadcastActivity(true);
         } else {
           logout();
         }
@@ -152,7 +241,18 @@ export const AuthProvider = ({ children }) => {
     }
 
     const handleActivity = () => {
-      if (warningOpen) return;
+      if (idleWarningOpenRef.current) return;
+      scheduleWarning();
+      broadcastActivity();
+    };
+
+    // Activité dans un autre onglet : on repart de zéro, sans rediffuser.
+    remoteActivityRef.current = () => {
+      if (idleWarningOpenRef.current) {
+        resumedByOtherTab = true;
+        Swal.close();
+        return;
+      }
       scheduleWarning();
     };
 
@@ -161,13 +261,16 @@ export const AuthProvider = ({ children }) => {
     scheduleWarning();
 
     return () => {
+      disposed = true;
+      remoteActivityRef.current = null;
       activityEvents.forEach((evt) => window.removeEventListener(evt, handleActivity));
       clearIdleTimer();
-      if (warningOpen) {
+      if (idleWarningOpenRef.current) {
+        idleWarningOpenRef.current = false;
         Swal.close();
       }
     };
-  }, [isAuthenticated, checkAuth, logout]);
+  }, [isAuthenticated, checkAuth, logout, broadcast]);
 
   const value = {
     isAuthenticated,

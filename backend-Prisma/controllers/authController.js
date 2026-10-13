@@ -307,7 +307,7 @@ export const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
   if (!email) {
-    return res.status(400).json({ message: "L'email est requis." });
+    return res.status(400).json({ error: "L'email est requis." });
   }
 
   // Réponse identique que le compte existe ou non, pour ne pas révéler les adresses valides.
@@ -405,12 +405,12 @@ export const resetPassword = async (req, res) => {
   const { token, password } = req.body;
 
   if (!token || !password) {
-    return res.status(400).json({ message: 'Token et nouveau mot de passe requis.' });
+    return res.status(400).json({ error: 'Token et nouveau mot de passe requis.' });
   }
 
   const passwordError = validatePasswordStrength(password);
   if (passwordError) {
-    return res.status(400).json({ message: passwordError });
+    return res.status(400).json({ error: passwordError });
   }
 
   try {
@@ -421,15 +421,15 @@ export const resetPassword = async (req, res) => {
     });
 
     if (!resetTokenRecord) {
-      return res.status(400).json({ message: 'Lien de réinitialisation invalide.' });
+      return res.status(400).json({ error: 'Lien de réinitialisation invalide.' });
     }
 
     if (new Date() > resetTokenRecord.expiresAt) {
-      return res.status(400).json({ message: 'Le lien de réinitialisation a expiré. Veuillez faire une nouvelle demande.' });
+      return res.status(400).json({ error: 'Le lien de réinitialisation a expiré. Veuillez faire une nouvelle demande.' });
     }
 
     if (resetTokenRecord.usedAt) {
-      return res.status(400).json({ message: 'Ce lien a déjà été utilisé. Veuillez faire une nouvelle demande.' });
+      return res.status(400).json({ error: 'Ce lien a déjà été utilisé. Veuillez faire une nouvelle demande.' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
@@ -452,12 +452,12 @@ export const resetPassword = async (req, res) => {
     });
 
     if (!consumed) {
-      return res.status(400).json({ message: 'Ce lien a déjà été utilisé ou a expiré. Veuillez faire une nouvelle demande.' });
+      return res.status(400).json({ error: 'Ce lien a déjà été utilisé ou a expiré. Veuillez faire une nouvelle demande.' });
     }
 
     return res.status(200).json({ message: 'Mot de passe réinitialisé avec succès.' });
   } catch (error) {
     console.error('Erreur resetPassword:', error);
-    return res.status(500).json({ message: 'Une erreur est survenue. Veuillez réessayer.' });
+    return res.status(500).json({ error: 'Une erreur est survenue. Veuillez réessayer.' });
   }
 };

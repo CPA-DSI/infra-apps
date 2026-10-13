@@ -3,14 +3,11 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import './ProduitLocaux.css';
 import DataTable from 'react-data-table-component';
 import { Button, Form, Badge } from 'react-bootstrap';
-import Swal from 'sweetalert2';
-import withReactContent from 'sweetalert2-react-content';
+import { MySwal } from '../../utils/swal';
 import { FaEdit, FaSync, FaFileExcel, FaWarehouse, FaTrash, FaSearch, FaBox, FaMapMarkerAlt, FaPlus } from 'react-icons/fa';
 import { fetchProduits, fetchLocaux, addProduct, updateProduct, deleteProduct, addLocation, updateLocation, deleteLocation } from '../../services/api';
 import ProductModal from './ProductModal';
 import LocationModal from './LocationModal';
-
-const MySwal = withReactContent(Swal);
 
 // --- Styles modernes ---
 const modernStyles = {

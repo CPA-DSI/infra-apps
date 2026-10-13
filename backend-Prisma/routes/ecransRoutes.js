@@ -6,13 +6,10 @@ import { authenticateToken, ensureActiveUser, requireRole } from '../middleware/
 import { UserRole } from '../constants/roles.js';
 import { STATUTS_ECRAN, affecterEcran, repondreErreurAffectation } from '../services/affectationService.js';
 import { validateIdParam } from '../middleware/validateIdParam.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 
 const router = express.Router();
 router.param('id', validateIdParam);
-
-const asyncHandler = fn => (req, res, next) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
-};
 
 router.use(authenticateToken, ensureActiveUser, requireRole(UserRole.IT_ADMIN, UserRole.DIRECTION));
 

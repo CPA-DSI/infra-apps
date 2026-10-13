@@ -110,7 +110,7 @@ const ForgotPassword = () => {
         Swal.fire({
           icon: 'error',
           title: 'Erreur',
-          text: data.message || 'Une erreur est survenue. Veuillez réessayer.',
+          text: data.error || data.message || 'Une erreur est survenue. Veuillez réessayer.',
           confirmButtonText: 'OK',
           confirmButtonColor: '#667eea'
         });

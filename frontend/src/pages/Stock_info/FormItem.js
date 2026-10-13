@@ -1,112 +1,38 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Spinner, Alert } from 'react-bootstrap';
-import Select from 'react-select';
 import dayjs from 'dayjs';
-import Swal from 'sweetalert2';
-import withReactContent from 'sweetalert2-react-content';
 
 import { fetchProduits, fetchLocaux, fetchMateriels, createMouvement } from '../../services/api';
 import { FaBox, FaMapMarkerAlt, FaUser, FaCalendarAlt, FaArrowRight, FaArrowLeft, FaPlus, FaMinus, FaFileAlt, FaCheck, FaExclamationTriangle } from 'react-icons/fa';
 import { escapeHtml } from '../../utils/escapeHtml';
+import { MySwal } from '../../utils/swal';
+import SharedFormItem from '../../components/FormItem/FormItem';
 
 import './HomeStock.css';
 
-const MySwal = withReactContent(Swal);
+// Icône affichée devant le libellé de chaque champ du formulaire de mouvement.
+const STOCK_FIELD_ICONS = {
+    id_produit: FaBox,
+    id_local_source: FaMapMarkerAlt,
+    id_local_destination: FaMapMarkerAlt,
+    id_materiels: FaUser,
+    date_mouvement: FaCalendarAlt,
+    quantite: FaBox,
+    motif: FaFileAlt,
+};
 
-const StockFormItem = React.memo(({ label, name, type = 'text', options = [], formData, handleChange, disabled = false, required = false }) => {
-    const getIcon = () => {
-        switch(name) {
-            case 'id_produit': return <FaBox />;
-            case 'id_local_source': return <FaMapMarkerAlt />;
-            case 'id_local_destination': return <FaMapMarkerAlt />;
-            case 'id_materiels': return <FaUser />;
-            case 'date_mouvement': return <FaCalendarAlt />;
-            case 'quantite': return <FaBox />;
-            case 'motif': return <FaFileAlt />;
-            default: return <FaBox />;
-        }
-    };
-
-    const renderInput = () => {
-        if (type === 'select') {
-            const normalizedOptions = options.map(opt => ({
-                ...opt,
-                isDisabled: opt.isDisabled || opt.disabled || false
-            }));
-            const selectedOption = formData[name] ? normalizedOptions.find(opt => String(opt.value) === String(formData[name])) || null : null;
-            const handleSelectChange = (selectedOption) => {
-                handleChange({
-                    target: {
-                        name: name,
-                        value: selectedOption ? selectedOption.value : ''
-                    }
-                });
-            };
-            return (
-                <Select
-                    name={name}
-                    value={selectedOption}
-                    onChange={handleSelectChange}
-                    options={normalizedOptions}
-                    isDisabled={disabled}
-                    isSearchable
-                    placeholder="Sélectionner..."
-                    styles={{
-                        control: (provided) => ({
-                            ...provided,
-                            fontSize: '0.85rem',
-                            minHeight: '38px',
-                        }),
-                        menu: (provided) => ({
-                            ...provided,
-                            fontSize: '0.85rem',
-                        }),
-                        input: (provided) => ({
-                            ...provided,
-                            fontSize: '0.85rem',
-                        }),
-                        option: (provided) => ({
-                            ...provided,
-                            fontSize: '0.85rem',
-                        }),
-                        singleValue: (provided) => ({
-                            ...provided,
-                            fontSize: '0.85rem',
-                        }),
-                    }}
-                    classNamePrefix="add-modal-select"
-                />
-            );
-        }
-        if (type === 'textarea') {
-            return (
-                <textarea name={name} value={formData[name] || ''} onChange={handleChange} className="add-modal-textarea" placeholder={`Entrez ${label.toLowerCase()}`} required={required} />
-            );
-        }
-        if (type === 'number') {
-            return (
-                <input type={type} name={name} value={formData[name] || ''} onChange={handleChange} className="add-modal-input" placeholder={`Entrez ${label.toLowerCase()}`} min="1" required={required} />
-            );
-        }
-        if (type === 'date') {
-            return (
-                <input type={type} name={name} value={formData[name] || ''} onChange={handleChange} className="add-modal-input" required={required} />
-            );
-        }
-        return (
-            <input type={type} name={name} value={formData[name] || ''} onChange={handleChange} className="add-modal-input" placeholder={`Entrez ${label.toLowerCase()}`} required={required} />
-        );
-    };
-
-    return (
-        <div className="add-modal-form-group">
-            <label className="add-modal-label">
-                {getIcon()} {label}
-            </label>
-            {renderInput()}
-        </div>
-    );
-});
+// Adaptateur du champ partagé : les libellés contiennent déjà l'astérisque
+// (« Produit * »), la validation passe par l'attribut HTML `required` et la
+// quantité est au minimum de 1.
+const StockFormItem = (props) => (
+    <SharedFormItem
+        {...props}
+        icon={STOCK_FIELD_ICONS[props.name] || FaBox}
+        showRequiredMark={false}
+        nativeRequired
+        min={props.type === 'number' ? '1' : undefined}
+    />
+);
 
 const FormItem = ({ initialData = {}, onSave, onClose, isModal = true }) => {
     const [produits, setProduits] = useState([]);

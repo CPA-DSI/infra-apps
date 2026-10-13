@@ -2,23 +2,23 @@ import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { AuthProvider, useAuth } from './AuthContext';
 import { apiClient, getCurrentUserProfile } from '../services/api';
+import Swal from 'sweetalert2';
 
-jest.mock('../services/api', () => ({
-  apiClient: { post: jest.fn() },
-  getCurrentUserProfile: jest.fn(),
+vi.mock('../services/api', () => ({
+  apiClient: { post: vi.fn() },
+  getCurrentUserProfile: vi.fn(),
 }));
 
 // AuthContext.js utilise withReactContent(Swal), qui fait `class extends Swal` :
 // il faut donc un vrai constructeur ici, pas un objet simple.
-jest.mock('sweetalert2', () => {
+vi.mock('sweetalert2', () => {
   class MockSwal {
-    static fire = jest.fn(() => new Promise(() => {}));
-    static close = jest.fn();
+    static fire = vi.fn(() => new Promise(() => {}));
+    static close = vi.fn();
   }
-  return MockSwal;
+  return { default: MockSwal };
 });
 
-const Swal = require('sweetalert2');
 
 const Probe = () => {
   const { isAuthenticated, isLoading, user, mustChangePassword } = useAuth();
@@ -41,8 +41,8 @@ const renderWithProvider = () =>
 
 describe('AuthContext', () => {
   afterEach(() => {
-    jest.clearAllMocks();
-    jest.useRealTimers();
+    vi.clearAllMocks();
+    vi.useRealTimers();
   });
 
   test("authentifie l'utilisateur quand /auth/me répond avec succès", async () => {
@@ -87,7 +87,7 @@ describe('AuthContext', () => {
       let resolveWarning;
       Swal.fire.mockImplementation(() => new Promise((resolve) => { resolveWarning = resolve; }));
 
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       renderWithProvider();
 
       await waitFor(() => expect(screen.getByTestId('auth-state')).toHaveTextContent('authentifié'));
@@ -95,7 +95,7 @@ describe('AuthContext', () => {
 
       // 9 minutes d'inactivité : l'avertissement doit s'afficher.
       act(() => {
-        jest.advanceTimersByTime(9 * 60 * 1000);
+        vi.advanceTimersByTime(9 * 60 * 1000);
       });
       expect(Swal.fire).toHaveBeenCalledTimes(1);
 
@@ -113,24 +113,24 @@ describe('AuthContext', () => {
       getCurrentUserProfile.mockResolvedValue({ role: 'USER' });
       Swal.fire.mockImplementation(() => new Promise(() => {}));
 
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       renderWithProvider();
 
       await waitFor(() => expect(screen.getByTestId('auth-state')).toHaveTextContent('authentifié'));
 
       // À 8 min, l'utilisateur redevient actif : le compteur doit repartir de zéro.
       act(() => {
-        jest.advanceTimersByTime(8 * 60 * 1000);
+        vi.advanceTimersByTime(8 * 60 * 1000);
         window.dispatchEvent(new Event('keydown'));
       });
       act(() => {
-        jest.advanceTimersByTime(8 * 60 * 1000);
+        vi.advanceTimersByTime(8 * 60 * 1000);
       });
       expect(Swal.fire).not.toHaveBeenCalled();
 
       // 1 min plus tard (9 min après la dernière activité), l'avertissement apparaît.
       act(() => {
-        jest.advanceTimersByTime(1 * 60 * 1000);
+        vi.advanceTimersByTime(1 * 60 * 1000);
       });
       expect(Swal.fire).toHaveBeenCalledTimes(1);
     });
@@ -140,13 +140,13 @@ describe('AuthContext', () => {
       let resolveWarning;
       Swal.fire.mockImplementation(() => new Promise((resolve) => { resolveWarning = resolve; }));
 
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       renderWithProvider();
 
       await waitFor(() => expect(screen.getByTestId('auth-state')).toHaveTextContent('authentifié'));
 
       act(() => {
-        jest.advanceTimersByTime(9 * 60 * 1000);
+        vi.advanceTimersByTime(9 * 60 * 1000);
       });
       expect(Swal.fire).toHaveBeenCalledTimes(1);
 
@@ -159,7 +159,7 @@ describe('AuthContext', () => {
 
       // Le timer a bien été relancé : encore 9 min plus tard, un nouvel avertissement.
       act(() => {
-        jest.advanceTimersByTime(9 * 60 * 1000);
+        vi.advanceTimersByTime(9 * 60 * 1000);
       });
       expect(Swal.fire).toHaveBeenCalledTimes(2);
     });

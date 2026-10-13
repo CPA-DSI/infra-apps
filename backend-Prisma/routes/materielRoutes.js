@@ -5,13 +5,9 @@ import express from 'express'; // Utilisez 'import' au lieu de 'require'
 import prisma from '../prismaClient.js';
 import { authenticateToken, ensureActiveUser, requireRole } from '../middleware/authMiddleware.js';
 import { UserRole } from '../constants/roles.js';
+import { sendError } from '../middleware/errorHandler.js';
 
 const router = express.Router();
-
-// Middleware pour gérer les erreurs de manière centralisée (facultatif mais recommandé)
-const asyncHandler = fn => (req, res, next) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
-};
 
 router.use(authenticateToken, ensureActiveUser, requireRole(UserRole.IT_ADMIN, UserRole.DIRECTION));
 
@@ -54,9 +50,8 @@ router.get('/', async (req, res) => {
     }));
         
     res.status(200).json(formattedResults);
-  } catch (err) {
-    console.error("ERREUR PRISMA FATALE DANS materielRoutes.js:", err);
-    res.status(500).send("Erreur serveur interne lors de la récupération des matériels.");
+  } catch (error) {
+    sendError(res, error, 'GET /api/materiels', 'Erreur serveur interne lors de la récupération des matériels.');
   }
 });
 
@@ -83,8 +78,7 @@ router.get('/stats-ecrans', async (req, res) => {
         res.json(formattedData);
 
     } catch (error) {
-        console.error("Erreur API /api/materiels/stats-ecrans:", error);
-        res.status(500).json({ error: "Erreur serveur interne lors de la récupération des statistiques d'écrans." });
+        sendError(res, error, 'GET /api/materiels/stats-ecrans', "Erreur serveur interne lors de la récupération des statistiques d'écrans.");
     }
 });
 
@@ -123,10 +117,8 @@ router.get('/capacite-ssd', async (req, res) => {
         }));
 
         res.json(serializedResult);
-    } catch (err) {
-        console.error("Erreur dans /api/materiels/capacite-ssd:", err.message);
-        // Le message d'erreur sera désormais plus précis dans la console si d'autres erreurs surviennent
-        res.status(500).send('Erreur serveur lors de la récupération des capacités SSD/HDD');
+    } catch (error) {
+        sendError(res, error, 'GET /api/materiels/capacite-ssd', 'Erreur serveur lors de la récupération des capacités SSD/HDD');
     }
 });
 
@@ -153,8 +145,7 @@ router.get('/count-equipe', async (req, res) => {
 
     res.status(200).json(serializedResult);
   } catch (error) {
-    console.error("Erreur Prisma SQL:", error);
-    res.status(500).json({ message: "Erreur lors du comptage", error: error.message });
+    sendError(res, error, 'GET /api/materiels/count-equipe', 'Erreur lors du comptage');
   }
 });
 
@@ -216,8 +207,7 @@ router.get('/equipe-details', async (req, res) => {
 
     res.status(200).json(serializedResult);
   } catch (error) {
-    console.error("Erreur Prisma SQL:", error);
-    res.status(500).json({ message: "Erreur lors de la récupération des détails", error: error.message });
+    sendError(res, error, 'GET /api/materiels/equipe-details', 'Erreur lors de la récupération des détails');
   }
 });
 
@@ -244,8 +234,7 @@ router.get('/count-by-local', async (req, res) => {
 
     res.status(200).json(serializedResult);
   } catch (error) {
-    console.error("Erreur Prisma SQL:", error);
-    res.status(500).json({ message: "Erreur lors du comptage par local", error: error.message });
+    sendError(res, error, 'GET /api/materiels/count-by-local', 'Erreur lors du comptage par local');
   }
 });
 
@@ -280,8 +269,7 @@ router.get('/mail-count', async (req, res) => {
       ]
     });
   } catch (error) {
-    console.error("Erreur Backend API:", error.message);
-    res.status(500).json({ error: error.message });
+    sendError(res, error, 'GET /api/materiels/mail-count');
   }
 });
 

@@ -33,7 +33,7 @@ export const updateUser = async (id, userData) => {
     const response = await apiClient.put(`/users/${id}`, userData);
     return response.data;
   } catch (error) {
-    const errorMessage = error.response?.data?.message || error.message;
+    const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message;
     throw new Error(errorMessage);
   }
 };
@@ -43,7 +43,7 @@ export const updateUserStatus = async (id, isActive) => {
     const response = await apiClient.patch(`/users/${id}/status`, { is_active: isActive });
     return response.data;
   } catch (error) {
-    const errorMessage = error.response?.data?.message || error.message;
+    const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message;
     throw new Error(errorMessage);
   }
 };

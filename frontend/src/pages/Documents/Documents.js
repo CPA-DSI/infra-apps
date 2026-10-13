@@ -4,8 +4,7 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import DataTable from 'react-data-table-component';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-import Swal from 'sweetalert2';
-import withReactContent from 'sweetalert2-react-content';
+import { MySwal } from '../../utils/swal';
 // --- Importations Bootstrap et Icônes ---
 import { Button, Form, InputGroup, Spinner, Card, Alert, Tabs, Tab } from 'react-bootstrap';
 import {
@@ -20,8 +19,6 @@ import DocumentDetailModal from './DocumentDetailModal';
 import QuickPreviewModal from './QuickPreviewModal';
 import { fetchDocuments, fetchMateriels, fetchAMarques, fetchProduits, getTickets, deleteDocument, getDocumentFileUrl, getPieceJointeFileUrl } from '../../services/api';
 import './Documents.css';
-
-const MySwal = withReactContent(Swal);
 
 // ==========================================================
 // --- Styles 2026 pour React-Data-Table-Component ---

@@ -1,10 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import * as XLSX from 'xlsx';
-import Swal from 'sweetalert2';
-import withReactContent from 'sweetalert2-react-content';
 import { apiClient } from '../../services/api';
-
-const MySwal = withReactContent(Swal);
+import { MySwal } from '../../utils/swal';
 
 const ROLE_LABEL_TO_ENUM = { 'Admin IT': 'IT_ADMIN', 'Direction': 'DIRECTION', 'Utilisateur': 'USER' };
 
@@ -337,7 +334,7 @@ export const useUserImportExport = ({ onImported }) => {
         } catch (error) {
             console.error('Erreur import Excel utilisateurs:', error);
 
-            const errorMessage = error.response?.data?.message || error.message || 'Erreur lors de l\'import.';
+            const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || 'Erreur lors de l\'import.';
             setImportError(errorMessage);
 
             await MySwal.fire({

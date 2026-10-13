@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
 import { createTicket, updateTicket, fetchAllUsers, fetchAllMateriels, fetchTechnicians } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
-import Swal from 'sweetalert2';
-import withReactContent from 'sweetalert2-react-content';
+import { MySwal } from '../../utils/swal';
 import Select from 'react-select';
 import {
     FaTicketAlt, FaUser, FaHdd, FaSave, FaTimes, FaInfoCircle,
@@ -10,8 +9,6 @@ import {
     FaUserPlus, FaUserCircle, FaIdBadge
 } from 'react-icons/fa';
 import './Tickets.css';
-
-const MySwal = withReactContent(Swal);
 
 const FormItem = memo(({ label, name, type = 'text', options = [], formData, handleChange, disabled = false, required = false }) => {
     const getIcon = () => {

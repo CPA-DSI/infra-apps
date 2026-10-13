@@ -10,8 +10,7 @@ import {
 } from 'react-icons/fa';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-import Swal from 'sweetalert2';
-import withReactContent from 'sweetalert2-react-content';
+import { MySwal } from '../../utils/swal';
 import TicketModal from './TicketModal';
 import TicketDetailsModal from './TicketDetailsModal';
 import CloseTicketModal from './CloseTicketModal';
@@ -19,8 +18,6 @@ import './Tickets.css';
 import { getTickets, deleteTicket, fetchAllMaterielsIt, assignTicket, fetchCommentaires, fetchCommentairesByTicket, addCommentaire, deleteCommentaire } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { hasPermission, PERMISSIONS } from '../../config/api';
-
-const MySwal = withReactContent(Swal);
 
 const STATUS_CONFIG = {
   NOUVEAU: { label: 'Nouveau', bg: '#dbeafe', text: '#1e40af', border: '#93c5fd', icon: FaInfoCircle },

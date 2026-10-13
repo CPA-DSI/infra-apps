@@ -1,0 +1,62 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'backend-Prisma/**'
+      - '.github/workflows/backend-ci.yml'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'backend-Prisma/**'
+      - '.github/workflows/backend-ci.yml'
+
+defaults:
+  run:
+    working-directory: backend-Prisma
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: itinfra_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d itinfra_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    # Valeurs factices propres à la CI (base jetable du service postgres) : ce ne sont pas des secrets.
+    # Le nom de la base doit finir par _test (garde-fou de tests/setup.js).
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/itinfra_test?schema=public
+      JWT_SECRET: ci-only-dummy-jwt-secret-not-used-anywhere-else-0000
+      PASS_MAIL_ENCRYPTION_KEY: 00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff
+      NODE_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend-Prisma/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply migrations
+        run: npx prisma migrate deploy
+
+      - name: Test
+        run: npm test

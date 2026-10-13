@@ -4,8 +4,8 @@ import express from 'express'; // Utilisez 'import' au lieu de 'require'
 import prisma from '../prismaClient.js';
 
 import bcrypt from 'bcryptjs';
-import { authenticateToken, ensureActiveUser, requireRole } from '../middleware/authMiddleware.js';
-import { UserRole } from '../constants/roles.js';
+import { authenticateToken, ensureActiveUser, requireRole, requirePermission } from '../middleware/authMiddleware.js';
+import { UserRole, PERMISSIONS, canViewAllMateriels } from '../constants/roles.js';
 import { encryptPassMail } from '../services/passMailCrypto.js';
 import {
     affecterPC,
@@ -17,13 +17,25 @@ import {
     repondreErreurAffectation,
 } from '../services/affectationService.js';
 import { validateIdParam } from '../middleware/validateIdParam.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
+import { sendError } from '../middleware/errorHandler.js';
 
 
 const router = express.Router();
 router.param('id', validateIdParam);
 
-const asyncHandler = fn => (req, res, next) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
+router.use(authenticateToken, ensureActiveUser);
+
+// Restreint une requête aux matériels de l'utilisateur connecté s'il n'a pas
+// la vue sur tout le parc. Retourne null si l'utilisateur est introuvable.
+const scopeMaterielsUtilisateur = async (req, where) => {
+    if (canViewAllMateriels(req.user?.role)) return where;
+
+    const currentUser = await prisma.users.findUnique({
+        where: { id_user: req.user?.userId },
+        select: { id_n: true },
+    });
+    return currentUser ? { ...where, id_n: currentUser.id_n } : null;
 };
 
 // ===============================================
@@ -32,23 +44,11 @@ const asyncHandler = fn => (req, res, next) => {
 // ===============================================
 
 // 1. GET all materiels (URL complète: /api/materiels_all/)
-router.get('/', authenticateToken, ensureActiveUser, asyncHandler(async (req, res) => {
-    const userRole = req.user?.role;
-    const userId = req.user?.userId;
-
+router.get('/', requirePermission(PERMISSIONS.MATERIELS_READ), asyncHandler(async (req, res) => {
     // Les postes supprimés (suppression logique) ne sont plus listés.
-    let where = { date_suppression: null };
-    if (userRole === 'USER') {
-        const currentUser = await prisma.users.findUnique({
-            where: { id_user: userId },
-            select: { id_n: true },
-        });
-
-        if (!currentUser) {
-            return res.status(404).json({ error: 'Utilisateur introuvable.' });
-        }
-
-        where.id_n = currentUser.id_n;
+    const where = await scopeMaterielsUtilisateur(req, { date_suppression: null });
+    if (!where) {
+        return res.status(404).json({ error: 'Utilisateur introuvable.' });
     }
 
     // 1. On récupère les données avec les relations incluses
@@ -96,7 +96,7 @@ router.get('/', authenticateToken, ensureActiveUser, asyncHandler(async (req, re
 
 // 1bis. GET technicians (équipe Informatique DSI) pour l'assignation de tickets
 // Accessible à tout utilisateur actif authentifié (liste minimale, sans données d'équipement sensibles)
-router.get('/technicians', authenticateToken, ensureActiveUser, asyncHandler(async (req, res) => {
+router.get('/technicians', asyncHandler(async (req, res) => {
     const technicians = await prisma.Materiels.findMany({
         where: { equipe: 'Informatique DSI', date_suppression: null },
         select: { id_n: true, utilisateur: true, equipe: true, local: { select: { nom_local: true } } },
@@ -115,8 +115,18 @@ router.get('/technicians', authenticateToken, ensureActiveUser, asyncHandler(asy
     res.json(uniqueTechnicians);
 }));
 
+// 1ter. GET liste simple (sans relations), utilisée par les sélecteurs de
+// matériel (documents, historique). Remplace l'ancien /api/materiels_s.
+router.get('/simple', requirePermission(PERMISSIONS.MATERIELS_READ), asyncHandler(async (req, res) => {
+    const where = canViewAllMateriels(req.user?.role)
+        ? { date_suppression: null }
+        : { date_suppression: null, id_n: req.user?.id_n };
+
+    res.json(await prisma.Materiels.findMany({ where }));
+}));
+
 // 2. GET materiel by ID (URL complète: /api/materiels_all/:id)
-router.get('/:id', authenticateToken, ensureActiveUser, asyncHandler(async (req, res) => {
+router.get('/:id', requirePermission(PERMISSIONS.MATERIELS_READ), asyncHandler(async (req, res) => {
     const { id } = req.params;
 
     // --- CORRECTION APPLIQUÉE ICI ---
@@ -130,21 +140,9 @@ router.get('/:id', authenticateToken, ensureActiveUser, asyncHandler(async (req,
         return; // Arrête l'exécution de la fonction
     }
 
-    const userRole = req.user?.role;
-    const userId = req.user?.userId;
-
-    let where = { id_materiels: materielId, date_suppression: null };
-    if (userRole === 'USER') {
-        const currentUser = await prisma.users.findUnique({
-            where: { id_user: userId },
-            select: { id_n: true },
-        });
-
-        if (!currentUser) {
-            return res.status(404).json({ error: 'Utilisateur introuvable.' });
-        }
-
-        where.id_n = currentUser.id_n;
+    const where = await scopeMaterielsUtilisateur(req, { id_materiels: materielId, date_suppression: null });
+    if (!where) {
+        return res.status(404).json({ error: 'Utilisateur introuvable.' });
     }
 
     // 3. Effectuer la requête Prisma dans un bloc try/catch (asyncHandler peut aussi gérer ça)
@@ -168,11 +166,7 @@ router.get('/:id', authenticateToken, ensureActiveUser, asyncHandler(async (req,
 }));
 
 // 3. POST create new materiel (URL complète: /api/materiels_all/)
-router.post('/', authenticateToken, ensureActiveUser, asyncHandler(async (req, res) => {
-    const userRole = req.user?.role;
-    if (userRole === 'USER') {
-        return res.status(403).json({ error: 'Accès interdit : permission insuffisante.' });
-    }
+router.post('/', requirePermission(PERMISSIONS.MATERIELS_WRITE), asyncHandler(async (req, res) => {
 
     const { 
         id_materiels, // Ignoré (auto-incrément)
@@ -273,7 +267,7 @@ router.post('/', authenticateToken, ensureActiveUser, asyncHandler(async (req, r
 // GET /api/materiels_all/affectation/beneficiaires
 // Liste légère des utilisateurs pour le choix du bénéficiaire d'une
 // affectation (évite /api/users qui renvoie les mots de passe mail).
-router.get('/affectation/beneficiaires', authenticateToken, ensureActiveUser, requireRole(UserRole.IT_ADMIN, UserRole.DIRECTION), asyncHandler(async (req, res) => {
+router.get('/affectation/beneficiaires', requireRole(UserRole.IT_ADMIN, UserRole.DIRECTION), asyncHandler(async (req, res) => {
     const users = await prisma.users.findMany({
         select: {
             id_n: true,
@@ -298,7 +292,7 @@ router.get('/affectation/beneficiaires', authenticateToken, ensureActiveUser, re
 
 // POST /api/materiels_all/:id/affecter
 // Body : { id_n (null = stock), utilisateur, equipe, id_local?, motif?, etat_remise?, commentaire? }
-router.post('/:id/affecter', authenticateToken, ensureActiveUser, requireRole(UserRole.IT_ADMIN, UserRole.DIRECTION), asyncHandler(async (req, res) => {
+router.post('/:id/affecter', requireRole(UserRole.IT_ADMIN, UserRole.DIRECTION), asyncHandler(async (req, res) => {
     const id_materiels = parseInt(req.params.id, 10);
     if (isNaN(id_materiels)) {
         return res.status(400).json({ error: "L'identifiant fourni n'est pas valide." });
@@ -323,7 +317,7 @@ router.post('/:id/affecter', authenticateToken, ensureActiveUser, requireRole(Us
 
 // GET /api/materiels_all/:id/affectations
 // Historique des affectations du poste : PC et écrans passés par ce poste.
-router.get('/:id/affectations', authenticateToken, ensureActiveUser, requireRole(UserRole.IT_ADMIN, UserRole.DIRECTION), asyncHandler(async (req, res) => {
+router.get('/:id/affectations', requireRole(UserRole.IT_ADMIN, UserRole.DIRECTION), asyncHandler(async (req, res) => {
     const id_materiels = parseInt(req.params.id, 10);
     if (isNaN(id_materiels)) {
         return res.status(400).json({ error: "L'identifiant fourni n'est pas valide." });
@@ -338,13 +332,8 @@ router.get('/:id/affectations', authenticateToken, ensureActiveUser, requireRole
 }));
 
 // 4. PUT update materiel (URL complète: /api/materiels_all/:id)
-router.put('/:id', authenticateToken, ensureActiveUser, asyncHandler(async (req, res) => {
+router.put('/:id', requirePermission(PERMISSIONS.MATERIELS_WRITE), asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const userRole = req.user?.role;
-
-    if (userRole === 'USER') {
-        return res.status(403).json({ error: 'Accès interdit : permission insuffisante.' });
-    }
 
     const { 
         id_materiels, nom_marque, nom_local, user, marque, local, url, 
@@ -429,8 +418,7 @@ router.put('/:id', authenticateToken, ensureActiveUser, asyncHandler(async (req,
         if (error.code === 'P2025') {
             return res.status(404).json({ error: `Matériel avec l'ID ${materielId} non trouvé.` });
         }
-        console.error("Erreur Prisma détaillée:", error);
-        res.status(500).json({ error: `Erreur interne lors de la mise à jour: ${error.message}` });
+        sendError(res, error, 'PUT /api/materiels_all/:id', 'Erreur interne lors de la mise à jour.');
     }
 }));
 
@@ -438,10 +426,7 @@ router.put('/:id', authenticateToken, ensureActiveUser, asyncHandler(async (req,
 // Body : { est_actif }. Remplace la bascule « Status » qui passait par le PUT.
 // Un PC en stock ou une fiche « Sans poste » change de statut uniquement via
 // l'affectation (POST /:id/affecter).
-router.patch('/:id/statut', authenticateToken, ensureActiveUser, asyncHandler(async (req, res) => {
-    if (req.user?.role === 'USER') {
-        return res.status(403).json({ error: 'Accès interdit : permission insuffisante.' });
-    }
+router.patch('/:id/statut', requirePermission(PERMISSIONS.MATERIELS_WRITE), asyncHandler(async (req, res) => {
 
     const materielId = parseInt(req.params.id, 10);
     const { est_actif } = req.body;
@@ -479,13 +464,8 @@ router.patch('/:id/statut', authenticateToken, ensureActiveUser, asyncHandler(as
 }));
 
 // 5. DELETE materiel (URL complète: /api/materiels_all/:id)
-router.delete('/:id', authenticateToken, ensureActiveUser, asyncHandler(async (req, res) => {
+router.delete('/:id', requirePermission(PERMISSIONS.MATERIELS_DELETE), asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const userRole = req.user?.role;
-
-    if (userRole === 'USER') {
-        return res.status(403).json({ error: 'Accès interdit : permission insuffisante.' });
-    }
 
     // Suppression logique : la fiche, son historique et ses affectations sont
     // conservés ; l'écran repart en stock et le matricule est libéré.

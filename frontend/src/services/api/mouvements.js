@@ -9,7 +9,7 @@ export const fetchAllMouvements = async (year, signal) => {
     if (axios.isCancel(error) || error.name === 'CanceledError') {
       return null;
     }
-    const message = error.response?.data?.message || 'Erreur de chargement';
+    const message = error.response?.data?.error || error.response?.data?.message || 'Erreur de chargement';
     throw new Error(message);
   }
 };
@@ -23,7 +23,7 @@ export const fetchAnneesDisponibles = async (signal) => {
     if (axios.isCancel(error) || error.name === 'CanceledError') {
       return null;
     }
-    const message = error.response?.data?.message || 'Erreur de chargement';
+    const message = error.response?.data?.error || error.response?.data?.message || 'Erreur de chargement';
     throw new Error(message);
   }
 };
@@ -36,7 +36,7 @@ export const fetchAllMouvementsChart = async () => {
     if (axios.isCancel(error) || error.name === 'CanceledError') {
       return null;
     }
-    const message = error.response?.data?.message || 'Erreur de chargement';
+    const message = error.response?.data?.error || error.response?.data?.message || 'Erreur de chargement';
     throw new Error(message);
   }
 };
@@ -102,7 +102,7 @@ export const importMouvements = async (formData, signal) => {
       throw new Error('Importation annulée');
     }
     if (error.response) {
-      throw new Error(error.response.data.message || "Erreur serveur lors de l'importation");
+      throw new Error(error.response.data.error || error.response.data.message || "Erreur serveur lors de l'importation");
     }
     throw new Error('Erreur de connexion au serveur');
   }

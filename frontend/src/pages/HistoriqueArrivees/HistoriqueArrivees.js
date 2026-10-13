@@ -102,7 +102,7 @@ const HistoriqueArrivees = () => {
             }
         } catch (err) {
             console.error('Erreur fetchHistoriqueData:', err);
-            setError(`Erreur: ${err.response?.data?.message || err.message}`);
+            setError(`Erreur: ${err.response?.data?.error || err.response?.data?.message || err.message}`);
             setData([]);
         } finally {
             setLoading(false);

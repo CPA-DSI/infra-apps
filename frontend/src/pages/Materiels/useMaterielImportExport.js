@@ -1,11 +1,8 @@
 import { useState, useCallback, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-import Swal from 'sweetalert2';
-import withReactContent from 'sweetalert2-react-content';
 import { apiClient } from '../../services/api';
-
-const MySwal = withReactContent(Swal);
+import { MySwal } from '../../utils/swal';
 
 const normalizeCell = (val) => {
     if (val === undefined || val === null) return null;
@@ -572,7 +569,7 @@ export const useMaterielImportExport = ({ materiels, filteredMateriels, filterNo
         } catch (error) {
             console.error('Erreur import Excel:', error);
 
-            const errorMessage = error.response?.data?.message || error.message || 'Erreur lors de l\'import.';
+            const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || 'Erreur lors de l\'import.';
             setImportError(errorMessage);
 
             await MySwal.fire({

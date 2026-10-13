@@ -1,13 +1,10 @@
 // src/pages/ProduitLocaux/ProductModal.js
 
 import React, { useState, useEffect, useCallback } from "react";
-import Swal from "sweetalert2";
-import withReactContent from "sweetalert2-react-content";
+import { MySwal } from "../../utils/swal";
 import { FaBox, FaExclamationTriangle, FaCalendarAlt, FaTimes, FaPlus, FaSave } from "react-icons/fa";
 import FormItem from "../../components/FormItem/FormItem";
 import "./ProductModal.css";
-
-const MySwal = withReactContent(Swal);
 
 const ProductModal = ({ show, handleClose, handleSave, initialData, errorMessage }) => {
   const [formData, setFormData] = useState({

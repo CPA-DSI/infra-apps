@@ -5,6 +5,7 @@ import { authenticateToken, ensureActiveUser, requirePermission } from '../middl
 import { PERMISSIONS } from '../constants/roles.js';
 import { encryptPassMail, decryptPassMail, encryptSecret, decryptSecret } from '../services/passMailCrypto.js';
 import { validateIdParam } from '../middleware/validateIdParam.js';
+import { sendError } from '../middleware/errorHandler.js';
 
 const router = express.Router();
 router.param('id', validateIdParam);
@@ -37,8 +38,7 @@ router.get('/stats', authenticateToken, ensureActiveUser, requirePermission(PERM
             ],
         });
     } catch (error) {
-        console.error('Erreur lors du comptage des emails utilisateur:', error);
-        res.status(500).json({ error: error.message });
+        sendError(res, error, 'GET /api/user-emails/count', 'Erreur lors du comptage des emails utilisateur.');
     }
 });
 
@@ -47,7 +47,7 @@ router.post('/', authenticateToken, ensureActiveUser, requirePermission(PERMISSI
         const { user_id, email, password, pass_mail, is_primary, is_verified } = req.body;
 
         if (!user_id || !email || !email.trim()) {
-            return res.status(400).json({ message: "L'ID utilisateur et l'email sont requis." });
+            return res.status(400).json({ error: "L'ID utilisateur et l'email sont requis." });
         }
 
         const trimmedEmail = email.trim().toLowerCase();
@@ -58,12 +58,12 @@ router.post('/', authenticateToken, ensureActiveUser, requirePermission(PERMISSI
         });
 
         if (!existingUser) {
-            return res.status(404).json({ message: "Utilisateur non trouvé." });
+            return res.status(404).json({ error: "Utilisateur non trouvé." });
         }
 
         const alreadyExists = existingUser.emails.find(e => e.email === trimmedEmail);
         if (alreadyExists) {
-            return res.status(400).json({ message: "Cet email est déjà associé à cet utilisateur." });
+            return res.status(400).json({ error: "Cet email est déjà associé à cet utilisateur." });
         }
 
         const plainPassword = password && password.trim() !== '' ? password.trim() : '123456';
@@ -95,8 +95,7 @@ router.post('/', authenticateToken, ensureActiveUser, requirePermission(PERMISSI
 
         res.status(201).json(serializeUserEmail(newEmail));
     } catch (error) {
-        console.error("Erreur lors de la création de l'email:", error);
-        res.status(400).json({ message: error.message });
+        sendError(res, error, 'POST /api/user-emails', "Erreur lors de la création de l'email.");
     }
 });
 
@@ -106,7 +105,7 @@ router.put('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMIS
         const id_uEmail = parseInt(req.params.id);
 
         if (isNaN(id_uEmail)) {
-            return res.status(400).json({ message: "ID email invalide." });
+            return res.status(400).json({ error: "ID email invalide." });
         }
 
         const existingEmail = await prisma.userEmail.findUnique({
@@ -115,7 +114,7 @@ router.put('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMIS
         });
 
         if (!existingEmail) {
-            return res.status(404).json({ message: "Email non trouvé." });
+            return res.status(404).json({ error: "Email non trouvé." });
         }
 
         const updateData = {
@@ -155,8 +154,7 @@ router.put('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMIS
 
         res.json(serializeUserEmail(updated));
     } catch (error) {
-        console.error("Erreur lors de la mise à jour de l'email:", error);
-        res.status(400).json({ message: error.message });
+        sendError(res, error, 'PUT /api/user-emails/:id', "Erreur lors de la mise à jour de l'email.");
     }
 });
 
@@ -165,7 +163,7 @@ router.get('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMIS
         const id_uEmail = parseInt(req.params.id);
 
         if (isNaN(id_uEmail)) {
-            return res.status(400).json({ message: "ID email invalide." });
+            return res.status(400).json({ error: "ID email invalide." });
         }
 
         const email = await prisma.userEmail.findUnique({
@@ -173,12 +171,11 @@ router.get('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMIS
             include: { user: { include: { materiel: true } } }
         });
         if (!email) {
-            return res.status(404).json({ message: "Email non trouvé." });
+            return res.status(404).json({ error: "Email non trouvé." });
         }
         res.json(serializeUserEmail(email));
     } catch (error) {
-        console.error("Erreur lors de la récupération de l'email:", error);
-        res.status(500).json({ message: error.message });
+        sendError(res, error, 'GET /api/user-emails/:id', "Erreur lors de la récupération de l'email.");
     }
 });
 

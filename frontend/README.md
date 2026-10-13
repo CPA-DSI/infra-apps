@@ -1,70 +1,26 @@
-# Getting Started with Create React App
+# InvTech IT - Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Application React 19 construite avec [Vite](https://vite.dev/) (migree depuis Create React App).
+Node.js 22.12+ requis (Vitest 5 / jsdom 30).
 
-## Available Scripts
+## Commandes
 
-In the project directory, you can run:
+| Commande | Role |
+| --- | --- |
+| `npm run dev` (ou `npm start`) | Serveur de developpement sur http://localhost:3000 |
+| `npm run build` | Build de production dans `build/` (sans source maps) |
+| `npm run preview` | Sert le build localement sur http://localhost:3000 |
+| `npm test` | Vitest en mode watch |
+| `npm run test:ci` | Vitest en une passe (CI) |
+| `npm run lint` | ESLint (`eslint.config.js`) sur `src/` |
 
-### `npm start`
+## Variables d'environnement
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Les fichiers `.env*` sont lus par Vite. Les prefixes `VITE_` et `REACT_APP_` sont exposes au code
+via `import.meta.env` (ex. `import.meta.env.REACT_APP_API_URL`, URL de l'API, par defaut
+`http://localhost:4000`). Ne jamais y mettre de secret : ces valeurs sont incluses dans le bundle.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Notes
 
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- Le JSX est autorise dans les fichiers `.js` de `src/` (voir `vite.config.js`).
+- Deploiement Vercel : `vercel.json` (framework Vite, sortie `build/`, reecriture SPA vers `index.html`).

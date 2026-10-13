@@ -6,17 +6,14 @@
 // que collecter le choix et l'envoyer.
 
 import React, { useState, useEffect, useMemo } from 'react';
-import Swal from 'sweetalert2';
-import withReactContent from 'sweetalert2-react-content';
+import { MySwal } from '../../utils/swal';
 import { FaTimes, FaExchangeAlt, FaDesktop, FaLaptop, FaSave, FaInfoCircle } from 'react-icons/fa';
 import {
     fetchBeneficiaires, affecterMateriel, fetchAllMateriels, fetchALocaux,
     fetchEcrans, affecterEcran, STATUTS_ECRAN_LABELS,
 } from '../../services/api';
-import SearchableSelect from './SearchableSelect';
+import SearchableSelect from '../../components/SearchableSelect/SearchableSelect';
 import './Materiels.css';
-
-const MySwal = withReactContent(Swal);
 
 const STOCK = '__STOCK__';
 const HORS_POSTE = ['EN_STOCK', 'EN_REPARATION', 'REFORME'];

@@ -1,83 +1,71 @@
 // routes/historiqueMaterielRoutes.js
 import express from 'express';
 import prisma from '../prismaClient.js';
-import { authenticateToken, ensureActiveUser } from '../middleware/authMiddleware.js';
+import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
 import { validateIdParam } from '../middleware/validateIdParam.js';
+import { canViewAllMateriels, PERMISSIONS } from '../constants/roles.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 
 const router = express.Router();
 router.param('id', validateIdParam);
 
-const asyncHandler = fn => (req, res, next) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
-};
+router.use(authenticateToken, ensureActiveUser, requirePermission(PERMISSIONS.MATERIELS_READ));
 
 // GET /api/historique_materiels - Récupérer tout l'historique des matériels
-router.get('/', authenticateToken, ensureActiveUser, asyncHandler(async (req, res) => {
-    try {
-        const userRole = req.user?.role;
-        const userId = req.user?.id_n;
+router.get('/', asyncHandler(async (req, res) => {
+    // Sans vue sur tout le parc : uniquement l'historique de ses propres matériels
+    const where = canViewAllMateriels(req.user?.role) ? {} : { materiel: { id_n: req.user?.id_n } };
 
-        let where = {};
-        if (userRole === 'USER') {
-            where = { materiel: { id_n: userId } };
-        }
-
-        const historique = await prisma.historiqueMateriel.findMany({
-            where,
-            include: {
-                materiel: {
-                    select: {
-                        id_materiels: true,
-                        id_n: true,
-                        utilisateur: true,
-                        code_pc: true,
-                        equipe: true,
-                        etat_pc: true,
-                        caracteristiques: true,
-                        local: {
-                            select: {
-                                nom_local: true
-                            }
+    const historique = await prisma.historiqueMateriel.findMany({
+        where,
+        include: {
+            materiel: {
+                select: {
+                    id_materiels: true,
+                    id_n: true,
+                    utilisateur: true,
+                    code_pc: true,
+                    equipe: true,
+                    etat_pc: true,
+                    caracteristiques: true,
+                    local: {
+                        select: {
+                            nom_local: true
                         }
                     }
-                },
+                }
             },
-            orderBy: {
-                date_modification: 'desc'
-            }
-        });
+        },
+        orderBy: {
+            date_modification: 'desc'
+        }
+    });
 
-        const formattedData = historique.map(item => ({
-            id_historique: item.id_historique,
-            id_materiels: item.id_materiels,
-            champ_modifie: item.champ_modifie,
-            ancienne_valeur: item.ancienne_valeur,
-            nouvelle_valeur: item.nouvelle_valeur,
-            date_modification: item.date_modification,
-            nom_utilisateur: item.nom_utilisateur || null,
-            materiel: item.materiel,
-            utilisateur: item.materiel?.utilisateur || null,
-        }));
+    const formattedData = historique.map(item => ({
+        id_historique: item.id_historique,
+        id_materiels: item.id_materiels,
+        champ_modifie: item.champ_modifie,
+        ancienne_valeur: item.ancienne_valeur,
+        nouvelle_valeur: item.nouvelle_valeur,
+        date_modification: item.date_modification,
+        nom_utilisateur: item.nom_utilisateur || null,
+        materiel: item.materiel,
+        utilisateur: item.materiel?.utilisateur || null,
+    }));
 
-        res.status(200).json(formattedData);
-    } catch (error) {
-        console.error("Erreur Prisma:", error);
-        res.status(500).json({
-            message: "Erreur lors de la récupération de l'historique des matériels",
-            error: error.message
-        });
-    }
+    res.status(200).json(formattedData);
 }));
 
 // GET /api/historique_materiels/materiel/:id_materiels - Récupérer l'historique d'un matériel spécifique
-router.get('/materiel/:id_materiels', authenticateToken, ensureActiveUser, asyncHandler(async (req, res) => {
-    const { id_materiels } = req.params;
-    const userRole = req.user?.role;
-    const userId = req.user?.id_n;
+router.get('/materiel/:id_materiels', asyncHandler(async (req, res) => {
+    const idMateriels = parseInt(req.params.id_materiels, 10);
+    if (isNaN(idMateriels)) {
+        return res.status(400).json({ error: 'Identifiant invalide.' });
+    }
 
-    let where = { id_materiels: parseInt(id_materiels) };
-    if (userRole === 'USER') {
-        where.materiel = { id_n: userId };
+    const where = { id_materiels: idMateriels };
+    if (!canViewAllMateriels(req.user?.role)) {
+        where.materiel = { id_n: req.user?.id_n };
     }
 
     const historique = await prisma.historiqueMateriel.findMany({
@@ -115,14 +103,12 @@ router.get('/materiel/:id_materiels', authenticateToken, ensureActiveUser, async
 }));
 
 // GET /api/historique_materiels/:id - Récupérer un historique par ID
-router.get('/:id', authenticateToken, ensureActiveUser, asyncHandler(async (req, res) => {
+router.get('/:id', asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const userRole = req.user?.role;
-    const userId = req.user?.id_n;
 
-    let where = { id_historique: parseInt(id) };
-    if (userRole === 'USER') {
-        where.materiel = { id_n: userId };
+    const where = { id_historique: parseInt(id, 10) };
+    if (!canViewAllMateriels(req.user?.role)) {
+        where.materiel = { id_n: req.user?.id_n };
     }
 
     const historique = await prisma.historiqueMateriel.findFirst({
@@ -143,7 +129,7 @@ router.get('/:id', authenticateToken, ensureActiveUser, asyncHandler(async (req,
     });
 
     if (!historique) {
-        return res.status(404).json({ message: 'Enregistrement non trouvé' });
+        return res.status(404).json({ error: 'Enregistrement non trouvé' });
     }
 
     res.status(200).json({
@@ -159,16 +145,11 @@ router.get('/:id', authenticateToken, ensureActiveUser, asyncHandler(async (req,
 }));
 
 // POST /api/historique_materiels - Créer un nouvel historique
-router.post('/', authenticateToken, ensureActiveUser, asyncHandler(async (req, res) => {
-    const userRole = req.user?.role;
-    if (userRole === 'USER') {
-        return res.status(403).json({ error: 'Accès interdit : permission insuffisante.' });
-    }
-
+router.post('/', requirePermission(PERMISSIONS.MATERIELS_WRITE), asyncHandler(async (req, res) => {
     const { id_materiels, ancienne_valeur, nouvelle_valeur, nom_utilisateur } = req.body;
 
     if (!id_materiels) {
-        return res.status(400).json({ message: 'Veuillez fournir id_materiels' });
+        return res.status(400).json({ error: 'Veuillez fournir id_materiels' });
     }
 
     const nouvelHistorique = await prisma.historiqueMateriel.create({

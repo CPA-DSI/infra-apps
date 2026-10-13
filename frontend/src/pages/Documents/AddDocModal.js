@@ -9,8 +9,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Select, { components } from 'react-select';
 import { useDropzone } from 'react-dropzone';
-import Swal from 'sweetalert2';
-import withReactContent from 'sweetalert2-react-content';
+import { MySwal } from '../../utils/swal';
 import {
   FaFileUpload, FaTimes, FaCheck, FaCloudUploadAlt, FaPaperclip,
   FaTag, FaFileAlt, FaGlobe, FaLock, FaCodeBranch, FaLink,
@@ -22,8 +21,6 @@ import {
   getPiecesJointes, deletePieceJointe
 } from '../../services/api';
 import './AddDocModal.css';
-
-const MySwal = withReactContent(Swal);
 
 // --- Formats acceptés : alignés sur la liste blanche de l'API (routes/documentRoutes.js) ---
 const ACCEPTED_FILE_TYPES = {

@@ -1,5 +1,5 @@
 // Configuration API centralisée
-export const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
+export const API_BASE_URL = import.meta.env.REACT_APP_API_URL || 'http://localhost:4000';
 
 export const API_ENDPOINTS = {
   LOGOUT: `${API_BASE_URL}/api/auth/logout`,

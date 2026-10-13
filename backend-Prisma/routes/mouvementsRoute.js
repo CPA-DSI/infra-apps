@@ -12,6 +12,7 @@ import {
 } from '../services/stockService.js';
 import { toDateOnly, todayDateOnly } from '../services/dateOnly.js';
 import { validateIdParam } from '../middleware/validateIdParam.js';
+import { sendError } from '../middleware/errorHandler.js';
 
 const router = express.Router();
 router.param('id', validateIdParam);
@@ -69,12 +70,7 @@ router.post('/import', requirePermission(PERMISSIONS.STOCKS_WRITE), upload.singl
         });
         
     } catch (error) {
-        console.error('Erreur import:', error);
-        res.status(500).json({
-            success: false,
-            message: error.message || 'Erreur lors de l\'importation',
-            error: process.env.NODE_ENV === 'development' ? error.stack : undefined
-        });
+        sendError(res, error, 'POST /api/mouvements/import', "Erreur lors de l'importation.");
     }
 });
 
@@ -99,14 +95,9 @@ router.get('/', requirePermission(PERMISSIONS.STOCKS_READ), async (req, res) => 
       orderBy: { updated_at: 'desc' },
     });
 
-    console.log(`Données renvoyées par l'API: ${mouvements.length} lignes.`);
     return res.status(200).json({ mouvements });
   } catch (error) {
-    console.error("Erreur GET /api/mouvements:", error.message);
-    return res.status(500).json({ 
-        error: "Une erreur interne est survenue lors de la récupération des mouvements.", 
-        message: error.message 
-    });
+    sendError(res, error, 'GET /api/mouvements', 'Une erreur interne est survenue lors de la récupération des mouvements.');
   }
 });
 
@@ -142,8 +133,7 @@ router.get('/stats/:year', requirePermission(PERMISSIONS.STOCKS_READ), async (re
 
     res.json(statsMensuelles);
   } catch (error) {
-    console.error("Erreur Backend /stats/:year:", error);
-    res.status(500).json({ message: "Erreur serveur lors du calcul des stats" });
+    sendError(res, error, 'GET /api/mouvements/stats/:year', 'Erreur serveur lors du calcul des stats');
   }
 });
 
@@ -165,8 +155,7 @@ router.get('/annees/disponibles', requirePermission(PERMISSIONS.STOCKS_READ), as
 
     res.json({ minYear, maxYear });
   } catch (error) {
-    console.error("Erreur GET /api/mouvements/annees/disponibles:", error);
-    res.status(500).json({ message: "Erreur serveur lors de la récupération des années disponibles" });
+    sendError(res, error, 'GET /api/mouvements/annees/disponibles', 'Erreur serveur lors de la récupération des années disponibles');
   }
 });
 
@@ -214,8 +203,7 @@ router.get('/:id', requirePermission(PERMISSIONS.STOCKS_READ), async (req, res) 
       res.status(404).json({ error: `Mouvement avec l'id ${id} introuvable.` });
     }
   } catch (error) {
-    console.error("Erreur Prisma lors de la récupération:", error);
-    res.status(500).json({ error: "Une erreur est survenue lors de la récupération du mouvement." });
+    sendError(res, error, 'GET /api/mouvements/:id', 'Une erreur est survenue lors de la récupération du mouvement.');
   }
 });
 
@@ -281,8 +269,7 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
         });
         if (existingProduct) {
             return res.status(400).json({
-                error: "Produit déjà existant",
-                message: `Le produit "${nom_produit}" existe déjà. Utilisez le type "Entrée Quantité Produit" pour ajouter du stock.`,
+                error: `Le produit "${nom_produit}" existe déjà. Utilisez le type "Entrée Quantité Produit" pour ajouter du stock.`,
                 existingProductId: existingProduct.id_produit
             });
         }
@@ -340,17 +327,12 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
     } catch (err) {
         if (err instanceof ProduitDejaExistantError) {
             return res.status(400).json({
-                error: "Produit déjà existant",
-                message: `Le produit "${err.nomProduit}" existe déjà. Utilisez le type "Entrée Quantité Produit" pour ajouter du stock.`,
+                error: `Le produit "${err.nomProduit}" existe déjà. Utilisez le type "Entrée Quantité Produit" pour ajouter du stock.`,
                 existingProductId: err.existingProductId
             });
         }
-        console.error("Erreur lors de la transaction du mouvement:", err.message);
-        let statusCode = err instanceof StockError ? err.status : 400;
-        if (err.message.includes("introuvable")) statusCode = 404;
-        // Le message détaillé (ex. "Stock insuffisant...") est mis dans `error` :
-        // c'est le champ lu en premier par getErrorMessage côté frontend.
-        res.status(statusCode).json({ error: err.message, message: err.message });
+        // StockError (ex. "Stock insuffisant...") : son statut 4xx et son message
+        sendError(res, err, 'POST /api/mouvements', "Erreur lors de l'enregistrement du mouvement.");
     }
 });
 
@@ -462,12 +444,10 @@ router.put('/:id', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res)
     });
 
   } catch (error) {
-    console.error('Erreur PUT:', error);
     if (error.code === 'P2025') {
       res.status(404).json({ error: `Mouvement avec l'id ${id} introuvable.` });
     } else {
-      const status = error instanceof StockError ? error.status : 400;
-      res.status(status).json({ error: error.message || "Erreur lors de la mise à jour du mouvement." });
+      sendError(res, error, 'PUT /api/mouvements/:id', 'Erreur lors de la mise à jour du mouvement.');
     }
   }
 });
@@ -495,9 +475,7 @@ router.delete('/:id', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, r
       deletedItem: deletedMouvement
     });
   } catch (error) {
-    console.error('Erreur DELETE:', error);
-    const status = error instanceof StockError ? error.status : 500;
-    res.status(status).json({ error: error.message || "Erreur lors de la suppression." });
+    sendError(res, error, 'DELETE /api/mouvements/:id', 'Erreur lors de la suppression.');
   }
 });
 

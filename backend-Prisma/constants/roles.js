@@ -62,3 +62,7 @@ export const hasPermission = (userRole, permission) => {
   const permissions = ROLE_PERMISSIONS[userRole] || [];
   return permissions.includes(permission);
 };
+
+// Vue sur l'ensemble du parc (et non sur les seuls matériels de l'utilisateur).
+// Liste blanche : un rôle inconnu n'obtient que la vue restreinte.
+export const canViewAllMateriels = (role) => hasPermission(role, PERMISSIONS.MATERIELS_WRITE);

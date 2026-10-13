@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { fetchALocaux, fetchAMarques, addMateriel, fetchAllMateriels } from '../../services/api';
-import Swal from 'sweetalert2';
-import withReactContent from 'sweetalert2-react-content';
+import { MySwal } from '../../utils/swal';
 import {
     FaVideo, FaNetworkWired, FaUsb,
     FaPlug, FaCheckCircle, FaTimesCircle, FaPlus,
@@ -13,8 +12,6 @@ import {
 import FormItem from '../../components/FormItem/FormItem';
 import { getMaterielFieldIcon } from './materielFieldIcons';
 import './Materiels.css';
-
-const MySwal = withReactContent(Swal);
 
 /**
  * Formate la date actuelle au format YYYY-MM-DD

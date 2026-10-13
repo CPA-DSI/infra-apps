@@ -4,12 +4,9 @@ import nodemailer from 'nodemailer';
 import { authenticateToken, ensureActiveUser, requirePermission } from '../middleware/authMiddleware.js';
 import { PERMISSIONS } from '../constants/roles.js';
 import { generateExcelReport, sendEmail, getCurrentDateTime } from '../services/reportService.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 
 const router = express.Router();
-
-const asyncHandler = fn => (req, res, next) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
-};
 
 router.use(authenticateToken, ensureActiveUser, requirePermission(PERMISSIONS.CONFIG_WRITE));
 
@@ -24,7 +21,7 @@ router.post('/send-report', asyncHandler(async (req, res) => {
         config = configHebdo;
     }
 
-    if (!config || !config.email_exp) return res.status(400).json({ message: "Configuration email manquante." });
+    if (!config || !config.email_exp) return res.status(400).json({ error: "Configuration email manquante." });
 
     const fullDateTime = getCurrentDateTime();
 
@@ -46,11 +43,11 @@ router.post('/send-test-quotidien', asyncHandler(async (req, res) => {
     const config = await prisma.configEmailQuotidien.findUnique({ where: { id: 1 } });
     
     if (!config || !config.email_exp || !config.email_dest) {
-        return res.status(400).json({ message: "Configuration email quotidienne manquante. Veuillez d'abord sauvegarder la configuration." });
+        return res.status(400).json({ error: "Configuration email quotidienne manquante. Veuillez d'abord sauvegarder la configuration." });
     }
     // Le mot de passe SMTP est toujours lu en base, jamais fourni par le client
     if (!config.email_pass) {
-        return res.status(400).json({ message: "Mot de passe SMTP non configuré. Veuillez le saisir puis sauvegarder la configuration." });
+        return res.status(400).json({ error: "Mot de passe SMTP non configuré. Veuillez le saisir puis sauvegarder la configuration." });
     }
 
     const fullDateTime = getCurrentDateTime();
@@ -75,11 +72,11 @@ router.post('/send-test-hebdomadaire', asyncHandler(async (req, res) => {
     const config = await prisma.configEmailHebdomadaire.findUnique({ where: { id: 1 } });
     
     if (!config || !config.email_exp || !config.email_dest) {
-        return res.status(400).json({ message: "Configuration email hebdomadaire manquante. Veuillez d'abord sauvegarder la configuration." });
+        return res.status(400).json({ error: "Configuration email hebdomadaire manquante. Veuillez d'abord sauvegarder la configuration." });
     }
     // Le mot de passe SMTP est toujours lu en base, jamais fourni par le client
     if (!config.email_pass) {
-        return res.status(400).json({ message: "Mot de passe SMTP non configuré. Veuillez le saisir puis sauvegarder la configuration." });
+        return res.status(400).json({ error: "Mot de passe SMTP non configuré. Veuillez le saisir puis sauvegarder la configuration." });
     }
 
     const fullDateTime = getCurrentDateTime();
@@ -106,12 +103,12 @@ router.post('/send-test-mensuel', asyncHandler(async (req, res) => {
     
     if (!config || !config.email_exp || !config.email_dest) {
         return res.status(400).json({ 
-            message: "Configuration email mensuelle manquante. Veuillez d'abord sauvegarder la configuration." 
+            error: "Configuration email mensuelle manquante. Veuillez d'abord sauvegarder la configuration." 
         });
     }
     // Le mot de passe SMTP est toujours lu en base, jamais fourni par le client
     if (!config.email_pass) {
-        return res.status(400).json({ message: "Mot de passe SMTP non configuré. Veuillez le saisir puis sauvegarder la configuration." });
+        return res.status(400).json({ error: "Mot de passe SMTP non configuré. Veuillez le saisir puis sauvegarder la configuration." });
     }
 
     const fullDateTime = getCurrentDateTime();
@@ -143,9 +140,10 @@ router.post('/send-test-mensuel', asyncHandler(async (req, res) => {
         });
     } catch (error) {
         console.error("Erreur d'envoi d'email:", error);
-        res.status(500).json({ 
-            success: false, 
-            message: "Erreur lors de l'envoi de l'email de test: " + error.message 
+        // Route réservée aux administrateurs : le détail SMTP aide à corriger la configuration
+        res.status(502).json({
+            success: false,
+            error: "Erreur lors de l'envoi de l'email de test: " + error.message
         });
     }
 }));

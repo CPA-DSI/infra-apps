@@ -1,14 +1,6 @@
 import 'dotenv/config';
-import express from 'express';
-import cors from 'cors';
-import cookieParser from 'cookie-parser';
 import prisma from './prismaClient.js';
-import { reloadCronTasks, getCronTasksState } from './cron-worker.js';
-import path from 'path';
-import fs from 'fs';
-import { authenticateToken, ensureActiveUser, requirePermission } from './middleware/authMiddleware.js';
-import { PERMISSIONS } from './constants/roles.js';
-import { createCsrfGuard, CSRF_HEADER_NAME } from './middleware/csrfMiddleware.js';
+import { reloadCronTasks } from './cron-worker.js';
 import { assertPassMailEncryptionKeyConfigured } from './services/passMailCrypto.js';
 
 // Échoue immédiatement au démarrage si PASS_MAIL_ENCRYPTION_KEY est absente/invalide,
@@ -21,172 +13,10 @@ try {
     process.exit(1);
 }
 
-// Les robots d'envoi sont planifiés au démarrage du serveur (voir app.listen).
+// Import dynamique : les routes ne sont chargées qu'après la vérification ci-dessus.
+const { default: app } = await import('./app.js');
 
-const app = express();
 const PORT = process.env.PORT || 4000;
-
-// --- 2. MIDDLEWARES ---
-
-const allowedOrigins = process.env.CORS_ORIGIN
-    ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
-    : ['http://localhost:3000'];
-
-app.use(cors({
-    origin: allowedOrigins,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', CSRF_HEADER_NAME],
-    credentials: true
-}));
-
-// Protection CSRF : toute requête mutante sur /api doit venir d'une origine
-// autorisée et porter l'en-tête X-Requested-With (voir middleware/csrfMiddleware.js).
-app.use('/api', createCsrfGuard(allowedOrigins));
-
-app.use(cookieParser());
-
-app.use(express.json({ limit: '1mb' }));
-
-// Le dossier uploads est exclu de Git (contenu utilisateur) : on le recrée au démarrage
-// pour éviter les 500 de Multer si le déploiement ne l'a pas conservé.
-// Il n'est volontairement PAS servi en statique : les fichiers ne sont accessibles
-// que via les routes authentifiées /api/documents/:id/fichier et /api/documents/pj/:pjId/fichier.
-const uploadsDir = path.join(process.cwd(), 'uploads');
-fs.mkdirSync(uploadsDir, { recursive: true });
-
-app.use((req, res, next) => {
-    req.prisma = prisma;
-    next();
-});
-
-// --- 3. ROUTES DE CONTRÔLE DES ROBOTS D'ENVOI ---
-
-app.get('/api/cron/status', authenticateToken, ensureActiveUser, requirePermission(PERMISSIONS.CONFIG_READ), async (req, res) => {
-    try {
-        const [configQuotidien, configHebdo, configMensuel] = await Promise.all([
-            prisma.configEmailQuotidien.findUnique({ where: { id: 1 } }),
-            prisma.configEmailHebdomadaire.findUnique({ where: { id: 1 } }),
-            prisma.configEmailMensuel.findUnique({ where: { id: 1 } }),
-        ]);
-
-        res.json({
-            running: configQuotidien?.cron_actif || false,
-            runningWeekly: configHebdo?.cron_actif_hebdo || false,
-            runningMonthly: configMensuel?.cron_actif || false,
-            tasks: getCronTasksState(),
-        });
-    } catch (error) {
-        console.error('Erreur GET /api/cron/status:', error);
-        res.status(500).json({ error: "Erreur lors de la lecture de l'état du robot" });
-    }
-});
-
-app.post('/api/cron/toggle', authenticateToken, ensureActiveUser, requirePermission(PERMISSIONS.CONFIG_WRITE), async (req, res) => {
-    const { action, type } = req.body;
-    const isActive = action === 'start';
-    // type : 'quotidien' (défaut), 'hebdomadaire' ou 'mensuel'
-    const cronType = type || 'quotidien';
-
-    try {
-        if (cronType === 'quotidien') {
-            await prisma.configEmailQuotidien.upsert({
-                where: { id: 1 },
-                update: { cron_actif: isActive },
-                create: { id: 1, cron_actif: isActive, email_dest: '', email_exp: '', email_pass: '', objet_mail: '', message_mail: '', heure_envoi: '17:15' }
-            });
-        } else if (cronType === 'hebdomadaire') {
-            await prisma.configEmailHebdomadaire.upsert({
-                where: { id: 1 },
-                update: { cron_actif_hebdo: isActive },
-                create: { id: 1, cron_actif_hebdo: isActive, email_dest: '', email_exp: '', email_pass: '', type_envoi: 'hebdomadaire', jour_envoi: 1, heure_envoi: '17:15', objet_mail_hebdo: '', message_mail_hebdo: '' }
-            });
-        } else if (cronType === 'mensuel') {
-            await prisma.configEmailMensuel.upsert({
-                where: { id: 1 },
-                update: { cron_actif: isActive },
-                create: { id: 1, cron_actif: isActive, email_dest: '', email_exp: '', email_pass: '', objet_mail: '', message_mail: '', jour_envoi: 1, heure_envoi: '17:15' }
-            });
-        } else {
-            return res.status(400).json({ error: 'Type de robot inconnu' });
-        }
-
-        await reloadCronTasks(prisma);
-        res.json({ running: isActive, type: cronType });
-    } catch (error) {
-        console.error('Erreur POST /api/cron/toggle:', error);
-        res.status(500).json({ error: "Erreur lors du changement d'état du robot" });
-    }
-});
-
-// --- 4. VOS AUTRES ROUTES ---
-
-import authRoutes from './routes/authRoutes.js';
-import materielRoutes from './routes/materielRoutes.js';
-import materielAllRoutes from './routes/materielAllRoutes.js';
-import marqueRoutes from './routes/marquesRoutes.js';
-import locauxRoutes from './routes/locauxRoutes.js';
-import produitsRoutes from './routes/produitsRoutes.js';
-import materielsRoutes from './routes/materielsRoutes.js';
-import historiqueRoutes from './routes/historiqueRoutes.js';
-import mouvementsRouter  from './routes/mouvementsRoute.js';
-import usersRoutes from './routes/usersRoutes.js'; 
-import userEmailsRoutes from './routes/userEmailsRoutes.js';
-import ticketRoutes from './routes/ticketRoutes.js';
-import commentRoutes from './routes/commentRoutes.js';
-import historiqueMaterielRoutes from './routes/historiqueMaterielRoutes.js';
-import emailSendRoutes from './routes/emailSendRoutes.js';
-import configQuotidienRoutes from './routes/configQuotidienRoutes.js';
-import configWeeklyRoutes from './routes/configWeeklyRoutes.js';
-import configMensuelRoutes from './routes/configMensuelRoutes.js';
-import importRouter from './routes/import.js';
-import documentRoutes from './routes/documentRoutes.js';
-import userDashboardRoutes from './routes/userDashboardRoutes.js';
-import ecransRoutes from './routes/ecransRoutes.js';
-
-app.use('/api/auth', authRoutes); 
-app.use('/api/materiels', materielRoutes);
-app.use('/api/materiels_all', materielAllRoutes);
-app.use('/api/marques', marqueRoutes);
-app.use('/api/locaux', locauxRoutes);
-app.use('/api/produits', produitsRoutes);
-app.use('/api/materiels_s', materielsRoutes); 
-app.use('/api/mouvements', mouvementsRouter);
-app.use('/api/historique_arrive', historiqueRoutes); 
-app.use('/api/historique', historiqueRoutes);
-app.use('/api/historique_materiels', historiqueMaterielRoutes); 
-app.use('/api/users', usersRoutes);
-app.use('/api/users', userDashboardRoutes);
-app.use('/api/user-emails', userEmailsRoutes);
-app.use('/api/tickets', ticketRoutes);
-app.use('/api/commentaires', commentRoutes);
-app.use('/api/config', configQuotidienRoutes);
-app.use('/api/config', configWeeklyRoutes);
-app.use('/api/config', configMensuelRoutes); // ✅ Ajout du routeur mensuel
-app.use('/api/email', emailSendRoutes);
-app.use('/api/import', importRouter); // <-- IMPORTANT: le chemin doit correspondre
-app.use('/api/documents', documentRoutes);
-app.use('/api/ecrans', ecransRoutes);
-
-app.get('/', (req, res) => {
-    res.status(200).json({ service: "API Gestion Matériel", status: "Online", robot: "Intégré (Quotidien & Hebdomadaire)" });
-});
-
-// Pour déboguer, ajoute ceci pour voir toutes les routes enregistrées (dev uniquement)
-if (process.env.NODE_ENV !== 'production') {
-  console.log('Routes enregistrées:');
-  app._router.stack.forEach((r) => {
-    if (r.route && r.route.path) {
-      console.log(`${Object.keys(r.route.methods)} ${r.route.path}`);
-    } else if (r.name === 'router' && r.handle.stack) {
-      r.handle.stack.forEach((layer) => {
-        if (layer.route && layer.route.path) {
-          console.log(`${Object.keys(layer.route.methods)} /api/historique${layer.route.path}`);
-        }
-      });
-    }
-  });
-}
-// --- 5. LANCEMENT ---
 
 app.listen(PORT, async () => {
     try {
@@ -197,6 +27,6 @@ app.listen(PORT, async () => {
         console.log(`🚀 Serveur actif sur http://localhost:${PORT}`);
     } catch (error) {
         console.error('❌ Erreur de démarrage:', error);
-        process.exit(1); 
+        process.exit(1);
     }
 });

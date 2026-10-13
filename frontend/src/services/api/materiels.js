@@ -117,8 +117,8 @@ export const fetchAllMaterielsByIdN = async () => {
 };
 
 export const fetchMateriels = async () => {
-  // Note: On utilise le chemin relatif '/materiels_s'
-  const response = await apiClient.get('/materiels_s');
+  // Liste simple (sans relations) ; un USER ne reçoit que ses propres matériels
+  const response = await apiClient.get('/materiels_all/simple');
   return response.data;
 };
 

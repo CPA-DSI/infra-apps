@@ -5,6 +5,7 @@ import { authenticateToken, ensureActiveUser, requirePermission } from '../middl
 import { PERMISSIONS, UserRole } from '../constants/roles.js';
 import { encryptPassMail, decryptPassMail, encryptSecret, decryptSecret } from '../services/passMailCrypto.js';
 import { validateIdParam } from '../middleware/validateIdParam.js';
+import { sendError } from '../middleware/errorHandler.js';
 
 const router = express.Router();
 router.param('id', validateIdParam);
@@ -34,8 +35,7 @@ router.get('/', authenticateToken, ensureActiveUser, requirePermission(PERMISSIO
         res.json(result);
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Erreur serveur lors de la récupération des utilisateurs." });
+        sendError(res, error, 'GET /api/users', 'Erreur serveur lors de la récupération des utilisateurs.');
     }
 });
 
@@ -68,7 +68,7 @@ router.post('/', authenticateToken, ensureActiveUser, requirePermission(PERMISSI
 
         if (existingUser) {
             return res.status(400).json({ 
-                message: "Ce utilisateur est déjà associé." 
+                error: "Ce utilisateur est déjà associé." 
             });
         }
 
@@ -134,8 +134,7 @@ router.post('/', authenticateToken, ensureActiveUser, requirePermission(PERMISSI
         const flat = mapEmailsToFlatFields(sanitizedEmails);
         res.status(201).json({ ...newUser, emails: sanitizedEmails, ...flat });
     } catch (error) {
-        console.error("Erreur backend lors de l'ajout d'utilisateur:", error);
-        res.status(500).json({ message: "Erreur lors de la création : " + error.message });
+        sendError(res, error, 'POST /api/users', "Erreur lors de la création de l'utilisateur.");
     }
 });
 
@@ -144,7 +143,7 @@ router.post('/import', authenticateToken, ensureActiveUser, requirePermission(PE
     const { items } = req.body;
 
     if (!Array.isArray(items) || items.length === 0) {
-        return res.status(400).json({ message: "Aucune donnée à importer." });
+        return res.status(400).json({ error: "Aucune donnée à importer." });
     }
 
     const ROLE_LABELS = { 'Admin IT': 'IT_ADMIN', 'Direction': 'DIRECTION', 'Utilisateur': 'USER' };
@@ -368,12 +367,12 @@ router.put('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMIS
         });
 
         if (!currentUser) {
-            return res.status(404).json({ message: "Utilisateur non trouvé." });
+            return res.status(404).json({ error: "Utilisateur non trouvé." });
         }
 
         // Le N° (id_n) n'est pas modifiable : l'interface l'envoie en lecture seule.
         if (id_n !== undefined && id_n !== null && id_n !== '' && Number(id_n) !== currentUser.id_n) {
-            return res.status(400).json({ message: "Le N° de l'utilisateur ne peut pas être modifié." });
+            return res.status(400).json({ error: "Le N° de l'utilisateur ne peut pas être modifié." });
         }
 
         // Liste blanche des champs du compte modifiables via cette route
@@ -381,14 +380,14 @@ router.put('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMIS
 
         if (role !== undefined) {
             if (!Object.values(UserRole).includes(role)) {
-                return res.status(400).json({ message: "Rôle invalide." });
+                return res.status(400).json({ error: "Rôle invalide." });
             }
             userDataToUpdate.role = role;
         }
 
         if (is_active !== undefined) {
             if (typeof is_active !== 'boolean') {
-                return res.status(400).json({ message: "Le champ is_active doit être un booléen." });
+                return res.status(400).json({ error: "Le champ is_active doit être un booléen." });
             }
             userDataToUpdate.is_active = is_active;
         }
@@ -400,7 +399,7 @@ router.put('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMIS
             (userDataToUpdate.role !== undefined && userDataToUpdate.role !== currentUser.role) ||
             (userDataToUpdate.is_active !== undefined && userDataToUpdate.is_active !== currentUser.is_active)
         )) {
-            return res.status(403).json({ message: "Vous ne pouvez pas modifier votre propre rôle ou statut." });
+            return res.status(403).json({ error: "Vous ne pouvez pas modifier votre propre rôle ou statut." });
         }
 
         let desiredEmails = [];
@@ -490,8 +489,7 @@ router.put('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMIS
         const flat = mapEmailsToFlatFields(sanitizedEmails);
         res.json({ ...updated, emails: sanitizedEmails, ...flat });
     } catch (error) {
-        console.error("Prisma update error:", error.message);
-        res.status(400).json({ message: error.message });
+        sendError(res, error, 'PUT /api/users/:id', "Erreur lors de la mise à jour de l'utilisateur.");
     }
 });
 
@@ -501,17 +499,17 @@ router.patch('/:id/status', authenticateToken, ensureActiveUser, requirePermissi
     try {
         const { is_active } = req.body;
         if (typeof is_active !== 'boolean') {
-            return res.status(400).json({ message: "Le champ is_active (booléen) est requis." });
+            return res.status(400).json({ error: "Le champ is_active (booléen) est requis." });
         }
 
         const id_user = parseInt(req.params.id);
         if (isNaN(id_user)) {
-            return res.status(400).json({ message: "ID utilisateur invalide." });
+            return res.status(400).json({ error: "ID utilisateur invalide." });
         }
 
         // Un utilisateur ne peut pas (dés)activer son propre compte.
         if (id_user === req.user?.userId) {
-            return res.status(403).json({ message: "Vous ne pouvez pas modifier votre propre statut." });
+            return res.status(403).json({ error: "Vous ne pouvez pas modifier votre propre statut." });
         }
 
         const updated = await prisma.Users.update({
@@ -522,8 +520,7 @@ router.patch('/:id/status', authenticateToken, ensureActiveUser, requirePermissi
 
         res.json(updated);
     } catch (error) {
-        console.error("Erreur backend lors du changement de statut:", error);
-        res.status(400).json({ message: error.message });
+        sendError(res, error, 'PATCH /api/users/:id/status', 'Erreur lors du changement de statut.');
     }
 });
 
@@ -531,12 +528,12 @@ router.patch('/:id/status', authenticateToken, ensureActiveUser, requirePermissi
 router.delete('/:id', authenticateToken, ensureActiveUser, requirePermission(PERMISSIONS.USERS_DELETE), async (req, res) => {
     try {
         if (!req.params.id) {
-            return res.status(400).json({ message: "ID utilisateur manquant pour la suppression." });
+            return res.status(400).json({ error: "ID utilisateur manquant pour la suppression." });
         }
 
         const id_user = parseInt(req.params.id);
         if (isNaN(id_user)) {
-            return res.status(400).json({ message: "ID utilisateur invalide." });
+            return res.status(400).json({ error: "ID utilisateur invalide." });
         }
 
         const user = await prisma.Users.findUnique({
@@ -545,7 +542,7 @@ router.delete('/:id', authenticateToken, ensureActiveUser, requirePermission(PER
         });
 
         if (!user) {
-            return res.status(404).json({ message: "Utilisateur non trouvé." });
+            return res.status(404).json({ error: "Utilisateur non trouvé." });
         }
 
         // Détachement des tickets + suppressions liées dans une même transaction :
@@ -579,7 +576,7 @@ router.delete('/:id', authenticateToken, ensureActiveUser, requirePermission(PER
         });
         res.json({ message: "Utilisateur supprimé avec succès" });
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        sendError(res, error, 'DELETE /api/users/:id', "Erreur lors de la suppression de l'utilisateur.");
     }
 });
 

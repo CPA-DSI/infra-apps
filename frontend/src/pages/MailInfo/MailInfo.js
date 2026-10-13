@@ -19,7 +19,7 @@ import { EditableRoleBadge } from './RoleBadges';
 import StatCard from './StatCard';
 import ActionButtons from './ActionButtons';
 import ExpandableEmailRow from './ExpandableEmailRow';
-import SearchableSelect from './SearchableSelect';
+import SearchableSelect from '../../components/SearchableSelect/SearchableSelect';
 import { STATS_CONFIG, PAGINATION_OPTIONS } from './mailInfoTableConfig';
 import { useUserImportExport } from './useUserImportExport';
 import { escapeHtml } from '../../utils/escapeHtml';
@@ -150,7 +150,7 @@ const UsersManager = () => {
         const actifsCount = users.filter(u => u.is_active !== false).length;
         const inactifsCount = users.filter(u => u.is_active === false).length;
 
-        if (process.env.NODE_ENV !== 'production' && actifsCount + inactifsCount !== users.length) {
+        if (import.meta.env.DEV && actifsCount + inactifsCount !== users.length) {
             console.warn(`Incohérence stats: actifs (${actifsCount}) + inactifs (${inactifsCount}) !== total (${users.length})`);
         }
         const totalTickets = users.reduce((sum, u) => {
@@ -1123,6 +1123,7 @@ const UsersManager = () => {
                                 onChange={setFilterEquipe}
                                 options={[...new Set(users.map(u => u.materiel?.equipe).filter(Boolean))]}
                                 allLabel="Toutes les équipes"
+                                variant="filter"
                                 style={{ backgroundColor: '#f8f9fa', fontSize: '0.9rem' }}
                             />
                         </div>

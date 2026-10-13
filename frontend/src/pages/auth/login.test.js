@@ -4,23 +4,23 @@ import { MemoryRouter } from 'react-router-dom';
 import Login from './login';
 import { AuthProvider } from '../../contexts/AuthContext';
 
-jest.mock('../../services/api', () => ({
-  apiClient: { post: jest.fn() },
-  login: jest.fn(),
-  getCurrentUserProfile: jest.fn().mockRejectedValue(new Error('no session')),
+vi.mock('../../services/api', () => ({
+  apiClient: { post: vi.fn() },
+  login: vi.fn(),
+  getCurrentUserProfile: vi.fn().mockRejectedValue(new Error('no session')),
 }));
 
-jest.mock('sweetalert2', () => {
+vi.mock('sweetalert2', () => {
   // Classe (et non objet simple) : AuthContext.js utilise withReactContent(Swal),
   // qui fait `class extends Swal`, et a donc besoin d'un vrai constructeur ici.
   class MockSwal {
-    static fire = jest.fn().mockResolvedValue({});
-    static close = jest.fn();
+    static fire = vi.fn().mockResolvedValue({});
+    static close = vi.fn();
   }
-  return MockSwal;
+  return { default: MockSwal };
 });
 
-jest.mock('react-parallax-tilt', () => ({ children }) => <div>{children}</div>);
+vi.mock('react-parallax-tilt', () => ({ default: ({ children }) => <div>{children}</div> }));
 
 const renderLogin = () =>
   render(

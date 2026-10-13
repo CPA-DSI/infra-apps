@@ -2,8 +2,7 @@
 // --- Importations React et Bibliothèques ---
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import DataTable from 'react-data-table-component';
-import Swal from 'sweetalert2';
-import withReactContent from 'sweetalert2-react-content';
+import { MySwal } from '../../utils/swal';
 import { useAuth } from '../../contexts/AuthContext';
 import { apiClient, updateMaterielStatut } from '../../services/api';
 import { Button, Form, InputGroup, Spinner, Card, Alert } from 'react-bootstrap';
@@ -15,14 +14,12 @@ import EditModal from './EditModal';
 import AddMarque from './AddMarque';
 import HistoriqueModal from './HistoriqueModal';
 import EcransModal from './EcransModal';
-import SearchableSelect from './SearchableSelect';
+import SearchableSelect from '../../components/SearchableSelect/SearchableSelect';
 import { modernStyles, paginationOptions, statusConfig } from './materielsTableConfig';
 import { useMaterielImportExport } from './useMaterielImportExport';
 
 // Import styles from Materiels.css
 import './Materiels.css';
-
-const MySwal = withReactContent(Swal);
 
 // ==========================================================
 // --- Composant principal Materiels ---

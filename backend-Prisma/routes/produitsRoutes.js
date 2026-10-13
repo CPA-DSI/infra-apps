@@ -6,6 +6,7 @@ import { PERMISSIONS } from '../constants/roles.js';
 import { validateIdParam } from '../middleware/validateIdParam.js';
 import { ajusterStockVers, enregistrerHistorique, StockError } from '../services/stockService.js';
 import { toDateOnly } from '../services/dateOnly.js';
+import { sendError } from '../middleware/errorHandler.js';
 
 
 const router = express.Router();
@@ -32,11 +33,7 @@ router.get('/', requirePermission(PERMISSIONS.STOCKS_READ), async (req, res) => 
     }); 
     res.json(produits);
   } catch (error) {
-    console.error(error); 
-    res.status(500).json({ 
-      error: "Une erreur interne est survenue.", 
-      details: error.message 
-    });
+    sendError(res, error, 'GET /api/produits', 'Une erreur interne est survenue.');
   }
 });
 
@@ -52,10 +49,10 @@ router.get('/:id', requirePermission(PERMISSIONS.STOCKS_READ), async (req, res) 
         if (produit) {
             res.json(produit);
         } else {
-            res.status(404).json({ message: 'Produit non trouvé' });
+            res.status(404).json({ error: 'Produit non trouvé' });
         }
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        sendError(res, error, 'GET /api/produits/:id');
     }
 });
 
@@ -127,14 +124,10 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
     });
     res.status(201).json(nouveauProduit);
   } catch (error) {
-    console.error("Erreur POST /produits:", error.message);
     if (error.code === 'P2002') {
-      return res.status(409).json({ error: "Ce produit existe déjà.", details: error.message });
+      return res.status(409).json({ error: "Ce produit existe déjà." });
     }
-    res.status(400).json({
-        error: "Erreur lors de la création du produit.",
-        details: error.message
-    });
+    sendError(res, error, 'POST /api/produits', 'Erreur lors de la création du produit.');
   }
 });
 
@@ -192,20 +185,14 @@ router.put('/:id', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res)
     });
     res.json(produitMisAJour);
   } catch (error) {
-    console.error("Erreur PUT /produits/:id:", error.message);
-    if (error instanceof StockError) {
-      return res.status(error.status).json({ error: error.message, details: error.message });
-    }
     if (error.code === 'P2025') {
-      return res.status(404).json({ error: 'Produit non trouvé', details: error.message });
+      return res.status(404).json({ error: 'Produit non trouvé' });
     }
     if (error.code === 'P2002') {
-      return res.status(409).json({ error: "Un autre produit porte déjà ce nom.", details: error.message });
+      return res.status(409).json({ error: "Un autre produit porte déjà ce nom." });
     }
-    res.status(400).json({
-        error: "Erreur lors de la mise à jour du produit.",
-        details: error.message
-    });
+    // StockError : son statut 4xx et son message
+    sendError(res, error, 'PUT /api/produits/:id', 'Erreur lors de la mise à jour du produit.');
   }
 });
 
@@ -218,7 +205,13 @@ router.delete('/:id', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, r
     });
     res.status(204).send(); // 204 No Content for successful deletion
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Produit non trouvé' });
+    }
+    if (error.code === 'P2003') {
+      return res.status(409).json({ error: 'Ce produit a des mouvements ou un historique : il ne peut pas être supprimé.' });
+    }
+    sendError(res, error, 'DELETE /api/produits/:id', 'Erreur lors de la suppression du produit.');
   }
 });
 

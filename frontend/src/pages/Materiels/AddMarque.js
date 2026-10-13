@@ -1,16 +1,13 @@
 // src/pages/Materiels/AddMarque.js - Version avec suppression améliorée et notifications locales
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import Swal from 'sweetalert2';
-import withReactContent from 'sweetalert2-react-content';
+import { MySwal } from '../../utils/swal';
 import DataTable from 'react-data-table-component';
 import { Form, Spinner, Row, Col, Alert } from 'react-bootstrap';
 import { FaPlus, FaTimes, FaImage, FaTrash, FaEdit, FaExclamationTriangle, FaCheckCircle } from 'react-icons/fa';
 import { fetchAMarques, createMarque, updateMarque, deleteMarque } from '../../services/api';
 import { escapeHtml } from '../../utils/escapeHtml';
 import './AddMarque.css';
-
-const MySwal = withReactContent(Swal);
 
 // ==========================================================
 // --- COMPOSANT LOGO SIMPLIFIÉ ---

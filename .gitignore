@@ -27,3 +27,6 @@ backend-Prisma/uploads/*
 !backend-Prisma/uploads/.gitkeep
 
 .vercel
+
+# Fichiers d'import (données réelles, à ne pas versionner)
+backend-Prisma/data/*.xlsx
