@@ -31,6 +31,7 @@ model Users {
   materiel             Materiels?
   affectations         AffectationMateriel[]   @relation("AffectationBeneficiaire")
   affectations_faites  AffectationMateriel[]   @relation("AffectationAuteur")
+  mouvements           Mouvement[]             @relation("MouvementBeneficiaire")
   tickets_assignes     Ticket[]                @relation("TicketAssigne")
   tickets_crees        Ticket[]                @relation("TicketDemandeur")
   tickets_fermes       TicketFermeture[]
@@ -96,7 +97,6 @@ model Materiels {
   marque            Marques?             @relation(fields: [id_marque], references: [id_marque])
   user              Users?               @relation(fields: [id_n], references: [id_n], onDelete: NoAction)
   documents_lies    MaterielDocument[]
-  mouvements        Mouvement[]
   tickets           Ticket[]
   ecran_actuel      Ecran?
   affectations      AffectationMateriel[]
@@ -289,7 +289,9 @@ model Mouvement {
   updated_at           DateTime   @default(now()) @db.Timestamptz(6)
   localDestination     Locaux?    @relation("MouvementDestination", fields: [id_local_destination], references: [id_local])
   localSource          Locaux?    @relation("MouvementSource", fields: [id_local_source], references: [id_local])
-  materiels            Materiels? @relation(fields: [id_materiels], references: [id_n])
+  // Matricule (users.id_n) du bénéficiaire, pas un id de fiche matériel :
+  // mettre en stock ou supprimer une fiche ne le touche donc pas.
+  beneficiaire         Users?     @relation("MouvementBeneficiaire", fields: [id_materiels], references: [id_n], onDelete: SetNull, onUpdate: Cascade)
   produits             Produits   @relation(fields: [id_produit], references: [id_produit])
 
   @@map("mouvements")

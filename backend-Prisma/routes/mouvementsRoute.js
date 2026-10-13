@@ -19,6 +19,13 @@ router.param('id', validateIdParam);
 
 router.use(authenticateToken, ensureActiveUser);
 
+// Le mouvement référence le bénéficiaire (users.id_n) ; la réponse garde le
+// champ « materiels » (sa fiche actuelle) attendu par le frontend.
+const avecFicheBeneficiaire = ({ beneficiaire, ...mouvement }) => ({
+    ...mouvement,
+    materiels: beneficiaire?.materiel ?? null,
+});
+
 // Configuration de multer pour l'upload de fichiers
 const storage = multer.memoryStorage();
 const upload = multer({ 
@@ -82,10 +89,14 @@ router.get('/', requirePermission(PERMISSIONS.STOCKS_READ), async (req, res) => 
   try {
     const mouvements = await prisma.Mouvement.findMany({
       include: {
-        materiels: { 
+        beneficiaire: {
           select: {
-            id_n: true, utilisateur: true, equipe: true,
-            marque: { select: { id_marque: true, nom_marque: true, url: true } }
+            materiel: {
+              select: {
+                id_n: true, utilisateur: true, equipe: true,
+                marque: { select: { id_marque: true, nom_marque: true, url: true } }
+              }
+            }
           }
         },
         produits: { select: { nom_produit: true, quantite_en_stock: true } },
@@ -95,7 +106,7 @@ router.get('/', requirePermission(PERMISSIONS.STOCKS_READ), async (req, res) => 
       orderBy: { updated_at: 'desc' },
     });
 
-    return res.status(200).json({ mouvements });
+    return res.status(200).json({ mouvements: mouvements.map(avecFicheBeneficiaire) });
   } catch (error) {
     sendError(res, error, 'GET /api/mouvements', 'Une erreur interne est survenue lors de la récupération des mouvements.');
   }
@@ -172,32 +183,36 @@ router.get('/:id', requirePermission(PERMISSIONS.STOCKS_READ), async (req, res) 
         produits: { select: { nom_produit: true, quantite_en_stock: true, seuil_alerte: true } },
         localSource: { select: { nom_local: true } },
         localDestination: { select: { nom_local: true } },
-        materiels: {
+        beneficiaire: {
           select: {
-            utilisateur: true,
-            equipe: true,
-            code_pc: true,
-            caracteristiques: true,
-            etat_pc: true,
-            etat_batterie: true,
-            ecran: true,
-            code_ecran: true,
-            hdmi: true,
-            clavier: true,
-            lan: true,
-            usb: true,
-            salle: true,
-            date_pc: true,
-            date_ecran: true,
-            commentaire: true,
-            marque: { select: { nom_marque: true, url: true } }
+            materiel: {
+              select: {
+                utilisateur: true,
+                equipe: true,
+                code_pc: true,
+                caracteristiques: true,
+                etat_pc: true,
+                etat_batterie: true,
+                ecran: true,
+                code_ecran: true,
+                hdmi: true,
+                clavier: true,
+                lan: true,
+                usb: true,
+                salle: true,
+                date_pc: true,
+                date_ecran: true,
+                commentaire: true,
+                marque: { select: { nom_marque: true, url: true } }
+              }
+            }
           }
         }
       }
     });
 
     if (mouvement) {
-      const responseWithUrl = { ...mouvement, url_detail_api: `${req.baseUrl}/${id}` };
+      const responseWithUrl = { ...avecFicheBeneficiaire(mouvement), url_detail_api: `${req.baseUrl}/${id}` };
       res.json(responseWithUrl);
     } else {
       res.status(404).json({ error: `Mouvement avec l'id ${id} introuvable.` });

@@ -104,20 +104,6 @@ const deplacerEcran = async (tx, ecran, cibleId, statut, ctx) => {
     });
 };
 
-// mouvements.id_materiels référence materiels.id_n avec ON UPDATE CASCADE :
-// retirer le matricule d'une fiche met ses mouvements à null. On les relève
-// avant pour les rattacher ensuite à la fiche qui reprend le matricule.
-const releverMouvements = async (tx, id_n) => {
-    if (!id_n) return [];
-    const mouvements = await tx.mouvement.findMany({ where: { id_materiels: id_n }, select: { id_mouvement: true } });
-    return mouvements.map(m => m.id_mouvement);
-};
-
-const rattacherMouvements = async (tx, ids, id_n) => {
-    if (ids.length === 0) return;
-    await tx.mouvement.updateMany({ where: { id_mouvement: { in: ids } }, data: { id_materiels: id_n } });
-};
-
 // Retire le poste vide d'un utilisateur qui reçoit un PC et libère son
 // matricule. Renvoie l'écran qu'il portait, que l'appelant doit replacer.
 const supprimerPosteVide = async (tx, posteVide, now, auteur) => {
@@ -153,8 +139,9 @@ const creerPosteVide = async (tx, materiel, now, auteur, description) => {
  * Réaffecte un PC (la fiche poste) à un autre bénéficiaire, ou le met en stock
  * si id_n est null. L'écran rattaché au poste suit le PC, sauf en cas de mise
  * en stock : l'écran part alors en stock. Dans les deux cas l'ancien titulaire
- * garde une fiche vide (est_vide), remplacée dès qu'un PC lui est réaffecté,
- * et conserve ses mouvements.
+ * garde une fiche vide (est_vide), remplacée dès qu'un PC lui est réaffecté.
+ * Ses mouvements de stock référencent son matricule (users.id_n) et ne
+ * bougent pas.
  */
 export const affecterPC = async (tx, { id_materiels, id_n, utilisateur, equipe, id_local, motif, etat_remise, commentaire }, auteurIdN) => {
     const materiel = await tx.materiels.findUnique({
@@ -202,16 +189,6 @@ export const affecterPC = async (tx, { id_materiels, id_n, utilisateur, equipe, 
     const now = new Date();
     const auteur = await resoudreAuteur(tx, auteurIdN);
     const miseEnStock = cibleIdN === null;
-
-    // Mouvements des utilisateurs qui gardent une fiche : l'ancien titulaire
-    // (mise en stock ou réaffectation) et la cible dont le poste vide va être
-    // remplacé. Sans ce relevé, le changement de materiels.id_n (ON UPDATE
-    // CASCADE) ferait passer les mouvements de l'ancien titulaire à la cible.
-    const idNsConserves = [materiel.id_n, posteVide ? cibleIdN : null].filter(Boolean);
-    const mouvementsConserves = [];
-    for (const idN of idNsConserves) {
-        mouvementsConserves.push({ idN, ids: await releverMouvements(tx, idN) });
-    }
 
     // Le matricule est unique : le poste vide doit le libérer avant le PC.
     const ecranPosteVide = posteVide ? await supprimerPosteVide(tx, posteVide, now, auteur) : null;
@@ -288,10 +265,6 @@ export const affecterPC = async (tx, { id_materiels, id_n, utilisateur, equipe, 
             ? `Poste vide : ${pc} mis en stock`
             : `Poste vide : ${pc} réaffecté à ${decrireBeneficiaire(cibleIdN, nom)}`;
         await creerPosteVide(tx, materiel, now, auteur, avecMotif(description, motif));
-    }
-
-    for (const { idN, ids } of mouvementsConserves) {
-        await rattacherMouvements(tx, ids, idN);
     }
 
     return misAJour;

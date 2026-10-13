@@ -290,7 +290,9 @@ async function getLocalIfExists(nom, caches = createCaches()) {
 }
 
 /**
- * Récupère un matériel par son id_n
+ * Vérifie le matricule du bénéficiaire (mouvements.id_materiels référence
+ * users.id_n) : un utilisateur sans PC, ou dont la fiche a été supprimée,
+ * reste un bénéficiaire valide.
  */
 async function getMaterielByIdN(id_n, caches = createCaches()) {
     if (!id_n) return null;
@@ -301,17 +303,17 @@ async function getMaterielByIdN(id_n, caches = createCaches()) {
         return materielCache.get(id_n);
     }
 
-    const materiel = await prisma.materiels.findFirst({
-        where: { id_n: id_n }
+    const utilisateur = await prisma.users.findUnique({
+        where: { id_n: id_n },
+        select: { id_n: true }
     });
 
-    if (materiel) {
+    if (utilisateur) {
         materielCache.set(id_n, id_n);
-        console.log(`✅ Matériel trouvé: ID_N=${id_n} -> id_materiels=${materiel.id_materiels}`);
         return id_n;
     }
 
-    console.warn(`⚠️ Matériel avec id_n=${id_n} non trouvé dans la base`);
+    console.warn(`⚠️ Utilisateur avec id_n=${id_n} non trouvé dans la base`);
     return null;
 }
 

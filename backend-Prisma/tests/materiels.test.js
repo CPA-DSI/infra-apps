@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterAll } from 'vitest';
-import { prisma, resetDatabase, createUser } from './helpers/db.js';
+import { prisma, resetDatabase, createUser, createProduit } from './helpers/db.js';
 import { as } from './helpers/http.js';
 
 let admin;
@@ -108,5 +108,38 @@ describe('DELETE /api/materiels_all/:id — fiches « Sans poste » et PC en sto
 
         const again = await as(admin).delete(`/api/materiels_all/${alice.materiel.id_materiels}`);
         expect(again.status).toBe(404);
+    });
+});
+
+describe('Mouvements de stock : rattachés au matricule de l\'utilisateur, pas à sa fiche', () => {
+    const creerMouvementPour = async (idN) => {
+        const produit = await createProduit({ nom: 'Souris' });
+        return prisma.mouvement.create({
+            data: { id_produit: produit.id_produit, type_mouvement: 'SORTIE', quantite: 1, id_materiels: idN, nom_utilisateur: 'Test' },
+        });
+    };
+    const relire = (mouvement) => prisma.mouvement.findUnique({ where: { id_mouvement: mouvement.id_mouvement } });
+
+    it('restent à l\'utilisateur après la mise en stock de son PC puis la suppression de sa fiche « Sans poste »', async () => {
+        const mouvement = await creerMouvementPour(10);
+
+        await as(admin).post(`/api/materiels_all/${alice.materiel.id_materiels}/affecter`).send({ id_n: null });
+        expect(await relire(mouvement)).toMatchObject({ id_materiels: 10 });
+
+        const ficheVide = await prisma.materiels.findUnique({ where: { id_n: 10 } });
+        const res = await as(admin).delete(`/api/materiels_all/${ficheVide.id_materiels}`);
+        expect(res.status).toBe(200);
+        expect(await relire(mouvement)).toMatchObject({ id_materiels: 10 });
+    });
+
+    it('restent à l\'utilisateur quand son PC est réaffecté à un autre', async () => {
+        await createUser({ idN: 20 });
+        const mouvement = await creerMouvementPour(10);
+
+        const res = await as(admin).post(`/api/materiels_all/${alice.materiel.id_materiels}/affecter`)
+            .send({ id_n: 20, utilisateur: 'Utilisateur 20' });
+
+        expect(res.status).toBe(200);
+        expect(await relire(mouvement)).toMatchObject({ id_materiels: 10 });
     });
 });
