@@ -451,10 +451,15 @@ export const ouvrirAffectationInitiale = async (tx, materiel, auteurIdN, motif =
     });
 };
 
+// Fiche « Sans poste » : poste vide créé par la mise en stock, ou ancienne
+// saisie dont l'état a été passé à « Sans poste ».
+const estSansPoste = (materiel) => materiel.est_vide || materiel.etat_pc === ETAT_SANS_POSTE;
+
 /**
- * Suppression logique d'un poste : ferme son affectation, envoie son écran en
- * stock et libère le matricule (materiels.id_n est unique) pour que
- * l'utilisateur puisse recevoir un autre poste. L'historique est conservé.
+ * Suppression logique d'une fiche « Sans poste » (utilisateur parti) ou d'un
+ * PC en stock (sortie d'inventaire) : ferme son affectation, envoie son écran
+ * en stock et libère le matricule (materiels.id_n est unique). L'historique
+ * est conservé. Un PC encore affecté doit d'abord être mis en stock.
  */
 export const retirerPoste = async (tx, id_materiels, auteurIdN) => {
     const materiel = await tx.materiels.findUnique({
@@ -464,12 +469,20 @@ export const retirerPoste = async (tx, id_materiels, auteurIdN) => {
     if (!materiel || materiel.date_suppression) {
         throw new AffectationError('Matériel introuvable.', 404);
     }
+    const sansPoste = estSansPoste(materiel);
+    if (materiel.id_n != null && !sansPoste) {
+        throw new AffectationError(
+            'Ce PC est affecté à un utilisateur : mettez-le d\'abord en stock (« Réaffecter le PC » > « Mettre en stock »), puis supprimez-le.'
+        );
+    }
 
     const now = new Date();
     const auteur = await resoudreAuteur(tx, auteurIdN);
 
+    const libelle = sansPoste ? 'Fiche « Sans poste » supprimée' : 'PC sorti de l\'inventaire';
+
     if (materiel.ecran_actuel) {
-        await deplacerEcran(tx, materiel.ecran_actuel, null, 'EN_STOCK', { now, auteur, motif: 'Poste supprimé' });
+        await deplacerEcran(tx, materiel.ecran_actuel, null, 'EN_STOCK', { now, auteur, motif: libelle });
     }
     await fermerAffectationEnCours(tx, { type_affectation: 'PC', id_materiels }, now);
 
@@ -488,10 +501,11 @@ export const retirerPoste = async (tx, id_materiels, auteurIdN) => {
     await tracer(
         tx,
         id_materiels,
-        `Affecté à : ${decrireBeneficiaire(materiel.id_n, materiel.utilisateur)}`,
-        'Poste supprimé',
+        sansPoste ? `Sans poste : ${decrireBeneficiaire(materiel.id_n, materiel.utilisateur)}` : `Affecté à : ${LIBELLE_STOCK}`,
+        libelle,
         auteur
     );
+    return { sansPoste };
 };
 
 /**

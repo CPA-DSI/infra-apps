@@ -138,11 +138,11 @@ const handleDeleteConfirm = useCallback(async (row) => {
     const materielId = row.id_materiels;
 
     try {
-        await apiClient.delete(`/materiels_all/${materielId}`);
+        const response = await apiClient.delete(`/materiels_all/${materielId}`);
         fetchMateriels();
 
         MySwal.fire({
-            icon: 'success', title: 'Supprimé !', text: 'Le matériel a été supprimé avec succès.', timer: 3000, showConfirmButton: false
+            icon: 'success', title: 'Supprimé !', text: response.data?.message || 'Suppression effectuée.', timer: 3000, showConfirmButton: false
         });
 
     } catch (error) {
@@ -157,11 +157,12 @@ const handleDeleteConfirm = useCallback(async (row) => {
 }, [fetchMateriels]);
 
 const confirmDelete = useCallback((row) => {
+    const ecranEnStock = row.code_ecran ? ` Son écran ${row.code_ecran} repartira en stock.` : '';
     MySwal.fire({
         title: 'Confirmer la suppression',
-        text: row.est_vide
-            ? `Supprimer la fiche « Sans poste » de ${row.utilisateur} ? L'utilisateur disparaîtra de la liste, son historique sera conservé.`
-            : `Supprimer le matériel ${row.code_pc || ''} ? Il disparaîtra de la liste, son écran repartira en stock et son historique sera conservé.`,
+        text: isSansPoste(row)
+            ? `Supprimer la fiche « Sans poste » de ${row.utilisateur} ? L'utilisateur disparaîtra de la liste et son matricule sera libéré.${ecranEnStock} L'historique est conservé.`
+            : `Sortir de l'inventaire le PC en stock ${row.code_pc || ''} ? Il disparaîtra de la liste.${ecranEnStock} L'historique est conservé.`,
         icon: 'warning',
         showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: 'Oui, supprimer', cancelButtonText: 'Annuler'
     }).then((result) => {
@@ -392,6 +393,8 @@ const renderMarque = useCallback((row) => {
 
 // Fiche « Sans poste » : pas de bouton Modifier (on lui attribue un PC via
 // « Réaffecter le PC ») ; la supprimer libère le matricule.
+// Supprimer : seulement les fiches « Sans poste » et les PC en stock ; un PC
+// affecté passe d'abord par « Mettre en stock ».
 const renderActions = useCallback((row) => (
         <div className="d-flex gap-1" role="group" aria-label="Actions">
             <Button 
@@ -430,11 +433,11 @@ const renderActions = useCallback((row) => (
             >
                 <FaHistory size={14} className="text-primary" />
             </Button>
-            {(userRole !== 'USER') && (
-            <Button 
-                variant="light" 
-                className="shadow-sm border-0 p-2 rounded-circle" 
-                onClick={() => confirmDelete(row)} 
+            {userRole !== 'USER' && (isSansPoste(row) || row.id_n == null) && (
+            <Button
+                variant="light"
+                className="shadow-sm border-0 p-2 rounded-circle"
+                onClick={() => confirmDelete(row)}
                 title="Supprimer"
                 style={{ 
                     transition: 'all 0.2s ease', width: '32px', height: '32px'

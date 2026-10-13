@@ -477,11 +477,14 @@ router.patch('/:id/statut', requirePermission(PERMISSIONS.MATERIELS_WRITE), asyn
 router.delete('/:id', requirePermission(PERMISSIONS.MATERIELS_DELETE), asyncHandler(async (req, res) => {
     const { id } = req.params;
 
-    // Suppression logique : la fiche, son historique et ses affectations sont
-    // conservés ; l'écran repart en stock et le matricule est libéré.
+    // Suppression logique d'une fiche « Sans poste » ou d'un PC en stock : la
+    // fiche, son historique et ses affectations sont conservés ; l'écran repart
+    // en stock et le matricule est libéré. Un PC affecté est refusé (400).
     try {
-        await prisma.$transaction((tx) => retirerPoste(tx, parseInt(id, 10), req.user?.id_n));
-        res.status(200).json({ message: 'Matériel supprimé avec succès.' });
+        const { sansPoste } = await prisma.$transaction((tx) => retirerPoste(tx, parseInt(id, 10), req.user?.id_n));
+        res.status(200).json({
+            message: sansPoste ? 'Fiche « Sans poste » supprimée.' : 'PC sorti de l\'inventaire.',
+        });
     } catch (error) {
         repondreErreurAffectation(res, error);
     }
