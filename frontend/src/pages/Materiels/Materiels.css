@@ -705,3 +705,45 @@
         justify-content: space-between;
     }
 }
+
+/* ==========================================================
+   --- Onglets de filtre par état (cf. .doc-category-tabs)
+   ========================================================== */
+.materiel-etat-tabs {
+  border-bottom: 0 !important;
+  background: var(--color-bg-alt);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 2px;
+  flex-wrap: wrap;
+  overflow: visible;
+}
+
+.materiel-etat-tabs .nav-link {
+  border: none !important;
+  border-radius: 10px !important;
+  color: var(--color-text-main);
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 8px 14px;
+  transition: all 0.2s ease;
+  background: transparent;
+  white-space: nowrap;
+}
+
+.materiel-etat-tabs .nav-link:hover {
+  background: #eef2ff;
+  color: #1e3a8a;
+}
+
+.materiel-etat-tabs .nav-link.active {
+  background: var(--color-bg) !important;
+  color: #1e3a8a !important;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--color-border) !important;
+}
+
+.materiel-etat-tabs + .tab-content {
+  display: none;
+}

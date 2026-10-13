@@ -5,7 +5,7 @@ import DataTable from 'react-data-table-component';
 import { MySwal } from '../../utils/swal';
 import { useAuth } from '../../contexts/AuthContext';
 import { apiClient, updateMaterielStatut } from '../../services/api';
-import { Button, Form, InputGroup, Spinner, Card, Alert } from 'react-bootstrap';
+import { Button, Form, InputGroup, Spinner, Card, Alert, Tabs, Tab } from 'react-bootstrap';
 import { FaEye, FaEdit, FaTrash, FaFileExcel, FaSearch, FaSync, FaTimes, FaDesktop, FaFileImport, FaPlus, FaUpload, FaCheckCircle, FaFileUpload, FaHistory, FaInfoCircle, FaInbox, FaUsers, FaMapMarkerAlt, FaCalendarAlt, FaUserCircle, FaBatteryFull, FaTags } from 'react-icons/fa';
 /// --- Importations des Modales ---
 import AddModal from './AddModal';
@@ -20,6 +20,19 @@ import { useMaterielImportExport } from './useMaterielImportExport';
 
 // Import styles from Materiels.css
 import './Materiels.css';
+
+// Onglets de filtre par état (ordre d'affichage)
+const ETATS = ['Très Bon', 'Bon', 'Moyen', 'Mauvais', 'HS', 'Disponible', 'Stock', 'Sans poste'];
+
+// 'Stock' : poste sans bénéficiaire (id_n null), y compris ceux mis en stock
+// avant que la mise en stock ne pose etat_pc = 'Stock'.
+// 'Sans poste' : utilisateur dont le PC est parti en stock (fiche vide)
+const matchesEtat = (materiel, etat) => {
+    if (!etat) return true;
+    if (etat === 'Stock') return materiel.id_n == null;
+    if (etat === 'Sans poste') return Boolean(materiel.est_vide);
+    return (materiel.etat_pc || '') === etat;
+};
 
 // ==========================================================
 // --- Composant principal Materiels ---
@@ -189,7 +202,8 @@ const handleToggleEstActif = useCallback(async (row) => {
 }, [fetchMateriels]);
 
 // --- Fonctions de filtrage et recherche ---
-const filteredMateriels = useMemo(() => {
+// Tous les filtres sauf l'état : sert de base aux compteurs des onglets
+const materielsHorsEtat = useMemo(() => {
     return materiels.filter(materiel => {
         const lowerCaseSearch = searchTerm.toLowerCase();
 
@@ -209,13 +223,6 @@ const filteredMateriels = useMemo(() => {
         const searchMatch = 
             id_n_string.toLowerCase().includes(lowerCaseSearch) || equipe.toLowerCase().includes(lowerCaseSearch) || utilisateur.toLowerCase().includes(lowerCaseSearch) || codePc.toLowerCase().includes(lowerCaseSearch) || salle.toLowerCase().includes(lowerCaseSearch) || nom_local.toLowerCase().includes(lowerCaseSearch) || caracteristiques.toLowerCase().includes(lowerCaseSearch) || etat_pc.toLowerCase().includes(lowerCaseSearch) || nom_marque.toLowerCase().includes(lowerCaseSearch) || est_actif.toLowerCase().includes(lowerCaseSearch);
 
-        // 'Stock' : poste sans bénéficiaire (id_n null), y compris ceux mis en stock
-        // avant que la mise en stock ne pose etat_pc = 'Stock'.
-        // 'Sans poste' : utilisateur dont le PC est parti en stock (fiche vide)
-        const etatMatch = !filterEtat
-            || (filterEtat === 'Stock' ? materiel.id_n == null
-                : filterEtat === 'Sans poste' ? Boolean(materiel.est_vide)
-                : etat_pc === filterEtat);
         const equipeMatch = !filterEquipe || equipe === filterEquipe;
         const nomLocalMatch = !filterNomLocal || nom_local === filterNomLocal;
         const marqueMatch = !filterMarque || nom_marque === filterMarque;
@@ -228,9 +235,20 @@ const filteredMateriels = useMemo(() => {
 
         const userMatch = userRole !== 'USER' || (id_n_string === userIdN);
 
-        return searchMatch && etatMatch && equipeMatch && nomLocalMatch && marqueMatch && yearMatch && estActifMatch && userMatch;
+        return searchMatch && equipeMatch && nomLocalMatch && marqueMatch && yearMatch && estActifMatch && userMatch;
     });
-}, [materiels, searchTerm, filterEtat, filterEquipe, filterNomLocal, filterMarque, filterYear, filterEstActif, userRole, userIdN]);
+}, [materiels, searchTerm, filterEquipe, filterNomLocal, filterMarque, filterYear, filterEstActif, userRole, userIdN]);
+
+const filteredMateriels = useMemo(
+    () => materielsHorsEtat.filter(m => matchesEtat(m, filterEtat)),
+    [materielsHorsEtat, filterEtat]
+);
+
+const etatCounts = useMemo(() => {
+    const counts = {};
+    ETATS.forEach(etat => { counts[etat] = materielsHorsEtat.filter(m => matchesEtat(m, etat)).length; });
+    return counts;
+}, [materielsHorsEtat]);
 
 // --- Fonctions de rendu partagées (tableau + vue cartes) ---
 const formatDate = useCallback((dateString) => {
@@ -365,6 +383,7 @@ const renderMarque = useCallback((row) => {
         );
 }, []);
 
+// Fiche « Sans poste » (utilisateur sans PC) : ni modification ni suppression
 const renderActions = useCallback((row) => (
         <div className="d-flex gap-1" role="group" aria-label="Actions">
             <Button 
@@ -382,6 +401,7 @@ const renderActions = useCallback((row) => (
             <Button 
                 variant="light" 
                 className="shadow-sm border-0 p-2 rounded-circle" 
+                disabled={Boolean(row.est_vide)}
                 onClick={() => handleEdit(row)} 
                 title="Modifier"
                 style={{ 
@@ -407,6 +427,7 @@ const renderActions = useCallback((row) => (
             <Button 
                 variant="light" 
                 className="shadow-sm border-0 p-2 rounded-circle" 
+                disabled={Boolean(row.est_vide)}
                 onClick={() => confirmDelete(row)} 
                 title="Supprimer"
                 style={{ 
@@ -951,7 +972,22 @@ return (
 
                 {/* Filtres */}
                 <div className="row mb-3 g-3">
-                    <div className="col-md-3 col-lg-3">
+                    {userRole !== 'USER' && (
+                    <div className="col-12">
+                        <Tabs
+                            activeKey={filterEtat || 'all'}
+                            onSelect={(key) => setFilterEtat(key === 'all' ? '' : key)}
+                            className="materiel-etat-tabs mb-0"
+                            fill
+                        >
+                            <Tab eventKey="all" title={<span className="d-inline-flex align-items-center gap-2"><FaDesktop size={12} />Tous ({materielsHorsEtat.length})</span>} />
+                            {ETATS.map(etat => (
+                                <Tab key={etat} eventKey={etat} title={<span className="d-inline-flex align-items-center gap-2"><span>{statusConfig[etat].emoji}</span>{etat} ({etatCounts[etat]})</span>} />
+                            ))}
+                        </Tabs>
+                    </div>
+                    )}
+                    <div className="col-12 col-lg-3">
                         <InputGroup className="bg-light rounded-pill px-3 py-2 border-0 shadow-sm" style={{ transition: 'all 0.2s ease' }}>
                             <InputGroup.Text className="bg-transparent border-0">
                                 <FaSearch className="text-muted" />
@@ -973,33 +1009,7 @@ return (
 
                     {userRole !== 'USER' && (
                     <>
-                    <div className="col-md-1 col-lg-1">
-                        <Form.Select
-                            value={filterEtat}
-                            onChange={(e) => setFilterEtat(e.target.value)}
-                            className="rounded-pill border-0 shadow-sm"
-                            style={{
-                                backgroundColor: filterEtat ? '#e0e7ff' : '#f8f9fa',
-                                height: '38px',
-                                fontSize: '0.85rem',
-                                color: filterEtat ? '#4338ca' : '#374151',
-                                fontWeight: filterEtat ? '600' : '400',
-                                transition: 'all 0.2s ease'
-                            }}
-                        >
-                            <option value="">Etats</option>
-                            <option value="Très Bon">Très Bon</option>
-                            <option value="Bon">Bon</option>
-                            <option value="Moyen">Moyen</option>
-                            <option value="Mauvais">Mauvais</option>
-                            <option value="HS">HS</option>
-                            <option value="Disponible">Disponible</option>
-                            <option value="Stock">Stock</option>
-                            <option value="Sans poste">Sans poste</option>
-                        </Form.Select>
-                    </div>
-
-                    <div className="col-md-2 col-lg-2">
+                    <div className="col-6 col-md-4 col-lg">
                         <SearchableSelect
                             value={filterEquipe}
                             onChange={setFilterEquipe}
@@ -1016,7 +1026,7 @@ return (
                         />
                     </div>
 
-                    <div className="col-md-1 col-lg-1">
+                    <div className="col-6 col-md-4 col-lg">
                         <Form.Select
                             value={filterNomLocal}
                             onChange={(e) => setFilterNomLocal(e.target.value)}
@@ -1037,7 +1047,7 @@ return (
                         </Form.Select>
                     </div>
 
-                    <div className="col-md-1 col-lg-1">
+                    <div className="col-6 col-md-4 col-lg">
                         <SearchableSelect
                             value={filterYear}
                             onChange={setFilterYear}
@@ -1056,7 +1066,7 @@ return (
                         />
                     </div>
 
-                    <div className="col-md-1 col-lg-1">
+                    <div className="col-6 col-md-4 col-lg">
                         <SearchableSelect
                             value={filterMarque}
                             onChange={setFilterMarque}
@@ -1073,7 +1083,7 @@ return (
                         />
                     </div>
 
-                    <div className="col-md-1 col-lg-1">
+                    <div className="col-6 col-md-4 col-lg">
                         <Form.Select
                             value={filterEstActif}
                             onChange={(e) => setFilterEstActif(e.target.value)}
@@ -1095,7 +1105,7 @@ return (
                     </>
                     )}
 
-                    <div className="col-md-auto">
+                    <div className="col-auto">
                         <div className="d-flex gap-2 align-items-center">
                             <div className="bg-light rounded-pill px-3 py-2 border-0 shadow-sm" style={{ 
                                 backgroundColor: (searchTerm || filterEtat || filterEquipe || filterNomLocal || filterMarque || filterYear || filterEstActif) ? '#fef3c7' : '#f8f9fa',
