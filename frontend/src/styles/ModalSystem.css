@@ -152,6 +152,23 @@
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
+/* Champ désactivé : nettement grisé pour se distinguer d'un champ saisissable.
+   Le sélecteur à deux classes l'emporte sur les styles inline de react-select. */
+.modal-input:disabled,
+.add-modal-input:disabled,
+.add-modal-select:disabled,
+.add-modal-select__control.add-modal-select__control--is-disabled {
+  background-color: #E2E8F0;
+  border-color: #CBD5E1;
+  color: #94A3B8;
+  cursor: not-allowed;
+}
+
+.add-modal-select__control--is-disabled .add-modal-select__single-value,
+.add-modal-select__control--is-disabled .add-modal-select__placeholder {
+  color: #94A3B8;
+}
+
 .modal-select,
 .add-modal-select {
   padding: 10px 12px;

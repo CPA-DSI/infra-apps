@@ -312,37 +312,88 @@ const AddModal = ({ onClose, onMaterialAdded }) => {
                     <div className="add-modal-form-grid" style={{
                         display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px'
                     }}>
+                        {/* État PC en tête : « Stock » vide et désactive les champs bénéficiaire et écran ci-dessous. */}
                         <div style={{ gridColumn: '1', gridRow: '1' }}>
-                            <FormItem label="N° Matricule" name="id_n" formData={formData} handleChange={handleChange} required={!enStock} disabled={enStock} icon={getMaterielFieldIcon("id_n")} />
+                            <FormItem label="État PC" name="etat_pc" type="select"
+                                options={[
+                                    { value: 'Très Bon', label: '✅ Très Bon' },
+                                    { value: 'Bon', label: '👍 Bon' },
+                                    { value: 'Moyen', label: '⚠️ Moyen' },
+                                    { value: 'Mauvais', label: '❗ Mauvais' },
+                                    { value: 'Disponible', label: '📦 Disponible' },
+                                    { value: ETAT_STOCK, label: '🗄️ Stock' },
+                                    { value: 'HS', label: '❌ HS' }
+                                ]}
+                                formData={formData}
+                                handleChange={handleChange} icon={getMaterielFieldIcon("etat_pc")}
+                            />
                         </div>
-                        <div style={{ gridColumn: '2', gridRow: '1' }}>
-                            <FormItem label="Utilisateur" name="utilisateur" formData={formData} handleChange={handleChange} required={!enStock} disabled={enStock} icon={getMaterielFieldIcon("utilisateur")} />
+                        <div className="add-modal-form-group add-modal-actif-group" style={{ gridColumn: '2', gridRow: '1' }}>
+                            <label className="add-modal-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: '600', color: '#1E293B' }}>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    Actif
+                                    {formData.est_actif ? (
+                                        <FaCheckCircle className="add-modal-actif-icon" style={{
+                                            color: '#10B981',
+                                            fontSize: '0.9rem',
+                                            transition: 'all 0.2s ease'
+                                        }} />
+                                    ) : (
+                                        <FaTimesCircle className="add-modal-actif-icon" style={{
+                                            color: '#EF4444',
+                                            fontSize: '0.9rem',
+                                            transition: 'all 0.2s ease'
+                                        }} />
+                                    )}
+                                </span>
+                                <div
+                                    className="add-modal-toggle"
+                                    onClick={() => !enStock && handleChange({ target: { name: 'est_actif', type: 'checkbox', checked: !formData.est_actif }})}
+                                    title={enStock ? 'Un PC en stock est inactif' : undefined}
+                                    style={{
+                                        backgroundColor: formData.est_actif ? '#10B981' : '#EF4444',
+                                        opacity: enStock ? 0.5 : 1,
+                                        cursor: enStock ? 'not-allowed' : undefined,
+                                    }}
+                                >
+                                    <div className="add-modal-toggle-knob" style={{
+                                        left: formData.est_actif ? '22px' : '2px',
+                                    }} />
+                                </div>
+                            </label>
                         </div>
 
                         <div style={{ gridColumn: '1', gridRow: '2' }}>
-                            <FormItem label="Marque Laptop" name="id_marque" type="select" options={marqueOptions} formData={formData} handleChange={handleChange} disabled={isLoadingMarques} icon={getMaterielFieldIcon("id_marque")} />
+                            <FormItem label="N° Matricule" name="id_n" formData={formData} handleChange={handleChange} required={!enStock} disabled={enStock} icon={getMaterielFieldIcon("id_n")} />
                         </div>
                         <div style={{ gridColumn: '2', gridRow: '2' }}>
-                            <FormItem label="Code PC" name="code_pc" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("code_pc")} />
+                            <FormItem label="Utilisateur" name="utilisateur" formData={formData} handleChange={handleChange} required={!enStock} disabled={enStock} icon={getMaterielFieldIcon("utilisateur")} />
                         </div>
 
                         <div style={{ gridColumn: '1', gridRow: '3' }}>
-                            <FormItem label="Marque Écran" name="ecran" formData={formData} handleChange={handleChange} disabled={enStock} icon={getMaterielFieldIcon("ecran")} />
+                            <FormItem label="Marque Laptop" name="id_marque" type="select" options={marqueOptions} formData={formData} handleChange={handleChange} disabled={isLoadingMarques} icon={getMaterielFieldIcon("id_marque")} />
                         </div>
                         <div style={{ gridColumn: '2', gridRow: '3' }}>
-                            <FormItem label="Code Écran" name="code_ecran" formData={formData} handleChange={handleChange} disabled={enStock} icon={getMaterielFieldIcon("code_ecran")} />
+                            <FormItem label="Code PC" name="code_pc" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("code_pc")} />
                         </div>
 
                         <div style={{ gridColumn: '1', gridRow: '4' }}>
+                            <FormItem label="Marque Écran" name="ecran" formData={formData} handleChange={handleChange} disabled={enStock} icon={getMaterielFieldIcon("ecran")} />
+                        </div>
+                        <div style={{ gridColumn: '2', gridRow: '4' }}>
+                            <FormItem label="Code Écran" name="code_ecran" formData={formData} handleChange={handleChange} disabled={enStock} icon={getMaterielFieldIcon("code_ecran")} />
+                        </div>
+
+                        <div style={{ gridColumn: '1', gridRow: '5' }}>
                             <FormItem label="Équipe" name="equipe" formData={formData} handleChange={handleChange} required={!enStock} disabled={enStock} icon={getMaterielFieldIcon("equipe")} />
                         </div>
-                        <div style={{ gridColumn: '1', gridRow: '5' }}>
+                        <div style={{ gridColumn: '1', gridRow: '6' }}>
                             <FormItem label="Date PC" name="date_pc" type="date" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("date_pc")} />
                         </div>
                         {/* Le bloc Connectiques occupe exactement les lignes de grille "Équipe" + "Date PC",
                             ce qui garantit l'alignement de "Date Écran" avec "Mot de passe local" ci-dessous,
                             quelle que soit la hauteur réelle du bloc (calcul fait par la grille, plus par coïncidence). */}
-                        <div className="add-modal-form-group" style={{ gridColumn: '2', gridRow: '4 / span 2' }}>
+                        <div className="add-modal-form-group" style={{ gridColumn: '2', gridRow: '5 / span 2' }}>
                             <label className="add-modal-label" style={{
                                 display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', fontWeight: '600', color: '#1E293B'
                             }}>
@@ -382,76 +433,27 @@ const AddModal = ({ onClose, onMaterialAdded }) => {
                             </div>
                         </div>
 
-                        <div style={{ gridColumn: '1', gridRow: '6' }}>
+                        <div style={{ gridColumn: '1', gridRow: '7' }}>
                             <FormItem label="Date Écran" name="date_ecran" type="date" formData={formData} handleChange={handleChange} disabled={enStock} icon={getMaterielFieldIcon("date_ecran")} />
                         </div>
-                        <div style={{ gridColumn: '2', gridRow: '6' }}>
+                        <div style={{ gridColumn: '2', gridRow: '7' }}>
                             <FormItem label="Mot de passe local" name="mdp_pc" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("mdp_pc")} />
                         </div>
 
-                        <div style={{ gridColumn: '1', gridRow: '7' }}>
+                        <div style={{ gridColumn: '1', gridRow: '8' }}>
                             <FormItem label="salle" name="salle" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("salle")} />
                         </div>
-                        <div style={{ gridColumn: '2', gridRow: '7' }}>
+                        <div style={{ gridColumn: '2', gridRow: '8' }}>
                             <FormItem label="Mot de passe Admin" name="mdp_admin" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("mdp_admin")} />
                         </div>
 
-                        <div style={{ gridColumn: '1', gridRow: '8' }}>
+                        <div style={{ gridColumn: '1', gridRow: '9' }}>
                             <FormItem label="Local(s)" name="id_local" type="select" options={localOptions} formData={formData} handleChange={handleChange} disabled={isLoadingLocaux} icon={getMaterielFieldIcon("id_local")} />
                         </div>
-                        <div style={{ gridColumn: '2', gridRow: '8' }}>
+                        <div style={{ gridColumn: '2', gridRow: '9' }}>
                             <FormItem label="État Batterie" name="etat_batterie" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("etat_batterie")} />
                         </div>
 
-                        <div style={{ gridColumn: '1', gridRow: '9' }}>
-                            <FormItem label="État PC" name="etat_pc" type="select"
-                                options={[
-                                    { value: 'Très Bon', label: '✅ Très Bon' },
-                                    { value: 'Bon', label: '👍 Bon' },
-                                    { value: 'Moyen', label: '⚠️ Moyen' },
-                                    { value: 'Mauvais', label: '❗ Mauvais' },
-                                    { value: 'Disponible', label: '📦 Disponible' },
-                                    { value: ETAT_STOCK, label: '🗄️ Stock' },
-                                    { value: 'HS', label: '❌ HS' }
-                                ]}
-                                formData={formData}
-                                handleChange={handleChange} icon={getMaterielFieldIcon("etat_pc")}
-                            />
-                        </div>
-                        <div className="add-modal-form-group add-modal-actif-group" style={{ gridColumn: '2', gridRow: '9' }}>
-                            <label className="add-modal-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: '600', color: '#1E293B' }}>
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    Actif
-                                    {formData.est_actif ? (
-                                        <FaCheckCircle className="add-modal-actif-icon" style={{
-                                            color: '#10B981',
-                                            fontSize: '0.9rem',
-                                            transition: 'all 0.2s ease'
-                                        }} />
-                                    ) : (
-                                        <FaTimesCircle className="add-modal-actif-icon" style={{
-                                            color: '#EF4444',
-                                            fontSize: '0.9rem',
-                                            transition: 'all 0.2s ease'
-                                        }} />
-                                    )}
-                                </span>
-                                <div
-                                    className="add-modal-toggle"
-                                    onClick={() => !enStock && handleChange({ target: { name: 'est_actif', type: 'checkbox', checked: !formData.est_actif }})}
-                                    title={enStock ? 'Un PC en stock est inactif' : undefined}
-                                    style={{
-                                        backgroundColor: formData.est_actif ? '#10B981' : '#EF4444',
-                                        opacity: enStock ? 0.5 : 1,
-                                        cursor: enStock ? 'not-allowed' : undefined,
-                                    }}
-                                >
-                                    <div className="add-modal-toggle-knob" style={{
-                                        left: formData.est_actif ? '22px' : '2px',
-                                    }} />
-                                </div>
-                            </label>
-                        </div>
                     </div>
 
                     <div className="add-modal-form-grid" style={{
