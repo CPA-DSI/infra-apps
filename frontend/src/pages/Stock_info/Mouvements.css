@@ -1,24 +1,24 @@
 /* --- Styles pour Mouvements.js --- */
 
 /* Modern Header */
-.modern-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.mvt-modern-header {
+    background: var(--gradient-brand);
     box-shadow: 0 6px 24px rgba(102, 126, 234, 0.18);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     min-height: 80px;
 }
 
-.modern-header h1 {
-    color: white !important;
+.mvt-modern-header h1 {
+    color: white;
     font-weight: 700;
     margin: 0;
     font-size: 1.1rem;
     letter-spacing: 0.3px;
 }
 
-.modern-header p {
-    color: rgba(255, 255, 255, 0.8) !important;
+.mvt-modern-header p {
+    color: rgba(255, 255, 255, 0.8);
     margin: 4px 0 0 0;
     font-size: 0.75rem;
     font-weight: 300;
@@ -48,62 +48,6 @@
     font-size: 1.25rem;
 }
 
-/* Header Buttons */
-.header-refresh-btn {
-    background: rgba(255, 255, 255, 0.2) !important;
-    color: white !important;
-    width: 42px;
-    height: 42px;
-    padding: 0 !important;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    font-size: 0.8rem;
-}
-
-.header-refresh-btn:hover {
-    background: rgba(255, 255, 255, 0.35) !important;
-    transform: rotate(180deg) scale(1.08);
-}
-
-.header-export-btn {
-    background: rgba(255, 255, 255, 0.15) !important;
-    color: white !important;
-    font-size: 0.75rem !important;
-    font-weight: 500 !important;
-    padding: 8px 20px !important;
-    transition: all 0.3s ease !important;
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    letter-spacing: 0.2px;
-    align-items: center;
-    gap: 6px;
-}
-
-.header-export-btn:hover {
-    background: rgba(255, 255, 255, 0.3) !important;
-    transform: translateY(-2px);
-}
-
-.header-add-btn {
-    background: white !important;
-    color: #667eea !important;
-    font-size: 0.8rem !important;
-    font-weight: 700 !important;
-    padding: 8px 22px !important;
-    transition: all 0.3s ease !important;
-    letter-spacing: 0.2px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.header-add-btn:hover {
-    transform: translateY(-3px) scale(1.04);
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.35);
-}
-
 /* Main Card */
 .mouvements-card {
     border: 0;
@@ -113,7 +57,7 @@
 }
 
 /* Statistics Cards */
-.stat-card {
+.mvt-stat-card {
     padding: 1rem;
     border-radius: 0.75rem;
     text-align: center;
@@ -122,13 +66,13 @@
     transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
 }
 
-.stat-card:hover {
+.mvt-stat-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.stat-card:focus-visible {
-    outline: 2px solid #667eea;
+.mvt-stat-card:focus-visible {
+    outline: 2px solid var(--color-brand-start);
     outline-offset: 2px;
 }
 
@@ -189,7 +133,7 @@
 .stat-icon-purple { color: #805ad5; }
 .stat-icon-light-blue { color: #3182ce; }
 
-.stat-value {
+.mvt-stat-value {
     font-size: 1.25rem;
     font-weight: bold;
 }
@@ -200,7 +144,7 @@
 .stat-value-purple { color: #6B46C1; }
 .stat-value-light-blue { color: #2B6CB0; }
 
-.stat-label {
+.mvt-stat-label {
     font-size: 0.75rem;
 }
 
@@ -244,38 +188,19 @@
     align-items: center;
 }
 
-/* Filter Buttons */
-.filter-btn {
+/* Bouton Réinitialiser (Bootstrap Button : on surcharge ses variables) */
+.btn.reset-btn {
+    --bs-btn-bg: #f8f9fa;
+    --bs-btn-color: #495057;
+    --bs-btn-hover-bg: #f8f9fa;
+    --bs-btn-hover-color: #495057;
+    --bs-btn-active-bg: #f8f9fa;
+    --bs-btn-active-color: #495057;
     width: 100%;
-    border-radius: 50px !important;
-    border: 0 !important;
-    font-weight: 500 !important;
-    padding: 10px !important;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: all 0.3s ease;
-}
-
-.filter-btn-active {
-    background: #667eea !important;
-    color: white !important;
-}
-
-.filter-btn-inactive {
-    background: #e9ecef !important;
-    color: #495057 !important;
-}
-
-.reset-btn {
-    width: 100%;
-    border-radius: 50px !important;
-    border: 0 !important;
-    background: #f8f9fa !important;
-    color: #495057 !important;
-    font-weight: 500 !important;
-    padding: 10px !important;
+    border: 0;
+    border-radius: 50px;
+    font-weight: 500;
+    padding: 10px;
     transition: all 0.3s ease;
 }
 
@@ -307,10 +232,10 @@
 .loading-container {
     padding: 48px;
     text-align: center;
-    color: #94a3b8;
+    color: var(--color-text-muted);
 }
 
-.loading-spinner {
+.mvt-loading-spinner {
     width: 3rem;
     height: 3rem;
     margin-right: 8px;
@@ -372,7 +297,7 @@
 
 .quantite-cell {
     font-weight: 700;
-    color: #1e293b;
+    color: var(--color-text-main);
     font-size: 14px;
 }
 
@@ -451,62 +376,18 @@
 .mouvements-container {
     background-color: #f8f9fc;
     min-height: 100vh;
-    font-family: 'Inter', sans-serif;
-}
-
-/* ========================================================== */
-/* IMPORT BUTTON - STYLE HEADER                              */
-/* ========================================================== */
-
-.header-import-btn {
-    background: rgba(255, 255, 255, 0.15) !important;
-    color: white !important;
-    font-size: 0.75rem !important;
-    font-weight: 500 !important;
-    padding: 8px 20px !important;
-    transition: all 0.3s ease !important;
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    letter-spacing: 0.2px;
-    align-items: center;
-    gap: 6px;
-}
-
-.header-import-btn:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.3) !important;
-    transform: translateY(-2px);
-}
-
-.header-import-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.header-import-btn.active {
-    background: rgba(255, 255, 255, 0.35) !important;
-    border-color: rgba(255, 255, 255, 0.5) !important;
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2) !important;
+    font-family: var(--font-sans);
 }
 
 /* ========================================================== */
 /* IMPORT SECTION - STYLE INTÉGRÉ (SANS MODAL)                */
 /* ========================================================== */
 
-.import-section {
+.mvt-import-section {
     animation: slideDown 0.3s ease-out;
 }
 
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes scaleIn {
+@keyframes mvt-scaleIn {
     0% {
         transform: scale(0);
         opacity: 0;
@@ -521,47 +402,47 @@
 }
 
 /* Zone de drop */
-.import-drop-zone {
+.mvt-import-drop-zone {
     transition: all 0.3s ease;
     cursor: pointer;
 }
 
-.import-drop-zone:hover:not(.has-file) {
-    border-color: #667eea !important;
+.mvt-import-drop-zone:hover:not(.has-file) {
+    border-color: var(--color-brand-start) !important;
     background-color: #f0f1ff !important;
 }
 
-.import-drop-zone.dragover {
-    border-color: #667eea !important;
+.mvt-import-drop-zone.dragover {
+    border-color: var(--color-brand-start) !important;
     background-color: #e8eaff !important;
     transform: scale(1.02);
 }
 
 /* Table preview styling */
-.import-section .table {
+.mvt-import-section .table {
     font-size: 0.7rem;
 }
 
-.import-section .table thead th {
+.mvt-import-section .table thead th {
     background-color: #f3f4f6;
     color: #374151;
     font-weight: 600;
     border-bottom: 2px solid #e5e7eb;
 }
 
-.import-section .table tbody tr:hover {
+.mvt-import-section .table tbody tr:hover {
     background-color: #f0f7ff;
 }
 
 /* Progress bar styling */
-.import-section .progress {
+.mvt-import-section .progress {
     height: 8px;
     border-radius: 20px;
     background-color: #e9ecef;
 }
 
-.import-section .progress-bar {
-    background: linear-gradient(90deg, #667eea, #764ba2) !important;
+.mvt-import-section .progress-bar {
+    background: linear-gradient(90deg, var(--color-brand-start), var(--color-brand-end)) !important;
     border-radius: 20px;
 }
 
@@ -576,7 +457,7 @@
 }
 
 .import-modal .modal-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--gradient-brand);
     color: white;
     border-radius: 20px 20px 0 0;
     border-bottom: 0;
@@ -597,7 +478,7 @@
     padding: 2rem;
 }
 
-.import-modal .import-drop-zone {
+.import-modal .mvt-import-drop-zone {
     border: 2px dashed #dee2e6;
     border-radius: 16px;
     padding: 3rem 2rem;
@@ -607,35 +488,35 @@
     background-color: #fafbfc;
 }
 
-.import-modal .import-drop-zone:hover {
-    border-color: #667eea;
+.import-modal .mvt-import-drop-zone:hover {
+    border-color: var(--color-brand-start);
     background-color: #f0f1ff;
 }
 
-.import-modal .import-drop-zone.dragover {
-    border-color: #667eea;
+.import-modal .mvt-import-drop-zone.dragover {
+    border-color: var(--color-brand-start);
     background-color: #e8eaff;
     transform: scale(1.02);
 }
 
-.import-modal .import-drop-zone .import-icon {
+.import-modal .mvt-import-drop-zone .import-icon {
     font-size: 3rem;
-    color: #667eea;
+    color: var(--color-brand-start);
     margin-bottom: 1rem;
 }
 
-.import-modal .import-drop-zone .import-text {
+.import-modal .mvt-import-drop-zone .import-text {
     font-size: 1.1rem;
     font-weight: 500;
     color: #1F2937;
 }
 
-.import-modal .import-drop-zone .import-subtext {
+.import-modal .mvt-import-drop-zone .import-subtext {
     font-size: 0.9rem;
     color: #6B7280;
 }
 
-.import-modal .import-drop-zone .import-formats {
+.import-modal .mvt-import-drop-zone .import-formats {
     font-size: 0.8rem;
     color: #9CA3AF;
     margin-top: 0.5rem;
@@ -674,7 +555,7 @@
 }
 
 .import-modal .import-progress .progress-bar {
-    background: linear-gradient(90deg, #667eea, #764ba2);
+    background: linear-gradient(90deg, var(--color-brand-start), var(--color-brand-end));
     border-radius: 20px;
 }
 
@@ -693,7 +574,7 @@
 }
 
 .import-modal .import-actions .btn-primary {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: var(--gradient-brand);
     border: 0;
 }
 
@@ -722,7 +603,7 @@
 .import-success .success-icon {
     font-size: 4rem;
     color: #38a169;
-    animation: scaleIn 0.5s ease;
+    animation: mvt-scaleIn 0.5s ease;
 }
 
 .import-success .success-text {
@@ -742,23 +623,23 @@
 /* ========================================================== */
 
 @media (max-width: 768px) {
-    .import-drop-zone {
+    .mvt-import-drop-zone {
         padding: 1.5rem 1rem !important;
     }
     
-    .import-section .table-responsive {
+    .mvt-import-section .table-responsive {
         max-height: 150px !important;
     }
     
-    .import-section {
+    .mvt-import-section {
         padding: 1rem !important;
     }
     
-    .import-modal .import-drop-zone {
+    .import-modal .mvt-import-drop-zone {
         padding: 2rem 1rem;
     }
     
-    .import-modal .import-drop-zone .import-icon {
+    .import-modal .mvt-import-drop-zone .import-icon {
         font-size: 2rem;
     }
     
@@ -772,123 +653,97 @@
 }
 
 /* ========================================================== */
-/* BOUTONS PRINCIPAUX - DESIGN ROUNDED PILL (STYLE BADGES)   */
+/* BOUTONS D'EN-TÊTE - DESIGN ROUNDED PILL                    */
+/* .btn.xxx : passe devant les règles .btn / .btn:hover de     */
+/* Bootstrap sans !important                                   */
 /* ========================================================== */
 
-/* ---- Bouton Importer (Vert émeraude dégradé) ---- */
-.header-import-btn {
-    background: linear-gradient(120deg, #059669, #10b981) !important;
-    border-radius: 40px !important;
-    padding: 8px 24px !important;
-    font-weight: 700 !important;
-    color: white !important;
-    font-size: 0.9rem;
-    border: none !important;
-    transition: all 0.3s ease !important;
-    display: inline-flex !important;
+.btn.header-import-btn,
+.btn.header-export-btn,
+.btn.header-add-btn {
+    border: none;
+    border-radius: 40px;
+    padding: 8px 24px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 0.3px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    letter-spacing: 0.3px;
+    transition: all 0.3s ease;
+}
+
+.btn.header-import-btn:disabled,
+.btn.header-export-btn:disabled,
+.btn.header-add-btn:disabled,
+.btn.header-refresh-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ---- Bouton Importer (Vert émeraude dégradé) ---- */
+.btn.header-import-btn {
+    background: linear-gradient(120deg, #059669, var(--color-success));
     box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
 }
 
-.header-import-btn:hover:not(:disabled) {
-    transform: scale(1.02) translateY(-2px) !important;
-    box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4) !important;
-    background: linear-gradient(120deg, #047857, #059669) !important;
+.btn.header-import-btn.active {
+    background: linear-gradient(120deg, #047857, #059669);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
 }
 
-.header-import-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.header-import-btn.active {
-    background: linear-gradient(120deg, #047857, #059669) !important;
+.btn.header-import-btn:hover:not(:disabled) {
+    transform: scale(1.02) translateY(-2px);
+    box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4);
+    background: linear-gradient(120deg, #047857, #059669);
 }
 
 /* ---- Bouton Exporter (Orange ambré dégradé) ---- */
-.header-export-btn {
-    background: linear-gradient(120deg, #ea580c, #f97316) !important;
-    border-radius: 40px !important;
-    padding: 8px 24px !important;
-    font-weight: 700 !important;
-    color: white !important;
-    font-size: 0.9rem;
-    border: none !important;
-    transition: all 0.3s ease !important;
-    display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    letter-spacing: 0.3px;
+.btn.header-export-btn {
+    background: linear-gradient(120deg, #ea580c, #f97316);
     box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3);
 }
 
-.header-export-btn:hover:not(:disabled) {
-    transform: scale(1.02) translateY(-2px) !important;
-    box-shadow: 0 6px 20px rgba(234, 88, 12, 0.4) !important;
-    background: linear-gradient(120deg, #c2410c, #ea580c) !important;
-}
-
-.header-export-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+.btn.header-export-btn:hover:not(:disabled) {
+    transform: scale(1.02) translateY(-2px);
+    box-shadow: 0 6px 20px rgba(234, 88, 12, 0.4);
+    background: linear-gradient(120deg, #c2410c, #ea580c);
 }
 
 /* ---- Bouton Nouveau (Bleu cyan dégradé) ---- */
-.header-add-btn {
-    background: linear-gradient(120deg, #2563eb, #06b6d4) !important;
-    border-radius: 40px !important;
-    padding: 8px 24px !important;
-    font-weight: 700 !important;
-    color: white !important;
-    font-size: 0.9rem;
-    border: none !important;
-    transition: all 0.3s ease !important;
-    display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    letter-spacing: 0.3px;
+.btn.header-add-btn {
+    font-size: 0.8rem;
+    background: linear-gradient(120deg, #2563eb, var(--color-cyan));
     box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
 }
 
-.header-add-btn:hover:not(:disabled) {
-    transform: scale(1.02) translateY(-2px) !important;
-    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4) !important;
-    background: linear-gradient(120deg, #1d4ed8, #0891b2) !important;
-}
-
-.header-add-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+.btn.header-add-btn:hover:not(:disabled) {
+    transform: scale(1.02) translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+    background: linear-gradient(120deg, #1d4ed8, #0891b2);
 }
 
 /* ---- Bouton Rafraîchir (Indigo dégradé circulaire) ---- */
-.header-refresh-btn {
-    background: linear-gradient(120deg, #4f46e5, #6366f1) !important;
-    border-radius: 50% !important;
-    color: white !important;
+.btn.header-refresh-btn {
+    background: linear-gradient(120deg, var(--color-primary-dark), var(--color-primary));
+    border: none;
+    border-radius: 50%;
+    color: white;
     width: 40px;
     height: 40px;
-    padding: 0 !important;
-    border: none !important;
-    transition: all 0.3s ease !important;
-    display: inline-flex !important;
+    padding: 0;
+    font-size: 0.8rem;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+    transition: all 0.3s ease;
 }
 
-.header-refresh-btn:hover:not(:disabled) {
-    transform: scale(1.05) translateY(-2px) !important;
-    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4) !important;
-    background: linear-gradient(120deg, #4338ca, #4f46e5) !important;
-}
-
-.header-refresh-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+.btn.header-refresh-btn:hover:not(:disabled) {
+    transform: scale(1.05) translateY(-2px);
+    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+    background: linear-gradient(120deg, #4338ca, var(--color-primary-dark));
 }

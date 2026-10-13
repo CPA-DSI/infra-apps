@@ -21,7 +21,7 @@ const EcranChart = () => {
         series: [],
         options: {
             chart: {
-                type: 'donut', fontFamily: 'Inter, system-ui, sans-serif',
+                type: 'donut', fontFamily: "'Inter Variable', system-ui, sans-serif",
                 animations: {
                     enabled: true, easing: 'easeinout', speed: 800
                 }
@@ -74,7 +74,7 @@ const EcranChart = () => {
         series: [],
         options: {
             chart: {
-                type: 'line', height: ecranChartConfig.line.height, width: '100%', fontFamily: 'Inter, system-ui, sans-serif', toolbar: { show: false }, zoom: { enabled: false },
+                type: 'line', height: ecranChartConfig.line.height, width: '100%', fontFamily: "'Inter Variable', system-ui, sans-serif", toolbar: { show: false }, zoom: { enabled: false },
                 animations: {
                     enabled: true, easing: 'easeinout', speed: 800,
                     animateGradually: {

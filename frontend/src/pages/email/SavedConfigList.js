@@ -12,7 +12,7 @@ const SavedConfigList = ({ configs, activeTab }) => {
 
   return (
     <div className="modern-card">
-      <div className="modern-header">
+      <div className="ecfg-modern-header">
         <h3 className="h6 mb-0 text-white fw-bold">Configurations sauvegardées</h3>
       </div>
       <ListGroup variant="flush">

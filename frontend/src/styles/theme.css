@@ -1,4 +1,8 @@
 :root {
+  --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  --bs-body-font-family: var(--font-sans);
+
   --color-primary: #6366f1;
   --color-primary-dark: #4f46e5;
   --color-primary-light: #818cf8;
@@ -9,7 +13,10 @@
   --color-danger: #ef4444;
   --color-info: #3b82f6;
   --color-cyan: #06b6d4;
+  --color-brand-start: #667eea;
+  --color-brand-end: #764ba2;
 
+  --gradient-brand: linear-gradient(135deg, var(--color-brand-start) 0%, var(--color-brand-end) 100%);
   --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   --gradient-primary-dark: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
   --gradient-add: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);

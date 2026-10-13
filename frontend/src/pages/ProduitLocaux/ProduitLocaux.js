@@ -348,7 +348,7 @@ const ProduitLocaux = () => {
 
   return (
     <div className="container-fluid py-2 px-2" style={{ backgroundColor: '#f9fafb', minHeight: '100vh' }}>
-      <div className="modern-header">
+      <div className="prod-modern-header">
         <div className="d-flex justify-content-between align-items-center">
           <div className="d-flex align-items-center">
             <div className="header-icon-wrapper me-3">
@@ -359,7 +359,7 @@ const ProduitLocaux = () => {
               <p className="mb-0 opacity-75">Gérez vos produits et localisations</p>
             </div>
           </div>
-          <Button className="btn-prod-refresh shadow-sm" onClick={handleRefresh} title="Actualiser toutes les données">
+          <Button className="btn-prod-refresh" onClick={handleRefresh} title="Actualiser toutes les données">
             <FaSync />
           </Button>
         </div>
@@ -386,11 +386,11 @@ const ProduitLocaux = () => {
                    <Form.Control type="text" placeholder="Rechercher..." className="search-pill-input" value={searchProducts} onChange={(e) => setSearchProducts(e.target.value)} />
                  </div>
                  <div className="d-flex gap-2">
-                    <Button className="btn-prod-export shadow-sm" onClick={handleExportExcelProducts}>
+                    <Button className="btn-prod-export" onClick={handleExportExcelProducts}>
                         <FaFileExcel size={15} />
                         <span>Exporter</span>
                     </Button>
-                    <Button className="btn-prod-add shadow-sm" onClick={handleOpenAddModalProduct}>
+                    <Button className="btn-prod-add" onClick={handleOpenAddModalProduct}>
                         <FaPlus size={16} />
                         <span>Ajouter Produit</span>
                     </Button>
@@ -443,11 +443,11 @@ const ProduitLocaux = () => {
                     />
                   </div>
                   <div className="d-flex gap-2">
-                      <Button className="btn-prod-export shadow-sm" onClick={handleExportExcelLocations}>
+                      <Button className="btn-prod-export" onClick={handleExportExcelLocations}>
                           <FaFileExcel size={15} />
                           <span>Exporter</span>
                       </Button>
-                      <Button className="btn-prod-add-location shadow-sm" onClick={handleOpenAddModalLocation}>
+                      <Button className="btn-prod-add-location" onClick={handleOpenAddModalLocation}>
                           <FaPlus size={16} />
                           <span>Ajouter Local</span>
                       </Button>

@@ -6,13 +6,13 @@
 
 .saved-config-item:hover {
   background: rgba(102, 126, 234, 0.05);
-  border-left-color: #667eea;
+  border-left-color: var(--color-brand-start);
 }
 
 .saved-config-active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  background: var(--gradient-brand) !important;
   color: white !important;
-  border-left-color: #667eea !important;
+  border-left-color: var(--color-brand-start) !important;
 }
 
 .saved-config-active .text-muted {
@@ -30,3 +30,70 @@
 .config-details div {
   line-height: 1.4;
 }
+
+/* Onglets du menu Email (ex assets/css/main.css) */
+.menu-tabs .btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.menu-tabs .btn-primary {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+    border: none;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+}
+
+.menu-tabs .btn-primary:hover {
+    background: linear-gradient(135deg, #5558e3 0%, #7c4ddb 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+}
+
+.menu-tabs .btn-outline-primary {
+    border: 2px solid var(--color-primary);
+    color: var(--color-primary);
+    background: transparent;
+}
+
+.menu-tabs .btn-outline-primary:hover {
+    background: var(--color-primary);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.menu-tabs .btn-secondary {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+    border: none;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+}
+
+.menu-tabs .btn-secondary:hover {
+    background: linear-gradient(135deg, #5558e3 0%, #7c4ddb 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+}
+
+.menu-tabs .btn-outline-secondary {
+    border: 2px solid var(--color-primary);
+    color: var(--color-primary);
+    background: transparent;
+}
+
+.menu-tabs .btn-outline-secondary:hover {
+    background: var(--color-primary);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.menu-tabs .btn svg {
+    transition: transform 0.3s ease;
+}
+
+.menu-tabs .btn:hover svg {
+    transform: scale(1.1);
+}
+

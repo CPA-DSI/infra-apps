@@ -10,7 +10,7 @@
 }
 
 .userTicketsTable thead th {
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   color: #ffffff;
   font-weight: 600;
   font-size: 12px;
@@ -53,9 +53,9 @@
 }
 
 .userTicketNumber {
-  font-family: 'Courier New', monospace;
+  font-family: var(--font-mono);
   font-weight: 700;
-  color: #6366f1;
+  color: var(--color-primary);
   font-size: 13px;
 }
 

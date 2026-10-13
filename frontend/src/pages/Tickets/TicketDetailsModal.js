@@ -148,7 +148,7 @@ const TicketDetailsModal = ({ show, handleClose, ticketId }) => {
                         {!loading && !error && ticket && (
                             <>
                                 <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
-                                    <span className="status-badge" style={{ backgroundColor: statutConfig.bg, color: statutConfig.text, border: `1px solid ${statutConfig.border}` }}>
+                                    <span className="tck-status-badge" style={{ backgroundColor: statutConfig.bg, color: statutConfig.text, border: `1px solid ${statutConfig.border}` }}>
                                         <StatusIcon size={12} style={{ marginRight: 4 }} /> {statutConfig.label}
                                     </span>
                                     <span className="priority-badge" style={{ backgroundColor: prioriteConfig.color + '20', color: prioriteConfig.color, border: `1px solid ${prioriteConfig.color}40` }}>
@@ -168,58 +168,58 @@ const TicketDetailsModal = ({ show, handleClose, ticketId }) => {
                                 </div>
 
                                 <div style={{ marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                                    <div className="add-modal-info-card">
-                                        <div className="add-modal-info-icon"><FaUser size={16} /></div>
-                                        <div className="add-modal-info-content">
-                                            <span className="add-modal-info-label">Demandeur</span>
-                                            <span className="add-modal-info-value">{ticket.nomDemandeurFormate || ticket.nomDemandeur || ticket.demandeur?.email_1 || 'Inconnu'}</span>
+                                    <div className="tck-info-card">
+                                        <div className="tck-info-icon"><FaUser size={16} /></div>
+                                        <div className="tck-info-content">
+                                            <span className="tck-info-label">Demandeur</span>
+                                            <span className="tck-info-value">{ticket.nomDemandeurFormate || ticket.nomDemandeur || ticket.demandeur?.email_1 || 'Inconnu'}</span>
                                         </div>
                                     </div>
 
-                                    <div className="add-modal-info-card">
-                                        <div className="add-modal-info-icon"><FaLaptop size={16} /></div>
-                                        <div className="add-modal-info-content">
-                                            <span className="add-modal-info-label">Matériel</span>
-                                            <span className="add-modal-info-value">{ticket.materiels?.nom_materiel || ticket.materiels?.caracteristiques || `ID: ${ticket.idMateriels}`}</span>
+                                    <div className="tck-info-card">
+                                        <div className="tck-info-icon"><FaLaptop size={16} /></div>
+                                        <div className="tck-info-content">
+                                            <span className="tck-info-label">Matériel</span>
+                                            <span className="tck-info-value">{ticket.materiels?.nom_materiel || ticket.materiels?.caracteristiques || `ID: ${ticket.idMateriels}`}</span>
                                         </div>
                                     </div>
 
                                     {ticket.assigneA && (
-                                        <div className="add-modal-info-card">
-                                            <div className="add-modal-info-icon"><FaArrowRight size={16} /></div>
-                                            <div className="add-modal-info-content">
-                                                <span className="add-modal-info-label">Assigné à</span>
-                                                <span className="add-modal-info-value">{ticket.nomAssigneFormate || ticket.nomAssigne || ticket.assigneA?.email_1 || 'Non assigné'}</span>
+                                        <div className="tck-info-card">
+                                            <div className="tck-info-icon"><FaArrowRight size={16} /></div>
+                                            <div className="tck-info-content">
+                                                <span className="tck-info-label">Assigné à</span>
+                                                <span className="tck-info-value">{ticket.nomAssigneFormate || ticket.nomAssigne || ticket.assigneA?.email_1 || 'Non assigné'}</span>
                                             </div>
                                         </div>
                                     )}
 
                                     {hasFermeture && (
-                                        <div className="add-modal-info-card" style={{ borderLeft: '4px solid #10b981' }}>
-                                            <div className="add-modal-info-icon" style={{ color: '#10b981' }}><FaLock size={16} /></div>
-                                            <div className="add-modal-info-content">
-                                                <span className="add-modal-info-label">Fermé le</span>
-                                                <span className="add-modal-info-value">{new Date(ticket.fermeture.dateFermeture).toLocaleDateString('fr-FR')}</span>
+                                        <div className="tck-info-card" style={{ borderLeft: '4px solid #10b981' }}>
+                                            <div className="tck-info-icon" style={{ color: '#10b981' }}><FaLock size={16} /></div>
+                                            <div className="tck-info-content">
+                                                <span className="tck-info-label">Fermé le</span>
+                                                <span className="tck-info-value">{new Date(ticket.fermeture.dateFermeture).toLocaleDateString('fr-FR')}</span>
                                             </div>
                                         </div>
                                     )}
                                 </div>
 
                                 {ticket.description && (
-                                    <div className="add-modal-info-card" style={{ marginBottom: 16, flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+                                    <div className="tck-info-card" style={{ marginBottom: 16, flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
-                                            <div className="add-modal-info-icon"><FaInfoCircle size={16} /></div>
-                                            <span className="add-modal-info-label" style={{ margin: 0 }}>Description</span>
+                                            <div className="tck-info-icon"><FaInfoCircle size={16} /></div>
+                                            <span className="tck-info-label" style={{ margin: 0 }}>Description</span>
                                         </div>
                                         <p style={{ margin: 0, fontSize: 13, color: '#64748b', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{ticket.description}</p>
                                     </div>
                                 )}
 
                                 {hasFermeture && ticket.fermeture.solution && (
-                                    <div className="add-modal-info-card" style={{ marginBottom: 16, flexDirection: 'column', alignItems: 'flex-start', gap: 8, borderLeft: '4px solid #10b981' }}>
+                                    <div className="tck-info-card" style={{ marginBottom: 16, flexDirection: 'column', alignItems: 'flex-start', gap: 8, borderLeft: '4px solid #10b981' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
-                                            <div className="add-modal-info-icon" style={{ color: '#10b981' }}><FaCheckCircle size={16} /></div>
-                                            <span className="add-modal-info-label" style={{ margin: 0, color: '#10b981' }}>Solution</span>
+                                            <div className="tck-info-icon" style={{ color: '#10b981' }}><FaCheckCircle size={16} /></div>
+                                            <span className="tck-info-label" style={{ margin: 0, color: '#10b981' }}>Solution</span>
                                         </div>
                                         <p style={{ margin: 0, fontSize: 13, color: '#475569', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{ticket.fermeture.solution}</p>
                                         {ticket.fermeture.motif && (

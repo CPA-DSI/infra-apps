@@ -142,9 +142,9 @@ export default function EmailConfigWeeklyPage({ initialConfig, onConfigUpdate })
   return (
     <>
       <div className="modern-card">
-        <div className="modern-header d-flex align-items-center justify-content-between">
+        <div className="ecfg-modern-header d-flex align-items-center justify-content-between">
           <div className="d-flex align-items-center gap-3">
-            <div className="header-icon" style={{ background: 'linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)' }}>
+            <div className="ecfg-header-icon" style={{ background: 'linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)' }}>
               <FaCalendarWeek className="fs-4 text-white" />
             </div>
             <div>
@@ -159,7 +159,7 @@ export default function EmailConfigWeeklyPage({ initialConfig, onConfigUpdate })
               <FaClock className="me-2" />
               <span className="fw-semibold">{form.heure_envoi}</span>
             </div>
-            <span className={`status-badge ${form.cron_actif_hebdo ? 'status-active' : 'status-inactive'}`}>
+            <span className={`ecfg-status-badge ${form.cron_actif_hebdo ? 'status-active' : 'status-inactive'}`}>
               {form.cron_actif_hebdo ? '● Active' : '○ Inactive'}
             </span>
           </div>
@@ -303,7 +303,7 @@ export default function EmailConfigWeeklyPage({ initialConfig, onConfigUpdate })
                     <Col sm={6}>
                       <Button variant="outline-secondary" onClick={handleSendTest} disabled={testLoading || loading} className="w-100 modern-btn-outline" >
                         {testLoading ? (
-                          <span className="loading-spinner"></span>
+                          <span className="ecfg-loading-spinner"></span>
                         ) : (
                           <>
                             <FaPaperPlane className="me-2" />
@@ -315,7 +315,7 @@ export default function EmailConfigWeeklyPage({ initialConfig, onConfigUpdate })
                     <Col sm={6}>
                       <Button variant="primary" type="submit" disabled={loading || testLoading} className="w-100 modern-btn-primary" >
                         {loading ? (
-                          <span className="loading-spinner"></span>
+                          <span className="ecfg-loading-spinner"></span>
                         ) : (
                           <>
                             <FaSave className="me-2" />

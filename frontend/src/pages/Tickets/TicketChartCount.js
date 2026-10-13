@@ -420,7 +420,7 @@ const StatusCard = React.memo(({ statusKey, count, percentage, icon }) => {
   
   return (
     <div
-      className="stat-card"
+      className="tcc-stat-card"
       style={cardStyle}
       role="figure"
       aria-label={`${config.label}: ${count} tickets (${percentage}%)`}
@@ -663,7 +663,7 @@ const TicketChartCount = () => {
   // =========================================================================
   
   const containerStyle = {
-    background: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(20px)', padding: '28px', borderRadius: '24px', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)', fontFamily: "'Poppins', system-ui, sans-serif", border: '1px solid rgba(255, 255, 255, 0.5)', width: '100%', maxWidth: 'auto',
+    background: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(20px)', padding: '28px', borderRadius: '24px', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)', fontFamily: 'var(--font-sans)', border: '1px solid rgba(255, 255, 255, 0.5)', width: '100%', maxWidth: 'auto',
   };
   
   const headerStyle = {
@@ -822,24 +822,6 @@ const TicketChartCount = () => {
       ) : (
         <LoadingSpinner />
       )}
-      
-      {/* Styles d'animation globaux */}
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .stat-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
-        }
-      `}</style>
     </div>
   );
 };

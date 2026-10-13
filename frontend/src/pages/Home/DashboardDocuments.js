@@ -203,8 +203,8 @@ const DashboardDocuments = () => {
   if (loading) {
     return (
       <div className="dashboard-documents-loading">
-        <div className="spinner-container">
-          <div className="spinner-icon">🔄</div>
+        <div className="dd-spinner-container">
+          <div className="dd-spinner-icon">🔄</div>
           <p>Chargement du tableau de bord documents...</p>
         </div>
       </div>
@@ -214,7 +214,7 @@ const DashboardDocuments = () => {
   if (error) {
     return (
       <div className="dashboard-documents-error">
-        <div className="error-icon">⚠️</div>
+        <div className="dd-error-icon">⚠️</div>
         <h3>Erreur de chargement</h3>
         <p>{error}</p>
       </div>
@@ -223,66 +223,66 @@ const DashboardDocuments = () => {
 
   return (
     <div className="dashboard-documents">
-      <div className="header-title">
-        <span className="header-icon">📑</span>
+      <div className="dd-header-title">
+        <span className="dd-header-icon">📑</span>
         <div>
           <h2>Dashboard Documents</h2>
-          <p className="header-subtitle">Analyse des documents et pièces jointes par catégorie</p>
+          <p className="dd-header-subtitle">Analyse des documents et pièces jointes par catégorie</p>
         </div>
       </div>
 
-      <div className="stats-cards">
-        <div className="stat-card">
-          <div className="stat-icon-wrapper">📑</div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.totalDocuments}</div>
-            <div className="stat-label">Documents total</div>
+      <div className="dd-stats-cards">
+        <div className="dd-stat-card">
+          <div className="dd-stat-icon-wrapper">📑</div>
+          <div className="dd-stat-content">
+            <div className="dd-stat-value">{stats.totalDocuments}</div>
+            <div className="dd-stat-label">Documents total</div>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon-wrapper">📎</div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.totalPiecesJointes}</div>
-            <div className="stat-label">Pièces jointes</div>
+        <div className="dd-stat-card">
+          <div className="dd-stat-icon-wrapper">📎</div>
+          <div className="dd-stat-content">
+            <div className="dd-stat-value">{stats.totalPiecesJointes}</div>
+            <div className="dd-stat-label">Pièces jointes</div>
           </div>
         </div>
-        <div className="stat-card highlight">
-          <div className="stat-icon-wrapper">📂</div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.documentsAvecPj}</div>
-            <div className="stat-label">Documents avec PJ suppl.</div>
+        <div className="dd-stat-card highlight">
+          <div className="dd-stat-icon-wrapper">📂</div>
+          <div className="dd-stat-content">
+            <div className="dd-stat-value">{stats.documentsAvecPj}</div>
+            <div className="dd-stat-label">Documents avec PJ suppl.</div>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon-wrapper">🌐</div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.documentsPublics}</div>
-            <div className="stat-label">Documents publics</div>
+        <div className="dd-stat-card">
+          <div className="dd-stat-icon-wrapper">🌐</div>
+          <div className="dd-stat-content">
+            <div className="dd-stat-value">{stats.documentsPublics}</div>
+            <div className="dd-stat-label">Documents publics</div>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon-wrapper">🔒</div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.documentsPrives}</div>
-            <div className="stat-label">Documents privés</div>
+        <div className="dd-stat-card">
+          <div className="dd-stat-icon-wrapper">🔒</div>
+          <div className="dd-stat-content">
+            <div className="dd-stat-value">{stats.documentsPrives}</div>
+            <div className="dd-stat-label">Documents privés</div>
           </div>
         </div>
       </div>
 
-      <div className="charts-container">
-        <div className="chart-card">
+      <div className="dd-charts-container">
+        <div className="dd-chart-card">
           <Chart options={barChartOptions} series={barChartSeries} type="bar" height={400} />
         </div>
-        <div className="chart-card">
+        <div className="dd-chart-card">
           <Chart options={pieChartOptions} series={pieChartSeries} type="donut" height={400} />
         </div>
       </div>
 
-      <div className="charts-container">
-        <div className="chart-card">
+      <div className="dd-charts-container">
+        <div className="dd-chart-card">
           <Chart options={publicPieOptions} series={publicPieSeries} type="pie" height={350} />
         </div>
-        <div className="chart-card">
+        <div className="dd-chart-card">
           <Chart options={pjBarOptions} series={pjBarSeries} type="bar" height={350} />
         </div>
       </div>
@@ -317,7 +317,7 @@ const DashboardDocuments = () => {
             );
           })}
           {categoryData.length === 0 && (
-            <div className="dashboard-empty-state">
+            <div className="dd-dashboard-empty-state">
               <p>Aucune catégorie trouvée</p>
             </div>
           )}

@@ -1,28 +1,23 @@
-@import '../../styles/theme.css';
-@import '../../styles/animations.css';
-@import '../../styles/ModalSystem.css';
-@import '../../styles/Buttons.css';
-
 /* ============================================================================
    Mail.css — Modern Header & Components
    ============================================================================ */
 
-.modern-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.mail-modern-header {
+    background: var(--gradient-brand);
     padding: 14px 20px;
     border: none;
     border-radius: 12px;
     margin-bottom: 20px;
 }
 
-.modern-header h1 {
+.mail-modern-header h1 {
     color: white !important;
     font-weight: 700;
     margin: 0;
     font-size: 1.5rem;
 }
 
-.modern-header p {
+.mail-modern-header p {
     color: rgba(255, 255, 255, 0.85) !important;
     margin: 4px 0 0 0;
     font-size: 0.875rem;
@@ -33,7 +28,7 @@
 }
 
 /* Animation fadeInUp pour les cartes de statistiques */
-@keyframes fadeInUp {
+@keyframes mail-fadeInUp {
     from {
         opacity: 0;
         transform: translateY(20px);
@@ -45,7 +40,7 @@
 }
 
 /* Styles pour les cartes de statistiques */
-.stat-card {
+.mail-stat-card {
     padding: 16px 20px;
     border-radius: 14px;
     cursor: default;
@@ -202,7 +197,7 @@
    STYLES - Nouvelles colonnes (Statut, Emails, Tickets)
    ============================================================================ */
 
-.status-badge {
+.mail-status-badge {
     font-size: 0.7rem;
     font-weight: 600;
     padding: 4px 10px;
@@ -211,7 +206,7 @@
     transition: all 0.2s ease;
 }
 
-.status-badge:hover {
+.mail-status-badge:hover {
     transform: scale(1.05);
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
@@ -302,17 +297,6 @@
 
 .expandable-email-row {
     animation: expandRowFadeIn 0.3s ease forwards;
-}
-
-@keyframes expandRowFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-4px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }
 
 .email-count-badge-table {
@@ -430,22 +414,22 @@
    IMPORT SECTION (alignée sur la page Matériels)
    ========================================================== */
 
-@keyframes slideDown {
+@keyframes mail-slideDown {
     from { opacity: 0; transform: translateY(-8px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
-.import-section {
-    animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+.mail-import-section {
+    animation: mail-slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.import-section .table-responsive {
+.mail-import-section .table-responsive {
     border-radius: 10px;
     border: 1px solid var(--color-border);
     overflow: hidden;
 }
 
-.import-section .table thead th {
+.mail-import-section .table thead th {
     background-color: var(--color-bg-alt);
     color: var(--color-text-main);
     font-weight: 600;
@@ -455,15 +439,15 @@
     white-space: nowrap;
 }
 
-.import-section .table tbody tr {
+.mail-import-section .table tbody tr {
     transition: background-color 0.15s ease;
 }
 
-.import-section .table tbody tr:hover {
+.mail-import-section .table tbody tr:hover {
     background-color: var(--color-bg-alt);
 }
 
-.import-drop-zone {
+.mail-import-drop-zone {
     position: relative;
     margin: 0 1.25rem 1.25rem 1.25rem;
     padding: 3rem 2rem;
@@ -482,34 +466,34 @@
     transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.import-drop-zone:hover {
+.mail-import-drop-zone:hover {
     background-color: #f5f5ff;
     box-shadow: 0 4px 16px rgba(99, 102, 241, 0.08);
 }
 
-.import-drop-zone:hover .import-drop-icon {
+.mail-import-drop-zone:hover .mail-import-drop-icon {
     transform: translateY(-4px);
     box-shadow: 0 8px 20px rgba(124, 58, 237, 0.28);
 }
 
-.import-drop-zone.dragover {
+.mail-import-drop-zone.dragover {
     background-color: #f5f3ff;
     transform: scale(1.01);
     box-shadow: 0 8px 24px rgba(99, 102, 241, 0.16);
     background-image:
-        linear-gradient(90deg, #6366f1 50%, transparent 50%),
-        linear-gradient(90deg, #6366f1 50%, transparent 50%),
-        linear-gradient(0deg, #6366f1 50%, transparent 50%),
-        linear-gradient(0deg, #6366f1 50%, transparent 50%);
+        linear-gradient(90deg, var(--color-primary) 50%, transparent 50%),
+        linear-gradient(90deg, var(--color-primary) 50%, transparent 50%),
+        linear-gradient(0deg, var(--color-primary) 50%, transparent 50%),
+        linear-gradient(0deg, var(--color-primary) 50%, transparent 50%);
     animation: dashSlide 0.6s linear infinite;
 }
 
-.import-drop-zone.dragover .import-drop-icon {
+.mail-import-drop-zone.dragover .mail-import-drop-icon {
     transform: scale(1.08) translateY(-2px);
     box-shadow: 0 10px 24px rgba(99, 102, 241, 0.35);
 }
 
-.import-drop-zone.has-file {
+.mail-import-drop-zone.has-file {
     cursor: default;
     background-color: #f0fdf4;
     background-image:
@@ -519,7 +503,7 @@
         linear-gradient(0deg, #bbf7d0 50%, transparent 50%);
 }
 
-.import-drop-zone.has-file:hover {
+.mail-import-drop-zone.has-file:hover {
     box-shadow: none;
 }
 
@@ -527,7 +511,7 @@
     to { background-position: 16px 0, -16px 100%, 0 -16px, 100% 16px; }
 }
 
-.import-drop-icon {
+.mail-import-drop-icon {
     width: 68px;
     height: 68px;
     margin: 0 auto 1.1rem;
@@ -537,7 +521,7 @@
     border-radius: 18px;
     font-size: 1.7rem;
     color: #ffffff;
-    background: linear-gradient(135deg, #7c3aed, #6366f1);
+    background: linear-gradient(135deg, #7c3aed, var(--color-primary));
     box-shadow: 0 6px 16px rgba(124, 58, 237, 0.22);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     animation: floatIcon 2.6s ease-in-out infinite;
@@ -548,15 +532,15 @@
     50% { transform: translateY(-5px); }
 }
 
-.import-browse-link {
-    color: #6366f1;
+.mail-import-browse-link {
+    color: var(--color-primary);
     font-weight: 600;
     text-decoration: underline;
     text-decoration-color: rgba(99, 102, 241, 0.35);
     text-underline-offset: 2px;
 }
 
-.import-file-icon {
+.mail-import-file-icon {
     animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -565,18 +549,18 @@
     to { transform: scale(1); opacity: 1; }
 }
 
-.import-remove-btn:hover:not(:disabled) {
+.mail-import-remove-btn:hover:not(:disabled) {
     background-color: #fee2e2 !important;
     transform: rotate(90deg);
 }
 
-.import-section .progress-container {
+.mail-import-section .mail-progress-container {
     position: relative;
     overflow: hidden;
     border-radius: 10px;
 }
 
-.import-section .progress-bar-fill {
+.mail-import-section .mail-progress-bar-fill {
     position: relative;
     overflow: hidden;
     border-radius: 10px;

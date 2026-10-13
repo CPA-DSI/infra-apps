@@ -1,11 +1,7 @@
-@import '../../styles/theme.css';
-@import '../../styles/animations.css';
-@import '../../styles/Buttons.css';
-
 /* src/pages/Documents/Documents.css */
 
 .doc-page {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-sans);
 }
 
 /* --- Header --- */
@@ -72,7 +68,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 1.4rem 1.6rem;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--color-border-light);
   background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
   border-radius: 18px 18px 0 0;
   color: #fff;
@@ -135,7 +131,7 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 0.65rem 0;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--color-border-light);
   font-size: 0.88rem;
   color: var(--color-text-main);
 }
@@ -170,7 +166,7 @@
   justify-content: flex-end;
   gap: 0.75rem;
   padding: 1.2rem 1.6rem;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--color-border-light);
 }
 
 .doc-details-footer .btn {

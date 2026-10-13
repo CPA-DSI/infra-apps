@@ -39,11 +39,11 @@
 
 .footer-copyright {
   font-size: 0.8rem;
-  color: var(--color-text-sub, #64748b);
+  color: var(--color-text-sub, var(--color-text-sub));
 }
 
 .footer-copyright .text-accent {
-  color: var(--accent-color, #6366f1);
+  color: var(--accent-color, var(--color-primary));
   font-weight: 600;
 }
 
@@ -53,7 +53,7 @@
   gap: 6px;
   font-size: 0.8rem;
   font-weight: 500;
-  color: var(--color-text-sub, #64748b);
+  color: var(--color-text-sub, var(--color-text-sub));
   text-decoration: none;
   padding: 6px 14px;
   border-radius: 999px;
@@ -62,7 +62,7 @@
 }
 
 .footer-support-link:hover {
-  background: var(--accent-color, #6366f1);
+  background: var(--accent-color, var(--color-primary));
   color: #fff;
   transform: translateY(-1px);
 }

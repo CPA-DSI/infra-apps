@@ -4,7 +4,6 @@ import FixedNavbarWithLogo from './components/Navbar/FixedNavbarWithLogo';
 import Footer from './components/Footer/Footer';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { hasPermission, PERMISSIONS } from './config/api';
-import 'bootstrap/dist/css/bootstrap.min.css';
 
 const Login = lazy(() => import('./pages/auth/login'));
 const FirstLoginPasswordChange = lazy(() => import('./pages/auth/FirstLoginPasswordChange'));

@@ -129,15 +129,15 @@ const StatCard = ({
   const sparkSeries = useMemo(() => [{ data: sparkData || [] }], [sparkData]);
 
   return (
-    <div className={`stat-card ${type}`}>
+    <div className={`dhc-stat-card ${type}`}>
       <div className="stat-card-header">
         <div className="stat-icon-box">{icon}</div>
-        <span className="stat-label">{label}</span>
+        <span className="dhc-stat-label">{label}</span>
       </div>
 
       <div className="stat-card-body">
         <div className="stat-main-row">
-          <span className="stat-value">
+          <span className="dhc-stat-value">
             {typeof value === 'number' ? value.toLocaleString('fr-FR') : value}
           </span>
           <span className="stat-unit">{unit}</span>
@@ -369,7 +369,7 @@ const DashboardHistoriqueChart = () => {
         strokeDashArray: 4,
         label: {
           text: '▲ Pic E',
-          style: { color: '#fff', background: THEME.in, fontSize: '10px', fontFamily: 'Poppins, sans-serif' },
+          style: { color: '#fff', background: THEME.in, fontSize: '10px', fontFamily: "'Inter Variable', system-ui, sans-serif" },
           position: 'top',
           orientation: 'horizontal',
         },
@@ -382,7 +382,7 @@ const DashboardHistoriqueChart = () => {
         strokeDashArray: 4,
         label: {
           text: '▼ Pic S',
-          style: { color: '#fff', background: THEME.out, fontSize: '10px', fontFamily: 'Poppins, sans-serif' },
+          style: { color: '#fff', background: THEME.out, fontSize: '10px', fontFamily: "'Inter Variable', system-ui, sans-serif" },
           position: 'top',
           orientation: 'horizontal',
         },
@@ -400,7 +400,7 @@ const DashboardHistoriqueChart = () => {
       chart: {
         type: chartType,
         toolbar: { show: false },
-        fontFamily: 'Poppins, system-ui, sans-serif',
+        fontFamily: "'Inter Variable', system-ui, sans-serif",
         animations: { enabled: true, speed: 600, animateGradually: { enabled: true, delay: 80 } },
         background: 'transparent',
       },
@@ -425,7 +425,7 @@ const DashboardHistoriqueChart = () => {
           style: {
             colors: Array(categories.length).fill(THEME.sub),
             fontSize: '11px',
-            fontFamily: 'Poppins, sans-serif',
+            fontFamily: "'Inter Variable', system-ui, sans-serif",
           },
         },
         crosshairs: {
@@ -435,7 +435,7 @@ const DashboardHistoriqueChart = () => {
       },
       yaxis: {
         labels: {
-          style: { colors: [THEME.sub], fontSize: '12px', fontFamily: 'Poppins, sans-serif' },
+          style: { colors: [THEME.sub], fontSize: '12px', fontFamily: "'Inter Variable', system-ui, sans-serif" },
           formatter: (v) => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v,
         },
       },
@@ -476,7 +476,7 @@ const DashboardHistoriqueChart = () => {
         theme: 'dark',
         shared: true,
         intersect: false,
-        style: { fontFamily: 'Poppins, sans-serif', fontSize: '12px' },
+        style: { fontFamily: "'Inter Variable', system-ui, sans-serif", fontSize: '12px' },
         y: {
           formatter: (v, { seriesIndex, dataPointIndex }) => {
             const monthName = MONTHS[rangeStart + dataPointIndex] || '';

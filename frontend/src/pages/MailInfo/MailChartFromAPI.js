@@ -114,7 +114,7 @@ const MailChartFromAPI = () => {
     () => ({
       chart: {
         type: 'donut',
-        fontFamily: 'Inter, system-ui, sans-serif',
+        fontFamily: "'Inter Variable', system-ui, sans-serif",
         animations: { enabled: true, easing: 'easeinout', speed: 800 },
       },
       colors: ['#4caf50', '#f44336', '#9e9e9e'],
@@ -159,7 +159,7 @@ const MailChartFromAPI = () => {
     () => ({
       chart: {
         type: 'donut',
-        fontFamily: 'Inter, system-ui, sans-serif',
+        fontFamily: "'Inter Variable', system-ui, sans-serif",
         animations: { enabled: true, easing: 'easeinout', speed: 800 },
       },
       colors: ['#667eea', '#764ba2', '#cbd5e1'],
@@ -214,7 +214,7 @@ const MailChartFromAPI = () => {
     () => ({
       chart: {
         type: 'bar',
-        fontFamily: 'Inter, system-ui, sans-serif',
+        fontFamily: "'Inter Variable', system-ui, sans-serif",
         animations: { enabled: true, easing: 'easeinout', speed: 800 },
         toolbar: { show: false },
         stacked: true,

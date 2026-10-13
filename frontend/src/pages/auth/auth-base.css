@@ -1,0 +1,107 @@
+/*
+ * Base des pages d'authentification (login, mot de passe oublié, reset, première connexion).
+ * Remplace assets/css/main.css + util.css (template Colorlib) : toutes les règles
+ * sont limitées à .login-container pour ne plus fuiter sur le reste de l'application.
+ */
+
+/* Reset limité aux pages d'authentification (:where = spécificité nulle, comme l'ancien reset global) */
+:where(.login-container),
+:where(.login-container) * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.login-container {
+  font-family: var(--font-sans);
+}
+
+:where(.login-container) a {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.7;
+  color: #666666;
+  transition: all 0.4s;
+}
+
+:where(.login-container) a:hover {
+  text-decoration: none;
+}
+
+:where(.login-container) p {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.7;
+  color: #666666;
+}
+
+:where(.login-container) ul,
+:where(.login-container) li {
+  list-style-type: none;
+}
+
+:where(.login-container) button {
+  outline: none;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.login-container input:focus::placeholder,
+.login-container textarea:focus::placeholder {
+  color: transparent;
+}
+
+.login-container input::placeholder,
+.login-container textarea::placeholder {
+  color: #999999;
+}
+
+/* Utilitaires (ex util.css) */
+.login-container .p-t-12 { padding-top: 12px; }
+.login-container .m-l-5 { margin-left: 5px; }
+
+.login-container .txt2 {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  color: #666666;
+}
+
+.login-container .validate-input {
+  position: relative;
+}
+
+/* Première connexion : panneau plus large */
+.login-container .wrap-login.first-login-wrap {
+  max-width: 1400px;
+  padding: 60px 140px 43px 140px;
+}
+
+/* Règles de mot de passe */
+.login-container .password-rules-panel {
+  background: #f7f8fc;
+  border: 1px solid #e3e6f0;
+  border-radius: 10px;
+  padding: 18px 20px;
+  width: 260px;
+  flex-shrink: 0;
+}
+
+.login-container .password-rules-title {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.login-container .icon-spin {
+  display: inline-block;
+  animation: icon-spin-rotate 1s linear infinite;
+}
+
+@keyframes icon-spin-rotate {
+  to { transform: rotate(360deg); }
+}

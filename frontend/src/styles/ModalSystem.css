@@ -1,6 +1,3 @@
-@import './theme.css';
-@import './animations.css';
-
 /* ============================================================
    MODAL SYSTEM — Styles partagés pour toutes les modales
    ============================================================ */
@@ -29,7 +26,7 @@
   max-height: 90vh;
   overflow: hidden;
   box-shadow: var(--shadow-lg);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-sans);
   border: none;
   display: flex;
   flex-direction: column;
@@ -160,13 +157,13 @@
 .add-modal-select__control.add-modal-select__control--is-disabled {
   background-color: #E2E8F0;
   border-color: #CBD5E1;
-  color: #94A3B8;
+  color: var(--color-text-muted);
   cursor: not-allowed;
 }
 
 .add-modal-select__control--is-disabled .add-modal-select__single-value,
 .add-modal-select__control--is-disabled .add-modal-select__placeholder {
-  color: #94A3B8;
+  color: var(--color-text-muted);
 }
 
 .modal-select,
@@ -207,7 +204,7 @@
   width: 100%;
   min-height: 80px;
   resize: vertical;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-sans);
 }
 
 .modal-textarea:focus,

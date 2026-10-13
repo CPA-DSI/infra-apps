@@ -7,7 +7,6 @@ import { Form, Spinner, Row, Col, Alert } from 'react-bootstrap';
 import { FaPlus, FaTimes, FaImage, FaTrash, FaEdit, FaExclamationTriangle, FaCheckCircle } from 'react-icons/fa';
 import { fetchAMarques, createMarque, updateMarque, deleteMarque } from '../../services/api';
 import { escapeHtml } from '../../utils/escapeHtml';
-import './AddMarque.css';
 
 // ==========================================================
 // --- COMPOSANT LOGO SIMPLIFIÉ ---

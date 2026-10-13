@@ -6,12 +6,8 @@ import Tilt from 'react-parallax-tilt';
 import Swal from 'sweetalert2';
 import { FaLock, FaEye, FaEyeSlash, FaSpinner, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 
-import '../../assets/vendor/animate/animate.css';
-import '../../assets/vendor/css-hamburgers/hamburgers.min.css';
-import '../../assets/vendor/select2/select2.min.css';
-import '../../assets/vendor/bootstrap/css/bootstrap.min.css';
-import '../../assets/css/util.css';
-import '../../assets/css/main.css';
+import './auth-base.css';
+import './login.css';
 
 const SVGIllustration = () => (
   <svg

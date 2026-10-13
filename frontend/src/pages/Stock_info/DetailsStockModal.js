@@ -67,7 +67,7 @@ const DetailsStockModal = ({ show, handleClose, selectedItemId }) => {
 
   if (loading) {
     return (
-        <Modal show={show} onHide={handleClose} size="lg" centered className="profile-modal-modern">
+        <Modal show={show} onHide={handleClose} size="lg" centered className="profile-modal-modern dsm-modal">
             <Modal.Body className="text-center p-5 modal-body-modern">
                 <Spinner animation="border" role="status" className="mb-3" />
                 <p>Chargement des détails...</p>
@@ -78,7 +78,7 @@ const DetailsStockModal = ({ show, handleClose, selectedItemId }) => {
 
   if (error || !itemDetails) {
     return (
-        <Modal show={show} onHide={handleClose} size="lg" centered className="profile-modal-modern">
+        <Modal show={show} onHide={handleClose} size="lg" centered className="profile-modal-modern dsm-modal">
             <Modal.Header closeButton className="modal-header-modern">
                 <Modal.Title>Erreur</Modal.Title>
             </Modal.Header>
@@ -101,7 +101,7 @@ const DetailsStockModal = ({ show, handleClose, selectedItemId }) => {
   const formattedDate = item.date_mouvement ? new Date(item.date_mouvement).toLocaleDateString('fr-FR') : 'N/A';
 
   return (
-    <Modal show={show} onHide={handleClose} size="lg" centered className="profile-modal-modern" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} >
+    <Modal show={show} onHide={handleClose} size="lg" centered className="profile-modal-modern dsm-modal" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} >
       <Modal.Header closeButton className="modal-header-modern" style={{ background: getHeaderGradient(item.type_mouvement) }} >
         <div className="modal-header-content">
           <div className="modal-icon-wrapper">

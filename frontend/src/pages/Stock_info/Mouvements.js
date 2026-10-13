@@ -21,7 +21,7 @@ import './HomeStock.css';
 import { getMouvements, deleteMouvement, importMouvements } from '../../services/api';
 import { escapeHtml } from '../../utils/escapeHtml';
 
-// --- Styles CSS intégrés (style modern-header comme Materiels.js) ---
+// --- Styles CSS intégrés (style mvt-modern-header comme Materiels.js) ---
 // Les styles ont été déplacés vers Mouvements.css
 
 const modernStyles = {
@@ -85,7 +85,7 @@ const AUTRES_TYPE_FILTER = '__AUTRES__';
 // --- Composant StatCard mémoïsé ---
 const StatCard = React.memo(({ icon: Icon, value, label, qty, cardClass, colorClass, isActive, isEmpty, onClick }) => (
     <div
-        className={`stat-card ${cardClass}${isActive ? ' stat-card-active' : ''}${isEmpty ? ' stat-card-empty' : ''}`}
+        className={`mvt-stat-card ${cardClass}${isActive ? ' stat-card-active' : ''}${isEmpty ? ' stat-card-empty' : ''}`}
         onClick={onClick}
         role="button"
         tabIndex={0}
@@ -99,8 +99,8 @@ const StatCard = React.memo(({ icon: Icon, value, label, qty, cardClass, colorCl
     >
         <Icon className={`stat-icon stat-icon-${colorClass}`} aria-hidden="true" />
         <div className="stat-card-row">
-            <div className={`stat-value stat-value-${colorClass}`}>{value}</div>
-            <div className={`stat-label stat-label-${colorClass}`}>{label}</div>
+            <div className={`mvt-stat-value stat-value-${colorClass}`}>{value}</div>
+            <div className={`mvt-stat-label stat-label-${colorClass}`}>{label}</div>
         </div>
         <div className={`stat-qty stat-label-${colorClass}`}>
             {qty} {qty === 1 ? 'unité' : 'unités'} au total
@@ -832,9 +832,9 @@ const handleImportSubmit = useCallback(async () => {
 
     return (
         <div className="container-fluid py-2 px-2 mouvements-container">
-            {/* En-tête - Style modern-header comme Materiels.js */}
+            {/* En-tête - Style mvt-modern-header comme Materiels.js */}
             <div 
-                className="d-flex justify-content-between align-items-center mb-4 p-2 p-md-3 rounded-3 modern-header" 
+                className="d-flex justify-content-between align-items-center mb-4 p-2 p-md-3 rounded-3 mvt-modern-header" 
             >
                 <div className="d-flex align-items-center gap-3">
                     <div className="icon-circle">
@@ -849,7 +849,7 @@ const handleImportSubmit = useCallback(async () => {
                 <div className="d-flex gap-2">
     {/* Bouton Rafraîchir - style circulaire */}
     <Button 
-        className="border-0 rounded-circle shadow-sm header-refresh-btn" 
+        className="border-0 rounded-circle header-refresh-btn" 
         onClick={fetchAllMouvements}
         title="Rafraîchir"
     >
@@ -858,31 +858,9 @@ const handleImportSubmit = useCallback(async () => {
     
     {/* Bouton Importer - style rounded-pill vert émeraude */}
     <Button 
-        className={`header-import-btn shadow-sm ${showImportSection ? 'active' : ''}`}
+        className={`header-import-btn ${showImportSection ? 'active' : ''}`}
         onClick={toggleImportSection}
         disabled={isImporting}
-        style={{
-            background: showImportSection 
-                ? 'linear-gradient(120deg, #059669, #10b981) !important' 
-                : 'linear-gradient(120deg, #059669, #10b981) !important',
-            borderRadius: '40px !important', padding: '8px 24px !important', fontWeight: '700 !important', color: 'white !important', fontSize: '0.9rem', border: 'none !important', transition: 'all 0.3s ease !important', display: 'inline-flex !important', alignItems: 'center', justifyContent: 'center', gap: '8px', letterSpacing: '0.3px', boxShadow: '0 2px 8px rgba(5, 150, 105, 0.3)'
-        }}
-        onMouseEnter={(e) => {
-            if (!isImporting) {
-                e.target.style.transform = 'scale(1.02) translateY(-2px)';
-                e.target.style.boxShadow = '0 6px 20px rgba(5, 150, 105, 0.4)';
-                e.target.style.background = 'linear-gradient(120deg, #047857, #059669)';
-            }
-        }}
-        onMouseLeave={(e) => {
-            if (!isImporting) {
-                e.target.style.transform = 'scale(1) translateY(0)';
-                e.target.style.boxShadow = '0 2px 8px rgba(5, 150, 105, 0.3)';
-                e.target.style.background = showImportSection 
-                    ? 'linear-gradient(120deg, #047857, #059669)' 
-                    : 'linear-gradient(120deg, #059669, #10b981)';
-            }
-        }}
     >
         {isImporting ? (
             <Spinner animation="border" size="sm" style={{ color: 'white' }} />
@@ -894,21 +872,8 @@ const handleImportSubmit = useCallback(async () => {
     
     {/* Bouton Exporter - style rounded-pill orange ambré */}
     <Button 
-        className="header-export-btn shadow-sm" 
+        className="header-export-btn" 
         onClick={handleExportExcel}
-        style={{
-           background: 'linear-gradient(120deg, #ea580c, #f97316) !important', borderRadius: '40px !important', padding: '8px 24px !important', fontWeight: '700 !important', color: 'white !important', fontSize: '0.9rem', border: 'none !important', transition: 'all 0.3s ease !important', display: 'inline-flex !important', alignItems: 'center', justifyContent: 'center', gap: '8px', letterSpacing: '0.3px', boxShadow: '0 2px 8px rgba(234, 88, 12, 0.3)'
-        }}
-        onMouseEnter={(e) => {
-            e.target.style.transform = 'scale(1.02) translateY(-2px)';
-            e.target.style.boxShadow = '0 6px 20px rgba(234, 88, 12, 0.4)';
-            e.target.style.background = 'linear-gradient(120deg, #c2410c, #ea580c)';
-        }}
-        onMouseLeave={(e) => {
-            e.target.style.transform = 'scale(1) translateY(0)';
-            e.target.style.boxShadow = '0 2px 8px rgba(234, 88, 12, 0.3)';
-            e.target.style.background = 'linear-gradient(120deg, #ea580c, #f97316)';
-        }}
     >
         <FaFileExcel size={15} />
         <span className="ms-2">Exporter</span>
@@ -916,21 +881,8 @@ const handleImportSubmit = useCallback(async () => {
     
     {/* Bouton Nouveau - style rounded-pill bleu cyan */}
     <Button 
-        className="header-add-btn shadow-md" 
+        className="header-add-btn" 
         onClick={handleAddClick}
-        style={{
-           background: 'linear-gradient(120deg, #2563eb, #06b6d4) !important', borderRadius: '40px !important', padding: '8px 24px !important', fontWeight: '700 !important', color: 'white !important', fontSize: '0.9rem', border: 'none !important', transition: 'all 0.3s ease !important', display: 'inline-flex !important', alignItems: 'center', justifyContent: 'center', gap: '8px', letterSpacing: '0.3px', boxShadow: '0 2px 8px rgba(37, 99, 235, 0.3)'
-        }}
-        onMouseEnter={(e) => {
-            e.target.style.transform = 'scale(1.02) translateY(-2px)';
-            e.target.style.boxShadow = '0 6px 20px rgba(37, 99, 235, 0.4)';
-            e.target.style.background = 'linear-gradient(120deg, #1d4ed8, #0891b2)';
-        }}
-        onMouseLeave={(e) => {
-            e.target.style.transform = 'scale(1) translateY(0)';
-            e.target.style.boxShadow = '0 2px 8px rgba(37, 99, 235, 0.3)';
-            e.target.style.background = 'linear-gradient(120deg, #2563eb, #06b6d4)';
-        }}
     >
         <FaPlus size={18} />
         <span className="ms-2">Nouveau</span>
@@ -940,7 +892,7 @@ const handleImportSubmit = useCallback(async () => {
 
             {/* SECTION D'IMPORT INTÉGRÉE */}
             {showImportSection && (
-                <div className="import-section mb-4 p-4 rounded-3" style={{ 
+                <div className="mvt-import-section mb-4 p-4 rounded-3" style={{ 
                     background: 'white', border: '1px solid #e5e7eb', borderRadius: '16px', boxShadow: '0 4px 16px rgba(0,0,0,0.06)', animation: 'slideDown 0.3s ease-out'
                 }}>
                     <div className="d-flex justify-content-between align-items-center mb-3">
@@ -962,7 +914,7 @@ const handleImportSubmit = useCallback(async () => {
                         <>
                             {/* Zone de drop */}
                             <div 
-                                className={`import-drop-zone ${isDragging ? 'dragover' : ''}`}
+                                className={`mvt-import-drop-zone ${isDragging ? 'dragover' : ''}`}
                                 onDragEnter={handleDragEnter}
                                 onDragLeave={handleDragLeave}
                                 onDragOver={handleDragOver}

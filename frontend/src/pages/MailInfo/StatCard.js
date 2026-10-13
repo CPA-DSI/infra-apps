@@ -4,7 +4,7 @@ const StatCard = React.memo(({ icon: Icon, value, label, colorScheme, tooltip })
     const [isHovered, setIsHovered] = useState(false);
 
     return (
-        <div className="stat-card" role="group" aria-label={label} title={tooltip}
+        <div className="mail-stat-card" role="group" aria-label={label} title={tooltip}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             style={{

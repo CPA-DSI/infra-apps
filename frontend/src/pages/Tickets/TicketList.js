@@ -404,7 +404,7 @@ const TicketList = () => {
       const cfg = STATUS_CONFIG[row.statut] || STATUS_CONFIG.NOUVEAU;
       const Icon = cfg.icon;
       return (
-        <span className="status-badge" style={{ backgroundColor: cfg.bg, color: cfg.text, border: `1px solid ${cfg.border}` }}>
+        <span className="tck-status-badge" style={{ backgroundColor: cfg.bg, color: cfg.text, border: `1px solid ${cfg.border}` }}>
           <Icon size={11} style={{ marginRight: 4 }} /> {cfg.label}
         </span>
       );

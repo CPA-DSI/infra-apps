@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { MySwal } from "../../utils/swal";
 import { FaBox, FaExclamationTriangle, FaCalendarAlt, FaTimes, FaPlus, FaSave } from "react-icons/fa";
 import FormItem from "../../components/FormItem/FormItem";
-import "./ProductModal.css";
 
 const ProductModal = ({ show, handleClose, handleSave, initialData, errorMessage }) => {
   const [formData, setFormData] = useState({

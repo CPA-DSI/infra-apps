@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { MySwal } from "../../utils/swal";
 import { FaBuilding, FaAlignLeft, FaExclamationTriangle, FaTimes, FaPlus, FaSave } from "react-icons/fa";
 import FormItem from "../../components/FormItem/FormItem";
-import "./ProductModal.css";
 
 const LocationModal = ({ show, handleClose, onSaveSuccess, initialData, existingLocations = [], existingProducts = [] }) => {
   const [formData, setFormData] = useState({

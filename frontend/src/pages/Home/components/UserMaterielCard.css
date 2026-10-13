@@ -8,7 +8,7 @@
   flex-direction: column;
   gap: 14px;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  animation: fadeInUp 0.4s ease-out;
+  animation: umc-fadeInUp 0.4s ease-out;
 }
 
 .userMaterielCard:hover {
@@ -130,10 +130,10 @@
 
 .userMaterielEmptyIcon {
   font-size: 2.2rem;
-  color: #6366f1;
+  color: var(--color-primary);
 }
 
-@keyframes fadeInUp {
+@keyframes umc-fadeInUp {
   from {
     opacity: 0;
     transform: translateY(12px);

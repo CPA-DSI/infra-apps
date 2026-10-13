@@ -5,7 +5,7 @@
 .dashboard-historique {
     padding: 24px;
     background-color: #0a0f1c;
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--font-sans);
     border-radius: 16px;
     min-height: 100%;
 }
@@ -30,7 +30,7 @@
     width: 48px;
     height: 48px;
     border-radius: 14px;
-    background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -55,7 +55,7 @@
 }
 
 .dashboard-year {
-    background: linear-gradient(135deg, #6366f1 0%, #a5b4fc 100%);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-lighter) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -69,13 +69,13 @@
     border-radius: 20px;
     background: rgba(99, 102, 241, 0.15);
     border: 1px solid rgba(99, 102, 241, 0.3);
-    color: #a5b4fc;
-    -webkit-text-fill-color: #a5b4fc;
+    color: var(--color-primary-lighter);
+    -webkit-text-fill-color: var(--color-primary-lighter);
     letter-spacing: 0.3px;
 }
 
 .dashboard-subtitle {
-    color: #64748b;
+    color: var(--color-text-sub);
     margin: 4px 0 0;
     font-size: 0.9rem;
     opacity: 0.8;
@@ -104,7 +104,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    color: #94a3b8;
+    color: var(--color-text-muted);
     font-size: 0.75rem;
     font-weight: 600;
     white-space: nowrap;
@@ -114,8 +114,8 @@
     background: rgba(99, 102, 241, 0.12);
     border: 1px solid rgba(99, 102, 241, 0.3);
     border-radius: 7px;
-    color: #a5b4fc;
-    font-family: 'Poppins', sans-serif;
+    color: var(--color-primary-lighter);
+    font-family: var(--font-sans);
     font-size: 0.8rem;
     font-weight: 700;
     padding: 5px 10px;
@@ -153,10 +153,10 @@
     border-radius: 7px;
     border: none;
     background: transparent;
-    color: #64748b;
+    color: var(--color-text-sub);
     font-size: 0.75rem;
     font-weight: 600;
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--font-sans);
     cursor: pointer;
     transition: background 0.2s ease, color 0.2s ease;
     white-space: nowrap;
@@ -164,12 +164,12 @@
 
 .period-btn:hover {
     background: rgba(99, 102, 241, 0.1);
-    color: #a5b4fc;
+    color: var(--color-primary-lighter);
 }
 
 .period-btn.active {
     background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(129, 140, 248, 0.15) 100%);
-    color: #a5b4fc;
+    color: var(--color-primary-lighter);
     border: 1px solid rgba(99, 102, 241, 0.3);
 }
 
@@ -191,10 +191,10 @@
     border-radius: 7px;
     border: none;
     background: transparent;
-    color: #64748b;
+    color: var(--color-text-sub);
     font-size: 0.78rem;
     font-weight: 600;
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--font-sans);
     cursor: pointer;
     transition: background 0.2s ease, color 0.2s ease;
     white-space: nowrap;
@@ -207,12 +207,12 @@
 
 .toggle-btn:hover {
     background: rgba(99, 102, 241, 0.1);
-    color: #a5b4fc;
+    color: var(--color-primary-lighter);
 }
 
 .toggle-btn.active {
     background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(129, 140, 248, 0.15) 100%);
-    color: #a5b4fc;
+    color: var(--color-primary-lighter);
     border: 1px solid rgba(99, 102, 241, 0.3);
 }
 
@@ -225,7 +225,7 @@
 }
 
 /* ── Carte statistique ────────────────────────────────────────────────────── */
-.stat-card {
+.dhc-stat-card {
     background: linear-gradient(145deg, rgba(15, 23, 42, 0.9) 0%, rgba(10, 15, 28, 0.8) 100%);
     padding: 18px 20px;
     border-radius: 16px;
@@ -236,25 +236,25 @@
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.stat-card:hover {
+.dhc-stat-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3);
 }
 
 /* Variantes de couleur */
-.stat-card.in {
+.dhc-stat-card.in {
     border-color: rgba(99, 102, 241, 0.3);
     background: linear-gradient(145deg, rgba(99, 102, 241, 0.08) 0%, rgba(15, 23, 42, 0.9) 100%);
 }
-.stat-card.out {
+.dhc-stat-card.out {
     border-color: rgba(244, 63, 94, 0.3);
     background: linear-gradient(145deg, rgba(244, 63, 94, 0.08) 0%, rgba(15, 23, 42, 0.9) 100%);
 }
-.stat-card.net {
+.dhc-stat-card.net {
     border-color: rgba(16, 185, 129, 0.3);
     background: linear-gradient(145deg, rgba(16, 185, 129, 0.08) 0%, rgba(15, 23, 42, 0.9) 100%);
 }
-.stat-card.ratio {
+.dhc-stat-card.ratio {
     border-color: rgba(245, 158, 11, 0.3);
     background: linear-gradient(145deg, rgba(245, 158, 11, 0.08) 0%, rgba(15, 23, 42, 0.9) 100%);
 }
@@ -276,29 +276,29 @@
     flex-shrink: 0;
 }
 
-.stat-card.in .stat-icon-box {
+.dhc-stat-card.in .stat-icon-box {
     background: rgba(99, 102, 241, 0.15);
     border: 1px solid rgba(99, 102, 241, 0.25);
-    color: #6366f1;
+    color: var(--color-primary);
 }
-.stat-card.out .stat-icon-box {
+.dhc-stat-card.out .stat-icon-box {
     background: rgba(244, 63, 94, 0.15);
     border: 1px solid rgba(244, 63, 94, 0.25);
     color: #f43f5e;
 }
-.stat-card.net .stat-icon-box {
+.dhc-stat-card.net .stat-icon-box {
     background: rgba(16, 185, 129, 0.15);
     border: 1px solid rgba(16, 185, 129, 0.25);
-    color: #10b981;
+    color: var(--color-success);
 }
-.stat-card.ratio .stat-icon-box {
+.dhc-stat-card.ratio .stat-icon-box {
     background: rgba(245, 158, 11, 0.15);
     border: 1px solid rgba(245, 158, 11, 0.25);
-    color: #f59e0b;
+    color: var(--color-warning);
 }
 
-.stat-label {
-    color: #94a3b8;
+.dhc-stat-label {
+    color: var(--color-text-muted);
     font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
@@ -318,20 +318,20 @@
     gap: 8px;
 }
 
-.stat-value {
+.dhc-stat-value {
     font-size: 28px;
     font-weight: 700;
     color: #f1f5f9;
     line-height: 1;
 }
 
-.stat-card.in .stat-value    { color: #818cf8; }
-.stat-card.out .stat-value   { color: #f43f5e; }
-.stat-card.net .stat-value   { color: #10b981; }
-.stat-card.ratio .stat-value { color: #f59e0b; }
+.dhc-stat-card.in .dhc-stat-value    { color: var(--color-primary-light); }
+.dhc-stat-card.out .dhc-stat-value   { color: #f43f5e; }
+.dhc-stat-card.net .dhc-stat-value   { color: var(--color-success); }
+.dhc-stat-card.ratio .dhc-stat-value { color: var(--color-warning); }
 
 .stat-unit {
-    color: #64748b;
+    color: var(--color-text-sub);
     font-size: 0.8rem;
 }
 
@@ -360,13 +360,13 @@
 }
 
 .stat-label-prev {
-    color: #64748b;
+    color: var(--color-text-sub);
     font-size: 0.72rem;
     font-weight: 500;
 }
 
 .stat-value-prev {
-    color: #94a3b8;
+    color: var(--color-text-muted);
     font-size: 0.8rem;
     font-weight: 600;
 }
@@ -386,7 +386,7 @@
 .stat-trend.positive {
     background: rgba(16, 185, 129, 0.12);
     border: 1px solid rgba(16, 185, 129, 0.22);
-    color: #10b981;
+    color: var(--color-success);
 }
 .stat-trend.negative {
     background: rgba(244, 63, 94, 0.12);
@@ -396,7 +396,7 @@
 .stat-trend.neutral {
     background: rgba(100, 116, 139, 0.12);
     border: 1px solid rgba(100, 116, 139, 0.22);
-    color: #64748b;
+    color: var(--color-text-sub);
 }
 
 /* ── Barre de progression Entrées vs Sorties ──────────────────────────────── */
@@ -420,7 +420,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    color: #818cf8;
+    color: var(--color-primary-light);
 }
 
 .flow-label-out {
@@ -437,7 +437,7 @@
     flex-shrink: 0;
 }
 
-.dot-in  { background: #6366f1; }
+.dot-in  { background: var(--color-primary); }
 .dot-out { background: #f43f5e; }
 
 .flow-progress-track {
@@ -455,7 +455,7 @@
     transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.fill-in  { background: linear-gradient(90deg, #6366f1, #818cf8); }
+.fill-in  { background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light)); }
 .fill-out { background: linear-gradient(90deg, #f43f5e, #fda4af); }
 
 /* ── Barre des mois pics ──────────────────────────────────────────────────── */
@@ -479,7 +479,7 @@
 .peak-item.peak-in {
     background: rgba(99, 102, 241, 0.1);
     border: 1px solid rgba(99, 102, 241, 0.2);
-    color: #a5b4fc;
+    color: var(--color-primary-lighter);
 }
 .peak-item.peak-out {
     background: rgba(244, 63, 94, 0.1);
@@ -521,10 +521,10 @@
     padding: 14px 18px;
     background: linear-gradient(145deg, rgba(15, 23, 42, 0.8) 0%, rgba(10, 15, 28, 0.7) 100%);
     border: none;
-    color: #94a3b8;
+    color: var(--color-text-muted);
     font-size: 0.82rem;
     font-weight: 600;
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--font-sans);
     cursor: pointer;
     text-align: left;
     transition: background 0.2s ease, color 0.2s ease;
@@ -532,7 +532,7 @@
 
 .monthly-table-toggle:hover {
     background: rgba(99, 102, 241, 0.08);
-    color: #a5b4fc;
+    color: var(--color-primary-lighter);
 }
 
 .monthly-table-toggle svg {
@@ -563,7 +563,7 @@
 .monthly-table th {
     padding: 10px 16px;
     text-align: right;
-    color: #64748b;
+    color: var(--color-text-sub);
     font-weight: 600;
     font-size: 0.72rem;
     text-transform: uppercase;
@@ -596,14 +596,14 @@
 }
 
 .monthly-table .col-month {
-    color: #94a3b8;
+    color: var(--color-text-muted);
     font-weight: 600;
 }
 
-.monthly-table .col-in    { color: #818cf8; }
+.monthly-table .col-in    { color: var(--color-primary-light); }
 .monthly-table .col-out   { color: #f43f5e; }
 
-.monthly-table .col-net.positive { color: #10b981; }
+.monthly-table .col-net.positive { color: var(--color-success); }
 .monthly-table .col-net.negative { color: #f43f5e; }
 
 /* ── États de chargement / erreur ─────────────────────────────────────────── */
@@ -614,7 +614,7 @@
     justify-content: center;
     align-items: center;
     height: 400px;
-    color: #64748b;
+    color: var(--color-text-sub);
     gap: 16px;
 }
 
@@ -626,13 +626,9 @@
     width: 40px;
     height: 40px;
     border: 3px solid rgba(99, 102, 241, 0.2);
-    border-top-color: #6366f1;
+    border-top-color: var(--color-primary);
     border-radius: 50%;
     animation: spin 0.9s linear infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
 }
 
 /* ── Responsive ───────────────────────────────────────────────────────────── */
@@ -675,7 +671,7 @@
     .dashboard-title {
         font-size: 20px;
     }
-    .stat-value {
+    .dhc-stat-value {
         font-size: 24px;
     }
     .peak-months-bar {

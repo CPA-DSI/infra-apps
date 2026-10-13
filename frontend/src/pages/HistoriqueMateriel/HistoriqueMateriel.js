@@ -409,7 +409,7 @@ const HistoriqueMateriel = () => {
                 </div>
 
                 <div className="d-flex gap-2">
-                    <Button className="border-0 rounded-circle shadow-sm ha-btn-refresh" onClick={fetchHistorique} title="Rafraîchir">
+                    <Button className="border-0 rounded-circle shadow-sm hm-btn-refresh" onClick={fetchHistorique} title="Rafraîchir">
                         <FaSync />
                     </Button>
                     {userRole !== 'USER' && (
@@ -427,7 +427,7 @@ const HistoriqueMateriel = () => {
                 </div>
             </div>
 
-            <Card className="border-0 ha-table-card mb-4">
+            <Card className="border-0 hm-table-card mb-4">
                 <Card.Body className="p-4 p-lg-5">
                     <div className="row mb-3 g-3">
                         <div className="col-md-4 col-lg-3">
@@ -602,7 +602,7 @@ const HistoriqueMateriel = () => {
                                     <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', fontWeight: '500', color: '#374151' }}>
                                         Matériel <span style={{ color: '#dc2626' }}>*</span>
                                     </label>
-                                    <select name="id_materiels" value={formData.id_materiels} onChange={handleFormChange} className="add-modal-select" required>
+                                    <select name="id_materiels" value={formData.id_materiels} onChange={handleFormChange} className="add-modal-select hm-input" required>
                                         <option value="">Sélectionner un matériel</option>
                                         {[...new Set(historique.map(item => item.materiel?.id_materiels).filter(Boolean))].map(id => {
                                             const mat = historique.find(item => item.materiel?.id_materiels === id)?.materiel;
@@ -619,28 +619,28 @@ const HistoriqueMateriel = () => {
                                     <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', fontWeight: '500', color: '#374151' }}>
                                         Champ modifié <span style={{ color: '#dc2626' }}>*</span>
                                     </label>
-                                    <input type="text" name="champ_modifie" value={formData.champ_modifie} onChange={handleFormChange} className="add-modal-select" placeholder="Ex: etat_pc, equipe, utilisateur..." required />
+                                    <input type="text" name="champ_modifie" value={formData.champ_modifie} onChange={handleFormChange} className="add-modal-select hm-input" placeholder="Ex: etat_pc, equipe, utilisateur..." required />
                                 </div>
 
                                 <div style={{ marginBottom: '16px' }}>
                                     <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', fontWeight: '500', color: '#374151' }}>
                                         Ancienne valeur
                                     </label>
-                                    <input type="text" name="ancienne_valeur" value={formData.ancienne_valeur} onChange={handleFormChange} className="add-modal-select" placeholder="Valeur précédente" />
+                                    <input type="text" name="ancienne_valeur" value={formData.ancienne_valeur} onChange={handleFormChange} className="add-modal-select hm-input" placeholder="Valeur précédente" />
                                 </div>
 
                                 <div style={{ marginBottom: '16px' }}>
                                     <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', fontWeight: '500', color: '#374151' }}>
                                         Nouvelle valeur
                                     </label>
-                                    <input type="text" name="nouvelle_valeur" value={formData.nouvelle_valeur} onChange={handleFormChange} className="add-modal-select" placeholder="Nouvelle valeur" />
+                                    <input type="text" name="nouvelle_valeur" value={formData.nouvelle_valeur} onChange={handleFormChange} className="add-modal-select hm-input" placeholder="Nouvelle valeur" />
                                 </div>
 
                                 <div style={{ marginBottom: '20px' }}>
                                     <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', fontWeight: '500', color: '#374151' }}>
                                         Nom de l'utilisateur
                                     </label>
-                                    <input type="text" name="nom_utilisateur" value={formData.nom_utilisateur} onChange={handleFormChange} className="add-modal-select" placeholder="Nom de l'utilisateur (laisser vide pour Système)" />
+                                    <input type="text" name="nom_utilisateur" value={formData.nom_utilisateur} onChange={handleFormChange} className="add-modal-select hm-input" placeholder="Nom de l'utilisateur (laisser vide pour Système)" />
                                 </div>
 
                                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>

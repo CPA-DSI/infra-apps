@@ -11,11 +11,11 @@
   --ud-text-primary: #1f2937;
   --ud-text-secondary: #4b5563;
   --ud-text-muted: #9ca3af;
-  --ud-accent: #6366f1;
+  --ud-accent: var(--color-primary);
   --ud-accent-light: rgba(99, 102, 241, 0.1);
-  --ud-success: #10b981;
+  --ud-success: var(--color-success);
   --ud-success-bg: rgba(16, 185, 129, 0.15);
-  --ud-danger: #ef4444;
+  --ud-danger: var(--color-danger);
   --ud-danger-bg: rgba(239, 68, 68, 0.1);
   --ud-danger-border: rgba(239, 68, 68, 0.3);
   --ud-muted-bg: #f3f4f6;
@@ -61,7 +61,7 @@
   --ud-transition-slow: 500ms ease;
 
   /* Font */
-  --ud-font: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --ud-font: var(--font-sans);
 
   /* Container Query support */
   container-type: inline-size;
@@ -184,7 +184,7 @@
   padding: var(--ud-space-6);
   border: 1px solid var(--ud-border);
   overflow: hidden;
-  animation: fadeInUp 0.6s ease-out forwards;
+  animation: ud-fadeInUp 0.6s ease-out forwards;
   opacity: 0;
   animation-delay: 0.2s;
   transition: box-shadow var(--ud-transition-fast), transform var(--ud-transition-fast);
@@ -198,16 +198,10 @@
 
 .userDashboardTabContent {
   margin-block-start: var(--ud-space-5);
-  animation: fadeIn 0.4s ease-out;
+  animation: ud-fadeIn 0.4s ease-out;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes fadeIn {
+@keyframes ud-fadeIn {
   from {
     opacity: 0;
   }
@@ -216,7 +210,7 @@
   }
 }
 
-@keyframes fadeInUp {
+@keyframes ud-fadeInUp {
   from {
     opacity: 0;
     transform: translateY(20px);

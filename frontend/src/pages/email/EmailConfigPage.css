@@ -1,25 +1,11 @@
-@keyframes fadeInUp {
+@keyframes ecfg-fadeInUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes pulse {
+@keyframes ecfg-pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.05); }
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 
 .modern-card {
@@ -28,18 +14,18 @@
   border-radius: 16px; 
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); 
   overflow: hidden;
-  animation: fadeInUp 0.5s ease-out;
+  animation: ecfg-fadeInUp 0.5s ease-out;
 }
 
-.modern-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+.ecfg-modern-header {
+  background: var(--gradient-brand); 
   padding: 18px 24px; 
   border: none;
   position: relative;
   overflow: hidden;
 }
 
-.modern-header::before {
+.ecfg-modern-header::before {
   content: '';
   position: absolute;
   top: 0;
@@ -61,7 +47,7 @@
 }
 
 .modern-input:focus {
-  border-color: #667eea; 
+  border-color: var(--color-brand-start); 
   box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15), inset 0 2px 4px rgba(0,0,0,0.02); 
   background: #fff;
   transform: translateY(-1px);
@@ -79,17 +65,17 @@
 }
 
 .modern-label svg {
-  color: #667eea;
+  color: var(--color-brand-start);
   transition: all 0.3s ease;
 }
 
 .modern-label:hover svg {
   transform: scale(1.1);
-  color: #764ba2;
+  color: var(--color-brand-end);
 }
 
 .modern-btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+  background: var(--gradient-brand); 
   border: none; 
   border-radius: 8px; 
   padding: 8px 16px; 
@@ -170,7 +156,7 @@
 }
 
 .modern-toggle.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-brand);
 }
 
 .modern-toggle::after {
@@ -194,7 +180,7 @@
   transform: scale(1.1);
 }
 
-.status-badge {
+.ecfg-status-badge {
   padding: 6px 14px; 
   border-radius: 20px; 
   font-size: 0.8rem; 
@@ -207,7 +193,7 @@
 .status-active {
   background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); 
   color: white;
-  animation: pulse 2s infinite;
+  animation: ecfg-pulse 2s infinite;
 }
 
 .status-inactive {
@@ -219,7 +205,7 @@
   background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%); 
   border-radius: 12px; 
   padding: 14px 18px; 
-  border-left: 4px solid #667eea;
+  border-left: 4px solid var(--color-brand-start);
   transition: all 0.3s ease;
 }
 
@@ -246,7 +232,7 @@
 .form-section-title {
   font-size: 0.75rem; 
   font-weight: 700; 
-  color: #667eea; 
+  color: var(--color-brand-start); 
   text-transform: uppercase; 
   letter-spacing: 1px; 
   margin-bottom: 14px; 
@@ -262,11 +248,11 @@
 }
 
 .icon-pulse {
-  animation: pulse 2s ease-in-out infinite;
+  animation: ecfg-pulse 2s ease-in-out infinite;
 }
 
 .page-row {
-  animation: fadeInUp 0.6s ease-out;
+  animation: ecfg-fadeInUp 0.6s ease-out;
   margin-top: 0.5rem !important;
   gap: 0.5rem !important;
 }
@@ -277,7 +263,7 @@
   padding: 24px;
 }
 
-.loading-spinner {
+.ecfg-loading-spinner {
   display: inline-block;
   width: 16px;
   height: 16px;
@@ -287,7 +273,7 @@
   animation: spin 1s ease-in-out infinite;
 }
 
-.header-icon {
+.ecfg-header-icon {
   background: rgba(255,255,255,0.2);
   padding: 10px;
   border-radius: 10px;
@@ -308,7 +294,7 @@
   border: none;
   padding: 14px 18px;
   font-weight: 500;
-  animation: fadeInUp 0.4s ease-out;
+  animation: ecfg-fadeInUp 0.4s ease-out;
 }
 
 .form-control:disabled {

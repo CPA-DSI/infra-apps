@@ -7,12 +7,7 @@ import Swal from 'sweetalert2';
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaSpinner } from 'react-icons/fa';
 
 // --- IMPORTS CSS ---
-import '../../assets/vendor/animate/animate.css';
-import '../../assets/vendor/css-hamburgers/hamburgers.min.css';
-import '../../assets/vendor/select2/select2.min.css';
-import '../../assets/vendor/bootstrap/css/bootstrap.min.css';
-import '../../assets/css/util.css';
-import '../../assets/css/main.css';
+import './auth-base.css';
 import './login.css';
 
 const SVGIllustration = () => (

@@ -52,7 +52,7 @@ const parseQuantity = (value) => parseInt(value, 10) || 0;
 
 const createCapacityChartOptions = (categories) => ({
   chart: {
-    type: 'bar', height: 280, fontFamily: "'Inter', 'Segoe UI', sans-serif", toolbar: { show: false }, background: 'transparent',
+    type: 'bar', height: 280, fontFamily: "'Inter Variable', system-ui, sans-serif", toolbar: { show: false }, background: 'transparent',
     animations: {
       enabled: true,
       easing: 'easeinout',
@@ -123,7 +123,7 @@ const createCapacityChartOptions = (categories) => ({
 
 const createDiskTypeChartOptions = () => ({
   chart: {
-    type: 'donut', fontFamily: "'Inter', 'Segoe UI', sans-serif", background: 'transparent',
+    type: 'donut', fontFamily: "'Inter Variable', system-ui, sans-serif", background: 'transparent',
     animations: {
       enabled: true,
       easing: 'easeinout',

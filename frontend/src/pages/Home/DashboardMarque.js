@@ -226,8 +226,8 @@ const DashboardMarque = () => {
   if (loading) {
     return (
       <div className="dashboard-marque-loading">
-        <div className="spinner-container">
-          <div className="spinner-icon">🔄</div>
+        <div className="dm-spinner-container">
+          <div className="dm-spinner-icon">🔄</div>
           <p>Chargement du tableau de bord...</p>
         </div>
       </div>
@@ -237,7 +237,7 @@ const DashboardMarque = () => {
   if (error) {
     return (
       <div className="dashboard-marque-error">
-        <div className="error-icon">⚠️</div>
+        <div className="dm-error-icon">⚠️</div>
         <h3>Erreur de chargement</h3>
         <p>{error}</p>
         <button className="retry-btn" onClick={handleRefresh}>
@@ -251,11 +251,11 @@ const DashboardMarque = () => {
     <div className="dashboard-marque">
       {/* En-tête */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <div className="header-title">
-          <span className="header-icon">💻</span>
+        <div className="dm-header-title">
+          <span className="dm-header-icon">💻</span>
           <div>
             <h2>Dashboard Marques</h2>
-            <p className="header-subtitle">Analyse des équipements par marque, équipe et localisation</p>
+            <p className="dm-header-subtitle">Analyse des équipements par marque, équipe et localisation</p>
           </div>
         </div>
         <div className="header-actions">
@@ -266,7 +266,7 @@ const DashboardMarque = () => {
             </div>
           )}
           <button 
-            className={`refresh-btn ${refreshing ? 'active' : ''}`} 
+            className={`dm-refresh-btn ${refreshing ? 'active' : ''}`} 
             onClick={handleRefresh} 
             disabled={refreshing}
           >
@@ -277,71 +277,71 @@ const DashboardMarque = () => {
       </div>
 
       {/* Cartes statistiques */}
-      <div className="stats-cards">
-        <div className="stat-card">
-          <div className="stat-icon-wrapper">🏷️</div>
-          <div className="stat-content">
-            <div className="stat-value">{marques.length}</div>
-            <div className="stat-label">Marques totales</div>
+      <div className="dm-stats-cards">
+        <div className="dm-stat-card">
+          <div className="dm-stat-icon-wrapper">🏷️</div>
+          <div className="dm-stat-content">
+            <div className="dm-stat-value">{marques.length}</div>
+            <div className="dm-stat-label">Marques totales</div>
           </div>
         </div>
-        <div className="stat-card highlight">
-          <div className="stat-icon-wrapper">🖥️</div>
-          <div className="stat-content">
-            <div className="stat-value">{totalEquipements}</div>
-            <div className="stat-label">Équipements total</div>
+        <div className="dm-stat-card highlight">
+          <div className="dm-stat-icon-wrapper">🖥️</div>
+          <div className="dm-stat-content">
+            <div className="dm-stat-value">{totalEquipements}</div>
+            <div className="dm-stat-label">Équipements total</div>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon-wrapper">⭐</div>
-          <div className="stat-content">
-            <div className="stat-value">{topMarques[0]?.nom_marque || '-'}</div>
-            <div className="stat-label">Marque la plus utilisée</div>
+        <div className="dm-stat-card">
+          <div className="dm-stat-icon-wrapper">⭐</div>
+          <div className="dm-stat-content">
+            <div className="dm-stat-value">{topMarques[0]?.nom_marque || '-'}</div>
+            <div className="dm-stat-label">Marque la plus utilisée</div>
             <div className="stat-percentage">{topMarques[0]?.nombre_equipements || 0} équipements</div>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon-wrapper">👥</div>
-          <div className="stat-content">
-            <div className="stat-value">{statsEquipes?.nombreEquipes || 0}</div>
-            <div className="stat-label">Équipes concernées</div>
+        <div className="dm-stat-card">
+          <div className="dm-stat-icon-wrapper">👥</div>
+          <div className="dm-stat-content">
+            <div className="dm-stat-value">{statsEquipes?.nombreEquipes || 0}</div>
+            <div className="dm-stat-label">Équipes concernées</div>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon-wrapper">📍</div>
-          <div className="stat-content">
-            <div className="stat-value">{locauxData.length}</div>
-            <div className="stat-label">Locaux utilisés</div>
+        <div className="dm-stat-card">
+          <div className="dm-stat-icon-wrapper">📍</div>
+          <div className="dm-stat-content">
+            <div className="dm-stat-value">{locauxData.length}</div>
+            <div className="dm-stat-label">Locaux utilisés</div>
           </div>
         </div>
       </div>
 
       {/* Graphiques principaux - 2 colonnes */}
-      <div className="charts-container">
-        <div className="chart-card">
+      <div className="dm-charts-container">
+        <div className="dm-chart-card">
           <Chart options={barChartOptions} series={barChartSeries} type="bar" height={400} />
         </div>
-        <div className="chart-card">
+        <div className="dm-chart-card">
           <Chart options={pieChartOptions} series={pieChartSeries} type="donut" height={400} />
         </div>
       </div>
 
       {/* Top 5 et États */}
-      <div className="charts-container">
-        <div className="chart-card">
+      <div className="dm-charts-container">
+        <div className="dm-chart-card">
           <Chart options={top5BarOptions} series={top5BarSeries} type="bar" height={350} />
         </div>
-        <div className="chart-card">
+        <div className="dm-chart-card">
           <Chart options={etatsPieOptions} series={etatsPieSeries} type="pie" height={350} />
         </div>
       </div>
 
       {/* Équipes et Localisation */}
-      <div className="charts-container">
-        <div className="chart-card">
+      <div className="dm-charts-container">
+        <div className="dm-chart-card">
           <Chart options={equipeBarOptions} series={equipeBarSeries} type="bar" height={420} />
         </div>
-        <div className="chart-card">
+        <div className="dm-chart-card">
           <Chart options={localBarOptions} series={localBarSeries} type="bar" height={380} />
         </div>
       </div>
@@ -377,7 +377,7 @@ const DashboardMarque = () => {
             );
           })}
           {marques.length === 0 && (
-            <div className="dashboard-empty-state">
+            <div className="dm-dashboard-empty-state">
               <p>Aucune marque trouvée</p>
             </div>
           )}

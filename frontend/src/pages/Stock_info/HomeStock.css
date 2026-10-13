@@ -1,8 +1,3 @@
-@import '../../styles/theme.css';
-@import '../../styles/animations.css';
-@import '../../styles/ModalSystem.css';
-@import '../../styles/Buttons.css';
-
 /* Supprimer le double fond blanc dans le modal d'ajout */
 .page-stock .modal .add-modal-overlay {
     position: relative !important;
@@ -41,7 +36,7 @@
     max-height: 90vh;
     overflow: hidden;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: var(--font-sans);
     border: none;
     display: flex;
     flex-direction: column;

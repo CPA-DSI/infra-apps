@@ -747,7 +747,7 @@ const UsersManager = () => {
             </div>
 
             {showImportSection && (
-                <div className="import-section mb-4 rounded-3" style={{
+                <div className="mail-import-section mb-4 rounded-3" style={{
                     background: 'white', border: '1px solid #e5e7eb', borderRadius: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden'
                 }}>
                     <div className="d-flex justify-content-between align-items-center p-4 pb-3">
@@ -775,7 +775,7 @@ const UsersManager = () => {
                     {!importSuccess ? (
                         <>
                             <div
-                                className={`import-drop-zone mx-4 mb-3 ${isDragging ? 'dragover' : ''} ${importFile ? 'has-file' : ''}`}
+                                className={`mail-import-drop-zone mx-4 mb-3 ${isDragging ? 'dragover' : ''} ${importFile ? 'has-file' : ''}`}
                                 onDragEnter={handleDragEnter} onDragLeave={handleDragLeave} onDragOver={handleDragOver} onDrop={handleDrop}
                                 onClick={() => fileInputRef.current?.click()}
                             >
@@ -785,7 +785,7 @@ const UsersManager = () => {
 
                                 {importFile ? (
                                     <div className="d-flex align-items-center justify-content-center gap-4">
-                                        <div className="import-file-icon" style={{
+                                        <div className="mail-import-file-icon" style={{
                                             fontSize: '2.5rem', color: '#217346', filter: 'drop-shadow(0 2px 4px rgba(33, 115, 70, 0.15))'
                                         }}>
                                             <FaFileExcel />
@@ -800,7 +800,7 @@ const UsersManager = () => {
                                             </div>
                                         </div>
                                         <button
-                                            className="btn btn-sm rounded-circle border-0 import-remove-btn"
+                                            className="btn btn-sm rounded-circle border-0 mail-import-remove-btn"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 handleRemoveFile();
@@ -815,14 +815,14 @@ const UsersManager = () => {
                                     </div>
                                 ) : (
                                     <div>
-                                        <div className="import-drop-icon">
+                                        <div className="mail-import-drop-icon">
                                             <FaFileUpload />
                                         </div>
                                         <div style={{ fontWeight: '600', color: '#374151', fontSize: '0.95rem', marginBottom: '0.4rem' }}>
                                             Glissez-déposez votre fichier Excel ici
                                         </div>
                                         <div style={{ color: '#6b7280', fontSize: '0.85rem', marginBottom: '1rem' }}>
-                                            ou <span className="import-browse-link">parcourez vos fichiers</span>
+                                            ou <span className="mail-import-browse-link">parcourez vos fichiers</span>
                                         </div>
                                         <div style={{
                                             color: '#6b7280', fontSize: '0.8rem', backgroundColor: '#f3f4f6', display: 'inline-block', padding: '4px 14px', borderRadius: '20px'
@@ -920,11 +920,11 @@ const UsersManager = () => {
                                             {importProgress}%
                                         </span>
                                     </div>
-                                    <div className="progress-container" style={{
+                                    <div className="mail-progress-container" style={{
                                         height: '10px', borderRadius: '10px', backgroundColor: '#f3f4f6', overflow: 'hidden', position: 'relative'
                                     }}>
                                         <div
-                                            className="progress-bar-fill"
+                                            className="mail-progress-bar-fill"
                                             style={{
                                                 height: '100%',
                                                 borderRadius: '10px',
@@ -1076,7 +1076,7 @@ const UsersManager = () => {
                 </div>
             )}
 
-            <div className="border-0 shadow-lg" style={{ borderRadius: '25px', fontFamily: "'Inter', sans-serif" }}>
+            <div className="border-0 shadow-lg" style={{ borderRadius: '25px', fontFamily: 'var(--font-sans)' }}>
                 <div className="p-4 p-lg-5">
 
                     {error && <Alert variant="danger" className="mb-3" style={{ borderRadius: '12px' }}>{error}</Alert>}
@@ -1088,7 +1088,7 @@ const UsersManager = () => {
                                 className="col-6 col-lg-3" 
                                 key={config.key}
                                 style={{
-                                    animation: 'fadeInUp 0.5s ease forwards', opacity: 0, animationDelay: `${index * 0.1}s`
+                                    animation: 'mail-fadeInUp 0.5s ease forwards', opacity: 0, animationDelay: `${index * 0.1}s`
                                 }}
                             >
                                 <StatCard icon={config.icon} value={stats[config.key]} label={config.label} colorScheme={config.colorScheme} tooltip={config.tooltip} />
