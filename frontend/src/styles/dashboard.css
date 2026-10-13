@@ -1,0 +1,75 @@
+/* ============================================================
+   Base commune des dashboards sombres de l'accueil
+   (DashboardMarque, DashboardEcran, DashboardSSD,
+   DashboardDocuments, CountEquipe).
+   Chaque dashboard garde ses styles internes propres.
+   ============================================================ */
+
+.dash-card {
+  position: relative;
+  width: 100%;
+  padding: 28px;
+  background: linear-gradient(135deg, var(--dash-bg) 0%, #1e1b4b 100%);
+  color: var(--dash-text);
+  border: 1px solid var(--dash-border);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-lg);
+  font-family: var(--font-sans);
+  overflow: hidden;
+}
+
+/* États chargement / erreur : même carte, contenu centré */
+.dash-card--state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+}
+
+.dash-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.dash-title {
+  margin: 0;
+  color: var(--dash-text);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.dash-subtitle {
+  margin: 4px 0 0;
+  color: var(--dash-text-sub);
+  font-size: 13px;
+}
+
+.dash-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: var(--color-primary-lighter);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .dash-card {
+    padding: 18px;
+  }
+
+  .dash-title {
+    font-size: 18px;
+  }
+}

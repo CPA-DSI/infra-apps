@@ -7,6 +7,8 @@ import { Form, Spinner, Row, Col, Alert } from 'react-bootstrap';
 import { FaPlus, FaTimes, FaImage, FaTrash, FaEdit, FaExclamationTriangle, FaCheckCircle } from 'react-icons/fa';
 import { fetchAMarques, createMarque, updateMarque, deleteMarque } from '../../services/api';
 import { escapeHtml } from '../../utils/escapeHtml';
+import AppModal from '../../components/AppModal/AppModal';
+import './MaterielsModals.css';
 
 // ==========================================================
 // --- COMPOSANT LOGO SIMPLIFIÉ ---
@@ -45,41 +47,33 @@ const LogoDisplay = React.memo(({ url, nomMarque }) => {
     
     if (!url || url === 'null' || url === 'undefined' || url === '') {
         return (
-            <div style={{ 
-                width: '60px', height: '60px', backgroundColor: '#f3f4f6', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #e5e7eb'
-            }}>
-                <FaImage style={{ color: '#9ca3af', fontSize: '24px' }} />
+            <div className="mat-marque-logo">
+                <FaImage aria-hidden="true" />
             </div>
         );
     }
-    
+
     if (isLoading) {
         return (
-            <div style={{ 
-                width: '60px', height: '60px', backgroundColor: '#f3f4f6', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #e5e7eb'
-            }}>
+            <div className="mat-marque-logo">
                 <Spinner animation="border" size="sm" />
             </div>
         );
     }
-    
+
     if (imgError) {
         return (
-            <div style={{ 
-                width: '60px', height: '60px', backgroundColor: '#fee2e2', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #fecaca'
-            }}>
-                <FaImage style={{ color: '#ef4444', fontSize: '24px' }} />
+            <div className="mat-marque-logo is-error">
+                <FaImage aria-hidden="true" />
             </div>
         );
     }
-    
+
     return (
         <img
             src={url}
             alt={`Logo ${nomMarque}`}
-            style={{ 
-                width: '60px', height: '60px', objectFit: 'contain', borderRadius: '10px', border: '1px solid #e5e7eb', padding: '6px', backgroundColor: '#ffffff'
-            }}
+            className="mat-marque-logo"
             loading="lazy"
         />
     );
@@ -100,39 +94,18 @@ const LocalNotification = ({ message, type, onClose, undoAction, onUndo }) => {
 
     if (!message) return null;
 
-    const backgroundColor = type === 'success' ? '#d4edda' : '#f8d7da';
-    const textColor = type === 'success' ? '#155724' : '#721c24';
     const icon = type === 'success' ? <FaCheckCircle /> : <FaExclamationTriangle />;
 
     return (
-        <div style={{
-            position: 'fixed', bottom: '20px', right: '20px', backgroundColor: backgroundColor,
-            borderLeft: `4px solid ${type === 'success' ? '#28a745' : '#dc3545'}`,
-            borderRadius: '8px', padding: '12px 20px', marginBottom: '10px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            zIndex: 9999,
-            display: 'flex', alignItems: 'center', gap: '12px', animation: 'slideInRight 0.3s ease-out',
-            color: textColor, fontSize: '14px', fontWeight: '500'
-        }}>
-            <span style={{ fontSize: '18px' }}>{icon}</span>
+        <div className={`mat-local-notif ${type === 'success' ? 'is-success' : ''}`} role="status">
+            <span className="mat-local-notif-icon" aria-hidden="true">{icon}</span>
             <span>{message}</span>
             {undoAction && onUndo && (
-                <button
-                    onClick={onUndo}
-                    style={{
-                        background: type === 'success' ? '#155724' : '#721c24',
-                        border: 'none', color: 'white', cursor: 'pointer', marginLeft: '10px', padding: '4px 12px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold'
-                    }}
-                >
+                <button type="button" onClick={onUndo} className="mat-local-notif-undo">
                   Annuler
                 </button>
             )}
-            <button
-                onClick={onClose}
-                style={{
-                    background: 'none', border: 'none', color: textColor, cursor: 'pointer', marginLeft: '10px', fontSize: '16px', opacity: 0.7
-                }}
-            >
+            <button type="button" onClick={onClose} className="mat-local-notif-close" aria-label="Fermer la notification">
                 <FaTimes size={12} />
             </button>
         </div>
@@ -142,7 +115,9 @@ const LocalNotification = ({ message, type, onClose, undoAction, onUndo }) => {
 // ==========================================================
 // --- COMPOSANT PRINCIPAL AddMarque ---
 // ==========================================================
-const AddMarque = ({ onClose, onMarqueAdded }) => {
+// show : Materiels.js garde la modale montée en permanence et la masque ;
+// par défaut (show absent) elle est affichée.
+const AddMarque = ({ show = true, onClose, onMarqueAdded }) => {
     const [formData, setFormData] = useState({
         nom_marque: '',
         url: ''
@@ -348,7 +323,6 @@ try {
     }, [formData, editingMarque, fetchMarques]);
 
     const handleDelete = useCallback(async (marque) => {
-    // Configuration personnalisée avec z-index plus élevé
     const result = await MySwal.fire({
         title: 'Confirmation de suppression',
         html: `
@@ -364,23 +338,6 @@ try {
         confirmButtonText: 'Oui, supprimer définitivement',
         cancelButtonText: 'Annuler',
         reverseButtons: true,
-        customClass: {
-            container: 'swal2-container-custom',
-            popup: 'swal2-popup-custom'
-        },
-        didOpen: () => {
-            // Appliquer les styles après l'ouverture
-            const containers = document.querySelectorAll('.swal2-container');
-            containers.forEach(container => {
-                container.style.zIndex = '10000';
-                container.style.position = 'fixed';
-            });
-            
-            const popup = document.querySelector('.swal2-popup');
-            if (popup) {
-                popup.style.zIndex = '10001';
-            }
-        }
     });
 
     if (result.isConfirmed || result.isDenied) {
@@ -443,7 +400,7 @@ try {
                 sortable: true, 
                 grow: 2,
                 cell: row => (
-                    <span style={{ fontWeight: '600', fontSize: '14px' }}>
+                    <span className="mat-marque-name">
                         {row.nom_marque}
                     </span>
                 )
@@ -458,30 +415,24 @@ try {
             {
                 name: 'Actions',
                 cell: row => (
-                    <div style={{ display: 'flex', gap: '8px' }} onClick={(e) => e.stopPropagation()}>
+                    <div className="mat-marque-actions" onClick={(e) => e.stopPropagation()}>
                         <button
                             type="button"
+                            className="btn-icon btn-icon--info"
                             onClick={(e) => handleEdit(row, e)}
-                            style={{
-                                background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', padding: '4px 8px', borderRadius: '6px', transition: 'all 0.2s'
-                            }}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#eff6ff'}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                             title="Modifier la marque"
+                            aria-label={`Modifier la marque ${row.nom_marque}`}
                         >
-                            <FaEdit size={16} />
+                            <FaEdit size={14} />
                         </button>
                         <button
                             type="button"
+                            className="btn-icon btn-icon--danger"
                             onClick={() => handleDelete(row)}
-                            style={{
-                                background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px 8px', borderRadius: '6px', transition: 'all 0.2s'
-                            }}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                             title="Supprimer la marque"
+                            aria-label={`Supprimer la marque ${row.nom_marque}`}
                         >
-                            <FaTrash size={16} />
+                            <FaTrash size={14} />
                         </button>
                     </div>
                 ),
@@ -492,198 +443,19 @@ try {
         ];
     }, [handleEdit, handleDelete]);
 
-    // Ajout des styles d'animation CSS
-    useEffect(() => {
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideInRight {
-                from {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-            }
-            
-            @keyframes fadeOut {
-                from {
-                    opacity: 1;
-                }
-                to {
-                    opacity: 0;
-                }
-            }
-            
-            .delete-pending {
-                animation: fadeOut 0.3s ease-out;
-            }
-        `;
-        document.head.appendChild(style);
-        return () => {
-            document.head.removeChild(style);
-        };
-    }, []);
-
     return (
-        <div 
-            className="add-modal-overlay" 
-            onClick={(e) => {
-                if (e.target === e.currentTarget && onClose) {
-                    onClose();
-                }
-            }}
-        >
-            <form 
-                onSubmit={editingMarque ? handleUpdate : handleSubmit} 
-                className="add-modal-content" 
-                style={{ width: '1100px', maxWidth: '95%', margin: '0 auto', maxHeight: '90vh', overflow: 'hidden' }}
-                onClick={(e) => e.stopPropagation()}
-            >
-                <div className="add-modal-header">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <div className="add-modal-icon-wrapper"> 
-                            {editingMarque ? <FaEdit /> : <FaPlus />}
-                        </div>
-                        <div>
-                            <h2 className="add-modal-title">
-                                {editingMarque ? 'Modifier la marque' : 'Ajout d\'une nouvelle Marque'}
-                            </h2>
-                            <p className="add-modal-subtitle">
-                                {editingMarque ? 'Modifiez les informations ci-dessous' : 'Remplissez les informations ci-dessous'}
-                            </p>
-                        </div>
-                    </div>
-                    {onClose && (
-                        <button onClick={onClose} className="add-modal-close-btn" type="button"> 
-                            <FaTimes /> 
-                        </button>
-                    )}
-                </div>
-                
-<div className="add-modal-body">
-                      {error && <Alert variant="danger" className="mb-3" style={{ borderRadius: '12px' }}>{error}</Alert>}
-                      {successMessage && <Alert variant="success" className="mb-3" style={{ borderRadius: '12px' }}>{successMessage}</Alert>}
-                      
-                      {apiError && (
-                          <Alert variant="danger" className="mt-3 mb-0" style={{ borderRadius: '12px' }}>
-                              <FaTimes className="me-2" />
-                              {apiError}
-                          </Alert>
-                      )}
-                    
-                    <Row className="g-4">
-                        <Col md={6}>
-                            <div className="mb-3">
-                                <label className="form-label fw-medium">
-                                    Nom de la marque <span className="text-danger">*</span>
-                                </label>
-                                <Form.Control 
-                                    name="nom_marque" 
-                                    type="text" 
-                                    value={formData.nom_marque} 
-                                    onChange={handleChange} 
-                                    placeholder="Ex: HP, Dell, Asus..." 
-                                    required 
-                                    disabled={loading}
-                                />
-                            </div>
-                           
-                            <div className="mb-3">
-                                <label className="form-label fw-medium">
-                                    URL du logo
-                                </label>
-                                <Form.Control 
-                                    name="url" 
-                                    type="text" 
-                                    value={formData.url} 
-                                    onChange={handleChange} 
-                                    placeholder="https://example.com/logo.png" 
-                                    disabled={loading}
-                                />
-                                <small className="text-muted d-block mt-1">
-                                    📌 Entrez l'URL complète de l'image du logo (PNG, JPG, SVG, WEBP)
-                                </small>
-                                <small className="text-muted d-block mt-1">
-                                    💡 Exemple: https://images.seeklogo.com/logo-png/6/1/hp-logo-png_seeklogo-68357.png
-                                </small>
-                            </div>
-                            
-                            {formData.url && isValidUrl(formData.url) && (
-                                <div className="mb-3">
-                                    <label className="form-label fw-medium">📸 Aperçu du logo :</label>
-                                    <div style={{ 
-                                        padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '10px', textAlign: 'center'
-                                    }}>
-                                        <LogoDisplay url={formData.url} nomMarque={formData.nom_marque || 'Aperçu'} />
-                                    </div>
-                                </div>
-                            )}
-                            
-                            {loading && (
-                                <div className="d-flex justify-content-center mt-3">
-                                    <Spinner animation="border" role="status">
-                                        <span className="visually-hidden">Chargement...</span>
-                                    </Spinner>
-                                </div>
-                            )}
-                            
-                            {editingMarque && (
-                                <div className="mt-3 d-flex gap-2">
-                                    <button
-                                        type="button"
-                                        className="btn btn-secondary"
-                                        onClick={() => {
-                                            setEditingMarque(null);
-                                            setFormData({ nom_marque: '', url: '' });
-                                        }}
-                                    >
-                                        Annuler la modification
-                                    </button>
-                                </div>
-                            )}
-                        </Col>
-                        
-                        <Col md={6}>
-                            <div className="mb-3">
-                                <label className="form-label fw-medium">
-                                    📋 Marques existantes ({marques.length})
-                                </label>
-                            </div>
-                            <div style={{ maxHeight: '450px', overflowY: 'auto' }}>
-                                {marquesLoading ? (
-                                    <div className="text-center p-4">
-                                        <Spinner animation="border" role="status">
-                                            <span className="visually-hidden">Chargement...</span>
-                                        </Spinner>
-                                        <p className="mt-2 text-muted">Chargement des marques...</p>
-                                    </div>
-                                ) : (
-                                    <DataTable
-                                        columns={columns}
-                                        data={marques}
-                                        pagination
-                                        paginationPerPage={7}
-                                        paginationRowsPerPageOptions={[7, 14, 28]}
-                                        highlightOnHover
-                                        pointerOnHover
-                                        responsive
-                                        noDataComponent={
-                                            <div className="p-4 text-center text-muted">
-                                                <FaImage size={40} style={{ opacity: 0.3 }} />
-                                                <p className="mt-2">Aucune marque trouvée</p>
-                                                <small>Cliquez sur "Ajouter" pour créer une nouvelle marque</small>
-                                            </div>
-                                        }
-                                    />
-                                )}
-                            </div>
-                        </Col>
-                    </Row>
-                </div>
-                
-                <div className="add-modal-footer">
+        <AppModal
+            show={show}
+            onClose={onClose}
+            closeOnBackdrop
+            as="form"
+            onSubmit={editingMarque ? handleUpdate : handleSubmit}
+            title={editingMarque ? 'Modifier la marque' : 'Ajout d\'une nouvelle Marque'}
+            subtitle={editingMarque ? 'Modifiez les informations ci-dessous' : 'Remplissez les informations ci-dessous'}
+            icon={editingMarque ? <FaEdit /> : <FaPlus />}
+            contentClassName="mat-marque-modal"
+            footer={
+                <>
                     {onClose && (
                         <button type="button" onClick={onClose} className="btn btn-outline-secondary" disabled={loading}>
                             Annuler
@@ -702,10 +474,129 @@ try {
                             </>
                         )}
                     </button>
-                </div>
-            </form>
-            
-            {/* Notification locale */}
+                </>
+            }
+        >
+            {error && <Alert variant="danger" className="mb-3">{error}</Alert>}
+            {successMessage && <Alert variant="success" className="mb-3">{successMessage}</Alert>}
+
+            {apiError && (
+                <Alert variant="danger" className="mt-3 mb-0">
+                    <FaTimes className="me-2" />
+                    {apiError}
+                </Alert>
+            )}
+
+            <Row className="g-4">
+                <Col md={6}>
+                    <div className="mb-3">
+                        <label className="form-label fw-medium" htmlFor="marque-nom">
+                            Nom de la marque <span className="text-danger">*</span>
+                        </label>
+                        <Form.Control
+                            id="marque-nom"
+                            name="nom_marque"
+                            type="text"
+                            value={formData.nom_marque}
+                            onChange={handleChange}
+                            placeholder="Ex: HP, Dell, Asus..."
+                            required
+                            disabled={loading}
+                        />
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label fw-medium" htmlFor="marque-url">
+                            URL du logo
+                        </label>
+                        <Form.Control
+                            id="marque-url"
+                            name="url"
+                            type="text"
+                            value={formData.url}
+                            onChange={handleChange}
+                            placeholder="https://example.com/logo.png"
+                            disabled={loading}
+                        />
+                        <small className="text-muted d-block mt-1">
+                            📌 Entrez l'URL complète de l'image du logo (PNG, JPG, SVG, WEBP)
+                        </small>
+                        <small className="text-muted d-block mt-1">
+                            💡 Exemple: https://images.seeklogo.com/logo-png/6/1/hp-logo-png_seeklogo-68357.png
+                        </small>
+                    </div>
+
+                    {formData.url && isValidUrl(formData.url) && (
+                        <div className="mb-3">
+                            <span className="form-label fw-medium d-block">📸 Aperçu du logo :</span>
+                            <div className="mat-marque-preview">
+                                <LogoDisplay url={formData.url} nomMarque={formData.nom_marque || 'Aperçu'} />
+                            </div>
+                        </div>
+                    )}
+
+                    {loading && (
+                        <div className="d-flex justify-content-center mt-3">
+                            <Spinner animation="border" role="status">
+                                <span className="visually-hidden">Chargement...</span>
+                            </Spinner>
+                        </div>
+                    )}
+
+                    {editingMarque && (
+                        <div className="mt-3 d-flex gap-2">
+                            <button
+                                type="button"
+                                className="btn btn-secondary"
+                                onClick={() => {
+                                    setEditingMarque(null);
+                                    setFormData({ nom_marque: '', url: '' });
+                                }}
+                            >
+                                Annuler la modification
+                            </button>
+                        </div>
+                    )}
+                </Col>
+
+                <Col md={6}>
+                    <div className="mb-3">
+                        <span className="form-label fw-medium d-block">
+                            📋 Marques existantes ({marques.length})
+                        </span>
+                    </div>
+                    <div className="mat-marque-list">
+                        {marquesLoading ? (
+                            <div className="text-center p-4">
+                                <Spinner animation="border" role="status">
+                                    <span className="visually-hidden">Chargement...</span>
+                                </Spinner>
+                                <p className="mt-2 text-muted">Chargement des marques...</p>
+                            </div>
+                        ) : (
+                            <DataTable
+                                columns={columns}
+                                data={marques}
+                                pagination
+                                paginationPerPage={7}
+                                paginationRowsPerPageOptions={[7, 14, 28]}
+                                highlightOnHover
+                                pointerOnHover
+                                responsive
+                                noDataComponent={
+                                    <div className="p-4 text-center text-muted">
+                                        <FaImage size={40} className="mat-marque-empty-icon" aria-hidden="true" />
+                                        <p className="mt-2">Aucune marque trouvée</p>
+                                        <small>Cliquez sur "Ajouter" pour créer une nouvelle marque</small>
+                                    </div>
+                                }
+                            />
+                        )}
+                    </div>
+                </Col>
+            </Row>
+
+            {/* Notification locale (position fixe) */}
             {localNotification.show && (
                 <LocalNotification
                     message={localNotification.message}
@@ -715,7 +606,7 @@ try {
                     onUndo={handleUndoDelete}
                 />
             )}
-        </div>
+        </AppModal>
     );
 };
 

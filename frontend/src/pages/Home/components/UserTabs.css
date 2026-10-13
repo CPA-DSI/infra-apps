@@ -1,7 +1,7 @@
 .userTabs {
   display: flex;
   position: relative;
-  background: #f3f4f6;
+  background: var(--color-border-light);
   border-radius: 14px;
   padding: 4px;
   gap: 4px;
@@ -17,22 +17,22 @@
   padding: 12px 20px;
   border: none;
   background: transparent;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--color-text-sub);
   transition: all 0.3s ease;
   position: relative;
   z-index: 1;
 }
 
 .userTab:hover {
-  color: #374151;
+  color: var(--color-text-body);
 }
 
 .userTabActive {
-  color: #4338ca;
+  color: var(--color-primary-darker);
 }
 
 .userTabLabel {
@@ -41,7 +41,7 @@
 
 .userTabBadge {
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-  color: #ffffff;
+  color: white;
   font-size: 11px;
   font-weight: 700;
   padding: 2px 8px;
@@ -56,8 +56,8 @@
   left: 4px;
   width: calc(50% - 4px);
   height: calc(100% - 8px);
-  background: #ffffff;
-  border-radius: 12px;
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 0;

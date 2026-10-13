@@ -1,0 +1,101 @@
+/* ============================================================
+   HistoriqueArriveesChart.css (préfixe hac-)
+   Utilisé dans HistoriqueArrivees et sur l'accueil (Home)
+   ============================================================ */
+
+.hac-chart-loading {
+  height: 400px;
+}
+
+.hac-chart-loading .spinner-grow {
+  width: 3rem;
+  height: 3rem;
+}
+
+.hac-chart-title {
+  letter-spacing: -0.3px;
+}
+
+/* Boutons de période : le bouton actif garde ses coins arrondis dans le groupe */
+.hac-period-group > .btn.hac-period-btn {
+  font-weight: 600;
+  font-size: 0.78rem;
+}
+
+.hac-period-group.btn-group > .btn.hac-period-btn.is-active {
+  border-radius: var(--radius-sm);
+}
+
+/* ---- Cartes KPI ---- */
+.hac-kpi {
+  border-radius: var(--radius-lg);
+  background: var(--hac-kpi-bg);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.07);
+}
+
+.hac-kpi--primary {
+  --hac-kpi-icon: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+  --hac-kpi-bg: linear-gradient(135deg, var(--color-primary-soft), var(--color-secondary-soft));
+}
+
+.hac-kpi--success {
+  --hac-kpi-icon: linear-gradient(135deg, var(--color-success), #34d399);
+  --hac-kpi-bg: linear-gradient(135deg, #ecfdf5, #f0fdf4);
+}
+
+.hac-kpi--warning {
+  --hac-kpi-icon: linear-gradient(135deg, var(--color-warning), #fbbf24);
+  --hac-kpi-bg: linear-gradient(135deg, #fffbeb, #fefce8);
+}
+
+.hac-kpi--info {
+  --hac-kpi-icon: linear-gradient(135deg, #0ea5e9, #38bdf8);
+  --hac-kpi-bg: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+}
+
+.hac-kpi__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: var(--hac-kpi-icon);
+  color: var(--color-bg);
+  font-size: 1.3rem;
+}
+
+.hac-kpi__value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-text-main);
+  line-height: 1.1;
+}
+
+.hac-kpi__label {
+  font-size: 0.75rem;
+  color: var(--color-text-sub);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* ---- Carte graphique ---- */
+.hac-chart-card {
+  border-radius: var(--radius-xl);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.hac-chart-select {
+  border-radius: var(--radius-sm);
+}
+
+.hac-chart-count {
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: 1px solid var(--color-border);
+}
+
+.hac-chart-area {
+  height: 400px;
+}

@@ -6,46 +6,31 @@ import {
 } from 'react-icons/fa';
 import { addUser, updateUser } from '../../services/api';
 import { ROLES } from '../../config/api';
-import './Mail.css';
-import '../Materiels/Materiels.css';
+import AppModal from '../../components/AppModal/AppModal';
+import '../../styles/DetailsSection.css';
+import './MailModals.css';
 
 function EmailSection({ title, subtitle, color, gradient, icon, index, emails, updateEmail, isDisabled, headerAction }) {
     const email = emails?.[index] || {};
-    const verifiedColor = email?.is_verified ? '#15803d' : '#b45309';
 
     return (
-        <div className="details-section" style={{
-            background: 'white', borderRadius: '16px', padding: '24px', marginBottom: '20px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid #E2E8F0',
-            position: 'relative'
-        }}>
+        <div className="details-section mail-modal-section mail-modal-section--roomy" style={{ '--mail-section-accent': color }}>
             <div className="details-section-header" style={{
-                background: gradient, border: `1px solid ${color}40`, borderRadius: '12px', padding: '10px 18px',
-                marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '14px',
-                boxShadow: `0 2px 8px ${color}40`
+                background: gradient, border: `1px solid ${color}40`, boxShadow: `0 2px 8px ${color}40`
             }}>
-                <div className="section-icon-wrapper" style={{
-                    background: 'rgba(255,255,255,0.25)', borderRadius: '50%', width: '40px', height: '40px',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', color: 'white'
-                }}>
+                <div className="section-icon-wrapper mail-modal-section-icon" aria-hidden="true">
                     {icon}
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <h3 className="details-section-title" style={{
-                        color: 'white', fontSize: '0.95rem', fontWeight: '600', margin: 0, letterSpacing: '0.5px',
-                        textShadow: '0 1px 2px rgba(0,0,0,0.1)'
-                    }}>
+                <div className="d-flex flex-column">
+                    <h3 className="details-section-title mail-modal-section-title">
                         {title}
                     </h3>
-                    <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.7rem', fontWeight: '400' }}>
+                    <span className="mail-modal-section-subtitle">
                         {subtitle}
                     </span>
                 </div>
-                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{
-                        background: 'rgba(255,255,255,0.2)', borderRadius: '20px', padding: '2px 12px',
-                        color: 'white', fontSize: '0.65rem', fontWeight: '500', letterSpacing: '0.5px', textTransform: 'uppercase'
-                    }}>
+                <div className="mail-modal-section-actions">
+                    <span className="section-badge">
                         {index === 0 ? 'Principal' : `Supplémentaire ${index}`}
                     </span>
                     {headerAction}
@@ -55,7 +40,7 @@ function EmailSection({ title, subtitle, color, gradient, icon, index, emails, u
             <div className="add-modal-form-grid">
                 <div className="add-modal-form-group">
                     <label className="add-modal-label">
-                        <FaEnvelope style={{ color }} /> {index === 0 ? 'Email Principal' : `Email Supplémentaire ${index}`}
+                        <FaEnvelope className="mail-modal-accent-icon" aria-hidden="true" /> {index === 0 ? 'Email Principal' : `Email Supplémentaire ${index}`}
                     </label>
                     <input
                         type="text"
@@ -68,7 +53,7 @@ function EmailSection({ title, subtitle, color, gradient, icon, index, emails, u
                 </div>
                 <div className="add-modal-form-group">
                     <label className="add-modal-label">
-                        <FaLock style={{ color }} /> Mot de passe compte
+                        <FaLock className="mail-modal-accent-icon" aria-hidden="true" /> Mot de passe compte
                     </label>
                     <input
                         type="text"
@@ -81,7 +66,7 @@ function EmailSection({ title, subtitle, color, gradient, icon, index, emails, u
                 </div>
                 <div className="add-modal-form-group">
                     <label className="add-modal-label">
-                        <FaLock style={{ color }} /> Mot de passe messagerie
+                        <FaLock className="mail-modal-accent-icon" aria-hidden="true" /> Mot de passe messagerie
                     </label>
                     <input
                         type="text"
@@ -93,14 +78,14 @@ function EmailSection({ title, subtitle, color, gradient, icon, index, emails, u
                     />
                 </div>
                 <div className="add-modal-form-group d-flex align-items-end">
-                    <label className="add-modal-label d-flex align-items-center gap-2" style={{ cursor: 'pointer', marginBottom: '8px' }}>
+                    <label className="add-modal-label d-flex align-items-center gap-2 mail-modal-verified-toggle">
                         <input
                             type="checkbox"
                             checked={email?.is_verified || false}
                             onChange={e => updateEmail(index, 'is_verified', e.target.checked)}
                             disabled={isDisabled}
                         />
-                        <span style={{ color: verifiedColor, fontWeight: 600 }}>Vérifié</span>
+                        <span className={`mail-modal-verified-text ${email?.is_verified ? 'is-verified' : ''}`}>Vérifié</span>
                     </label>
                 </div>
             </div>
@@ -299,223 +284,156 @@ function UserFormModal({ show, handleClose, mode, userData, availableMateriels, 
 
     if (!show) return null;
 
-    const headerGradient = isEdit
-        ? 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)'
-        : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)';
+    const isInactive = form.is_active === false;
+    const emailCount = (form.emails || []).length;
+
+    const footer = (
+        <>
+            <button type="button" onClick={handleClose} className="add-modal-cancel-btn" disabled={submitting}>
+                Annuler
+            </button>
+            <button type="submit" className="add-modal-submit-btn" disabled={submitting}>
+                {submitting ? (
+                    <><span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />Enregistrement...</>
+                ) : (
+                    isEdit ? <><FaEdit aria-hidden="true" /> Enregistrer les modifications</> : <><FaUser aria-hidden="true" /> Ajouter l'utilisateur</>
+                )}
+            </button>
+        </>
+    );
 
     return (
-        <div className="add-modal-overlay">
-            <div className="add-modal-content" style={{
-                maxWidth: '1000px', maxHeight: '90vh', overflowY: 'auto', borderRadius: '20px',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
-            }}>
-                <div className="add-modal-header" style={{
-                    background: headerGradient, borderBottom: '1px solid rgba(255,255,255,0.1)'
+        <AppModal
+            show={show}
+            onClose={handleClose}
+            as="form"
+            onSubmit={handleSubmit}
+            contentClassName="mail-modal mail-modal--wide"
+            headerBg={isEdit ? 'linear-gradient(135deg, var(--color-warning) 0%, #fbbf24 100%)' : undefined}
+            icon={isEdit ? <FaEdit /> : <FaUser />}
+            title={isEdit ? 'Modifier l\'utilisateur' : 'Ajouter un utilisateur'}
+            subtitle={isEdit ? 'Modifiez les informations ci-dessous' : 'Remplissez les informations ci-dessous'}
+            footer={footer}
+        >
+            {errorMessage && (
+                <div className="add-modal-error mail-modal-alert mail-modal-alert--error" role="alert">
+                    <FaShieldAlt aria-hidden="true" />
+                    {errorMessage}
+                </div>
+            )}
+
+            <div className="details-section mail-modal-section mail-modal-section--roomy">
+                <div className="details-section-header" style={{
+                    background: 'var(--gradient-primary-dark)',
+                    border: '1px solid rgba(79,70,229,0.2)',
+                    boxShadow: '0 2px 8px rgba(79,70,229,0.2)'
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <div className="add-modal-icon-wrapper" style={{
-                            background: 'linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.1))',
-                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-                        }}>
-                            {isEdit ? <FaEdit style={{ color: 'white' }} /> : <FaUser style={{ color: 'white' }} />}
-                        </div>
-                        <div>
-                            <h2 className="add-modal-title" style={{ color: 'white' }}>
-                                {isEdit ? 'Modifier l\'utilisateur' : 'Ajouter un utilisateur'}
-                            </h2>
-                            <p className="add-modal-subtitle" style={{ margin: 0, fontSize: '0.85rem', opacity: 0.85 }}>
-                                {isEdit ? 'Modifiez les informations ci-dessous' : 'Remplissez les informations ci-dessous'}
-                            </p>
-                        </div>
+                    <div className="section-icon-wrapper mail-modal-section-icon" aria-hidden="true">
+                        <FaUser />
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <button type="button" onClick={handleClose} className="add-modal-close-btn" style={{
-                            background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.15)'
-                        }}>
-                            <FaTimes />
-                        </button>
+                    <div className="d-flex flex-column">
+                        <h3 className="details-section-title mail-modal-section-title">
+                            Informations Générales
+                        </h3>
+                        <span className="mail-modal-section-subtitle">
+                            👤 Matériel, rôle et statut
+                        </span>
                     </div>
                 </div>
 
-                <div className="add-modal-body">
-                    {errorMessage && (
-                        <div className="add-modal-error" style={{
-                            marginBottom: '16px', padding: '12px', background: 'rgba(239, 68, 68, 0.1)',
-                            borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '8px'
-                        }}>
-                            <FaShieldAlt style={{ color: '#ef4444' }} />
-                            {errorMessage}
+                <div className="add-modal-form-grid">
+                    <div className="add-modal-form-group">
+                        <label className="add-modal-label">
+                            <FaQrcode aria-hidden="true" /> Associer au Matériel (ID_N)
+                        </label>
+                        <select
+                            className="add-modal-select"
+                            value={form.id_n || ''}
+                            onChange={handleSelectMateriel}
+                            required
+                            disabled={!isEdit ? false : true}
+                        >
+                            <option value="">Sélectionner...</option>
+                            {availableMateriels.map(m => (
+                                <option key={m.id_n} value={m.id_n}>
+                                    N° {m.id_n} - {m.utilisateur || 'Sans nom'}
+                                </option>
+                            ))}
+                        </select>
+                        <div className="form-text mail-modal-hint">
+                            {isEdit ? 'Le matériel ne peut pas être modifié.' : 'Recherchez l\'identifiant correspondant à cet utilisateur.'}
                         </div>
-                    )}
-
-                    <form onSubmit={handleSubmit}>
-                        <div className="details-section" style={{
-                            background: 'white', borderRadius: '16px', padding: '24px', marginBottom: '20px',
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid #E2E8F0'
-                        }}>
-                            <div className="details-section-header" style={{
-                                background: 'linear-gradient(135deg, #4F46E5, #6366F1)',
-                                border: '1px solid rgba(79,70,229,0.2)', borderRadius: '12px', padding: '10px 18px',
-                                marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '14px',
-                                boxShadow: '0 2px 8px rgba(79,70,229,0.2)'
-                            }}>
-                                <div className="section-icon-wrapper" style={{
-                                    background: 'rgba(255,255,255,0.25)', borderRadius: '50%', width: '40px', height: '40px',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', color: 'white'
-                                }}>
-                                    <FaUser />
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <h3 className="details-section-title" style={{
-                                        color: 'white', fontSize: '0.95rem', fontWeight: '600', margin: 0, letterSpacing: '0.5px',
-                                        textShadow: '0 1px 2px rgba(0,0,0,0.1)'
-                                    }}>
-                                        Informations Générales
-                                    </h3>
-                                    <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.7rem', fontWeight: '400' }}>
-                                        👤 Matériel, rôle et statut
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="add-modal-form-grid">
-                                <div className="add-modal-form-group">
-                                    <label className="add-modal-label">
-                                        <FaQrcode /> Associer au Matériel (ID_N)
-                                    </label>
-                                    <select
-                                        className="add-modal-select"
-                                        value={form.id_n || ''}
-                                        onChange={handleSelectMateriel}
-                                        required
-                                        disabled={!isEdit ? false : true}
-                                    >
-                                        <option value="">Sélectionner...</option>
-                                        {availableMateriels.map(m => (
-                                            <option key={m.id_n} value={m.id_n}>
-                                                N° {m.id_n} - {m.utilisateur || 'Sans nom'}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <div className="form-text" style={{ color: '#6366f1', fontSize: '0.8rem', marginTop: '4px' }}>
-                                        {isEdit ? 'Le matériel ne peut pas être modifié.' : 'Recherchez l\'identifiant correspondant à cet utilisateur.'}
-                                    </div>
-                                </div>
-                                <div className="add-modal-form-group">
-                                    <label className="add-modal-label">
-                                        <FaUsers /> Rôle
-                                    </label>
-                                    <select
-                                        className="add-modal-select"
-                                        value={form.role || 'USER'}
-                                        onChange={e => setForm({ ...form, role: e.target.value })}
-                                        disabled={isDisabled}
-                                    >
-                                        {Object.entries(ROLES).map(([value, { label }]) => (
-                                            <option key={value} value={value}>{label}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="add-modal-form-group">
-                                    <label className="add-modal-label">Statut</label>
-                                    <div className="d-flex align-items-center gap-3" style={{ marginTop: '8px' }}>
-                                        <label className="switch" style={{ position: 'relative', display: 'inline-block', width: '50px', height: '26px', cursor: 'pointer' }}>
-                                            <input type="checkbox" checked={form.is_active !== false} onChange={e => setForm({ ...form, is_active: e.target.checked })} disabled={isDisabled} style={{ opacity: 0, width: 0, height: 0 }} />
-                                            <span style={{ position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: form.is_active === false ? '#ef4444' : '#22c55e', transition: '0.3s', borderRadius: '26px' }}></span>
-                                            <span style={{ position: 'absolute', content: '""', height: '20px', width: '20px', left: form.is_active === false ? '24px' : '4px', bottom: '3px', backgroundColor: 'white', transition: '0.3s', borderRadius: '50%' }}></span>
-                                        </label>
-                                        <span className="fw-medium" style={{ fontSize: '0.9rem', color: form.is_active === false ? '#ef4444' : '#22c55e' }}>
-                                            {form.is_active === false ? 'Désactivé' : 'Actif'}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
+                    </div>
+                    <div className="add-modal-form-group">
+                        <label className="add-modal-label">
+                            <FaUsers aria-hidden="true" /> Rôle
+                        </label>
+                        <select
+                            className="add-modal-select"
+                            value={form.role || 'USER'}
+                            onChange={e => setForm({ ...form, role: e.target.value })}
+                            disabled={isDisabled}
+                        >
+                            {Object.entries(ROLES).map(([value, { label }]) => (
+                                <option key={value} value={value}>{label}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="add-modal-form-group">
+                        <label className="add-modal-label">Statut</label>
+                        <div className="d-flex align-items-center gap-3 mt-2">
+                            <label className={`mail-modal-switch ${isInactive ? 'is-off' : ''}`}>
+                                <input type="checkbox" checked={!isInactive} onChange={e => setForm({ ...form, is_active: e.target.checked })} disabled={isDisabled} aria-label="Compte actif" />
+                                <span className="mail-modal-switch-track"></span>
+                                <span className="mail-modal-switch-knob"></span>
+                            </label>
+                            <span className={`mail-modal-status-text fw-medium ${isInactive ? 'is-off' : ''}`}>
+                                {isInactive ? 'Désactivé' : 'Actif'}
+                            </span>
                         </div>
-
-                        {(form.emails || []).map((email, index) => (
-                            <EmailSection
-                                key={index}
-                                title={index === 0 ? 'Email Principal' : `Email Supplémentaire ${index}`}
-                                subtitle={index === 0 ? 'Compte email principal de l\'utilisateur' : 'Compte email supplémentaire'}
-                                color={index === 0 ? '#8B5CF6' : '#0EA5E9'}
-                                gradient={index === 0 ? 'linear-gradient(135deg, #8B5CF6, #A78BFA)' : 'linear-gradient(135deg, #0EA5E9, #38BDF8)'}
-                                icon={index === 0 ? <FaEnvelope /> : <FaEnvelopeOpenText />}
-                                index={index}
-                                emails={form.emails}
-                                updateEmail={updateEmail}
-                                isDisabled={isDisabled}
-                                headerAction={
-                                    <button
-                                        type="button"
-                                        onClick={() => removeEmail(index)}
-                                        disabled={isDisabled || (form.emails || []).length <= 1}
-                                        style={{
-                                            background: 'rgba(255, 255, 255, 0.2)',
-                                            color: 'white',
-                                            border: '1px solid rgba(255, 255, 255, 0.3)',
-                                            width: '28px',
-                                            height: '28px',
-                                            borderRadius: '50%',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            cursor: (isDisabled || (form.emails || []).length <= 1) ? 'not-allowed' : 'pointer',
-                                            opacity: (isDisabled || (form.emails || []).length <= 1) ? 0.5 : 1,
-                                            transition: 'all 0.2s ease'
-                                        }}
-                                        title="Supprimer cet email"
-                                    >
-                                        <FaTimes size={12} />
-                                    </button>
-                                }
-                            />
-                        ))}
-
-                        {!isEdit && (
-                            <button
-                                type="button"
-                                onClick={addEmail}
-                                disabled={isDisabled}
-                                style={{
-                                    width: '100%',
-                                    padding: '12px',
-                                    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '12px',
-                                    cursor: isDisabled ? 'not-allowed' : 'pointer',
-                                    opacity: isDisabled ? 0.6 : 1,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: '8px',
-                                    fontSize: '0.9rem',
-                                    fontWeight: '600',
-                                    marginBottom: '20px',
-                                    boxShadow: '0 4px 12px rgba(99, 102, 241, 0.2)'
-                                }}
-                            >
-                                <FaPlus size={14} />
-                                Ajouter un email
-                            </button>
-                        )}
-
-                        <div className="add-modal-footer">
-                            <button type="button" onClick={handleClose} className="add-modal-cancel-btn" disabled={submitting}>
-                                Annuler
-                            </button>
-                            <button type="submit" className="add-modal-submit-btn" disabled={submitting}>
-                                {submitting ? (
-                                    <><span className="spinner-border spinner-border-sm me-2" />Enregistrement...</>
-                                ) : (
-                                    isEdit ? <><FaEdit /> Enregistrer les modifications</> : <><FaUser /> Ajouter l'utilisateur</>
-                                )}
-                            </button>
-                        </div>
-                    </form>
+                    </div>
                 </div>
             </div>
-        </div>
+
+            {(form.emails || []).map((email, index) => (
+                <EmailSection
+                    key={index}
+                    title={index === 0 ? 'Email Principal' : `Email Supplémentaire ${index}`}
+                    subtitle={index === 0 ? 'Compte email principal de l\'utilisateur' : 'Compte email supplémentaire'}
+                    color={index === 0 ? '#8B5CF6' : '#0EA5E9'}
+                    gradient={index === 0 ? 'linear-gradient(135deg, var(--color-secondary), #A78BFA)' : 'linear-gradient(135deg, #0EA5E9, #38BDF8)'}
+                    icon={index === 0 ? <FaEnvelope /> : <FaEnvelopeOpenText />}
+                    index={index}
+                    emails={form.emails}
+                    updateEmail={updateEmail}
+                    isDisabled={isDisabled}
+                    headerAction={
+                        <button
+                            type="button"
+                            className="mail-modal-section-remove"
+                            onClick={() => removeEmail(index)}
+                            disabled={isDisabled || emailCount <= 1}
+                            title="Supprimer cet email"
+                            aria-label="Supprimer cet email"
+                        >
+                            <FaTimes size={12} aria-hidden="true" />
+                        </button>
+                    }
+                />
+            ))}
+
+            {!isEdit && (
+                <button
+                    type="button"
+                    className="mail-modal-add-email"
+                    onClick={addEmail}
+                    disabled={isDisabled}
+                >
+                    <FaPlus size={14} aria-hidden="true" />
+                    Ajouter un email
+                </button>
+            )}
+        </AppModal>
     );
 }
 

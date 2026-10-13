@@ -42,10 +42,3 @@ export const STATS_CONFIG = [
         tooltip: 'Nombre total de tickets'
     }
 ];
-
-export const PAGINATION_OPTIONS = {
-    rowsPerPageText: 'Lignes par page :',
-    rangeSeparatorText: 'sur',
-    selectAllRowsItem: true,
-    selectAllRowsItemText: 'Tout'
-};

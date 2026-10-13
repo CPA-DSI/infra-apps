@@ -1,0 +1,542 @@
+/* ============================================================
+   Modale « profil » (Mon Profil dans la navbar, et DetailsStockModal)
+   Toutes les règles sont limitées à .profile-modal-modern.
+   :where() garde la spécificité d'origine (0,1,0) pour que les
+   surcharges des pages (ex. .dsm-modal .info-card) restent prioritaires.
+   ============================================================ */
+
+.profile-modal-modern .modal-content {
+  border: none;
+  border-radius: var(--radius-2xl);
+  box-shadow: 0 30px 60px -15px rgba(79, 70, 229, 0.25), 0 10px 25px -10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  animation: pm-pop-in 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes pm-pop-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ---- En-tête ---- */
+:where(.profile-modal-modern) .modal-header-modern {
+  background: var(--gradient-primary);
+  border: none;
+  padding: 1.6rem 1.75rem;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+:where(.profile-modal-modern) .modal-header-modern::before {
+  content: "";
+  position: absolute;
+  top: -60px;
+  right: -40px;
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+:where(.profile-modal-modern) .modal-header-modern .btn-close {
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
+  transition: all 0.25s ease;
+  background-size: 0.85rem;
+  z-index: 2;
+}
+
+:where(.profile-modal-modern) .modal-header-modern .btn-close:hover {
+  opacity: 1;
+  transform: rotate(90deg) scale(1.1);
+}
+
+:where(.profile-modal-modern) .modal-header-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+:where(.profile-modal-modern) .modal-icon-wrapper {
+  width: 52px;
+  height: 52px;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+:where(.profile-modal-modern) .modal-title-modern {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: white;
+  margin: 0;
+}
+
+:where(.profile-modal-modern) .modal-subtitle {
+  font-size: 0.85rem;
+  opacity: 0.85;
+  margin: 2px 0 0;
+  color: white;
+  font-weight: 400;
+}
+
+/* ---- Corps ---- */
+:where(.profile-modal-modern) .modal-body-modern {
+  margin: 10px;
+  background: var(--color-bg);
+}
+
+:where(.profile-modal-modern) .profile-info-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+:where(.profile-modal-modern) .info-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-light);
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+:where(.profile-modal-modern) .info-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-border);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.1);
+}
+
+:where(.profile-modal-modern) .info-card:nth-child(1) { animation-delay: 0.04s; }
+:where(.profile-modal-modern) .info-card:nth-child(2) { animation-delay: 0.08s; }
+:where(.profile-modal-modern) .info-card:nth-child(3) { animation-delay: 0.12s; }
+:where(.profile-modal-modern) .info-card:nth-child(4) { animation-delay: 0.16s; }
+:where(.profile-modal-modern) .info-card:nth-child(5) { animation-delay: 0.2s; }
+
+:where(.profile-modal-modern) .info-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+
+:where(.profile-modal-modern) .info-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+:where(.profile-modal-modern) .info-label {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+:where(.profile-modal-modern) .info-value {
+  font-size: 0.95rem;
+  color: var(--color-text-main);
+  font-weight: 600;
+  word-break: break-word;
+}
+
+/* ---- Badge de rôle ---- */
+:where(.profile-modal-modern) .badge-role {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 16px;
+  border-radius: var(--radius-pill);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+:where(.profile-modal-modern) .badge-role.role-default {
+  background: var(--color-border-light);
+  color: var(--color-text-sub);
+  font-size: 0.75rem;
+  padding: 6px 12px;
+}
+
+:where(.profile-modal-modern) .badge-role.role-user {
+  background: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-dark) 100%);
+  color: white;
+  font-size: 0.78rem;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+:where(.profile-modal-modern) .badge-role.role-admin {
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-secondary-dark) 100%);
+  color: white;
+  font-size: 0.75rem;
+  padding: 6px 12px;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+:where(.profile-modal-modern) .badge-role.role-direction {
+  background: linear-gradient(135deg, var(--color-warning) 0%, var(--color-warning-dark) 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  font-size: 0.75rem;
+  padding: 6px 12px;
+}
+
+:where(.profile-modal-modern) .modal-divider {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-border), transparent);
+  margin: 1.5rem 0;
+}
+
+/* ---- Section mot de passe ---- */
+:where(.profile-modal-modern) .password-section {
+  background: var(--color-bg);
+  padding: 22px;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
+  border: 1px solid var(--color-border-light);
+}
+
+:where(.profile-modal-modern) .section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.02rem;
+  color: var(--color-text-strong);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 1.1rem;
+}
+
+:where(.profile-modal-modern) .section-title svg {
+  color: var(--color-primary);
+}
+
+:where(.profile-modal-modern) .alert-modern {
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  font-size: 0.88rem;
+  margin-bottom: 1.1rem;
+}
+
+:where(.profile-modal-modern) .password-form .password-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--color-text-body);
+  margin-bottom: 6px;
+}
+
+:where(.profile-modal-modern) .password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+:where(.profile-modal-modern) .password-input-wrapper .password-field {
+  width: 100%;
+  padding-right: 44px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+:where(.profile-modal-modern) .password-input-wrapper .password-field:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.15);
+  outline: none;
+}
+
+:where(.profile-modal-modern) .password-input-wrapper .password-toggle {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 4px 8px;
+  color: var(--color-text-sub);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+:where(.profile-modal-modern) .password-input-wrapper .password-toggle:hover,
+:where(.profile-modal-modern) .password-input-wrapper .password-toggle:focus {
+  color: var(--color-primary);
+  background: transparent;
+  text-decoration: none;
+}
+
+/* ---- Pied ---- */
+:where(.profile-modal-modern) .modal-footer-modern {
+  border: none;
+  padding: 1.1rem 1.75rem 1.6rem;
+  background: var(--color-bg);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+:where(.profile-modal-modern) .btn-secondary-modern {
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px 22px;
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--color-text-sub);
+  background: white;
+  transition: all 0.25s ease;
+}
+
+:where(.profile-modal-modern) .btn-secondary-modern:hover {
+  border-color: var(--color-border-strong);
+  background: var(--color-bg-alt);
+  color: var(--color-text-secondary);
+}
+
+:where(.profile-modal-modern) .btn-primary-modern {
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-secondary-dark) 100%);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 10px 26px;
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: white;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.28);
+}
+
+:where(.profile-modal-modern) .btn-primary-modern:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(79, 70, 229, 0.38);
+  color: white;
+}
+
+:where(.profile-modal-modern) .btn-primary-modern:disabled {
+  opacity: 0.7;
+  transform: none;
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.2);
+}
+
+/* ---- Mise en page 2 colonnes (Mon Profil) ---- */
+:where(.profile-modal-modern) .profile-two-col {
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+}
+
+:where(.profile-modal-modern) .profile-col {
+  flex: 1 1 50%;
+  padding: 0 1.5rem;
+}
+
+:where(.profile-modal-modern) .profile-col-info {
+  padding-left: 0;
+}
+
+:where(.profile-modal-modern) .profile-col-password {
+  padding-right: 0;
+}
+
+:where(.profile-modal-modern) .profile-col-divider {
+  width: 1px;
+  background: linear-gradient(180deg, transparent, var(--color-border-light) 20%, var(--color-border-light) 80%, transparent);
+  margin: 0;
+}
+
+:where(.profile-modal-modern) .profile-col-password .password-section {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  margin: 0;
+}
+
+/* ---- Bannière de profil ---- */
+:where(.profile-modal-modern) .profile-banner-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+:where(.profile-modal-modern) .profile-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  max-width: 360px;
+  padding: 1.75rem 1rem 1.5rem;
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-secondary-dark) 55%, #9333ea 100%);
+  border-radius: var(--radius-xl);
+  color: white;
+  box-shadow: 0 16px 32px rgba(79, 70, 229, 0.28);
+  position: relative;
+  overflow: hidden;
+}
+
+:where(.profile-modal-modern) .profile-banner::after {
+  content: "";
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 140px;
+  height: 140px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+}
+
+:where(.profile-modal-modern) .profile-avatar-ring {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  padding: 5px;
+  background: rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+  position: relative;
+  z-index: 1;
+}
+
+:where(.profile-modal-modern) .profile-avatar-img,
+:where(.profile-modal-modern) .profile-avatar-fallback {
+  width: 86px;
+  height: 86px;
+  border-radius: 50%;
+  border: 3px solid white;
+}
+
+:where(.profile-modal-modern) .profile-avatar-img {
+  object-fit: cover;
+}
+
+:where(.profile-modal-modern) .profile-avatar-fallback {
+  background: white;
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.1rem;
+  font-weight: 700;
+}
+
+:where(.profile-modal-modern) .profile-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.7rem;
+  color: white;
+  position: relative;
+  z-index: 1;
+}
+
+:where(.profile-modal-modern) .profile-banner .badge-role {
+  margin: 0;
+  position: relative;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.18);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(8px);
+  padding: 7px 16px;
+}
+
+/* Cartes d'information de la colonne profil */
+:where(.profile-modal-modern) .profile-col-info .info-icon {
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-secondary-dark) 100%);
+  color: white;
+  box-shadow: 0 6px 14px rgba(79, 70, 229, 0.25);
+}
+
+:where(.profile-modal-modern) .profile-col-info .info-label {
+  color: var(--color-text-sub);
+}
+
+:where(.profile-modal-modern) .profile-col-info .info-value {
+  color: var(--color-text-strong);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  :where(.profile-modal-modern) .modal-body-modern {
+    padding: 1rem;
+  }
+
+  :where(.profile-modal-modern) .profile-two-col {
+    flex-direction: column;
+  }
+
+  :where(.profile-modal-modern) .profile-col {
+    flex: 1 1 100%;
+    padding: 0;
+  }
+
+  :where(.profile-modal-modern) .profile-col-divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--color-border), transparent);
+    margin: 1.25rem 0;
+  }
+}
+
+@media (max-width: 576px) {
+  :where(.profile-modal-modern) .modal-header-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  :where(.profile-modal-modern) .profile-info-cards {
+    gap: 8px;
+  }
+
+  :where(.profile-modal-modern) .info-card {
+    padding: 12px;
+  }
+
+  :where(.profile-modal-modern) .modal-footer-modern {
+    flex-direction: column;
+  }
+
+  :where(.profile-modal-modern) .btn-secondary-modern,
+  :where(.profile-modal-modern) .btn-primary-modern {
+    width: 100%;
+    justify-content: center;
+  }
+}

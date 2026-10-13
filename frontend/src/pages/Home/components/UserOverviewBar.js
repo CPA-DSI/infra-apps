@@ -18,9 +18,9 @@ const formatAnciennete = (datePc) => {
   return remainingMonths > 0 ? `${yearsLabel} et ${remainingMonths} mois` : yearsLabel;
 };
 
-const StatTile = ({ icon: Icon, label, value, accent }) => (
+const StatTile = ({ icon: Icon, label, value, tone }) => (
   <div className="userStatTile">
-    <div className="userStatTileIcon" style={{ backgroundColor: `${accent}1a`, color: accent }}>
+    <div className={`userStatTileIcon userStatTileIcon--${tone}`}>
       <Icon />
     </div>
     <div className="userStatTileContent">
@@ -36,10 +36,10 @@ const UserOverviewBar = ({ ticketsOuverts = 0, ticketsFermes = 0, materiel }) =>
   return (
     <div className="userOverviewBar">
       <div className="userStatsTiles">
-        <StatTile icon={FaTicketAlt} label="Tickets ouverts" value={ticketsOuverts} accent="#6366f1" />
-        <StatTile icon={FaCheckCircle} label="Tickets fermés" value={ticketsFermes} accent="#10b981" />
+        <StatTile icon={FaTicketAlt} label="Tickets ouverts" value={ticketsOuverts} tone="primary" />
+        <StatTile icon={FaCheckCircle} label="Tickets fermés" value={ticketsFermes} tone="success" />
         {anciennete && (
-          <StatTile icon={FaCalendarAlt} label="Ancienneté matériel" value={anciennete} accent="#f59e0b" />
+          <StatTile icon={FaCalendarAlt} label="Ancienneté matériel" value={anciennete} tone="warning" />
         )}
       </div>
 

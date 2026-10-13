@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import UserDashboard from './UserDashboard';
+import '../../styles/dashboard.css';
 import './Home.css';
 import DashboardMarque from './DashboardMarque.js';
 import DashboardEcran from './DashboardEcran.js';
@@ -20,82 +21,82 @@ const Home = () => {
   }
 
   return (
-    <div className="homeContainer">
-      <div className="headerSection">
-        <div className="headerContent">
-          <div className="headerText">
-            <h1 className="title">Tous les tableaux de bord</h1>
-            <p className="subtitle">Visualisez les statistiques et indicateurs clés de votre infrastructure</p>
+    <div className="home-container">
+      <div className="home-header">
+        <div className="home-header-content">
+          <div className="home-header-text">
+            <h1 className="home-title">Tous les tableaux de bord</h1>
+            <p className="home-subtitle">Visualisez les statistiques et indicateurs clés de votre infrastructure</p>
           </div>
         </div>
       </div>
 
-      <div className="cardGrid cardGridFull">
-        <div className="dashboardCard">
-          <div className="cardContent">
+      <div className="home-grid">
+        <div className="home-card">
+          <div className="home-card-content">
             <DashboardHistoriqueChart />
           </div>
         </div>
       </div>
       
-      <div className="cardGrid cardGridFull">
-        <div className="dashboardCard">
-          <div className="cardContent">
+      <div className="home-grid">
+        <div className="home-card">
+          <div className="home-card-content">
             <HistoriqueArriveesChart />
           </div>
         </div>
       </div>
 
-      <div className="cardGrid cardGridFull">
-        <div className="dashboardCard">
-          <div className="cardContent">
+      <div className="home-grid">
+        <div className="home-card home-card--bare">
+          <div className="home-card-content">
             <DashboardMarque />
           </div>
         </div>
       </div>
       
-      <div className="cardGrid cardGridFull">
-        <div className="dashboardCard">
-          <div className="cardContent">
+      <div className="home-grid">
+        <div className="home-card">
+          <div className="home-card-content">
             <TicketChartCount />
           </div>
         </div>
       </div>
-      <div className="cardGrid cardGridFull">
-        <div className="dashboardCard">
-          <div className="cardContent">
+      <div className="home-grid">
+        <div className="home-card">
+          <div className="home-card-content">
             <MailChartFromAPI />
           </div>
         </div>
       </div>
 
-      <div className="cardGrid cardGridFull">
-        <div className="dashboardCard">
-          <div className="cardContent">
+      <div className="home-grid">
+        <div className="home-card home-card--bare">
+          <div className="home-card-content">
             <DashboardEcran />
           </div>
         </div>
       </div>
       
-      <div className="cardGrid cardGridFull">
-        <div className="dashboardCard">
-          <div className="cardContent">
+      <div className="home-grid">
+        <div className="home-card home-card--bare">
+          <div className="home-card-content">
             <DashboardSSD />
           </div>
         </div>
       </div>
 
-      <div className="cardGrid cardGridFull">
-        <div className="dashboardCard">
-          <div className="cardContent">
+      <div className="home-grid">
+        <div className="home-card home-card--bare">
+          <div className="home-card-content">
             <DashboardDocuments />
           </div>
         </div>
       </div>
 
-      <div className="cardGrid cardGridFull">
-        <div className="dashboardCard dashboardCardTall">
-          <div className="cardContent">
+      <div className="home-grid">
+        <div className="home-card home-card--bare home-card--tall">
+          <div className="home-card-content">
             <CountEquipe />
           </div>
         </div>

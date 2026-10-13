@@ -4,42 +4,55 @@ import Chart from 'react-apexcharts';
 import DataTable from 'react-data-table-component';
 import FilterComponent from './FilterComponent';
 import { fetchCountEquipe } from '../../services/api';
+import { getChartTheme, darkTitleStyle } from '../../styles/chartTheme';
+import { tableStyles } from '../../styles/dataTableTheme';
 import './CountEquipe.css';
 
-const ACCENT_COLOR = '#8b5cf6';
 const TOP_N = 10;
 
 const normalize = (value) => (value || '').toString().toLowerCase();
 
-const tableStyles = {
-  table: { style: { backgroundColor: 'transparent' } },
+// Thème partagé des tableaux, adapté au fond sombre du dashboard
+const equipeTableStyles = tableStyles({
   headRow: {
-    style: { backgroundColor: '#1e293b', minHeight: '44px', borderBottom: '2px solid #334155' },
+    style: {
+      backgroundColor: 'var(--dash-surface)',
+      minHeight: '44px',
+      borderBottom: '2px solid var(--dash-border)',
+      boxShadow: 'none',
+    },
   },
   headCells: {
     style: {
-      fontSize: '0.7rem', fontWeight: '700', color: '#94a3b8', letterSpacing: '0.06em',
-      textTransform: 'uppercase',
+      backgroundColor: 'var(--dash-surface)',
+      color: 'var(--dash-text-sub)',
+      borderBottom: 'none',
     },
   },
   rows: {
     style: {
-      fontSize: '13px', color: '#f1f5f9', minHeight: '42px', backgroundColor: 'transparent',
-      '&:not(:last-of-type)': { borderBottom: '1px solid #334155' },
+      fontSize: '13px',
+      color: 'var(--dash-text)',
+      minHeight: '42px',
+      backgroundColor: 'transparent',
+      borderBottom: '1px solid var(--dash-border)',
     },
     highlightOnHoverStyle: {
-      backgroundColor: 'rgba(139, 92, 246, 0.12)', color: '#f1f5f9', transitionDuration: '0.2s',
+      backgroundColor: 'rgba(139, 92, 246, 0.12)',
+      color: 'var(--dash-text)',
+      cursor: 'default',
     },
   },
   pagination: {
-    style: { backgroundColor: 'transparent', color: '#94a3b8', border: 'none' },
+    style: { backgroundColor: 'transparent', color: 'var(--dash-text-sub)' },
   },
   noData: {
-    style: { backgroundColor: 'transparent', color: '#94a3b8' },
+    style: { backgroundColor: 'transparent', color: 'var(--dash-text-sub)' },
   },
-};
+});
 
 const CountEquipe = () => {
+  const t = useMemo(getChartTheme, []);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -137,20 +150,20 @@ const CountEquipe = () => {
         ? `👥 Top ${TOP_N} équipes par nombre d'équipements`
         : "👥 Équipes par nombre d'équipements",
       align: 'center',
-      style: { color: '#f1f5f9', fontSize: '15px', fontWeight: '600' },
+      style: { ...darkTitleStyle(t), fontSize: '15px' },
     },
     plotOptions: {
       bar: { horizontal: true, borderRadius: 6, barHeight: '65%', dataLabels: { position: 'top' } },
     },
-    xaxis: { categories: chartData.categories, labels: { style: { colors: '#94a3b8' } } },
-    yaxis: { labels: { style: { colors: '#94a3b8', fontSize: '12px' } } },
+    xaxis: { categories: chartData.categories, labels: { style: { colors: t.textSub } } },
+    yaxis: { labels: { style: { colors: t.textSub, fontSize: '12px' } } },
     dataLabels: {
       enabled: true,
       offsetX: 24,
-      style: { colors: ['#f1f5f9'], fontSize: '11px' },
+      style: { colors: [t.text], fontSize: '11px' },
     },
-    colors: [ACCENT_COLOR],
-    grid: { borderColor: '#334155', strokeDashArray: 5 },
+    colors: [t.secondary],
+    grid: { borderColor: t.grid, strokeDashArray: 5 },
     tooltip: {
       theme: 'dark',
       y: {
@@ -158,7 +171,7 @@ const CountEquipe = () => {
           `${val} équipement(s)${totalEquipements ? ` (${((val / totalEquipements) * 100).toFixed(1)}%)` : ''}`,
       },
     },
-  }), [chartData, equipeAggregates.length, totalEquipements]);
+  }), [t, chartData, equipeAggregates.length, totalEquipements]);
 
   const chartSeries = useMemo(
     () => [{ name: "Nombre d'équipements", data: chartData.data }],
@@ -173,7 +186,7 @@ const CountEquipe = () => {
 
   if (loading) {
     return (
-      <div className="count-equipe count-equipe-loading">
+      <div className="dash-card dash-card--state count-equipe count-equipe-loading">
         <div className="count-equipe-spinner-icon">🔄</div>
         <p>Chargement des équipes...</p>
       </div>
@@ -182,7 +195,7 @@ const CountEquipe = () => {
 
   if (error) {
     return (
-      <div className="count-equipe count-equipe-error">
+      <div className="dash-card dash-card--state count-equipe count-equipe-error">
         <div className="count-equipe-error-icon">⚠️</div>
         <h3>Erreur de chargement</h3>
         <p>{error}</p>
@@ -192,7 +205,7 @@ const CountEquipe = () => {
   }
 
   return (
-    <div className="count-equipe">
+    <div className="dash-card count-equipe">
       <div className="count-equipe-header">
         <div className="count-equipe-header-title">
           <span className="count-equipe-header-icon">👥</span>
@@ -254,7 +267,7 @@ const CountEquipe = () => {
             pagination
             paginationPerPage={5}
             paginationRowsPerPageOptions={[5, 10, 20]}
-            customStyles={tableStyles}
+            customStyles={equipeTableStyles}
             highlightOnHover
             noDataComponent={<div className="count-equipe-empty-state">Aucune équipe trouvée</div>}
           />

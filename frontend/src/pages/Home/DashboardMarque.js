@@ -1,4 +1,3 @@
-// frontend/src/components/Dashboard/DashboardMarque.js
 import React, { useState, useEffect, useMemo } from 'react';
 import Chart from 'react-apexcharts';
 import {
@@ -6,6 +5,7 @@ import {
   fetchStatsEquipesEtats,
   fetchMaterielsByLocal
 } from '../../services/api';
+import { getChartTheme } from '../../styles/chartTheme';
 import './DashboardMarque.css';
 
 const DashboardMarque = () => {
@@ -19,12 +19,9 @@ const DashboardMarque = () => {
   const [statsEquipes, setStatsEquipes] = useState(null);
   const [locauxData, setLocauxData] = useState([]);
   
-  // Couleurs prédéfinies
-  const COLORS = [
-    '#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
-    '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#14b8a6',
-    '#d946ef', '#f43f5e', '#0ea5e9', '#eab308', '#a855f7'
-  ];
+  // Couleurs des graphiques (tokens du thème)
+  const t = useMemo(getChartTheme, []);
+  const COLORS = t.palette;
 
   // Chargement initial
   useEffect(() => {
@@ -85,24 +82,24 @@ const DashboardMarque = () => {
     title: {
       text: '📊 Nombre d\'équipements par marque',
       align: 'center',
-      style: { color: '#f1f5f9', fontSize: '16px', fontWeight: '600' }
+      style: { color: t.text, fontSize: '16px', fontWeight: '600' }
     },
     xaxis: {
       categories: marques.slice(0, 10).map(m => m.nom_marque || 'Sans nom'),
-      labels: { rotate: -45, style: { colors: '#94a3b8', fontSize: '11px' } }
+      labels: { rotate: -45, style: { colors: t.textSub, fontSize: '11px' } }
     },
     yaxis: {
-      title: { text: 'Nombre d\'équipements', style: { color: '#94a3b8' } },
-      labels: { style: { colors: '#94a3b8' } }
+      title: { text: 'Nombre d\'équipements', style: { color: t.textSub } },
+      labels: { style: { colors: t.textSub } }
     },
     plotOptions: {
       bar: { borderRadius: 8, horizontal: false, columnWidth: '60%', dataLabels: { position: 'top' } }
     },
-    dataLabels: { enabled: true, offsetY: -20, style: { colors: ['#f1f5f9'], fontSize: '11px' } },
-    grid: { borderColor: '#334155', strokeDashArray: 5 },
+    dataLabels: { enabled: true, offsetY: -20, style: { colors: [t.text], fontSize: '11px' } },
+    grid: { borderColor: t.grid, strokeDashArray: 5 },
     tooltip: { theme: 'dark', y: { formatter: (val) => `${val} équipement(s)` } },
     colors: [COLORS[0]],
-    legend: { position: 'top', labels: { colors: '#94a3b8' } }
+    legend: { position: 'top', labels: { colors: t.textSub } }
   };
 
   const barChartSeries = [{
@@ -116,12 +113,12 @@ const DashboardMarque = () => {
     title: {
       text: '🥧 Répartition des équipements par marque',
       align: 'center',
-      style: { color: '#f1f5f9', fontSize: '16px', fontWeight: '600' }
+      style: { color: t.text, fontSize: '16px', fontWeight: '600' }
     },
     labels: marques.slice(0, 10).map(m => m.nom_marque || 'Sans nom'),
     colors: COLORS,
-    legend: { position: 'bottom', labels: { colors: '#94a3b8' }, formatter: (val, opts) => `${val} (${marques[opts.seriesIndex]?.nombre_equipements || 0})` },
-    plotOptions: { pie: { donut: { size: '55%', labels: { show: true, total: { show: true, label: 'Total', color: '#f1f5f9', formatter: () => totalEquipements } } } } },
+    legend: { position: 'bottom', labels: { colors: t.textSub }, formatter: (val, opts) => `${val} (${marques[opts.seriesIndex]?.nombre_equipements || 0})` },
+    plotOptions: { pie: { donut: { size: '55%', labels: { show: true, total: { show: true, label: 'Total', color: t.text, formatter: () => totalEquipements } } } } },
     dataLabels: { enabled: true, style: { colors: ['#fff'], fontSize: '11px' } },
     tooltip: { theme: 'dark', y: { formatter: (val) => `${val} équipement(s) (${((val / totalEquipements) * 100).toFixed(1)}%)` } },
     responsive: [{ breakpoint: 480, options: { chart: { width: '100%' }, legend: { position: 'bottom' } } }]
@@ -132,13 +129,13 @@ const DashboardMarque = () => {
   // Configuration Graphique 3: Horizontal Bar - Top 5 Marques
   const top5BarOptions = {
     chart: { type: 'bar', height: 350, background: 'transparent', animations: { enabled: true } },
-    title: { text: '🏆 Top 5 des marques', align: 'center', style: { color: '#f1f5f9', fontSize: '16px', fontWeight: '600' } },
-    xaxis: { categories: topMarques.map(m => m.nom_marque || 'Sans nom'), labels: { style: { colors: '#94a3b8' } } },
-    yaxis: { title: { text: 'Nombre d\'équipements', style: { color: '#94a3b8' } }, labels: { style: { colors: '#94a3b8' } } },
+    title: { text: '🏆 Top 5 des marques', align: 'center', style: { color: t.text, fontSize: '16px', fontWeight: '600' } },
+    xaxis: { categories: topMarques.map(m => m.nom_marque || 'Sans nom'), labels: { style: { colors: t.textSub } } },
+    yaxis: { title: { text: 'Nombre d\'équipements', style: { color: t.textSub } }, labels: { style: { colors: t.textSub } } },
     plotOptions: { bar: { borderRadius: 6, horizontal: false, dataLabels: { position: 'top' } } },
-    dataLabels: { enabled: true, offsetY: -20, style: { colors: ['#f59e0b'], fontSize: '12px', fontWeight: 'bold' } },
-    colors: ['#f59e0b'],
-    grid: { borderColor: '#334155' },
+    dataLabels: { enabled: true, offsetY: -20, style: { colors: [t.warning], fontSize: '12px', fontWeight: 'bold' } },
+    colors: [t.warning],
+    grid: { borderColor: t.grid },
     tooltip: { theme: 'dark', y: { formatter: (val) => `${val} équipement(s)` } }
   };
 
@@ -172,18 +169,18 @@ const DashboardMarque = () => {
       toolbar: { show: true, tools: { download: true, zoom: false, pan: false } },
       animations: { enabled: true, easing: 'easeinout', speed: 800 },
     },
-    title: { text: '👥 Répartition par équipe', align: 'center', style: { color: '#f1f5f9', fontSize: '16px', fontWeight: '600' } },
+    title: { text: '👥 Répartition par équipe', align: 'center', style: { color: t.text, fontSize: '16px', fontWeight: '600' } },
     plotOptions: { bar: { horizontal: true, borderRadius: 6, barHeight: '70%', dataLabels: { position: 'top' } } },
-    xaxis: { categories: equipeBarData.categories, labels: { style: { colors: '#94a3b8' } } },
-    yaxis: { labels: { style: { colors: '#94a3b8', fontSize: '12px' } } },
+    xaxis: { categories: equipeBarData.categories, labels: { style: { colors: t.textSub } } },
+    yaxis: { labels: { style: { colors: t.textSub, fontSize: '12px' } } },
     dataLabels: {
       enabled: true,
       offsetX: 24,
-      style: { colors: ['#f1f5f9'], fontSize: '11px' },
+      style: { colors: [t.text], fontSize: '11px' },
       formatter: (val) => val
     },
-    colors: ['#8b5cf6'],
-    grid: { borderColor: '#334155', strokeDashArray: 5 },
+    colors: [t.secondary],
+    grid: { borderColor: t.grid, strokeDashArray: 5 },
     tooltip: {
       theme: 'dark',
       y: { formatter: (val) => `${val} équipement(s) (${((val / (statsEquipes?.totalEquipements || 1)) * 100).toFixed(1)}%)` }
@@ -195,10 +192,10 @@ const DashboardMarque = () => {
   // Configuration Graphique 5: Pie - États des PC
   const etatsPieOptions = {
     chart: { type: 'pie', background: 'transparent', animations: { enabled: true } },
-    title: { text: '💻 États des équipements', align: 'center', style: { color: '#f1f5f9', fontSize: '16px', fontWeight: '600' } },
+    title: { text: '💻 États des équipements', align: 'center', style: { color: t.text, fontSize: '16px', fontWeight: '600' } },
     labels: statsEquipes?.etatsCount ? Object.keys(statsEquipes.etatsCount) : ['Aucune donnée'],
-    colors: ['#10b981', '#f59e0b', '#ef4444', '#6366f1', '#8b5cf6', '#ec4899'],
-    legend: { position: 'bottom', labels: { colors: '#94a3b8' } },
+    colors: [t.success, t.warning, t.danger, t.primary, t.secondary, t.palette[5]],
+    legend: { position: 'bottom', labels: { colors: t.textSub } },
     dataLabels: { enabled: true, style: { colors: ['#fff'], fontSize: '11px' } },
     tooltip: { theme: 'dark', y: { formatter: (val, { seriesIndex }) => {
       const total = statsEquipes?.totalEquipements || 1;
@@ -211,13 +208,13 @@ const DashboardMarque = () => {
   // Configuration Graphique 6: Bar - Localisation
   const localBarOptions = {
     chart: { type: 'bar', height: 350, background: 'transparent', animations: { enabled: true } },
-    title: { text: '📍 Équipements par localisation', align: 'center', style: { color: '#f1f5f9', fontSize: '16px', fontWeight: '600' } },
-    xaxis: { categories: locauxData.map(l => l.nom_local || 'Sans nom'), labels: { rotate: -45, style: { colors: '#94a3b8', fontSize: '11px' } } },
-    yaxis: { title: { text: 'Nombre d\'équipements', style: { color: '#94a3b8' } }, labels: { style: { colors: '#94a3b8' } } },
+    title: { text: '📍 Équipements par localisation', align: 'center', style: { color: t.text, fontSize: '16px', fontWeight: '600' } },
+    xaxis: { categories: locauxData.map(l => l.nom_local || 'Sans nom'), labels: { rotate: -45, style: { colors: t.textSub, fontSize: '11px' } } },
+    yaxis: { title: { text: 'Nombre d\'équipements', style: { color: t.textSub } }, labels: { style: { colors: t.textSub } } },
     plotOptions: { bar: { borderRadius: 8, horizontal: false, dataLabels: { position: 'top' } } },
-    dataLabels: { enabled: true, offsetY: -15, style: { colors: ['#f1f5f9'], fontSize: '10px' } },
-    colors: ['#06b6d4'],
-    grid: { borderColor: '#334155' },
+    dataLabels: { enabled: true, offsetY: -15, style: { colors: [t.text], fontSize: '10px' } },
+    colors: [t.cyan],
+    grid: { borderColor: t.grid },
     tooltip: { theme: 'dark', y: { formatter: (val) => `${val} équipement(s)` } }
   };
 
@@ -225,8 +222,8 @@ const DashboardMarque = () => {
 
   if (loading) {
     return (
-      <div className="dashboard-marque-loading">
-        <div className="dm-spinner-container">
+      <div className="dashboard-marque-loading dash-card dash-card--state">
+        <div>
           <div className="dm-spinner-icon">🔄</div>
           <p>Chargement du tableau de bord...</p>
         </div>
@@ -236,11 +233,11 @@ const DashboardMarque = () => {
 
   if (error) {
     return (
-      <div className="dashboard-marque-error">
+      <div className="dashboard-marque-error dash-card dash-card--state">
         <div className="dm-error-icon">⚠️</div>
         <h3>Erreur de chargement</h3>
         <p>{error}</p>
-        <button className="retry-btn" onClick={handleRefresh}>
+        <button className="dm-retry-btn" onClick={handleRefresh}>
           🔄 Réessayer
         </button>
       </div>
@@ -248,9 +245,9 @@ const DashboardMarque = () => {
   }
 
   return (
-    <div className="dashboard-marque">
+    <div className="dashboard-marque dash-card">
       {/* En-tête */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <div className="dash-header">
         <div className="dm-header-title">
           <span className="dm-header-icon">💻</span>
           <div>
@@ -258,9 +255,9 @@ const DashboardMarque = () => {
             <p className="dm-header-subtitle">Analyse des équipements par marque, équipe et localisation</p>
           </div>
         </div>
-        <div className="header-actions">
+        <div className="dm-header-actions">
           {lastUpdated && (
-            <div className="last-updated">
+            <div className="dm-last-updated">
               <span>🕐</span>
               <span>Mis à jour: {lastUpdated.toLocaleTimeString()}</span>
             </div>
@@ -270,7 +267,7 @@ const DashboardMarque = () => {
             onClick={handleRefresh} 
             disabled={refreshing}
           >
-            <span className={refreshing ? 'spin' : ''}>🔄</span>
+            <span className={refreshing ? 'dm-spin' : ''}>🔄</span>
             <span>{refreshing ? 'Chargement...' : 'Rafraîchir'}</span>
           </button>
         </div>
@@ -297,7 +294,7 @@ const DashboardMarque = () => {
           <div className="dm-stat-content">
             <div className="dm-stat-value">{topMarques[0]?.nom_marque || '-'}</div>
             <div className="dm-stat-label">Marque la plus utilisée</div>
-            <div className="stat-percentage">{topMarques[0]?.nombre_equipements || 0} équipements</div>
+            <div className="dm-stat-percentage">{topMarques[0]?.nombre_equipements || 0} équipements</div>
           </div>
         </div>
         <div className="dm-stat-card">

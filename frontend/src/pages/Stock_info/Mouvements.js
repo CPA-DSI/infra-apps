@@ -6,7 +6,7 @@ import * as XLSX from 'xlsx';
 import Swal from 'sweetalert2';
 
 // --- Importations Bootstrap et Icônes ---
-import { Button, Spinner, Alert } from 'react-bootstrap';
+import { Spinner, Alert } from 'react-bootstrap';
 import { FaEye, FaEdit, FaTrash, FaPlus, FaFileExcel, FaSearch, FaBoxOpen, FaSync, FaTimes, FaFilter, FaArrowUp, FaArrowDown, FaExchangeAlt, FaChartBar, FaUpload, FaCheckCircle, FaFileUpload, FaFileImport } from 'react-icons/fa';
 
 /// --- Importations des Modales ---
@@ -16,66 +16,22 @@ import EditStockModal from './EditStockModal';
 
 // Import styles from Mouvements.css
 import './Mouvements.css';
-import './HomeStock.css';
 
 import { getMouvements, deleteMouvement, importMouvements } from '../../services/api';
 import { escapeHtml } from '../../utils/escapeHtml';
+import PageHeader from '../../components/PageHeader/PageHeader';
+import { tableStyles, paginationOptions } from '../../styles/dataTableTheme';
 
-// --- Styles CSS intégrés (style mvt-modern-header comme Materiels.js) ---
-// Les styles ont été déplacés vers Mouvements.css
-
-const modernStyles = {
-    table: {
-        style: {
-            backgroundColor: 'transparent', borderRadius: '20px', overflow: 'hidden',
-        },
-    },
-    headRow: {
-        style: {
-            backgroundColor: '#f0f4f8', border: 'none', minHeight: '56px', borderRadius: '10px 10px 0 0', borderBottom: '2px solid #e2e8f0', fontWeight: 700,
-        },
-    },
-    headCells: {
-        style: {
-            fontSize: '0.75rem', fontWeight: '700', color: '#374151', letterSpacing: '0.05em', textTransform: 'capitalize', paddingLeft: '16px', paddingRight: '16px', paddingTop: '16px', paddingBottom: '16px', verticalAlign: 'middle', textAlign: 'left', backgroundColor: '#f3f4f6', borderBottom: '2px solid #e5e7eb', whiteSpace: 'nowrap', userSelect: 'none',
-        },
-    },
-    rows: {
-        style: {
-            fontSize: '13px', fontWeight: '500', color: '#334155', minHeight: '68px', paddingLeft: '16px', paddingRight: '16px', borderBottom: '1px solid #e2e8f0', transition: 'all 0.3s ease',
-        },
-        highlightOnHoverStyle: {
-            backgroundColor: '#f0f8ff', color: '#0056b3', cursor: 'pointer', transitionDuration: '0.2s',
-        },
-    },
-    pagination: {
-        style: {
-            border: 'none', fontSize: '13px', color: '#6c757d', paddingTop: '20px', backgroundColor: 'transparent',
-        },
-        pageButtonsStyle: {
-            borderRadius: '4px', height: '32px', cursor: 'pointer', transition: 'all 0.3s',
-            '&:hover:not(:disabled)': {
-                backgroundColor: '#667eea',
-                color: 'white',
-            },
-            '&:disabled': {
-                cursor: 'unset',
-                opacity: 0.5,
-            },
-        },
-    },
-    noData: {
-        style: {
-            display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent',
-        },
-    },
-};
+// Tableau : thème partagé, seules les hauteurs de ligne diffèrent
+const tableCustomStyles = tableStyles({
+    rows: { style: { fontSize: '13px', minHeight: '68px' } },
+});
 
 const NoDataComponent = () => (
-    <div style={{ padding: '48px', textAlign: 'center', color: '#94a3b8' }}>
-        <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
-        <p style={{ margin: 0, fontSize: '16px', fontWeight: '500' }}>Aucun mouvement ne correspond aux critères</p>
-        <p style={{ margin: '8px 0 0 0', fontSize: '14px' }}>Réessayez avec d'autres filtres</p>
+    <div className="mvt-no-data">
+        <div className="mvt-no-data__icon" aria-hidden="true">🔍</div>
+        <p className="mvt-no-data__title">Aucun mouvement ne correspond aux critères</p>
+        <p className="mvt-no-data__hint">Réessayez avec d'autres filtres</p>
     </div>
 );
 
@@ -83,9 +39,9 @@ const NoDataComponent = () => (
 const AUTRES_TYPE_FILTER = '__AUTRES__';
 
 // --- Composant StatCard mémoïsé ---
-const StatCard = React.memo(({ icon: Icon, value, label, qty, cardClass, colorClass, isActive, isEmpty, onClick }) => (
+const StatCard = React.memo(({ icon: Icon, value, label, qty, variant, isActive, isEmpty, onClick }) => (
     <div
-        className={`mvt-stat-card ${cardClass}${isActive ? ' stat-card-active' : ''}${isEmpty ? ' stat-card-empty' : ''}`}
+        className={`mvt-stat-card mvt-stat--${variant}${isActive ? ' is-active' : ''}${isEmpty ? ' is-empty' : ''}`}
         onClick={onClick}
         role="button"
         tabIndex={0}
@@ -97,12 +53,12 @@ const StatCard = React.memo(({ icon: Icon, value, label, qty, cardClass, colorCl
             }
         }}
     >
-        <Icon className={`stat-icon stat-icon-${colorClass}`} aria-hidden="true" />
-        <div className="stat-card-row">
-            <div className={`mvt-stat-value stat-value-${colorClass}`}>{value}</div>
-            <div className={`mvt-stat-label stat-label-${colorClass}`}>{label}</div>
+        <Icon className="mvt-stat-icon" aria-hidden="true" />
+        <div className="mvt-stat-row">
+            <div className="mvt-stat-value">{value}</div>
+            <div className="mvt-stat-label">{label}</div>
         </div>
-        <div className={`stat-qty stat-label-${colorClass}`}>
+        <div className="mvt-stat-qty">
             {qty} {qty === 1 ? 'unité' : 'unités'} au total
         </div>
     </div>
@@ -111,15 +67,15 @@ const StatCard = React.memo(({ icon: Icon, value, label, qty, cardClass, colorCl
 // --- Composant ActionButtons mémoïsé ---
 const ActionButtons = React.memo(({ row, handleView, handleEdit, handleDelete }) => (
     <div className="d-flex gap-2" role="group" aria-label="Actions">
-        <Button variant="light" onClick={() => handleView(row)} title="Voir détails" className="shadow-sm border-0 p-2 rounded-circle d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px' }} >
-            <FaEye size={14} className="text-info" />
-        </Button>
-        <Button variant="light" onClick={() => handleEdit(row)} title="Modifier" className="shadow-sm border-0 p-2 rounded-circle d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px' }} >
-            <FaEdit size={14} className="text-warning" />
-        </Button>
-        <Button variant="light" onClick={() => handleDelete(row)} title="Supprimer" className="shadow-sm border-0 p-2 rounded-circle d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px' }} >
-            <FaTrash size={14} className="text-danger" />
-        </Button>
+        <button type="button" className="btn-icon btn-icon--info" onClick={() => handleView(row)} title="Voir détails" aria-label="Voir détails">
+            <FaEye size={14} aria-hidden="true" />
+        </button>
+        <button type="button" className="btn-icon btn-icon--warning" onClick={() => handleEdit(row)} title="Modifier" aria-label="Modifier">
+            <FaEdit size={14} aria-hidden="true" />
+        </button>
+        <button type="button" className="btn-icon btn-icon--danger" onClick={() => handleDelete(row)} title="Supprimer" aria-label="Supprimer">
+            <FaTrash size={14} aria-hidden="true" />
+        </button>
     </div>
 ));
 
@@ -294,11 +250,11 @@ const Mouvements = () => {
 
     // --- Configuration des cartes de statistiques (cliquables pour filtrer) ---
     const statsConfig = useMemo(() => [
-        { key: 'total', label: 'Total', value: stats.total, qty: stats.totalQte, icon: FaChartBar, cardClass: 'stat-card-total', colorClass: 'blue', filterValue: '' },
-        { key: 'entree', label: 'Entrées', value: stats.entree, qty: stats.entreeQte, icon: FaArrowUp, cardClass: 'stat-card-entree', colorClass: 'green', filterValue: 'ENTREE' },
-        { key: 'sortie', label: 'Sorties', value: stats.sortie, qty: stats.sortieQte, icon: FaArrowDown, cardClass: 'stat-card-sortie', colorClass: 'red', filterValue: 'SORTIE' },
-        { key: 'ajustement', label: 'Ajustements', value: stats.ajustement, qty: stats.ajustementQte, icon: FaExchangeAlt, cardClass: 'stat-card-ajustement', colorClass: 'purple', filterValue: 'ENTREE_QUANTITE' },
-        { key: 'autres', label: 'Autres', value: stats.autres, qty: stats.autresQte, icon: FaBoxOpen, cardClass: 'stat-card-autres', colorClass: 'light-blue', filterValue: AUTRES_TYPE_FILTER },
+        { key: 'total', label: 'Total', value: stats.total, qty: stats.totalQte, icon: FaChartBar, variant: 'total', filterValue: '' },
+        { key: 'entree', label: 'Entrées', value: stats.entree, qty: stats.entreeQte, icon: FaArrowUp, variant: 'entree', filterValue: 'ENTREE' },
+        { key: 'sortie', label: 'Sorties', value: stats.sortie, qty: stats.sortieQte, icon: FaArrowDown, variant: 'sortie', filterValue: 'SORTIE' },
+        { key: 'ajustement', label: 'Ajustements', value: stats.ajustement, qty: stats.ajustementQte, icon: FaExchangeAlt, variant: 'ajustement', filterValue: 'ENTREE_QUANTITE' },
+        { key: 'autres', label: 'Autres', value: stats.autres, qty: stats.autresQte, icon: FaBoxOpen, variant: 'autres', filterValue: AUTRES_TYPE_FILTER },
     ], [stats]);
 
     const handleStatCardClick = useCallback((filterValue) => {
@@ -697,11 +653,11 @@ const handleImportSubmit = useCallback(async () => {
                 else ageText = `${Math.floor(diffDays / 30)}mois`;
 
                 return (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <span style={{ fontSize: '13px', fontWeight: '500', color: '#1F2937' }}>
+                    <div className="mvt-cell-stack mvt-cell-stack--gap">
+                        <span className="mvt-cell-date">
                             {date.toLocaleDateString('fr-FR')}
                         </span>
-                        <span style={{ fontSize: '11px', color: '#6B7280', fontStyle: 'italic' }}>
+                        <span className="mvt-cell-age">
                             {ageText}
                         </span>
                     </div>
@@ -712,17 +668,15 @@ const handleImportSubmit = useCallback(async () => {
             name: 'Type', selector: row => row.type_mouvement, sortable: true, width: '150px',
             cell: (row) => {
                 const typeConfig = {
-                    'ENTREE': { bg: '#C6F6D5', text: '#2F855A', icon: '▲', label: 'Entrée' },
-                    'SORTIE': { bg: '#FED7D7', text: '#C53030', icon: '▼', label: 'Sortie' },
-                    'ENTREE_QUANTITE': { bg: '#E9D8FD', text: '#6B46C1', icon: '●', label: 'Ajustement' },
+                    'ENTREE': { variant: 'entree', icon: '▲', label: 'Entrée' },
+                    'SORTIE': { variant: 'sortie', icon: '▼', label: 'Sortie' },
+                    'ENTREE_QUANTITE': { variant: 'ajustement', icon: '●', label: 'Ajustement' },
                 };
-                const config = typeConfig[row.type_mouvement] || { bg: '#BEE3F8', text: '#2B6CB0', icon: '◆', label: row.type_mouvement };
+                const config = typeConfig[row.type_mouvement] || { variant: 'autre', icon: '◆', label: row.type_mouvement };
 
                 return (
-                    <span style={{
-                        backgroundColor: config.bg, color: config.text, padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '4px'
-                    }}>
-                        <span>{config.icon}</span>
+                    <span className={`mvt-type-badge mvt-type-badge--${config.variant}`}>
+                        <span aria-hidden="true">{config.icon}</span>
                         {config.label}
                     </span>
                 );
@@ -734,7 +688,7 @@ const handleImportSubmit = useCallback(async () => {
             sortable: true,
             width: '120px',
             cell: row => (
-                <span style={{ fontWeight: '700', color: '#1e293b', fontSize: '14px' }}>
+                <span className="mvt-cell-qty">
                     {row.quantite ?? 'N/A'}
                 </span>
             ),
@@ -745,8 +699,8 @@ const handleImportSubmit = useCallback(async () => {
             sortable: true,
             grow: 3,
             cell: row => (
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ fontWeight: '500', color: '#1F2937' }}>
+                <div className="mvt-cell-stack">
+                    <span className="mvt-cell-strong">
                         {row.produits?.nom_produit || 'N/A'}
                     </span>
                 </div>
@@ -758,12 +712,12 @@ const handleImportSubmit = useCallback(async () => {
             sortable: true,
             grow: 2,
             cell: row => (
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ fontWeight: '500', color: '#1F2937' }}>
+                <div className="mvt-cell-stack">
+                    <span className="mvt-cell-strong">
                         {row.nom_utilisateur || 'N/A'}
                     </span>
                     {row.materiels?.equipe && (
-                        <small style={{ color: '#6B7280', fontSize: '11px' }}>
+                        <small className="mvt-cell-sub">
                             Équipe : {row.materiels.equipe}
                         </small>
                     )}
@@ -783,7 +737,7 @@ const handleImportSubmit = useCallback(async () => {
                         <img
                             src={imageUrl}
                             alt={`Aperçu matériel ${nomMarque || ''}`}
-                            style={{ width: '44px', height: '44px', objectFit: 'cover', borderRadius: '8px' }}
+                            className="mvt-marque-img"
                             onError={(e) => {
                                 e.target.onerror = null;
                                 e.target.style.display = 'none';
@@ -792,7 +746,7 @@ const handleImportSubmit = useCallback(async () => {
                     );
                 }
                 return (
-                    <span style={{ fontSize: '12px', color: '#6B7280' }}>
+                    <span className="mvt-cell-small">
                         {nomMarque || 'N/A'}
                     </span>
                 );
@@ -804,7 +758,7 @@ const handleImportSubmit = useCallback(async () => {
             selector: row => row.localSource?.nom_local || 'N/A',
             sortable: true, width: '140px',
             cell: row => (
-                <span style={{ fontSize: '12px', color: '#475569' }}>
+                <span className="mvt-cell-local">
                     {row.localSource?.nom_local || 'N/A'}
                 </span>
             ),
@@ -814,7 +768,7 @@ const handleImportSubmit = useCallback(async () => {
             selector: row => row.localDestination?.nom_local || 'N/A',
             sortable: true, width: '140px',
             cell: row => (
-                <span style={{ fontSize: '12px', color: '#475569' }}>
+                <span className="mvt-cell-local">
                     {row.localDestination?.nom_local || 'N/A'}
                 </span>
             ),
@@ -831,138 +785,118 @@ const handleImportSubmit = useCallback(async () => {
     ], [handleDetailsClick, handleEditClick, handleDeleteClick]);
 
     return (
-        <div className="container-fluid py-2 px-2 mouvements-container">
-            {/* En-tête - Style mvt-modern-header comme Materiels.js */}
-            <div 
-                className="d-flex justify-content-between align-items-center mb-4 p-2 p-md-3 rounded-3 mvt-modern-header" 
-            >
-                <div className="d-flex align-items-center gap-3">
-                    <div className="icon-circle">
-                        <FaBoxOpen className="text-white" style={{ fontSize: '1.25rem' }} />
-                    </div>
-                    <div>
-                        <h1>Mouvements de Stock</h1>
-                        <p>Surveillez les entrées et sorties de votre parc informatique.</p>
-                    </div>
-                </div>
-                
-                <div className="d-flex gap-2">
-    {/* Bouton Rafraîchir - style circulaire */}
-    <Button 
-        className="border-0 rounded-circle header-refresh-btn" 
-        onClick={fetchAllMouvements}
-        title="Rafraîchir"
-    >
-        <FaSync />
-    </Button>
-    
-    {/* Bouton Importer - style rounded-pill vert émeraude */}
-    <Button 
-        className={`header-import-btn ${showImportSection ? 'active' : ''}`}
-        onClick={toggleImportSection}
-        disabled={isImporting}
-    >
-        {isImporting ? (
-            <Spinner animation="border" size="sm" style={{ color: 'white' }} />
-        ) : (
-            <FaFileImport size={15} />
-        )}
-        <span className="ms-2">{isImporting ? 'Import...' : 'Importer'}</span>
-    </Button>
-    
-    {/* Bouton Exporter - style rounded-pill orange ambré */}
-    <Button 
-        className="header-export-btn" 
-        onClick={handleExportExcel}
-    >
-        <FaFileExcel size={15} />
-        <span className="ms-2">Exporter</span>
-    </Button>
-    
-    {/* Bouton Nouveau - style rounded-pill bleu cyan */}
-    <Button 
-        className="header-add-btn" 
-        onClick={handleAddClick}
-    >
-        <FaPlus size={18} />
-        <span className="ms-2">Nouveau</span>
-    </Button>
-</div>
-            </div>
+        <div className="container-fluid py-2 px-2 mvt-page">
+            <PageHeader
+                icon={<FaBoxOpen />}
+                title="Mouvements de Stock"
+                subtitle="Surveillez les entrées et sorties de votre parc informatique."
+                actions={
+                    <>
+                        <button
+                            type="button"
+                            className="btn-pill btn-pill-ghost btn-refresh"
+                            onClick={fetchAllMouvements}
+                            title="Rafraîchir"
+                            aria-label="Rafraîchir"
+                        >
+                            <FaSync aria-hidden="true" />
+                        </button>
+                        <button
+                            type="button"
+                            className={`btn-pill btn-pill-success ${showImportSection ? 'active' : ''}`}
+                            onClick={toggleImportSection}
+                            disabled={isImporting}
+                            aria-expanded={showImportSection}
+                        >
+                            {isImporting ? (
+                                <Spinner animation="border" size="sm" aria-hidden="true" />
+                            ) : (
+                                <FaFileImport size={15} aria-hidden="true" />
+                            )}
+                            <span>{isImporting ? 'Import...' : 'Importer'}</span>
+                        </button>
+                        <button type="button" className="btn-pill btn-pill-warning" onClick={handleExportExcel}>
+                            <FaFileExcel size={15} aria-hidden="true" />
+                            <span>Exporter</span>
+                        </button>
+                        <button type="button" className="btn-pill btn-pill-primary" onClick={handleAddClick}>
+                            <FaPlus size={15} aria-hidden="true" />
+                            <span>Nouveau</span>
+                        </button>
+                    </>
+                }
+            />
 
             {/* SECTION D'IMPORT INTÉGRÉE */}
             {showImportSection && (
-                <div className="mvt-import-section mb-4 p-4 rounded-3" style={{ 
-                    background: 'white', border: '1px solid #e5e7eb', borderRadius: '16px', boxShadow: '0 4px 16px rgba(0,0,0,0.06)', animation: 'slideDown 0.3s ease-out'
-                }}>
+                <div className="mvt-import-section">
                     <div className="d-flex justify-content-between align-items-center mb-3">
-                        <h6 className="fw-bold mb-0" style={{ color: '#1F2937' }}>
-                            <FaFileImport className="me-2" style={{ color: '#667eea' }} />
+                        <h6 className="fw-bold mb-0 mvt-import-title">
+                            <FaFileImport className="me-2 mvt-import-accent" aria-hidden="true" />
                             Importer des mouvements
                         </h6>
-                        <button 
-                            className="btn btn-sm btn-outline-secondary rounded-circle border-0"
+                        <button
+                            type="button"
+                            className="btn-icon"
                             onClick={toggleImportSection}
-                            style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                             disabled={isImporting}
+                            aria-label="Fermer l'import"
                         >
-                            <FaTimes />
+                            <FaTimes aria-hidden="true" />
                         </button>
                     </div>
 
                     {!importSuccess ? (
                         <>
                             {/* Zone de drop */}
-                            <div 
-                                className={`mvt-import-drop-zone ${isDragging ? 'dragover' : ''}`}
+                            <div
+                                className={`mvt-import-drop-zone ${isDragging ? 'dragover' : ''} ${importFile ? 'has-file' : ''}`}
                                 onDragEnter={handleDragEnter}
                                 onDragLeave={handleDragLeave}
                                 onDragOver={handleDragOver}
                                 onDrop={handleDrop}
                                 onClick={() => fileInputRef.current?.click()}
-                                style={{
-                                    border: `2px dashed ${isDragging ? '#667eea' : '#dee2e6'}`, borderRadius: '16px', padding: '2rem', textAlign: 'center', transition: 'all 0.3s ease', cursor: importFile ? 'default' : 'pointer', backgroundColor: isDragging ? '#f0f1ff' : importFile ? '#f0fdf4' : '#fafbfc', position: 'relative'
-                                }}
                             >
                                 <input
-                                    ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFileSelect} style={{ display: 'none' }} disabled={isImporting}
+                                    ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFileSelect} className="d-none" disabled={isImporting}
                                 />
 
                                 {importFile ? (
                                     <div className="d-flex align-items-center justify-content-center gap-4">
-                                        <div style={{ fontSize: '2.5rem', color: '#217346' }}>
+                                        <div className="mvt-import-icon mvt-import-icon--excel" aria-hidden="true">
                                             <FaFileExcel />
                                         </div>
                                         <div className="text-start">
-                                            <div className="fw-semibold" style={{ color: '#1F2937' }}>{importFile.name}</div>
-                                            <div className="text-muted" style={{ fontSize: '0.85rem' }}>
+                                            <div className="fw-semibold mvt-import-text">{importFile.name}</div>
+                                            <div className="text-muted mvt-import-filesize">
                                                 {(importFile.size / 1024).toFixed(1)} Ko
                                             </div>
                                         </div>
-                                        <button 
-                                            className="btn btn-sm btn-outline-danger rounded-circle border-0"
+                                        <button
+                                            type="button"
+                                            className="btn-icon btn-icon--danger"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 handleRemoveFile();
                                             }}
                                             disabled={isImporting}
-                                            style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                            aria-label="Retirer le fichier"
                                         >
-                                            <FaTimes />
+                                            <FaTimes aria-hidden="true" />
                                         </button>
                                     </div>
                                 ) : (
                                     <>
-                                        <div style={{ fontSize: '2.5rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
+                                        <div className="mvt-import-icon" aria-hidden="true">
                                             <FaFileUpload />
                                         </div>
-                                        <div style={{ fontWeight: '500', color: '#1F2937' }}>
+                                        <div className="mvt-import-text">
                                             Glissez-déposez votre fichier Excel ici
                                         </div>
-                                        <div style={{ color: '#6B7280', fontSize: '0.9rem' }}>
+                                        <div className="mvt-import-subtext">
                                             ou cliquez pour parcourir
                                         </div>
-                                        <div style={{ color: '#9CA3AF', fontSize: '0.8rem', marginTop: '0.5rem' }}>
+                                        <div className="mvt-import-formats">
                                             Formats acceptés : <span className="fw-medium">.xlsx, .xls</span>
                                         </div>
                                     </>
@@ -971,19 +905,19 @@ const handleImportSubmit = useCallback(async () => {
 
                             {/* Aperçu du fichier */}
                             {importPreview.length > 0 && !isImporting && (
-                                <div className="mt-3 p-3 rounded-3" style={{ background: '#f8f9fa', border: '1px solid #e9ecef' }}>
+                                <div className="mt-3 p-3 rounded-3 mvt-import-preview">
                                     <div className="d-flex justify-content-between align-items-center mb-2">
-                                        <h6 className="mb-0" style={{ fontSize: '0.9rem' }}>
-                                            <FaSearch className="me-2" style={{ color: '#667eea' }} />
+                                        <h6 className="mb-0">
+                                            <FaSearch className="me-2 mvt-import-accent" aria-hidden="true" />
                                             Aperçu des données ({importData.length} lignes)
                                         </h6>
                                     </div>
-                                    <div className="table-responsive" style={{ maxHeight: '200px', overflow: 'auto' }}>
+                                    <div className="table-responsive">
                                         <table className="table table-sm table-bordered table-hover mb-0">
                                             <thead className="table-light">
                                                 <tr>
                                                     {Object.keys(importPreview[0] || {}).map((key, index) => (
-                                                        <th key={index} style={{ fontSize: '0.7rem', whiteSpace: 'nowrap' }}>
+                                                        <th key={index}>
                                                             {key}
                                                         </th>
                                                     ))}
@@ -993,7 +927,7 @@ const handleImportSubmit = useCallback(async () => {
                                                 {importPreview.map((row, rowIndex) => (
                                                     <tr key={rowIndex}>
                                                         {Object.values(row).map((value, cellIndex) => (
-                                                            <td key={cellIndex} style={{ fontSize: '0.7rem', maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                            <td key={cellIndex}>
                                                                 {String(value || '')}
                                                             </td>
                                                         ))}
@@ -1010,40 +944,22 @@ const handleImportSubmit = useCallback(async () => {
                                 <div className="mx-4 mb-3">
                                     <div className="d-flex justify-content-between align-items-center mb-2">
                                         <div className="d-flex align-items-center gap-2">
-                                            <Spinner animation="border" size="sm" style={{ color: '#667eea' }} />
-                                            <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#374151' }}>
-                                                {importProgress < 25 ? 'Analyse du fichier Excel...' : 
-                                                 importProgress < 70 ? 'Envoi des données au serveur...' : 
-                                                 importProgress < 100 ? 'Traitement des données...' : 
+                                            <Spinner animation="border" size="sm" className="mvt-import-accent" />
+                                            <span className="mvt-import-status">
+                                                {importProgress < 25 ? 'Analyse du fichier Excel...' :
+                                                 importProgress < 70 ? 'Envoi des données au serveur...' :
+                                                 importProgress < 100 ? 'Traitement des données...' :
                                                  'Importation terminée !'}
                                             </span>
                                         </div>
-                                        <span style={{ 
-                                            fontWeight: '600', 
-                                            color: importProgress === 100 ? '#10b981' : '#667eea',
-                                            fontSize: '0.9rem'
-                                        }}>
+                                        <span className={`mvt-import-percent ${importProgress === 100 ? 'is-done' : ''}`}>
                                             {importProgress}%
                                         </span>
                                     </div>
-                                    <div className="progress-container" style={{ 
-                                        height: '10px', 
-                                        borderRadius: '10px', 
-                                        backgroundColor: '#f3f4f6',
-                                        overflow: 'hidden',
-                                        position: 'relative'
-                                    }}>
-                                        <div 
-                                            className="progress-bar-fill"
-                                            style={{ 
-                                                height: '100%',
-                                                borderRadius: '10px',
-                                                background: importProgress === 100 
-                                                    ? 'linear-gradient(90deg, #10b981, #059669)' 
-                                                    : 'linear-gradient(90deg, #667eea, #764ba2)',
-                                                width: `${importProgress}%`,
-                                                transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
-                                            }}
+                                    <div className="mvt-progress">
+                                        <div
+                                            className={`mvt-progress__fill ${importProgress === 100 ? 'is-done' : ''}`}
+                                            style={{ width: `${importProgress}%` }}
                                         />
                                     </div>
                                 </div>
@@ -1051,44 +967,29 @@ const handleImportSubmit = useCallback(async () => {
 
                             {/* Message d'erreur */}
                             {importError && (
-                                <Alert variant="danger" className="mt-3 mb-0" style={{ borderRadius: '12px' }}>
-                                    <FaTimes className="me-2" />
+                                <Alert variant="danger" className="mt-3 mb-0 mvt-import-error">
+                                    <FaTimes className="me-2" aria-hidden="true" />
                                     {importError}
                                 </Alert>
                             )}
 
                             {/* Boutons d'action */}
                             {!isImporting && !importSuccess && (
-                                <div className="d-flex justify-content-end gap-2 mt-3">
-                                    <button 
+                                <div className="d-flex justify-content-end gap-2 mt-3 mvt-import-actions">
+                                    <button
+                                        type="button"
                                         className="btn btn-outline-secondary rounded-pill px-4"
                                         onClick={toggleImportSection}
                                     >
                                         Annuler
                                     </button>
-                                    <button 
-                                        className="btn rounded-pill px-4"
+                                    <button
+                                        type="button"
+                                        className="btn-pill btn-pill-success"
                                         onClick={handleImportSubmit}
                                         disabled={!importFile}
-                                        style={{
-                                            background: !importFile ? '#e5e7eb' : 'linear-gradient(135deg, #667eea, #764ba2)',
-                                            color: 'white',
-                                            border: 'none',
-                                            fontWeight: '600',
-                                            transition: 'all 0.3s ease'
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            if (importFile) {
-                                                e.target.style.transform = 'translateY(-2px)';
-                                                e.target.style.boxShadow = '0 8px 24px rgba(102, 126, 234, 0.25)';
-                                            }
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.target.style.transform = 'none';
-                                            e.target.style.boxShadow = 'none';
-                                        }}
                                     >
-                                        <FaUpload className="me-2" />
+                                        <FaUpload aria-hidden="true" />
                                         Importer
                                     </button>
                                 </div>
@@ -1097,13 +998,13 @@ const handleImportSubmit = useCallback(async () => {
                     ) : (
                         /* Succès de l'importation */
                         <div className="text-center py-4">
-                            <div style={{ fontSize: '3.5rem', color: '#38a169', animation: 'scaleIn 0.5s ease' }}>
+                            <div className="mvt-import-success-icon" aria-hidden="true">
                                 <FaCheckCircle />
                             </div>
-                            <div style={{ fontSize: '1.2rem', fontWeight: '600', color: '#1F2937', marginTop: '1rem' }}>
+                            <div className="mvt-import-success-text">
                                 Importation réussie !
                             </div>
-                            <div style={{ color: '#6B7280' }}>
+                            <div className="mvt-import-success-subtext">
                                 Les mouvements ont été importés avec succès.
                             </div>
                         </div>
@@ -1112,7 +1013,7 @@ const handleImportSubmit = useCallback(async () => {
             )}
 
             {/* Carte principale */}
-            <div className="border-0 shadow-lg mouvements-card">
+            <div className="mvt-card">
                 <div className="p-4 p-lg-5">
 
                     {/* Messages d'état */}
@@ -1124,7 +1025,7 @@ const handleImportSubmit = useCallback(async () => {
                                 Rapport d'import : {importReport.doublons} doublon(s) ignoré(s) (déjà présents en base), {importReport.errors} ligne(s) en erreur
                             </div>
                             {importReport.details.length > 0 && (
-                                <ul className="mb-0 small" style={{ maxHeight: '160px', overflowY: 'auto' }}>
+                                <ul className="mb-0 small mvt-import-report">
                                     {importReport.details.slice(0, 50).map((detail, idx) => (
                                         <li key={idx}>{detail}</li>
                                     ))}
@@ -1145,8 +1046,7 @@ const handleImportSubmit = useCallback(async () => {
                                     value={cfg.value}
                                     label={cfg.label}
                                     qty={cfg.qty}
-                                    cardClass={cfg.cardClass}
-                                    colorClass={cfg.colorClass}
+                                    variant={cfg.variant}
                                     isActive={filterType === cfg.filterValue}
                                     isEmpty={cfg.value === 0}
                                     onClick={() => handleStatCardClick(cfg.filterValue)}
@@ -1158,58 +1058,60 @@ const handleImportSubmit = useCallback(async () => {
                     {/* Barre de recherche et filtres */}
                     <div className="row mb-4 g-3">
                         <div className="col-md-6 col-lg-4">
-                            <div className="bg-light rounded-pill px-3 py-2 border-0 shadow-sm" style={{ display: 'flex', alignItems: 'center' }}>
-                                <span style={{ color: '#6c757d', marginRight: '8px' }}><FaSearch /></span>
+                            <div className="mvt-search">
+                                <FaSearch aria-hidden="true" />
                                 <input
                                     type="text"
                                     placeholder="Rechercher par matériel, utilisateur, date..."
+                                    aria-label="Rechercher un mouvement"
                                     value={filterText}
                                     onChange={e => setFilterText(e.target.value)}
-                                    style={{ flex: 1, border: 'none', outline: 'none', backgroundColor: 'transparent', fontSize: '14px' }}
                                 />
                                 {filterText && (
                                     <button
+                                        type="button"
+                                        className="mvt-search-clear"
                                         onClick={() => setFilterText('')}
-                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6c757d' }}
+                                        aria-label="Effacer la recherche"
                                     >
-                                        <FaTimes />
+                                        <FaTimes aria-hidden="true" />
                                     </button>
                                 )}
                             </div>
                         </div>
                         <div className="col-md-6 col-lg-4">
-                            <Button
-                                className="w-100 rounded-pill border-0"
-                                style={{
-                                    background: showAdvancedFilters ? '#667eea' : '#e9ecef', color: showAdvancedFilters ? 'white' : '#495057', fontWeight: '500', padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.3s ease'
-                                }}
+                            <button
+                                type="button"
+                                className={`mvt-filter-btn ${showAdvancedFilters ? 'is-active' : ''}`}
                                 onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                                aria-expanded={showAdvancedFilters}
                             >
-                                <FaFilter size={14} />
+                                <FaFilter size={14} aria-hidden="true" />
                                 Filtres avancés
-                            </Button>
+                            </button>
                         </div>
                         <div className="col-md-6 col-lg-4">
-                            <Button
-                                className="w-100 rounded-pill border-0 reset-btn"
+                            <button
+                                type="button"
+                                className="mvt-filter-btn"
                                 onClick={clearFilters}
                             >
-                                <FaTimes size={14} style={{ marginRight: '6px' }} />
+                                <FaTimes size={14} aria-hidden="true" />
                                 Réinitialiser
-                            </Button>
+                            </button>
                         </div>
                     </div>
 
                     {/* Filtres avancés */}
                     {showAdvancedFilters && (
-                        <div className="row mb-4 g-3 p-3 rounded-3 advanced-filters">
+                        <div className="row mb-4 g-3 mvt-advanced-filters">
                             <div className="col-md-4">
-                                <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#495057', marginBottom: '6px', display: 'block' }}>Type de mouvement</label>
+                                <label htmlFor="mvt-filter-type">Type de mouvement</label>
                                 <select
+                                    id="mvt-filter-type"
                                     value={filterType}
                                     onChange={e => setFilterType(e.target.value)}
-                                    className="form-select border-0 rounded-2"
-                                    style={{ backgroundColor: '#fff', fontSize: '0.9rem' }}
+                                    className="form-select"
                                 >
                                     <option value="">Tous les types</option>
                                     <option value="ENTREE">Entrée</option>
@@ -1219,23 +1121,23 @@ const handleImportSubmit = useCallback(async () => {
                                 </select>
                             </div>
                             <div className="col-md-4">
-                                <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#495057', marginBottom: '6px', display: 'block' }}>Du :</label>
+                                <label htmlFor="mvt-filter-start">Du :</label>
                                 <input
+                                    id="mvt-filter-start"
                                     type="date"
                                     value={filterDateRange.start}
                                     onChange={e => setFilterDateRange({ ...filterDateRange, start: e.target.value })}
-                                    className="form-control border-0 rounded-2"
-                                    style={{ backgroundColor: '#fff', fontSize: '0.9rem' }}
+                                    className="form-control"
                                 />
                             </div>
                             <div className="col-md-4">
-                                <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#495057', marginBottom: '6px', display: 'block' }}>À :</label>
+                                <label htmlFor="mvt-filter-end">À :</label>
                                 <input
+                                    id="mvt-filter-end"
                                     type="date"
                                     value={filterDateRange.end}
                                     onChange={e => setFilterDateRange({ ...filterDateRange, end: e.target.value })}
-                                    className="form-control border-0 rounded-2"
-                                    style={{ backgroundColor: '#fff', fontSize: '0.9rem' }}
+                                    className="form-control"
                                 />
                             </div>
                         </div>
@@ -1255,15 +1157,13 @@ const handleImportSubmit = useCallback(async () => {
                             progressPending={loading}
                             progressComponent={
                                 <div className="p-5 text-center">
-                                    <div className="spinner-grow text-primary" role="status" style={{ width: '3rem', height: '3rem', marginRight: '8px' }}></div>
+                                    <div className="spinner-grow text-primary mvt-loading-spinner" role="status"></div>
                                     <p className="text-muted mt-3">Chargement des données...</p>
                                 </div>
                             }
-                            customStyles={modernStyles}
+                            customStyles={tableCustomStyles}
                             noDataComponent={<NoDataComponent />}
-                            paginationComponentOptions={{
-                                rowsPerPageText: 'Lignes par page :', rangeSeparatorText: 'sur', selectAllRowsItem: true, selectAllRowsItemText: 'Tout'
-                            }}
+                            paginationComponentOptions={paginationOptions}
                             persistTableHead
                         />
                     </div>

@@ -2,16 +2,21 @@
    DashboardHistoriqueChart.css
    ═══════════════════════════════════════════════════════════════════════════ */
 
-.dashboard-historique {
+.dhc-root {
+    /* Palette locale du tableau de bord sombre */
+    --dhc-bg: #0a0f1c;
+    --dhc-out: #f43f5e;
+    --dhc-out-light: #fda4af;
+
     padding: 24px;
-    background-color: #0a0f1c;
+    background-color: var(--dhc-bg);
     font-family: var(--font-sans);
     border-radius: 16px;
     min-height: 100%;
 }
 
 /* ── En-tête ──────────────────────────────────────────────────────────────── */
-.dashboard-header {
+.dhc-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -20,13 +25,13 @@
     margin-bottom: 24px;
 }
 
-.dashboard-header-left {
+.dhc-header-left {
     display: flex;
     align-items: center;
     gap: 16px;
 }
 
-.dashboard-icon-box {
+.dhc-icon-box {
     width: 48px;
     height: 48px;
     border-radius: 14px;
@@ -38,12 +43,12 @@
     flex-shrink: 0;
 }
 
-.dashboard-icon-box svg {
-    stroke: white;
+.dhc-icon-box svg {
+    stroke: var(--color-bg);
 }
 
-.dashboard-title {
-    color: #f1f5f9;
+.dhc-title {
+    color: var(--dash-text);
     font-size: 26px;
     font-weight: 700;
     margin: 0;
@@ -54,7 +59,7 @@
     flex-wrap: wrap;
 }
 
-.dashboard-year {
+.dhc-year {
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-lighter) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -62,7 +67,7 @@
 }
 
 /* Badge période (T1, S2…) */
-.dashboard-period-badge {
+.dhc-period-badge {
     font-size: 13px;
     font-weight: 600;
     padding: 3px 10px;
@@ -74,7 +79,7 @@
     letter-spacing: 0.3px;
 }
 
-.dashboard-subtitle {
+.dhc-subtitle {
     color: var(--color-text-sub);
     margin: 4px 0 0;
     font-size: 0.9rem;
@@ -82,7 +87,7 @@
 }
 
 /* ── Contrôles (période + toggle) ─────────────────────────────────────────── */
-.dashboard-controls {
+.dhc-controls {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -90,7 +95,7 @@
 }
 
 /* ── Sélecteur d'année ────────────────────────────────────────────────────── */
-.year-selector-dash {
+.dhc-year-selector {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -100,7 +105,7 @@
     padding: 6px 10px;
 }
 
-.year-selector-label {
+.dhc-year-selector-label {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -110,7 +115,7 @@
     white-space: nowrap;
 }
 
-.year-selector-select {
+.dhc-year-selector-select {
     background: rgba(99, 102, 241, 0.12);
     border: 1px solid rgba(99, 102, 241, 0.3);
     border-radius: 7px;
@@ -123,23 +128,23 @@
     transition: background 0.2s ease, border-color 0.2s ease;
 }
 
-.year-selector-select:hover {
+.dhc-year-selector-select:hover {
     background: rgba(99, 102, 241, 0.2);
     border-color: rgba(99, 102, 241, 0.5);
 }
 
-.year-selector-select:focus {
+.dhc-year-selector-select:focus {
     outline: none;
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
 
-.year-selector-select option {
-    background: #0a0f1c;
-    color: #f1f5f9;
+.dhc-year-selector-select option {
+    background: var(--dhc-bg);
+    color: var(--dash-text);
 }
 
 /* ── Sélecteur de période ─────────────────────────────────────────────────── */
-.period-selector {
+.dhc-period-selector {
     display: flex;
     gap: 4px;
     background: rgba(15, 23, 42, 0.8);
@@ -148,7 +153,7 @@
     padding: 4px;
 }
 
-.period-btn {
+.dhc-period-btn {
     padding: 6px 12px;
     border-radius: 7px;
     border: none;
@@ -162,19 +167,19 @@
     white-space: nowrap;
 }
 
-.period-btn:hover {
+.dhc-period-btn:hover {
     background: rgba(99, 102, 241, 0.1);
     color: var(--color-primary-lighter);
 }
 
-.period-btn.active {
+.dhc-period-btn.active {
     background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(129, 140, 248, 0.15) 100%);
     color: var(--color-primary-lighter);
     border: 1px solid rgba(99, 102, 241, 0.3);
 }
 
 /* ── Toggle Bar / Line ────────────────────────────────────────────────────── */
-.chart-type-toggle {
+.dhc-chart-type-toggle {
     display: flex;
     gap: 6px;
     background: rgba(15, 23, 42, 0.8);
@@ -183,7 +188,7 @@
     padding: 4px;
 }
 
-.toggle-btn {
+.dhc-toggle-btn {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -200,24 +205,24 @@
     white-space: nowrap;
 }
 
-.toggle-btn svg {
+.dhc-toggle-btn svg {
     stroke: currentColor;
     flex-shrink: 0;
 }
 
-.toggle-btn:hover {
+.dhc-toggle-btn:hover {
     background: rgba(99, 102, 241, 0.1);
     color: var(--color-primary-lighter);
 }
 
-.toggle-btn.active {
+.dhc-toggle-btn.active {
     background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(129, 140, 248, 0.15) 100%);
     color: var(--color-primary-lighter);
     border: 1px solid rgba(99, 102, 241, 0.3);
 }
 
 /* ── Grille des statistiques ──────────────────────────────────────────────── */
-.dashboard-stats-grid {
+.dhc-stats-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 16px;
@@ -260,13 +265,13 @@
 }
 
 /* ── En-tête de la carte ── */
-.stat-card-header {
+.dhc-stat-card-header {
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
-.stat-icon-box {
+.dhc-stat-icon-box {
     width: 34px;
     height: 34px;
     border-radius: 9px;
@@ -276,22 +281,22 @@
     flex-shrink: 0;
 }
 
-.dhc-stat-card.in .stat-icon-box {
+.dhc-stat-card.in .dhc-stat-icon-box {
     background: rgba(99, 102, 241, 0.15);
     border: 1px solid rgba(99, 102, 241, 0.25);
     color: var(--color-primary);
 }
-.dhc-stat-card.out .stat-icon-box {
+.dhc-stat-card.out .dhc-stat-icon-box {
     background: rgba(244, 63, 94, 0.15);
     border: 1px solid rgba(244, 63, 94, 0.25);
-    color: #f43f5e;
+    color: var(--dhc-out);
 }
-.dhc-stat-card.net .stat-icon-box {
+.dhc-stat-card.net .dhc-stat-icon-box {
     background: rgba(16, 185, 129, 0.15);
     border: 1px solid rgba(16, 185, 129, 0.25);
     color: var(--color-success);
 }
-.dhc-stat-card.ratio .stat-icon-box {
+.dhc-stat-card.ratio .dhc-stat-icon-box {
     background: rgba(245, 158, 11, 0.15);
     border: 1px solid rgba(245, 158, 11, 0.25);
     color: var(--color-warning);
@@ -306,13 +311,13 @@
 }
 
 /* ── Corps de la carte ── */
-.stat-card-body {
+.dhc-stat-card-body {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
-.stat-main-row {
+.dhc-stat-main-row {
     display: flex;
     align-items: baseline;
     gap: 8px;
@@ -321,29 +326,29 @@
 .dhc-stat-value {
     font-size: 28px;
     font-weight: 700;
-    color: #f1f5f9;
+    color: var(--dash-text);
     line-height: 1;
 }
 
 .dhc-stat-card.in .dhc-stat-value    { color: var(--color-primary-light); }
-.dhc-stat-card.out .dhc-stat-value   { color: #f43f5e; }
+.dhc-stat-card.out .dhc-stat-value   { color: var(--dhc-out); }
 .dhc-stat-card.net .dhc-stat-value   { color: var(--color-success); }
 .dhc-stat-card.ratio .dhc-stat-value { color: var(--color-warning); }
 
-.stat-unit {
+.dhc-stat-unit {
     color: var(--color-text-sub);
     font-size: 0.8rem;
 }
 
 /* ── Mini sparkline ── */
-.stat-sparkline {
+.dhc-stat-sparkline {
     margin: 0 -4px;
     opacity: 0.75;
     pointer-events: none;
 }
 
 /* ── Pied de la carte ── */
-.stat-footer-row {
+.dhc-stat-footer-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -353,26 +358,26 @@
     flex-wrap: wrap;
 }
 
-.stat-prev-year {
+.dhc-stat-prev-year {
     display: flex;
     align-items: center;
     gap: 6px;
 }
 
-.stat-label-prev {
+.dhc-stat-label-prev {
     color: var(--color-text-sub);
     font-size: 0.72rem;
     font-weight: 500;
 }
 
-.stat-value-prev {
+.dhc-stat-value-prev {
     color: var(--color-text-muted);
     font-size: 0.8rem;
     font-weight: 600;
 }
 
 /* ── Badge de tendance ── */
-.stat-trend {
+.dhc-stat-trend {
     display: flex;
     align-items: center;
     gap: 4px;
@@ -383,24 +388,24 @@
     white-space: nowrap;
 }
 
-.stat-trend.positive {
+.dhc-stat-trend.positive {
     background: rgba(16, 185, 129, 0.12);
     border: 1px solid rgba(16, 185, 129, 0.22);
     color: var(--color-success);
 }
-.stat-trend.negative {
+.dhc-stat-trend.negative {
     background: rgba(244, 63, 94, 0.12);
     border: 1px solid rgba(244, 63, 94, 0.22);
-    color: #f43f5e;
+    color: var(--dhc-out);
 }
-.stat-trend.neutral {
+.dhc-stat-trend.neutral {
     background: rgba(100, 116, 139, 0.12);
     border: 1px solid rgba(100, 116, 139, 0.22);
     color: var(--color-text-sub);
 }
 
 /* ── Barre de progression Entrées vs Sorties ──────────────────────────────── */
-.flow-progress-bar {
+.dhc-flow-progress-bar {
     margin-bottom: 20px;
     padding: 14px 18px;
     background: linear-gradient(145deg, rgba(15, 23, 42, 0.7) 0%, rgba(10, 15, 28, 0.6) 100%);
@@ -408,7 +413,7 @@
     border-radius: 12px;
 }
 
-.flow-progress-labels {
+.dhc-flow-progress-labels {
     display: flex;
     justify-content: space-between;
     margin-bottom: 8px;
@@ -416,31 +421,31 @@
     font-weight: 600;
 }
 
-.flow-label-in {
+.dhc-flow-label-in {
     display: flex;
     align-items: center;
     gap: 6px;
     color: var(--color-primary-light);
 }
 
-.flow-label-out {
+.dhc-flow-label-out {
     display: flex;
     align-items: center;
     gap: 6px;
-    color: #fda4af;
+    color: var(--dhc-out-light);
 }
 
-.flow-dot {
+.dhc-flow-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
     flex-shrink: 0;
 }
 
-.dot-in  { background: var(--color-primary); }
-.dot-out { background: #f43f5e; }
+.dhc-dot-in  { background: var(--color-primary); }
+.dhc-dot-out { background: var(--dhc-out); }
 
-.flow-progress-track {
+.dhc-flow-progress-track {
     display: flex;
     height: 8px;
     border-radius: 99px;
@@ -449,24 +454,24 @@
     gap: 2px;
 }
 
-.flow-progress-fill {
+.dhc-flow-progress-fill {
     height: 100%;
     border-radius: 99px;
     transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.fill-in  { background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light)); }
-.fill-out { background: linear-gradient(90deg, #f43f5e, #fda4af); }
+.dhc-fill-in  { background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light)); }
+.dhc-fill-out { background: linear-gradient(90deg, var(--dhc-out), var(--dhc-out-light)); }
 
 /* ── Barre des mois pics ──────────────────────────────────────────────────── */
-.peak-months-bar {
+.dhc-peak-months-bar {
     display: flex;
     gap: 12px;
     margin-bottom: 20px;
     flex-wrap: wrap;
 }
 
-.peak-item {
+.dhc-peak-item {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -476,28 +481,28 @@
     font-weight: 500;
 }
 
-.peak-item.peak-in {
+.dhc-peak-item.dhc-peak-in {
     background: rgba(99, 102, 241, 0.1);
     border: 1px solid rgba(99, 102, 241, 0.2);
     color: var(--color-primary-lighter);
 }
-.peak-item.peak-out {
+.dhc-peak-item.dhc-peak-out {
     background: rgba(244, 63, 94, 0.1);
     border: 1px solid rgba(244, 63, 94, 0.2);
-    color: #fda4af;
+    color: var(--dhc-out-light);
 }
 
-.peak-item svg {
+.dhc-peak-item svg {
     fill: currentColor;
     flex-shrink: 0;
 }
 
-.peak-label  { color: inherit; opacity: 0.75; }
-.peak-month  { font-weight: 700; }
-.peak-value  { opacity: 0.85; }
+.dhc-peak-label  { color: inherit; opacity: 0.75; }
+.dhc-peak-month  { font-weight: 700; }
+.dhc-peak-value  { opacity: 0.85; }
 
 /* ── Conteneur du graphique ───────────────────────────────────────────────── */
-.dashboard-chart-container {
+.dhc-chart-container {
     background: linear-gradient(145deg, rgba(15, 23, 42, 0.7) 0%, rgba(10, 15, 28, 0.6) 100%);
     padding: 20px 16px 12px;
     border-radius: 16px;
@@ -507,13 +512,13 @@
 }
 
 /* ── Tableau récapitulatif mensuel ────────────────────────────────────────── */
-.monthly-table-wrapper {
+.dhc-monthly-table-wrapper {
     border-radius: 14px;
     border: 1px solid rgba(100, 116, 139, 0.15);
     overflow: hidden;
 }
 
-.monthly-table-toggle {
+.dhc-monthly-table-toggle {
     width: 100%;
     display: flex;
     align-items: center;
@@ -530,37 +535,37 @@
     transition: background 0.2s ease, color 0.2s ease;
 }
 
-.monthly-table-toggle:hover {
+.dhc-monthly-table-toggle:hover {
     background: rgba(99, 102, 241, 0.08);
     color: var(--color-primary-lighter);
 }
 
-.monthly-table-toggle svg {
+.dhc-monthly-table-toggle svg {
     stroke: currentColor;
     flex-shrink: 0;
 }
 
-.monthly-table-toggle span {
+.dhc-monthly-table-toggle span {
     flex: 1;
 }
 
-.monthly-table-container {
+.dhc-monthly-table-container {
     overflow-x: auto;
     background: rgba(10, 15, 28, 0.6);
 }
 
-.monthly-table {
+.dhc-monthly-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.82rem;
 }
 
-.monthly-table thead tr {
+.dhc-monthly-table thead tr {
     background: rgba(15, 23, 42, 0.9);
     border-bottom: 1px solid rgba(100, 116, 139, 0.15);
 }
 
-.monthly-table th {
+.dhc-monthly-table th {
     padding: 10px 16px;
     text-align: right;
     color: var(--color-text-sub);
@@ -571,44 +576,44 @@
     white-space: nowrap;
 }
 
-.monthly-table th:first-child,
-.monthly-table td:first-child {
+.dhc-monthly-table th:first-child,
+.dhc-monthly-table td:first-child {
     text-align: left;
 }
 
-.monthly-table tbody tr {
+.dhc-monthly-table tbody tr {
     border-bottom: 1px solid rgba(100, 116, 139, 0.08);
     transition: background 0.15s ease;
 }
 
-.monthly-table tbody tr:last-child {
+.dhc-monthly-table tbody tr:last-child {
     border-bottom: none;
 }
 
-.monthly-table tbody tr:hover {
+.dhc-monthly-table tbody tr:hover {
     background: rgba(99, 102, 241, 0.05);
 }
 
-.monthly-table td {
+.dhc-monthly-table td {
     padding: 10px 16px;
     text-align: right;
     white-space: nowrap;
 }
 
-.monthly-table .col-month {
+.dhc-monthly-table .col-month {
     color: var(--color-text-muted);
     font-weight: 600;
 }
 
-.monthly-table .col-in    { color: var(--color-primary-light); }
-.monthly-table .col-out   { color: #f43f5e; }
+.dhc-monthly-table .col-in    { color: var(--color-primary-light); }
+.dhc-monthly-table .col-out   { color: var(--dhc-out); }
 
-.monthly-table .col-net.positive { color: var(--color-success); }
-.monthly-table .col-net.negative { color: #f43f5e; }
+.dhc-monthly-table .col-net.positive { color: var(--color-success); }
+.dhc-monthly-table .col-net.negative { color: var(--dhc-out); }
 
 /* ── États de chargement / erreur ─────────────────────────────────────────── */
-.dashboard-loading,
-.dashboard-error {
+.dhc-loading,
+.dhc-error {
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -618,11 +623,11 @@
     gap: 16px;
 }
 
-.dashboard-error svg {
-    stroke: #f43f5e;
+.dhc-error svg {
+    stroke: var(--dhc-out);
 }
 
-.spinner {
+.dhc-spinner {
     width: 40px;
     height: 40px;
     border: 3px solid rgba(99, 102, 241, 0.2);
@@ -633,18 +638,18 @@
 
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 1100px) {
-    .dashboard-stats-grid {
+    .dhc-stats-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 }
 
 @media (max-width: 800px) {
-    .dashboard-controls {
+    .dhc-controls {
         flex-direction: column;
         align-items: flex-start;
     }
-    .period-selector,
-    .chart-type-toggle {
+    .dhc-period-selector,
+    .dhc-chart-type-toggle {
         width: 100%;
         justify-content: flex-start;
         flex-wrap: wrap;
@@ -652,32 +657,32 @@
 }
 
 @media (max-width: 700px) {
-    .dashboard-stats-grid {
+    .dhc-stats-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    .dashboard-header {
+    .dhc-header {
         flex-direction: column;
         align-items: flex-start;
     }
 }
 
 @media (max-width: 480px) {
-    .dashboard-stats-grid {
+    .dhc-stats-grid {
         grid-template-columns: 1fr;
     }
-    .dashboard-historique {
+    .dhc-root {
         padding: 14px;
     }
-    .dashboard-title {
+    .dhc-title {
         font-size: 20px;
     }
     .dhc-stat-value {
         font-size: 24px;
     }
-    .peak-months-bar {
+    .dhc-peak-months-bar {
         flex-direction: column;
     }
-    .period-selector {
+    .dhc-period-selector {
         flex-wrap: wrap;
     }
 }

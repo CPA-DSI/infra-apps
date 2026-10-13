@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Button, Row, Col, Badge, Spinner, Alert, Accordion } from 'react-bootstrap';
 import { getMouvementById } from '../../services/api';
 import { FaCalendarAlt, FaExchangeAlt, FaBox, FaHashtag, FaUser, FaUsers, FaLaptop, FaMapMarkerAlt, FaArrowRight, FaTag, FaExclamationTriangle, FaClipboardList, FaHistory, FaCogs } from 'react-icons/fa';
+// Classes .profile-modal-modern / .modal-*-modern / .info-card partagées avec la modale de profil
+import '../../components/Navbar/ProfileModal.css';
 import './DetailsStockModal.css';
 
 const DetailsStockModal = ({ show, handleClose, selectedItemId }) => {
@@ -51,17 +53,17 @@ const DetailsStockModal = ({ show, handleClose, selectedItemId }) => {
     }
   };
 
-  // Nouvelle fonction pour le gradient selon le type
-  const getHeaderGradient = (type) => {
+  // Variante de couleur de l'en-tête selon le type (cf. DetailsStockModal.css)
+  const getHeaderVariant = (type) => {
     switch (type) {
       case 'ENTREE':
-        return 'linear-gradient(135deg, #059669 0%, #047857 100%)'; // Vert émeraude
+        return 'entree';
       case 'ENTREE_QUANTITE':
-        return 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)'; // Bleu océan
+        return 'ajustement';
       case 'SORTIE':
-        return 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)'; // Rouge intense
+        return 'sortie';
       default:
-        return 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)'; // Gris foncé
+        return 'autre';
     }
   };
 
@@ -101,10 +103,10 @@ const DetailsStockModal = ({ show, handleClose, selectedItemId }) => {
   const formattedDate = item.date_mouvement ? new Date(item.date_mouvement).toLocaleDateString('fr-FR') : 'N/A';
 
   return (
-    <Modal show={show} onHide={handleClose} size="lg" centered className="profile-modal-modern dsm-modal" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} >
-      <Modal.Header closeButton className="modal-header-modern" style={{ background: getHeaderGradient(item.type_mouvement) }} >
+    <Modal show={show} onHide={handleClose} size="lg" centered className="profile-modal-modern dsm-modal dsm-modal--loaded">
+      <Modal.Header closeButton className={`modal-header-modern dsm-header--${getHeaderVariant(item.type_mouvement)}`}>
         <div className="modal-header-content">
-          <div className="modal-icon-wrapper">
+          <div className="modal-icon-wrapper" aria-hidden="true">
             <FaBox />
           </div>
           <div>
@@ -122,14 +124,14 @@ const DetailsStockModal = ({ show, handleClose, selectedItemId }) => {
           <Col md={6}>
             <div className="profile-info-cards">
               <div className="info-card">
-                <div className="info-icon"><FaCalendarAlt /></div>
+                <div className="info-icon" aria-hidden="true"><FaCalendarAlt /></div>
                 <div className="info-content">
                   <span className="info-label">Date du mouvement</span>
                   <span className="info-value">{formattedDate}</span>
                 </div>
               </div>
               <div className="info-card">
-                <div className="info-icon"><FaExchangeAlt /></div>
+                <div className="info-icon" aria-hidden="true"><FaExchangeAlt /></div>
                 <div className="info-content">
                   <span className="info-label">Type de mouvement</span>
                   <Badge bg={getTypeVariant(item.type_mouvement)} className="badge-role">
@@ -138,22 +140,22 @@ const DetailsStockModal = ({ show, handleClose, selectedItemId }) => {
                 </div>
               </div>
               <div className="info-card">
-                <div className="info-icon"><FaBox /></div>
+                <div className="info-icon" aria-hidden="true"><FaBox /></div>
                 <div className="info-content">
                   <span className="info-label">Produit concerné</span>
                   <span className="info-value">{item.produits?.nom_produit || 'N/A'}</span>
                 </div>
               </div>
               <div className="info-card">
-                <div className="info-icon"><FaHashtag /></div>
+                <div className="info-icon" aria-hidden="true"><FaHashtag /></div>
                 <div className="info-content">
                   <span className="info-label">Quantité</span>
-                  <span className="info-value text-primary">{item.quantite || 'N/A'}</span>
+                  <span className="info-value dsm-qty">{item.quantite || 'N/A'}</span>
                 </div>
               </div>
               {item.produits?.quantite_en_stock !== undefined && item.produits?.quantite_en_stock !== null && (
                 <div className="info-card">
-                  <div className="info-icon"><FaExclamationTriangle /></div>
+                  <div className="info-icon" aria-hidden="true"><FaExclamationTriangle /></div>
                   <div className="info-content">
                     <span className="info-label">Stock actuel du produit</span>
                     <span className="info-value">
@@ -175,29 +177,29 @@ const DetailsStockModal = ({ show, handleClose, selectedItemId }) => {
           <Col md={6}>
             <div className="password-section">
               <h5 className="section-title"><FaMapMarkerAlt /> Localisation et Personnel</h5>
-              <div className="profile-info-cards" style={{ gap: '8px' }}>
-                <div className="info-card" style={{ padding: '12px' }}>
-                  <div className="info-icon" style={{ width: '36px', height: '36px', fontSize: '1rem' }}><FaUser /></div>
+              <div className="profile-info-cards dsm-info-cards--dense">
+                <div className="info-card">
+                  <div className="info-icon" aria-hidden="true"><FaUser /></div>
                   <div className="info-content">
                     <span className="info-label">Utilisateur</span>
                     <span className="info-value">{item.materiels?.utilisateur || item.nom_utilisateur || 'N/A'}</span>
                   </div>
                 </div>
-                <div className="info-card" style={{ padding: '12px' }}>
-                  <div className="info-icon" style={{ width: '36px', height: '36px', fontSize: '1rem' }}><FaUsers /></div>
+                <div className="info-card">
+                  <div className="info-icon" aria-hidden="true"><FaUsers /></div>
                   <div className="info-content">
                     <span className="info-label">Équipe</span>
                     <span className="info-value">{equipeNom}</span>
                   </div>
                 </div>
-                <div className="info-card" style={{ padding: '12px' }}>
-                  <div className="info-icon" style={{ width: '36px', height: '36px', fontSize: '1rem' }}><FaLaptop /></div>
+                <div className="info-card">
+                  <div className="info-icon" aria-hidden="true"><FaLaptop /></div>
                   <div className="info-content">
                     <span className="info-label">Laptop / Marque</span>
                     <div className="d-flex align-items-center gap-2">
                       {marqueUrl ? (
                         <a href={marqueUrl} target="_blank" rel="noopener noreferrer">
-                          <img src={marqueUrl} alt={nom_marque} style={{ maxWidth: '50px', height: 'auto', borderRadius: '8px' }} />
+                          <img src={marqueUrl} alt={nom_marque} className="dsm-brand-img" />
                         </a>
                       ) : (
                         <span className="info-value">{nom_marque}</span>
@@ -206,12 +208,12 @@ const DetailsStockModal = ({ show, handleClose, selectedItemId }) => {
                     </div>
                   </div>
                 </div>
-                <div className="info-card" style={{ padding: '12px' }}>
-                  <div className="info-icon" style={{ width: '36px', height: '36px', fontSize: '1rem' }}><FaMapMarkerAlt /></div>
+                <div className="info-card">
+                  <div className="info-icon" aria-hidden="true"><FaMapMarkerAlt /></div>
                   <div className="info-content">
                     <span className="info-label">Source → Destination</span>
                     <span className="info-value">
-                      {item.localSource?.nom_local || 'N/A'} <FaArrowRight className="mx-1" style={{ fontSize: '0.8rem' }} /> {item.localDestination?.nom_local || 'N/A'}
+                      {item.localSource?.nom_local || 'N/A'} <FaArrowRight className="mx-1 dsm-arrow" aria-hidden="true" /> {item.localDestination?.nom_local || 'N/A'}
                     </span>
                   </div>
                 </div>
@@ -225,7 +227,7 @@ const DetailsStockModal = ({ show, handleClose, selectedItemId }) => {
             <hr className="modal-divider" />
             <div className="password-section">
               <h5 className="section-title"><FaTag /> Motif / Notes</h5>
-              <div className="info-card" style={{ cursor: 'default' }}>
+              <div className="info-card dsm-info-card--static">
                 <div className="info-content">
                   <span className="info-label">Description</span>
                   <span className="info-value">{item.motif}</span>
@@ -240,7 +242,7 @@ const DetailsStockModal = ({ show, handleClose, selectedItemId }) => {
             <hr className="modal-divider" />
             <div className="password-section">
               <h5 className="section-title"><FaClipboardList /> Remarque</h5>
-              <div className="info-card" style={{ cursor: 'default' }}>
+              <div className="info-card dsm-info-card--static">
                 <div className="info-content">
                   <span className="info-value">{item.remarque}</span>
                 </div>

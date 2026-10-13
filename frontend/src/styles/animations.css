@@ -1,11 +1,20 @@
+/* Animations partagées : réutiliser ces noms plutôt que de redéclarer
+   des @keyframes locaux dans les pages. */
+
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Alias historique de fadeInUp (utilisé en inline dans plusieurs pages). */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInOpacity {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes spin {
@@ -22,8 +31,19 @@
   100% { background-position: 200% 0; }
 }
 
+/* Alias historique de shimmer. */
+@keyframes skeletonLoading {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -43,12 +63,23 @@
   to { transform: scale(1); opacity: 1; }
 }
 
+@keyframes popIn {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+
 @keyframes expandRowFadeIn {
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes skeletonLoading {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+/* Icône en rotation continue (spinners react-icons : className="fa-spin"). */
+.fa-spin {
+  animation: spin 1s linear infinite;
 }

@@ -1,20 +1,20 @@
 .userMaterielCard {
-  background: #ffffff;
-  border-radius: 16px;
-  border: 1px solid #eef0f4;
+  background: var(--color-bg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-light);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   padding: 22px;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: var(--transition-base);
   animation: umc-fadeInUp 0.4s ease-out;
 }
 
 .userMaterielCard:hover {
   transform: translateY(-3px);
   box-shadow: 0 10px 24px rgba(124, 58, 237, 0.14);
-  border-color: #ddd6fe;
+  border-color: #ddd6fe; /* violet-200, sans token */
 }
 
 .userMaterielTop {
@@ -40,10 +40,10 @@
 
 .userMaterielLogoFallback {
   padding: 6px 12px;
-  background-color: #f3f4f6;
-  border-radius: 8px;
+  background-color: var(--color-border-light);
+  border-radius: var(--radius-sm);
   font-size: 0.8rem;
-  color: #6b7280;
+  color: var(--color-text-sub);
   font-weight: 500;
   flex-shrink: 0;
 }
@@ -56,12 +56,12 @@
 .userMaterielCode {
   font-weight: 700;
   font-size: 0.95rem;
-  color: #1f2937;
+  color: var(--color-text-main);
 }
 
 .userMaterielSub {
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: var(--color-text-muted);
   margin-top: 2px;
   word-break: break-word;
 }
@@ -76,6 +76,9 @@
   gap: 6px;
   white-space: nowrap;
   text-transform: capitalize;
+  color: var(--color-text-secondary);
+  background-color: var(--color-border-light);
+  border: 1px solid var(--color-border);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
@@ -84,8 +87,8 @@
   flex-direction: column;
   gap: 9px;
   padding: 12px 0;
-  border-top: 1px solid #f3f4f6;
-  border-bottom: 1px solid #f3f4f6;
+  border-top: 1px solid var(--color-border-light);
+  border-bottom: 1px solid var(--color-border-light);
 }
 
 .userMaterielInfoItem {
@@ -93,11 +96,11 @@
   align-items: center;
   gap: 8px;
   font-size: 0.85rem;
-  color: #4b5563;
+  color: var(--color-text-secondary);
 }
 
 .userMaterielInfoItem svg {
-  color: #7c3aed;
+  color: var(--color-secondary-dark);
   flex-shrink: 0;
   font-size: 0.8rem;
 }
@@ -115,12 +118,25 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  border: 1px solid;
+}
+
+.userMaterielActifBadge--on {
+  color: #065f46;
+  background-color: var(--color-success-soft);
+  border-color: var(--color-success);
+}
+
+.userMaterielActifBadge--off {
+  color: #991b1b;
+  background-color: var(--color-danger-soft);
+  border-color: var(--color-danger);
 }
 
 .userMaterielEmpty {
   text-align: center;
   padding: 40px 20px;
-  color: #9ca3af;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
   display: flex;
   flex-direction: column;

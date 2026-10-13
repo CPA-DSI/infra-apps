@@ -15,6 +15,9 @@ import TicketModal from './TicketModal';
 import TicketDetailsModal from './TicketDetailsModal';
 import CloseTicketModal from './CloseTicketModal';
 import './Tickets.css';
+import AppModal from '../../components/AppModal/AppModal';
+import PageHeader from '../../components/PageHeader/PageHeader';
+import { tableStyles, paginationOptions } from '../../styles/dataTableTheme';
 import { getTickets, deleteTicket, fetchAllMaterielsIt, assignTicket, fetchCommentaires, fetchCommentairesByTicket, addCommentaire, deleteCommentaire } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { hasPermission, PERMISSIONS } from '../../config/api';
@@ -33,43 +36,10 @@ const PRIORITY_CONFIG = {
   BASSE: { label: 'Basse', color: '#718096', icon: FaStar },
 };
 
-// --- Styles modernes pour react-data-table-component ---
-const modernStyles = {
-  table: { style: { backgroundColor: 'transparent', borderRadius: '20px' } },
-  headRow: {
-    style: {
-      backgroundColor: '#f8f9fa', border: 'none', minHeight: '56px',
-      borderRadius: '10px 10px 0 0', boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-    },
-  },
-  headCells: {
-    style: {
-      fontSize: '0.75rem', fontWeight: '700', color: '#374151', letterSpacing: '0.05em',
-      textTransform: 'uppercase', padding: '16px', verticalAlign: 'middle',
-      textAlign: 'left', backgroundColor: '#f3f4f6', borderBottom: '2px solid #e5e7eb',
-      whiteSpace: 'nowrap', userSelect: 'none',
-    },
-  },
-  rows: {
-    style: {
-      fontSize: '13px', fontWeight: '500', color: '#212529', minHeight: '60px',
-      backgroundColor: '#ffffff',
-      '&:not(:last-of-type)': { borderBottom: '1px solid #e9ecef' },
-      '&:hover': { backgroundColor: '#f0f7ff !important', transition: 'background-color 0.2s ease' },
-    },
-    highlightOnHoverStyle: {
-      backgroundColor: '#EBF4FF', color: '#0056b3', cursor: 'pointer', transitionDuration: '0.2s',
-    },
-  },
-  pagination: {
-    style: { border: 'none', fontSize: '12px', color: '#6c757d', padding: '20px' },
-  },
-};
-
-const paginationOptions = {
-  rowsPerPageText: 'Lignes par page :', rangeSeparatorText: 'sur',
-  selectAllRowsItem: true, selectAllRowsItemText: 'Tout',
-};
+// Thème commun des tableaux + spécificités de la page
+const tableCustomStyles = tableStyles({
+  rows: { style: { fontSize: '13px', minHeight: '60px' } },
+});
 
 const ExpandableComments = ({ data }) => {
   const { user } = useAuth();
@@ -136,35 +106,35 @@ const ExpandableComments = ({ data }) => {
   const isClosed = ['FERME', 'CLOS', 'CLOTURE', 'CLÔTURÉ', 'FERME', 'RESOLU'].includes(data?.statut) || data?.fermeture;
 
   return (
-    <div className="ticket-comments-section" style={{ padding: '12px 24px', background: '#F8FAFC' }}>
+    <div className="tck-comments-section tck-comments-section--expanded">
       {commentsLoading ? (
-        <div className="loading-spinner" style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#64748b', padding: '8px 0' }}>
+        <div className="tck-loading-inline">
           <Spinner animation="border" size="sm" />
           <span>Chargement des commentaires...</span>
         </div>
       ) : comments.length === 0 ? (
-        <p className="text-muted" style={{ fontSize: 13, margin: 0 }}>Aucun commentaire pour ce ticket.</p>
+        <p className="tck-comments-empty">Aucun commentaire pour ce ticket.</p>
       ) : (
-        <div className="comment-list">
+        <div className="tck-comment-list">
           {comments.map((c) => {
             const auteurNom = c.auteur?.materiel?.utilisateur || c.auteur?.emails?.[0]?.email || 'Utilisateur';
             const auteurEquipe = c.auteur?.materiel?.equipe || '';
             return (
-              <div key={c.idCommentaire} className="comment-item">
-                <div className="comment-header">
-                  <span className="comment-avatar">{auteurNom.charAt(0).toUpperCase()}</span>
-                  <span className="comment-meta">
-                    <span className="comment-author">{auteurNom}</span>
-                    {auteurEquipe && <span className="comment-team">{auteurEquipe}</span>}
-                    <span className="comment-date">{c.datePubli ? new Date(c.datePubli).toLocaleString('fr-FR') : ''}</span>
+              <div key={c.idCommentaire} className="tck-comment-item">
+                <div className="tck-comment-header">
+                  <span className="tck-comment-avatar">{auteurNom.charAt(0).toUpperCase()}</span>
+                  <span className="tck-comment-meta">
+                    <span className="tck-comment-author">{auteurNom}</span>
+                    {auteurEquipe && <span className="tck-comment-team">{auteurEquipe}</span>}
+                    <span className="tck-comment-date">{c.datePubli ? new Date(c.datePubli).toLocaleString('fr-FR') : ''}</span>
                   </span>
                   {!isClosed && canDeleteComment(c) && (
-                    <button type="button" className="comment-delete-btn" onClick={() => handleDeleteComment(c.idCommentaire)} title="Supprimer">
-                      <FaTimes size={11} />
+                    <button type="button" className="tck-comment-delete-btn" onClick={() => handleDeleteComment(c.idCommentaire)} title="Supprimer" aria-label="Supprimer le commentaire">
+                      <FaTimes size={11} aria-hidden="true" />
                     </button>
                   )}
                 </div>
-                <p className="comment-content">{c.contenu}</p>
+                <p className="tck-comment-content">{c.contenu}</p>
               </div>
             );
           })}
@@ -172,17 +142,17 @@ const ExpandableComments = ({ data }) => {
       )}
 
       {!isClosed && (
-        <form className="comment-form" onSubmit={handleAddComment}>
+        <form className="tck-comment-form" onSubmit={handleAddComment}>
           <textarea
-            className="comment-textarea"
+            className="tck-comment-textarea"
             placeholder="Ajouter un commentaire..."
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             rows={3}
           />
           <div className="d-flex justify-content-end mt-2">
-            <button type="submit" className="comment-submit-btn" disabled={commentSubmitting || !newComment.trim()}>
-              <FaPaperPlane size={12} style={{ marginRight: 6 }} />
+            <button type="submit" className="tck-comment-submit-btn" disabled={commentSubmitting || !newComment.trim()}>
+              <FaPaperPlane size={12} className="tck-btn-icon" aria-hidden="true" />
               {commentSubmitting ? 'Envoi...' : 'Commenter'}
             </button>
           </div>
@@ -405,7 +375,7 @@ const TicketList = () => {
       const Icon = cfg.icon;
       return (
         <span className="tck-status-badge" style={{ backgroundColor: cfg.bg, color: cfg.text, border: `1px solid ${cfg.border}` }}>
-          <Icon size={11} style={{ marginRight: 4 }} /> {cfg.label}
+          <Icon size={11} className="tck-badge-icon" aria-hidden="true" /> {cfg.label}
         </span>
       );
     };
@@ -414,8 +384,8 @@ const TicketList = () => {
       const cfg = PRIORITY_CONFIG[row.priorite] || PRIORITY_CONFIG.MOYENNE;
       const Icon = cfg.icon;
       return (
-        <span className="priority-badge" style={{ backgroundColor: cfg.color + '20', color: cfg.color, border: `1px solid ${cfg.color}40` }}>
-          <Icon size={11} style={{ marginRight: 4 }} /> {cfg.label}
+        <span className="tck-priority-badge" style={{ backgroundColor: cfg.color + '20', color: cfg.color, border: `1px solid ${cfg.color}40` }}>
+          <Icon size={11} className="tck-badge-icon" aria-hidden="true" /> {cfg.label}
         </span>
       );
     };
@@ -426,7 +396,7 @@ const TicketList = () => {
       const label = materielLabel || idMat || '—';
       return (
         <span className="tck-materiel">
-          <FaLaptop size={12} style={{ marginRight: 6, color: '#64748b' }} />
+          <FaLaptop size={12} className="tck-materiel-icon" aria-hidden="true" />
           {label}
         </span>
       );
@@ -436,7 +406,7 @@ const TicketList = () => {
       if (isInconnu) {
         return (
           <span className="tck-unassigned" title={unassignedLabel}>
-            {icon && <span style={{ marginRight: 6, opacity: 0.7 }}>{icon}</span>}
+            {icon && <span className="tck-unassigned-icon" aria-hidden="true">{icon}</span>}
             {unassignedLabel}
           </span>
         );
@@ -503,34 +473,34 @@ const TicketList = () => {
     const renderActions = (row) => {
       const isClosed = ['FERME', 'CLOS', 'CLOTURE', 'CLÔTURÉ', 'FERME', 'RESOLU'].includes(row.statut) || row.fermeture;
       return (
-        <div className="d-flex gap-2" role="group" aria-label="Actions" style={{ alignItems: 'center' }}>
-          <Button variant="light" className="shadow-sm border-0 p-2 rounded-circle" onClick={() => handleOpenDetails(row)} title="Voir détails">
-            <FaInfoCircle size={14} className="text-info" />
-          </Button>
+        <div className="d-flex align-items-center gap-2" role="group" aria-label="Actions">
+          <button type="button" className="btn-icon btn-icon--info" onClick={() => handleOpenDetails(row)} title="Voir détails" aria-label="Voir détails">
+            <FaInfoCircle size={14} aria-hidden="true" />
+          </button>
           {isClosed && (
-            <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#c53030', background: '#fff5f5', padding: '4px 10px', borderRadius: '999px', border: '1px solid #feb2b2', whiteSpace: 'nowrap', lineHeight: 1 }}>
+            <span className="tck-closed-pill">
               Fermé
             </span>
           )}
           {!isClosed && (
-            <Button variant="light" className="shadow-sm border-0 p-2 rounded-circle" onClick={() => handleOpenEdit(row)} title="Modifier">
-              <FaPaperPlane size={14} className="text-warning" style={{ transform: 'rotate(-45deg)' }} />
-            </Button>
+            <button type="button" className="btn-icon btn-icon--warning" onClick={() => handleOpenEdit(row)} title="Modifier" aria-label="Modifier">
+              <FaPaperPlane size={14} className="tck-icon-tilt" aria-hidden="true" />
+            </button>
           )}
           {canManageTickets && !isClosed && !row.idAssigne && (
-            <Button variant="light" className="shadow-sm border-0 p-2 rounded-circle" onClick={() => handleAssign(row.idTicket)} title="Assigner">
-              <FaUser size={14} className="text-primary" />
-            </Button>
+            <button type="button" className="btn-icon btn-icon--primary" onClick={() => handleAssign(row.idTicket)} title="Assigner" aria-label="Assigner">
+              <FaUser size={14} aria-hidden="true" />
+            </button>
           )}
           {canManageTickets && !isClosed && (
-            <Button variant="light" className="shadow-sm border-0 p-2 rounded-circle" onClick={() => handleOpenClose(row)} title="Résolu">
-              <FaCheckCircle size={14} className="text-success" />
-            </Button>
+            <button type="button" className="btn-icon btn-icon--success" onClick={() => handleOpenClose(row)} title="Résolu" aria-label="Résolu">
+              <FaCheckCircle size={14} aria-hidden="true" />
+            </button>
           )}
           {canManageTickets && (
-            <Button variant="light" className="shadow-sm border-0 p-2 rounded-circle" onClick={() => confirmDelete(row.idTicket)} title="Supprimer">
-              <FaTimes size={14} className="text-danger" />
-            </Button>
+            <button type="button" className="btn-icon btn-icon--danger" onClick={() => confirmDelete(row.idTicket)} title="Supprimer" aria-label="Supprimer">
+              <FaTimes size={14} aria-hidden="true" />
+            </button>
           )}
         </div>
       );
@@ -561,41 +531,34 @@ const TicketList = () => {
   const resolvedTickets = tickets.filter((t) => t.statut === 'RESOLU').length;
 
   return (
-    <div className="tck-page container-fluid py-2 px-2" style={{ backgroundColor: '#f9fafb', minHeight: '100vh' }}>
-      {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4 p-3 rounded-3 tck-header">
-        <div className="d-flex align-items-center gap-3">
-          <div className="d-flex align-items-center justify-content-center flex-shrink-0 tck-header-icon">
-            <FaTicketAlt className="text-white" style={{ fontSize: '1.5rem' }} />
-          </div>
-          <div>
-            <h1 className="h5 fw-bold text-white mb-1">Gestion des Tickets</h1>
-            <p className="text-white mb-0" style={{ fontSize: '0.8rem', opacity: 0.8 }}>
-              Suivez et traitez les demandes de support
-            </p>
-          </div>
-        </div>
-
-        <div className="d-flex gap-2">
-          <Button className="btn-pill btn-pill-ghost btn-refresh border-0 rounded-circle shadow-sm" onClick={fetchTickets} title="Rafraîchir">
-            <FaSyncAlt />
-          </Button>
-          <Button className="btn-pill btn-pill-warning shadow-sm" style={{ borderRadius: '9999px' }} onClick={handleExportExcel} disabled={loading || filteredTickets.length === 0}>
-            <FaDownload size={15} />
-            <span className="ms-2">Exporter</span>
-          </Button>
-          <Button className="btn-pill btn-pill-primary shadow-sm" style={{ borderRadius: '9999px' }} onClick={handleOpenAdd}>
-            <FaPlus size={16} />
-            <span className="ms-2">Ajouter</span>
-          </Button>
-        </div>
-      </div>
+    <div className="tck-page container-fluid py-2 px-2">
+      <PageHeader
+        icon={<FaTicketAlt />}
+        title="Gestion des Tickets"
+        subtitle="Suivez et traitez les demandes de support"
+        background="var(--gradient-primary-dark)"
+        actions={
+          <>
+            <button type="button" className="btn-refresh" onClick={fetchTickets} title="Rafraîchir" aria-label="Rafraîchir">
+              <FaSyncAlt aria-hidden="true" />
+            </button>
+            <button type="button" className="btn-pill btn-pill-warning" onClick={handleExportExcel} disabled={loading || filteredTickets.length === 0}>
+              <FaDownload size={15} aria-hidden="true" />
+              <span>Exporter</span>
+            </button>
+            <button type="button" className="btn-pill btn-pill-primary" onClick={handleOpenAdd}>
+              <FaPlus size={16} aria-hidden="true" />
+              <span>Ajouter</span>
+            </button>
+          </>
+        }
+      />
 
       {/* Statistiques rapides */}
-      <div className="row g-3 mb-4">
+      <div className="tck-stats row g-3 mb-4">
         <div className="col-6 col-md">
           <div className="tck-stat-card">
-            <div className="tck-stat-icon tck-stat-total"><FaList /></div>
+            <div className="tck-stat-icon tck-stat-total" aria-hidden="true"><FaList /></div>
             <div>
               <div className="tck-stat-value">{totalTickets}</div>
               <div className="tck-stat-label">Total des tickets</div>
@@ -604,7 +567,7 @@ const TicketList = () => {
         </div>
         <div className="col-6 col-md">
           <div className="tck-stat-card">
-            <div className="tck-stat-icon tck-stat-open"><FaClock /></div>
+            <div className="tck-stat-icon tck-stat-open" aria-hidden="true"><FaClock /></div>
             <div>
               <div className="tck-stat-value">{openTickets}</div>
               <div className="tck-stat-label">Tickets ouverts</div>
@@ -613,7 +576,7 @@ const TicketList = () => {
         </div>
         <div className="col-6 col-md">
           <div className="tck-stat-card">
-            <div className="tck-stat-icon tck-stat-inprogress"><FaSyncAlt /></div>
+            <div className="tck-stat-icon tck-stat-inprogress" aria-hidden="true"><FaSyncAlt /></div>
             <div>
               <div className="tck-stat-value">{inProgressTickets}</div>
               <div className="tck-stat-label">Tickets en cours</div>
@@ -622,7 +585,7 @@ const TicketList = () => {
         </div>
         <div className="col-6 col-md">
           <div className="tck-stat-card">
-            <div className="tck-stat-icon tck-stat-resolved"><FaCheckCircle /></div>
+            <div className="tck-stat-icon tck-stat-resolved" aria-hidden="true"><FaCheckCircle /></div>
             <div>
               <div className="tck-stat-value">{resolvedTickets}</div>
               <div className="tck-stat-label">Tickets résolus</div>
@@ -631,7 +594,7 @@ const TicketList = () => {
         </div>
         <div className="col-6 col-md">
           <div className="tck-stat-card">
-            <div className="tck-stat-icon tck-stat-closed"><FaArchive /></div>
+            <div className="tck-stat-icon tck-stat-closed" aria-hidden="true"><FaArchive /></div>
             <div>
               <div className="tck-stat-value">{closedTickets}</div>
               <div className="tck-stat-label">Tickets fermés</div>
@@ -645,7 +608,7 @@ const TicketList = () => {
         <div className="row g-2 align-items-center">
           <div className="col-12 col-md-5">
             <div className="input-group">
-              <span className="input-group-text tck-search-icon"><FaSearch /></span>
+              <span className="input-group-text tck-search-icon" aria-hidden="true"><FaSearch /></span>
               <input
                 type="text"
                 className="form-control tck-search-input"
@@ -654,8 +617,8 @@ const TicketList = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
               {searchTerm && (
-                <button className="btn tck-clear-btn" onClick={() => setSearchTerm('')} title="Effacer">
-                  <FaTimes />
+                <button type="button" className="btn tck-clear-btn" onClick={() => setSearchTerm('')} title="Effacer" aria-label="Effacer la recherche">
+                  <FaTimes aria-hidden="true" />
                 </button>
               )}
             </div>
@@ -681,8 +644,8 @@ const TicketList = () => {
             </div>
           </div>
           <div className="col-12 col-md-1 d-grid">
-            <Button variant="light" className="tck-reset-btn" onClick={handleResetFilters} title="Réinitialiser">
-              <FaTimes />
+            <Button variant="light" className="tck-reset-btn" onClick={handleResetFilters} title="Réinitialiser" aria-label="Réinitialiser les filtres">
+              <FaTimes aria-hidden="true" />
             </Button>
           </div>
         </div>
@@ -691,21 +654,21 @@ const TicketList = () => {
       {/* Tableau */}
       <div className="tck-table-card rounded-3 p-3">
         {error && (
-          <Alert variant="danger" className="mb-3" style={{ borderRadius: '12px' }}>
+          <Alert variant="danger" className="tck-alert mb-3">
             <FaTimes className="me-2" /> {error}
           </Alert>
         )}
 
         {loading ? (
           <div className="d-flex justify-content-center align-items-center py-5">
-            <Spinner animation="border" style={{ color: '#4f46e5' }} />
+            <Spinner animation="border" className="tck-spinner" />
             <span className="ms-3 text-muted">Chargement des tickets...</span>
           </div>
         ) : (
           <DataTable
             columns={columns}
             data={filteredTickets}
-            customStyles={modernStyles}
+            customStyles={tableCustomStyles}
             persistTableHead
             pagination
             paginationComponentOptions={paginationOptions}
@@ -714,21 +677,15 @@ const TicketList = () => {
             responsive
             expandableRows
             expandableRowsComponent={ExpandableComments}
-            expandableRowIcon={<span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', color: '#64748b' }}><FaArrowRight size={12} /><FaCommentDots size={12} style={{ opacity: 0.7 }} /></span>}
-            expandableRowCollapsedIcon={<span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', color: '#4f46e5' }}><FaArrowRight size={12} style={{ transform: 'rotate(90deg)' }} /><FaCommentDots size={12} style={{ opacity: 0.9 }} /></span>}
+            expandableRowIcon={<span className="tck-expand-icon"><FaArrowRight size={12} /><FaCommentDots size={12} className="tck-expand-icon__comments" /></span>}
+            expandableRowCollapsedIcon={<span className="tck-expand-icon tck-expand-icon--open"><FaArrowRight size={12} className="tck-expand-icon__arrow" /><FaCommentDots size={12} className="tck-expand-icon__comments" /></span>}
             noDataComponent={
-              <div className="py-5 text-center">
-                <div className="d-flex justify-content-center mb-3">
-                  <div style={{
-                    width: 80, height: 80, borderRadius: '50%',
-                    backgroundColor: '#eef2ff', display: 'flex',
-                    alignItems: 'center', justifyContent: 'center'
-                  }}>
-                    <FaTicketAlt size={36} style={{ color: '#4f46e5' }} />
-                  </div>
+              <div className="tck-empty py-5 text-center">
+                <div className="tck-empty-icon" aria-hidden="true">
+                  <FaTicketAlt size={36} />
                 </div>
-                <div className="fw-bold mb-1" style={{ color: '#374151', fontSize: '1.125rem' }}>Aucun ticket trouvé</div>
-                <div className="text-muted" style={{ fontSize: '0.875rem' }}>Essayez avec d'autres filtres.</div>
+                <div className="tck-empty-title fw-bold mb-1">Aucun ticket trouvé</div>
+                <div className="tck-empty-text text-muted">Essayez avec d'autres filtres.</div>
               </div>
             }
           />
@@ -759,21 +716,26 @@ const TicketList = () => {
       />
 
       {/* Confirmation suppression */}
-      {deleteId !== null && (
-        <div className="tck-modal-overlay" onClick={() => setDeleteId(null)}>
-          <div className="tck-confirm-card" onClick={(e) => e.stopPropagation()}>
-            <div className="tck-confirm-icon"><FaTimes /></div>
-            <h5 className="fw-bold mb-2">Confirmer la suppression</h5>
-            <p className="text-muted mb-4">Voulez-vous vraiment supprimer ce ticket ? Cette action est irréversible.</p>
-            <div className="d-flex justify-content-end gap-2">
-              <Button variant="light" className="tck-cancel-btn" onClick={() => setDeleteId(null)} disabled={processing}>Annuler</Button>
-              <Button className="tck-delete-btn" onClick={handleDeleteConfirmed} disabled={processing}>
-                {processing ? 'Suppression...' : 'Supprimer'}
-              </Button>
-            </div>
-          </div>
+      <AppModal
+        show={deleteId !== null}
+        onClose={() => setDeleteId(null)}
+        hideHeader
+        size="sm"
+        closeOnBackdrop
+        ariaLabel="Confirmer la suppression"
+        contentClassName="tck-confirm-card"
+        bodyClassName="tck-confirm-body"
+      >
+        <div className="tck-confirm-icon" aria-hidden="true"><FaTimes /></div>
+        <h5 className="fw-bold mb-2">Confirmer la suppression</h5>
+        <p className="text-muted mb-4">Voulez-vous vraiment supprimer ce ticket ? Cette action est irréversible.</p>
+        <div className="d-flex justify-content-end gap-2">
+          <button type="button" className="add-modal-cancel-btn" onClick={() => setDeleteId(null)} disabled={processing}>Annuler</button>
+          <button type="button" className="btn-pill btn-pill-danger" onClick={handleDeleteConfirmed} disabled={processing}>
+            {processing ? 'Suppression...' : 'Supprimer'}
+          </button>
         </div>
-      )}
+      </AppModal>
     </div>
   );
 };

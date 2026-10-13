@@ -1,6 +1,6 @@
 .userTicketsChart {
-  background: #ffffff;
-  border: 1px solid #eef0f4;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-light);
   border-radius: 14px;
   padding: 18px 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
@@ -17,13 +17,13 @@
 .userTicketsChartTitle {
   font-size: 0.9rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--color-text-main);
 }
 
 .userTicketsChartTotal {
   font-size: 0.78rem;
   font-weight: 600;
-  color: #9ca3af;
+  color: var(--color-text-muted);
 }
 
 .userTicketsChartBar {
@@ -32,12 +32,13 @@
   height: 10px;
   border-radius: 9999px;
   overflow: hidden;
-  background: #f1f5f9;
+  background: var(--color-border-light);
   margin-bottom: 16px;
 }
 
 .userTicketsChartBarSegment {
   height: 100%;
+  background-color: var(--ud-tone-fg);
   transition: width 0.4s ease;
 }
 
@@ -55,6 +56,8 @@
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 600;
+  color: var(--ud-tone-fg);
+  background-color: var(--ud-tone-bg);
 }
 
 .userTicketsChartLegendDot {
@@ -62,6 +65,7 @@
   height: 7px;
   border-radius: 50%;
   flex-shrink: 0;
+  background-color: var(--ud-tone-fg);
 }
 
 .userTicketsChartLegendCount {

@@ -1,0 +1,25 @@
+/* Tons de statut partagés (StatusBadge, UserTicketsChart).
+   --ud-tone-fg : texte / pastille, --ud-tone-bg : fond, --ud-tone-border : bordure. */
+.ud-tone--info {
+  --ud-tone-fg: #1e40af;
+  --ud-tone-bg: var(--color-info-soft);
+  --ud-tone-border: #bfdbfe;
+}
+
+.ud-tone--warning {
+  --ud-tone-fg: #854d0e;
+  --ud-tone-bg: #fef9c3;
+  --ud-tone-border: #fef08a;
+}
+
+.ud-tone--success {
+  --ud-tone-fg: #166534;
+  --ud-tone-bg: #dcfce7;
+  --ud-tone-border: #bbf7d0;
+}
+
+.ud-tone--neutral {
+  --ud-tone-fg: var(--color-text-secondary);
+  --ud-tone-bg: var(--color-border-light);
+  --ud-tone-border: var(--color-border);
+}

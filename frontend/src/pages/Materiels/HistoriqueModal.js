@@ -4,7 +4,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { FaHistory, FaUser, FaDesktop, FaTimes, FaPlus, FaSave } from 'react-icons/fa';
 import DataTable from 'react-data-table-component';
 import { getHistoriqueMaterielByMaterielId, createHistoriqueMateriel, fetchMateriels } from '../../services/api';
-import './Materiels.css';
+import AppModal from '../../components/AppModal/AppModal';
+import { tableStyles, paginationOptions } from '../../styles/dataTableTheme';
+import './MaterielsModals.css';
+
+// En-têtes un peu plus grands et espacés que le thème par défaut.
+const HISTORIQUE_TABLE_STYLES = tableStyles({
+    headCells: { style: { fontSize: '0.8rem', letterSpacing: '0.05em' } },
+});
 
 const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -206,377 +213,231 @@ const HistoriqueModal = ({ isOpen, onClose, materielId, materielData, onHistoriq
             name: 'Ancien état',
             selector: row => row.ancienne_valeur || '',
             width: '250px',
-            cell: row => (
-                <span style={{
-                    color: '#dc2626', backgroundColor: '#fef2f2', padding: '4px 12px', borderRadius: '8px', fontSize: '0.85rem', textDecoration: 'line-through', opacity: 0.8
-                }}>
-                    {row.ancienne_valeur || '—'}
-                </span>
-            ),
+            cell: row => <span className="mat-histo-old">{row.ancienne_valeur || '—'}</span>,
         },
         {
             name: 'Nouvelle état',
             selector: row => row.nouvelle_valeur || '',
             width: '250px',
-            cell: row => (
-                <span style={{
-                    color: '#059669', backgroundColor: '#ecfdf5', padding: '4px 12px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: '500'
-                }}>
-                    {row.nouvelle_valeur || '—'}
-                </span>
-            ),
+            cell: row => <span className="mat-histo-new">{row.nouvelle_valeur || '—'}</span>,
         },
         {
             name: 'Auteur',
             selector: row => row.nom_utilisateur || 'Système',
             width: '250px',
             cell: row => (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <FaUser style={{ fontSize: '0.8rem', color: '#94a3b8' }} />
-                    <span style={{ fontSize: '0.85rem' }}>
-                        {row.nom_utilisateur || 'Système'}
-                    </span>
+                <div className="mat-histo-author">
+                    <FaUser aria-hidden="true" />
+                    <span>{row.nom_utilisateur || 'Système'}</span>
                 </div>
             ),
         },
     ];
 
+    const titre = `Historique du Matériel ${materielData?.id_n ? `N°${materielData.id_n}` : ''}`;
+
+    const header = (
+        <div className="add-modal-header">
+            <div className="d-flex align-items-center gap-3">
+                <div className="add-modal-icon-wrapper" aria-hidden="true">
+                    <FaHistory />
+                </div>
+                <div>
+                    <h2 className="add-modal-title">{titre}</h2>
+                    <p className="add-modal-subtitle">
+                        {materielData?.code_pc || 'Équipement'} • {materielData?.equipe || ''}
+                    </p>
+                </div>
+            </div>
+            <div className="mat-modal-header-actions">
+                {!showAddForm && (
+                    <button onClick={() => setShowAddForm(true)} className="mat-histo-add-btn" type="button">
+                        <FaPlus aria-hidden="true" /> Ajouter
+                    </button>
+                )}
+                <button onClick={onClose} className="add-modal-close-btn" type="button" aria-label="Fermer">
+                    <FaTimes />
+                </button>
+            </div>
+        </div>
+    );
+
     return (
-        <div className="add-modal-overlay">
-            <div className="add-modal-content" style={{
-               maxWidth: '1000px', maxHeight: '90vh', overflowY: 'auto', borderRadius: '20px', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', background: 'white',
-            }}>
-                {/* Header */}
-                <div className="add-modal-header" style={{
-                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '24px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '20px 20px 0 0',
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <div className="add-modal-icon-wrapper" style={{
-                            background: 'rgba(255, 255, 255, 0.2)', boxShadow: '0 4px 15px rgba(99, 102, 241, 0.3)', width: '48px', height: '48px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                        }}>
-                            <FaHistory style={{ color: 'white', fontSize: '1.4rem' }} />
-                        </div>
-                        <div>
-                            <h2 className="add-modal-title" style={{ 
-                                color: 'white', fontSize: '1.4rem', fontWeight: '700', margin: 0
-                            }}>
-                                Historique du Matériel {materielData?.id_n ? `N°${materielData.id_n}` : ''}
-                            </h2>
-                            <p className="add-modal-subtitle" style={{ 
-                                color: 'rgba(255,255,255,0.7)', margin: '4px 0 0 0', fontSize: '0.9rem'
-                            }}>
-                                {materielData?.code_pc || 'Équipement'} • {materielData?.equipe || ''}
-                            </p>
-                        </div>
+        <AppModal
+            show={isOpen}
+            onClose={onClose}
+            header={header}
+            ariaLabel={titre}
+            contentClassName="mat-modal mat-modal--histo mat-histo-modal"
+            footer={
+                <button onClick={onClose} className="add-modal-cancel-btn" type="button">
+                    Fermer
+                </button>
+            }
+        >
+            {/* Infos matériel */}
+            {materielData && (
+                <div className="mat-info-band mat-histo-info">
+                    <div className="mat-histo-info-user">
+                        <FaDesktop aria-hidden="true" />
+                        <span>{materielData.utilisateur || 'Utilisateur inconnu'}</span>
                     </div>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        {!showAddForm && (
-                            <button 
-                                onClick={() => setShowAddForm(true)} 
-                                className="add-modal-add-btn" 
-                                type="button" 
-                                style={{
-                                    background: 'white', color: '#6366f1', border: '1px solid rgba(255,255,255,0.4)', padding: '10px 18px', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s ease', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600', fontSize: '0.9rem', boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.target.style.background = '#fef2f2';
-                                    e.target.style.color = '#4f46e5';
-                                    e.target.style.transform = 'translateY(-1px)';
-                                    e.target.style.boxShadow = '0 6px 18px rgba(99, 102, 241, 0.35)';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.target.style.background = 'white';
-                                    e.target.style.color = '#6366f1';
-                                    e.target.style.transform = 'translateY(0)';
-                                    e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-                                }}
-                                onMouseDown={(e) => {
-                                    e.target.style.transform = 'translateY(0) scale(0.97)';
-                                }}
-                                onMouseUp={(e) => {
-                                    e.target.style.transform = 'translateY(-1px) scale(1)';
-                                }}
-                            >
-                                <FaPlus /> Ajouter
-                            </button>
-                        )}
-                        <button 
-                            onClick={onClose} 
-                            className="add-modal-close-btn" 
-                            type="button" 
-                            style={{
-                                background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.15)', padding: '10px', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s ease', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    <div className="mat-histo-info-sep" aria-hidden="true"></div>
+                    <span>ID Biostar: <strong>{materielData.id_n || 'N/A'}</strong></span>
+                    <div className="mat-histo-info-sep" aria-hidden="true"></div>
+                    <span>Équipe: <strong>{materielData.equipe || 'N/A'}</strong></span>
+                    <div className="mat-histo-info-sep" aria-hidden="true"></div>
+                    <span>Code: <strong>{materielData.code_pc || 'N/A'}</strong></span>
+                </div>
+            )}
+
+            {/* Formulaire d'ajout */}
+            {showAddForm && (
+                <div className="mat-histo-form-card">
+                    <div className="mat-histo-form-head">
+                        <h4 className="mat-histo-form-title">
+                            <FaPlus aria-hidden="true" />
+                            Ajouter une entrée d'historique
+                        </h4>
+                        <button
+                            type="button"
+                            className="btn-icon"
+                            aria-label="Fermer le formulaire"
+                            onClick={() => {
+                                setShowAddForm(false);
+                                resetForm();
                             }}
                         >
                             <FaTimes />
                         </button>
                     </div>
-                </div>
 
-                {/* Body */}
-                <div className="add-modal-body" style={{
-                    padding: '24px 28px', background: '#F8FAFC'
-                }}>
-                    {/* Infos matériel */}
-                    {materielData && (
-                        <div style={{
-                           background: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)', borderRadius: '12px', padding: '16px 20px', marginBottom: '24px', border: '1px solid #BFDBFE', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap'
-                        }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <FaDesktop style={{ color: '#3B82F6', fontSize: '1.1rem' }} />
-                                <span style={{ color: '#1E40AF', fontWeight: '600', fontSize: '0.9rem' }}>
-                                    {materielData.utilisateur || 'Utilisateur inconnu'}
-                                </span>
-                            </div>
-                            <div style={{ width: '1px', height: '20px', background: '#BFDBFE' }}></div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span style={{ color: '#1E40AF', fontSize: '0.85rem' }}>
-                                    ID Biostar: <strong>{materielData.id_n || 'N/A'}</strong>
-                                </span>
-                            </div>
-                            <div style={{ width: '1px', height: '20px', background: '#BFDBFE' }}></div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span style={{ color: '#1E40AF', fontSize: '0.85rem' }}>
-                                    Équipe: <strong>{materielData.equipe || 'N/A'}</strong>
-                                </span>
-                            </div>
-                            <div style={{ width: '1px', height: '20px', background: '#BFDBFE' }}></div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span style={{ color: '#1E40AF', fontSize: '0.85rem' }}>
-                                    Code: <strong>{materielData.code_pc || 'N/A'}</strong>
-                                </span>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Formulaire d'ajout */}
-                    {showAddForm && (
-                        <div style={{
-                            background: 'white', borderRadius: '16px', padding: '20px 24px', marginBottom: '24px', border: '2px solid #6366f1', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.1)'
-                        }}>
-                            <div style={{ 
-                                display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px'
-                            }}>
-                                <h4 style={{ 
-                                    color: '#1E293B', fontWeight: '600', margin: 0, display: 'flex', alignItems: 'center', gap: '8px'
-                                }}>
-                                    <FaPlus style={{ color: '#6366f1', fontSize: '1.1rem' }} />
-                                    Ajouter une entrée d'historique
-                                </h4>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setShowAddForm(false);
-                                        resetForm();
-                                    }}
-                                    style={{
-                                        background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '1.2rem', padding: '4px'
-                                    }}
+                    <form onSubmit={handleSubmit}>
+                        <div className="mat-histo-form-grid">
+                            <div className="mat-histo-row">
+                                <label className="mat-histo-label" htmlFor="histo-dsi">
+                                    Informatique DSI<span className="mat-histo-optional">(optionnel)</span>
+                                </label>
+                                <select
+                                    id="histo-dsi"
+                                    name="id_materiel_dsi"
+                                    value={formData.id_materiel_dsi || ''}
+                                    onChange={handleInputChange}
+                                    disabled={materielsLoading}
+                                    className="mat-histo-select"
                                 >
-                                    <FaTimes />
+                                    <option value="">Sélectionnez une option</option>
+                                    {materielOptions.map(opt => (
+                                        <option key={opt.value} value={opt.value}>
+                                            {opt.label}
+                                        </option>
+                                    ))}
+                                </select>
+                                <input
+                                    type="text"
+                                    name="nom_utilisateur"
+                                    value={formData.nom_utilisateur}
+                                    readOnly
+                                    placeholder="Nom de la personne ayant effectué la modification"
+                                    aria-label="Auteur de la modification"
+                                    className={`mat-histo-input ${formErrors.nom_utilisateur ? 'is-invalid' : ''}`}
+                                />
+                            </div>
+
+                            <div className="mat-histo-row">
+                                <label className="mat-histo-label" htmlFor="histo-ancienne">
+                                    Ancien état <span className="mat-histo-optional">(optionnel)</span>
+                                </label>
+                                <div className="mat-histo-field">
+                                    <textarea
+                                        id="histo-ancienne"
+                                        name="ancienne_valeur"
+                                        value={formData.ancienne_valeur}
+                                        onChange={handleInputChange}
+                                        placeholder="Ancien état du matériel"
+                                        rows={3}
+                                        className={`mat-histo-input ${formErrors.ancienne_valeur ? 'is-invalid' : ''}`}
+                                    />
+                                    {formErrors.ancienne_valeur && (
+                                        <span className="mat-histo-field-error">{formErrors.ancienne_valeur}</span>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="mat-histo-row">
+                                <label className="mat-histo-label" htmlFor="histo-nouvelle">
+                                    Nouvel état <span className="mat-danger-text">*</span>
+                                </label>
+                                <div className="mat-histo-field">
+                                    <textarea
+                                        id="histo-nouvelle"
+                                        name="nouvelle_valeur"
+                                        value={formData.nouvelle_valeur}
+                                        onChange={handleInputChange}
+                                        placeholder="Nouvel état du matériel"
+                                        rows={3}
+                                        className={`mat-histo-input ${formErrors.nouvelle_valeur ? 'is-invalid' : ''}`}
+                                    />
+                                    {formErrors.nouvelle_valeur && (
+                                        <span className="mat-histo-field-error">{formErrors.nouvelle_valeur}</span>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="mat-histo-submit-row">
+                                <button type="submit" disabled={submitting} className="add-modal-submit-btn">
+                                    <FaSave aria-hidden="true" /> Sauvegarder
                                 </button>
                             </div>
-
-                            <form onSubmit={handleSubmit}>
-                                <div style={{ display: 'grid', gap: '16px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                                        <label style={{ 
-                                            fontSize: '0.85rem', fontWeight: '500', color: '#475569', whiteSpace: 'nowrap', minWidth: '180px'
-                                        }}>
-                                            Informatique DSI<span style={{ color: '#94a3b8', fontWeight: '400' }}>(optionnel)</span>
-                                        </label>
-                                        <select
-                                            name="id_materiel_dsi"
-                                            value={formData.id_materiel_dsi || ''}
-                                            onChange={handleInputChange}
-                                            disabled={materielsLoading}
-                                            style={{
-                                                flex: 1, padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.9rem', backgroundColor: 'white', outline: 'none', transition: 'border-color 0.2s'
-                                            }}
-                                        >
-                                            <option value="">Sélectionnez une option</option>
-                                            {materielOptions.map(opt => (
-                                                <option key={opt.value} value={opt.value}>
-                                                    {opt.label}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <input
-                                            type="text"
-                                            name="nom_utilisateur"
-                                            value={formData.nom_utilisateur}
-                                            readOnly
-                                            placeholder="Nom de la personne ayant effectué la modification"
-                                            style={{
-                                                width: '100%', padding: '10px 14px', borderRadius: '10px', border: `1px solid ${formErrors.nom_utilisateur ? '#ef4444' : '#d1d5db'}`, fontSize: '0.95rem', transition: 'all 0.2s ease', outline: 'none', backgroundColor: '#f9fafb', cursor: 'default'
-                                            }}
-                                        />
-                                    </div>
-                                    
-
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                                        <label style={{ 
-                                            fontSize: '0.85rem', fontWeight: '500', color: '#475569', whiteSpace: 'nowrap', minWidth: '180px'
-                                        }}>
-                                            Ancien état <span style={{ color: '#94a3b8', fontWeight: '400' }}>(optionnel)</span>
-                                        </label>
-                                        <div style={{ flex: 1 }}>
-                                            <textarea
-                                                name="ancienne_valeur"
-                                                value={formData.ancienne_valeur}
-                                                onChange={handleInputChange}
-                                                placeholder="Ancien état du matériel"
-                                                rows={3}
-                                                style={{
-                                                    width: '100%', padding: '10px 14px', borderRadius: '10px', border: `1px solid ${formErrors.ancienne_valeur ? '#ef4444' : '#d1d5db'}`, fontSize: '0.95rem', transition: 'all 0.2s ease', outline: 'none', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box'
-                                                }}
-                                            />
-                                            {formErrors.ancienne_valeur && (
-                                                <span style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>
-                                                    {formErrors.ancienne_valeur}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                                        <label style={{ 
-                                            fontSize: '0.85rem', fontWeight: '500', color: '#475569', whiteSpace: 'nowrap', minWidth: '180px'
-                                        }}>
-                                             Nouvel état <span style={{ color: '#ef4444' }}>*</span>
-                                        </label>
-                                        <div style={{ flex: 1 }}>
-                                            <textarea
-                                                name="nouvelle_valeur"
-                                                value={formData.nouvelle_valeur}
-                                                onChange={handleInputChange}
-                                                placeholder="Nouvel état du matériel"
-                                                rows={3}
-                                                style={{
-                                                    width: '100%', padding: '10px 14px', borderRadius: '10px', border: `1px solid ${formErrors.nouvelle_valeur ? '#ef4444' : '#d1d5db'}`, fontSize: '0.95rem', transition: 'all 0.2s ease', outline: 'none', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box'
-                                                }}
-                                            />
-                                            {formErrors.nouvelle_valeur && (
-                                                <span style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>
-                                                    {formErrors.nouvelle_valeur}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
-                                        <button
-                                            type="submit"
-                                            disabled={submitting}
-                                            style={{
-                                                background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '12px', fontWeight: '500', fontSize: '0.9rem', cursor: submitting ? 'not-allowed' : 'pointer', opacity: submitting ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)', transition: 'all 0.2s ease'
-                                            }}
-                                        >
-                                            <FaSave /> Sauvegarder
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
                         </div>
-                    )}
-
-                    {/* Erreur */}
-                    {error && (
-                        <div style={{
-                           background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '12px', padding: '16px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', color: '#dc2626'
-                        }}>
-                            <FaTimes style={{ fontSize: '1.2rem', flexShrink: 0 }} />
-                            <span>{error}</span>
-                        </div>
-                    )}
-
-                    {/* Loading */}
-                    {loading ? (
-                        <div className="text-center py-5">
-                            <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
-                                <span className="visually-hidden">Chargement...</span>
-                            </div>
-                            <p className="text-muted mt-3" style={{ color: '#6B7280' }}>Chargement de l'historique...</p>
-                        </div>
-                    ) : historique.length === 0 ? (
-                        <div className="text-center py-5">
-                            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📭</div>
-                            <h5 style={{ color: '#374151', fontWeight: '600' }}>Aucun historique disponible</h5>
-                            <p style={{ color: '#6B7280', fontSize: '0.95rem' }}>
-                                Aucune modification n'a été enregistrée pour ce matériel.
-                            </p>
-                        </div>
-                    ) : (
-                        <div style={{
-                            background: 'white', borderRadius: '16px', padding: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid #E2E8F0'
-                        }}>
-                            <DataTable
-                                columns={columns}
-                                data={historique}
-                                pagination
-                                paginationPerPage={10}
-                                paginationRowsPerPageOptions={[5, 10, 20]}
-                                paginationComponentOptions={{
-                                    rowsPerPageText: 'Lignes par page',
-                                    rangeSeparatorText: 'sur',
-                                }}
-                                highlightOnHover
-                                pointerOnHover
-                                responsive
-                                customStyles={{
-                                    table: { style: { borderRadius: '12px' } },
-                                    headRow: { 
-                                        style: { 
-                                            backgroundColor: '#f8fafc', borderRadius: '12px', borderBottom: '2px solid #E2E8F0'
-                                        } 
-                                    },
-                                    headCells: {
-                                        style: {
-                                            fontWeight: '600', color: '#475569', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em'
-                                        }
-                                    },
-                                    rows: {
-                                        style: {
-                                            minHeight: '52px',
-                                            borderBottom: '1px solid #f1f5f9'
-                                        }
-                                    }
-                                }}
-                            />
-                            <div style={{
-                                padding: '12px 16px', fontSize: '0.8rem', color: '#94a3b8', borderTop: '1px solid #f1f5f9', textAlign: 'right'
-                            }}>
-                                {historique.length} modification{historique.length > 1 ? 's' : ''} enregistrée{historique.length > 1 ? 's' : ''}
-                            </div>
-                        </div>
-                    )}
+                    </form>
                 </div>
+            )}
 
-                {/* Footer */}
-                <div className="add-modal-footer" style={{
-                    background: '#F1F5F9', borderTop: '1px solid #E2E8F0', padding: '16px 28px', display: 'flex', justifyContent: 'flex-end', gap: '12px', borderRadius: '0 0 20px 20px'
-                }}>
-                    <button 
-                        onClick={onClose} 
-                        className="add-modal-cancel-btn" 
-                        type="button" 
-                        style={{
-                            background: 'white', color: '#1E293B', border: '1px solid #CBD5E1', padding: '10px 32px', borderRadius: '12px', fontWeight: '500', fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.2s ease', boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.target.style.background = '#f8fafc';
-                            e.target.style.borderColor = '#94a3b8';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.target.style.background = 'white';
-                            e.target.style.borderColor = '#CBD5E1';
-                        }}
-                    >
-                        Fermer
-                    </button>
+            {/* Erreur */}
+            {error && (
+                <div className="mat-histo-error" role="alert">
+                    <FaTimes aria-hidden="true" />
+                    <span>{error}</span>
                 </div>
-            </div>
-        </div>
+            )}
+
+            {/* Loading */}
+            {loading ? (
+                <div className="text-center py-5">
+                    <div className="spinner-border text-primary mat-histo-spinner" role="status">
+                        <span className="visually-hidden">Chargement...</span>
+                    </div>
+                    <p className="text-muted mt-3">Chargement de l'historique...</p>
+                </div>
+            ) : historique.length === 0 ? (
+                <div className="text-center py-5">
+                    <div className="mat-histo-empty-icon" aria-hidden="true">📭</div>
+                    <h5 className="mat-histo-empty-title">Aucun historique disponible</h5>
+                    <p className="mat-histo-empty-text">
+                        Aucune modification n'a été enregistrée pour ce matériel.
+                    </p>
+                </div>
+            ) : (
+                <div className="mat-histo-table-card">
+                    <DataTable
+                        columns={columns}
+                        data={historique}
+                        pagination
+                        paginationPerPage={10}
+                        paginationRowsPerPageOptions={[5, 10, 20]}
+                        paginationComponentOptions={paginationOptions}
+                        highlightOnHover
+                        pointerOnHover
+                        responsive
+                        customStyles={HISTORIQUE_TABLE_STYLES}
+                    />
+                    <div className="mat-histo-count">
+                        {historique.length} modification{historique.length > 1 ? 's' : ''} enregistrée{historique.length > 1 ? 's' : ''}
+                    </div>
+                </div>
+            )}
+        </AppModal>
     );
 };
 

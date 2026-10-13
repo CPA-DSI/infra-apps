@@ -8,6 +8,7 @@ import { PAGE_TITLES, ROLES, validatePassword, hasPermission, PERMISSIONS } from
 import { useAuth } from '../../contexts/AuthContext';
 import { apiClient } from '../../services/api';
 import './Navbar.css';
+import './ProfileModal.css';
 
 const FixedNavbarWithLogo = () => {
   const { user, logout } = useAuth();
@@ -92,7 +93,7 @@ const FixedNavbarWithLogo = () => {
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -488,7 +489,7 @@ const FixedNavbarWithLogo = () => {
         onHide={handleCloseProfile} 
         centered 
         size="lg"
-        className="profile-modal-modern profile-modal-two-col"
+        dialogClassName="profile-modal-modern"
       >
         <Modal.Header closeButton className="modal-header-modern">
           <div className="modal-header-content">

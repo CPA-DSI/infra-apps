@@ -11,7 +11,7 @@
 
 .userTicketsTable thead th {
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-  color: #ffffff;
+  color: white;
   font-weight: 600;
   font-size: 12px;
   text-transform: uppercase;
@@ -33,9 +33,9 @@
 
 .userTicketsTable tbody td {
   padding: 14px 16px;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--color-border-light);
   font-size: 14px;
-  color: #4b5563;
+  color: var(--color-text-secondary);
   transition: all 0.2s ease;
   vertical-align: middle;
 }
@@ -45,7 +45,7 @@
 }
 
 .userTicketsTable tbody tr:hover td {
-  background: #f5f3ff;
+  background: var(--color-secondary-soft);
 }
 
 .userTicketsTable tbody tr:hover {
@@ -61,11 +61,11 @@
 
 .userTicketTitle {
   font-weight: 500;
-  color: #1f2937;
+  color: var(--color-text-main);
 }
 
 .userTicketDate {
-  color: #9ca3af;
+  color: var(--color-text-muted);
   font-size: 13px;
   white-space: nowrap;
 }
@@ -76,7 +76,7 @@
   align-items: center;
   justify-content: center;
   padding: 48px 20px;
-  color: #9ca3af;
+  color: var(--color-text-muted);
   gap: 12px;
 }
 

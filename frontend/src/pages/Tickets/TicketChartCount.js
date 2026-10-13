@@ -21,6 +21,7 @@ import { FaTicketAlt } from 'react-icons/fa';
 import DataTable from 'react-data-table-component';
 
 import { getTickets } from '../../services/api';
+import { tableStyles, paginationOptions } from '../../styles/dataTableTheme';
 import './Tickets.css';
 
 // ============================================================================
@@ -57,6 +58,12 @@ const STATUS_CONFIG = Object.freeze({
     label: 'Fermé',
     gradient: 'linear-gradient(135deg, #96CEB4 0%, #85c0a3 100%)'
   },
+});
+
+/** Thème commun des tableaux, en-têtes plus compacts */
+const TABLE_STYLES = tableStyles({
+  headCells: { style: { fontSize: '0.72rem', paddingLeft: '14px', paddingRight: '14px' } },
+  rows: { style: { fontSize: '13px' } },
 });
 
 /** Liste des statuts pour l'itération */
@@ -385,60 +392,36 @@ const useTicketLoader = () => {
  */
 const StatusCard = React.memo(({ statusKey, count, percentage, icon }) => {
   const config = STATUS_CONFIG[statusKey];
-  
-  const cardStyle = {
-    background: config.bg, borderRadius: '20px', padding: '20px', textAlign: 'center', border: `2px solid ${config.border}`, transition: 'all 0.3s ease', position: 'relative', overflow: 'hidden', cursor: 'default',
+
+  // Seules la couleur du statut et le pourcentage sont dynamiques
+  const cardVars = {
+    '--tcc-color': config.border,
+    '--tcc-bg': config.bg,
+    '--tcc-gradient': config.gradient,
+    '--tcc-pct': `${percentage}%`,
   };
-  
-  const topBarStyle = {
-   position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: config.gradient,
-  };
-  
-  const circleContainerStyle = {
-    width: '60px', height: '60px', borderRadius: '50%', background: `conic-gradient(${config.border} ${percentage}%, #e2e8f0 0%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', position: 'relative',
-  };
-  
-  const circleInnerStyle = {
-    width: '48px', height: '48px', borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-  };
-  
-  const percentageStyle = {
-    fontSize: '18px', fontWeight: 700, color: config.border,
-  };
-  
-  const labelContainerStyle = {
-    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '6px',
-  };
-  
-  const labelStyle = {
-    fontSize: '11px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px',
-  };
-  
-  const countStyle = {
-    fontSize: '28px', fontWeight: 700, color: config.border, transition: 'transform 0.3s ease',
-  };
-  
+
   return (
     <div
       className="tcc-stat-card"
-      style={cardStyle}
+      style={cardVars}
       role="figure"
       aria-label={`${config.label}: ${count} tickets (${percentage}%)`}
     >
-      <div style={topBarStyle} />
-      
-      <div style={circleContainerStyle}>
-        <div style={circleInnerStyle}>
-          <span style={percentageStyle}>{percentage}%</span>
+      <div className="tcc-stat-card__bar" />
+
+      <div className="tcc-stat-card__ring">
+        <div className="tcc-stat-card__ring-inner">
+          <span className="tcc-stat-card__pct">{percentage}%</span>
         </div>
       </div>
-      
-      <div style={labelContainerStyle}>
-        {React.cloneElement(icon, { size: 16, color: config.icon })}
-        <span style={labelStyle}>{config.label}</span>
+
+      <div className="tcc-stat-card__label-row">
+        {React.cloneElement(icon, { size: 16, color: config.icon, 'aria-hidden': true })}
+        <span className="tcc-stat-card__label">{config.label}</span>
       </div>
-      
-      <div style={countStyle}>{count}</div>
+
+      <div className="tcc-stat-card__count">{count}</div>
     </div>
   );
 });
@@ -449,26 +432,12 @@ StatusCard.displayName = 'StatusCard';
  * Composant LoadingSpinner - Affiche un indicateur de chargement
  * @returns {JSX.Element} Indicateur de chargement
  */
-const LoadingSpinner = () => {
-  const containerStyle = {
-    height: 280, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '15px',
-  };
-  
-  const spinnerStyle = {
-    width: 48, height: 48, border: '4px solid #e2e8f0', borderTop: '4px solid #667eea', borderRadius: '50%', animation: 'spin 1s linear infinite',
-  };
-  
-  const textStyle = {
-    color: '#94a3b8', fontWeight: 600, fontSize: '14px',
-  };
-  
-  return (
-    <div style={containerStyle}>
-      <div style={spinnerStyle} />
-      <span style={textStyle}>Chargement...</span>
-    </div>
-  );
-};
+const LoadingSpinner = () => (
+  <div className="tcc-loading">
+    <div className="tcc-loading__spinner" />
+    <span className="tcc-loading__text">Chargement...</span>
+  </div>
+);
 
 /**
  * Composant ErrorMessage - Affiche un message d'erreur avec bouton de retry
@@ -477,38 +446,15 @@ const LoadingSpinner = () => {
  * @param {Function} props.onRetry - Fonction de retry
  * @returns {JSX.Element} Message d'erreur
  */
-const ErrorMessage = React.memo(({ message, onRetry }) => {
-  const containerStyle = {
-    background: 'rgba(239, 68, 68, 0.1)', border: '2px solid #ef4444', borderRadius: '16px', padding: '20px', textAlign: 'center', marginBottom: '20px',
-  };
-  
-  const iconStyle = {
-    marginBottom: '8px',
-  };
-  
-  const textStyle = {
-    color: '#ef4444', margin: 0, fontWeight: 600,
-  };
-  
-  const buttonStyle = {
-    marginTop: '12px', padding: '10px 20px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, transition: 'background 0.2s ease',
-  };
-  
-  return (
-    <div role="alert" style={containerStyle}>
-      <MdErrorOutline size={32} color="#ef4444" style={iconStyle} />
-      <p style={textStyle}>{message}</p>
-      <button
-        onClick={onRetry}
-        style={buttonStyle}
-        onMouseOver={(e) => e.target.style.background = '#dc2626'}
-        onMouseOut={(e) => e.target.style.background = '#ef4444'}
-      >
-        Réessayer
-      </button>
-    </div>
-  );
-});
+const ErrorMessage = React.memo(({ message, onRetry }) => (
+  <div role="alert" className="tcc-error">
+    <MdErrorOutline size={32} className="tcc-error__icon" aria-hidden="true" />
+    <p className="tcc-error__text">{message}</p>
+    <button type="button" onClick={onRetry} className="tcc-error__btn">
+      Réessayer
+    </button>
+  </div>
+));
 
 ErrorMessage.displayName = 'ErrorMessage';
 
@@ -519,29 +465,20 @@ ErrorMessage.displayName = 'ErrorMessage';
  * @param {Function} props.onClick - Fonction au clic
  * @returns {JSX.Element} Bouton de rafraîchissement
  */
-const RefreshButton = React.memo(({ isRefreshing, onClick }) => {
-  const containerStyle = {
-    background: 'rgba(102, 126, 234, 0.1)', padding: '10px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-  };
-  
-  const buttonStyle = {
-    background: 'transparent', border: 'none', cursor: isRefreshing ? 'not-allowed' : 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: isRefreshing ? 'spin 0.8s linear infinite' : 'none',
-  };
-  
-  return (
-    <div style={containerStyle}>
-      <button
-        onClick={onClick}
-        disabled={isRefreshing}
-        style={buttonStyle}
-        aria-label="Actualiser les statistiques"
-        title="Actualiser"
-      >
-        <MdRefresh size={20} color={isRefreshing ? '#a0aec0' : '#667eea'} />
-      </button>
-    </div>
-  );
-});
+const RefreshButton = React.memo(({ isRefreshing, onClick }) => (
+  <div className="tcc-refresh">
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={isRefreshing}
+      className={`tcc-refresh__btn ${isRefreshing ? 'is-refreshing' : ''}`.trim()}
+      aria-label="Actualiser les statistiques"
+      title="Actualiser"
+    >
+      <MdRefresh size={20} aria-hidden="true" />
+    </button>
+  </div>
+));
 
 RefreshButton.displayName = 'RefreshButton';
 
@@ -550,26 +487,12 @@ RefreshButton.displayName = 'RefreshButton';
  * @param {number} total - Nombre total de tickets
  * @returns {JSX.Element} Carte du total
  */
-const TotalCard = React.memo(({ total }) => {
-  const cardStyle = {
-   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', padding: '20px 24px', borderRadius: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 600, boxShadow: '0 8px 25px rgba(102, 126, 234, 0.35)',
-  };
-  
-  const labelStyle = {
-    textTransform: 'uppercase', letterSpacing: '1px', fontSize: '13px',
-  };
-  
-  const countStyle = {
-    fontSize: '24px', fontWeight: 700, letterSpacing: '1px', background: 'rgba(255, 255, 255, 0.2)', padding: '8px 16px', borderRadius: '12px',
-  };
-  
-  return (
-    <div style={cardStyle}>
-      <span style={labelStyle}>Total Tickets</span>
-      <div style={countStyle}>{total}</div>
-    </div>
-  );
-});
+const TotalCard = React.memo(({ total }) => (
+  <div className="tcc-total">
+    <span className="tcc-total__label">Total Tickets</span>
+    <div className="tcc-total__count">{total}</div>
+  </div>
+));
 
 TotalCard.displayName = 'TotalCard';
 
@@ -618,38 +541,6 @@ const TicketChartCount = () => {
     });
   }, [tickets]);
 
-  const datatableStyles = {
-    table: { style: { backgroundColor: 'transparent', borderRadius: '16px' } },
-    headRow: {
-      style: {
-        backgroundColor: '#f8f9fa', border: 'none', minHeight: '52px',
-        borderRadius: '10px 10px 0 0', boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-      },
-    },
-    headCells: {
-      style: {
-        fontSize: '0.72rem', fontWeight: '700', color: '#374151', letterSpacing: '0.06em',
-        textTransform: 'uppercase', padding: '14px', verticalAlign: 'middle',
-        textAlign: 'left', backgroundColor: '#f3f4f6', borderBottom: '2px solid #e5e7eb',
-        whiteSpace: 'nowrap', userSelect: 'none',
-      },
-    },
-    rows: {
-      style: {
-        fontSize: '13px', fontWeight: '500', color: '#212529', minHeight: '52px',
-        backgroundColor: '#ffffff',
-        '&:not(:last-of-type)': { borderBottom: '1px solid #e9ecef' },
-        '&:hover': { backgroundColor: '#f0f7ff !important', transition: 'background-color 0.2s ease' },
-      },
-      highlightOnHoverStyle: {
-        backgroundColor: '#EBF4FF', color: '#0056b3', cursor: 'pointer', transitionDuration: '0.2s',
-      },
-    },
-    pagination: {
-      style: { border: 'none', fontSize: '12px', color: '#6c757d', padding: '18px' },
-    },
-  };
-
   const datatableColumns = useMemo(() => [
     { name: 'N° Ticket', selector: (row) => row.numeroTicket, sortable: true, minWidth: '120px', grow: 1 },
     { name: 'Titre', selector: (row) => row.titre, sortable: true, minWidth: '180px', grow: 2 },
@@ -659,164 +550,118 @@ const TicketChartCount = () => {
   ], []);
   
   // =========================================================================
-  // STYLES DU COMPOSANT
-  // =========================================================================
-  
-  const containerStyle = {
-    background: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(20px)', padding: '28px', borderRadius: '24px', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)', fontFamily: 'var(--font-sans)', border: '1px solid rgba(255, 255, 255, 0.5)', width: '100%', maxWidth: 'auto',
-  };
-  
-  const headerStyle = {
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', paddingBottom: '15px', borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
-  };
-  
-  const iconBoxStyle = {
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', padding: '14px', borderRadius: '18px', display: 'flex', alignItems: 'center', boxShadow: '0 8px 20px rgba(102, 126, 234, 0.35)',
-  };
-  
-   const statsGridStyle = {
-     display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px',
-   };
-   
-   const contentGridStyle = {
-     display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '24px', alignItems: 'start',
-   };
-   
-   const chartSectionStyle = {
-     display: 'flex', flexDirection: 'column', gap: '16px',
-   };
-  
-  // =========================================================================
   // RENDU DU COMPOSANT
   // =========================================================================
   
   return (
-    <div style={containerStyle}>
+    <div className="tcc-container">
       {/* En-tête */}
-      <div style={headerStyle}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={iconBoxStyle}>
+      <div className="tcc-header">
+        <div className="tcc-header__main">
+          <div className="tcc-header__icon" aria-hidden="true">
             <MdConfirmationNumber size={22} />
           </div>
           <div>
-            <h3 style={{ 
-              margin: 0, fontSize: '18px', fontWeight: 700, color: '#1e293b', letterSpacing: '-0.5px'
-            }}>
-              Tickets
-            </h3>
-            <span style={{ 
-              fontSize: '12px', color: '#94a3b8', fontWeight: 500
-            }}>
-              Répartition par statut
-            </span>
+            <h3 className="tcc-header__title">Tickets</h3>
+            <span className="tcc-header__subtitle">Répartition par statut</span>
           </div>
         </div>
-        
-        <RefreshButton 
-          isRefreshing={isRefreshing} 
-          onClick={refresh} 
+
+        <RefreshButton
+          isRefreshing={isRefreshing}
+          onClick={refresh}
         />
       </div>
-      
+
       {/* Contenu principal */}
       {!loading ? (
         <>
           {error ? (
-            <ErrorMessage 
-              message={error} 
-              onRetry={refresh} 
+            <ErrorMessage
+              message={error}
+              onRetry={refresh}
             />
           ) : (
-              <>
-                <div style={contentGridStyle}>
-                  {/* Section graphique / statistiques */}
-                  <div style={chartSectionStyle}>
-                    {/* Grille des statistiques par statut */}
-                    <div style={statsGridStyle}>
-                      <StatusCard 
-                        statusKey="NOUVEAU" 
-                        count={animatedStats.NOUVEAU} 
-                        percentage={percentages.NOUVEAU}
-                        icon={<MdTrendingUp />}
-                      />
-                      <StatusCard 
-                        statusKey="EN_COURS" 
-                        count={animatedStats.EN_COURS} 
-                        percentage={percentages.EN_COURS}
-                        icon={<MdAccessTime />}
-                      />
-                      <StatusCard 
-                        statusKey="RESOLU" 
-                        count={animatedStats.RESOLU} 
-                        percentage={percentages.RESOLU}
-                        icon={<MdCheckCircle />}
-                      />
-                      <StatusCard 
-                        statusKey="FERME" 
-                        count={animatedStats.FERME} 
-                        percentage={percentages.FERME}
-                        icon={<MdCancel />}
-                      />
-                    </div>
-                    
-                    {/* Carte du total */}
-                    <TotalCard total={animatedStats.total} />
-                  </div>
-
-                  {/* Section tableau des tickets */}
-                  <div>
-                    <h4 style={{ margin: '0 0 12px', fontSize: '16px', fontWeight: 700, color: '#1e293b' }}>Derniers tickets</h4>
-                    {sortedTickets.length === 0 ? (
-                      <div style={{ border: '1px solid #e2e8f0', borderRadius: '16px', overflow: 'hidden', background: '#fff' }}>
-                        <div style={{ display: 'flex', background: '#f8f9fa', minHeight: '52px', borderRadius: '10px 10px 0 0', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                          {datatableColumns.map((col, idx) => (
-                            <div 
-                              key={idx}
-                              style={{ 
-                                flex: col.grow || 1, 
-                                minWidth: col.minWidth || 'auto',
-                                padding: '14px', 
-                                fontSize: '0.72rem', 
-                                fontWeight: 700, 
-                                color: '#374151', 
-                                textTransform: 'uppercase', 
-                                letterSpacing: '0.06em',
-                                textAlign: col.center ? 'center' : 'left',
-                                backgroundColor: '#f3f4f6',
-                                borderBottom: '2px solid #e5e7eb',
-                                whiteSpace: 'nowrap',
-                                userSelect: 'none'
-                              }}
-                            >
-                              {col.name}
-                            </div>
-                          ))}
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 20px', color: '#64748b', background: '#fff' }}>
-                          <div style={{ marginBottom: '16px', padding: '16px', borderRadius: '50%', background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%)' }}>
-                            <FaTicketAlt size={48} color="#667eea" />
-                          </div>
-                          <h3 style={{ margin: '0 0 8px', fontSize: '18px', fontWeight: 700, color: '#334155' }}>Aucun historique trouvé</h3>
-                          <p style={{ margin: 0, fontSize: '14px', color: '#94a3b8', fontWeight: 500 }}>Essayez avec d'autres filtres.</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <DataTable
-                        columns={datatableColumns}
-                        data={sortedTickets}
-                        pagination
-                        paginationPerPage={5}
-                        paginationRowsPerPageOptions={[5, 10, 20]}
-                        progressPending={isRefreshing}
-                        progressComponent={<LoadingSpinner />}
-                        customStyles={datatableStyles}
-                        highlightOnHover
-                        pointerOnHover
-                      />
-                    )}
-                  </div>
+            <div className="tcc-content">
+              {/* Section graphique / statistiques */}
+              <div className="tcc-chart-section">
+                {/* Grille des statistiques par statut */}
+                <div className="tcc-stats-grid">
+                  <StatusCard
+                    statusKey="NOUVEAU"
+                    count={animatedStats.NOUVEAU}
+                    percentage={percentages.NOUVEAU}
+                    icon={<MdTrendingUp />}
+                  />
+                  <StatusCard
+                    statusKey="EN_COURS"
+                    count={animatedStats.EN_COURS}
+                    percentage={percentages.EN_COURS}
+                    icon={<MdAccessTime />}
+                  />
+                  <StatusCard
+                    statusKey="RESOLU"
+                    count={animatedStats.RESOLU}
+                    percentage={percentages.RESOLU}
+                    icon={<MdCheckCircle />}
+                  />
+                  <StatusCard
+                    statusKey="FERME"
+                    count={animatedStats.FERME}
+                    percentage={percentages.FERME}
+                    icon={<MdCancel />}
+                  />
                 </div>
-              </>
+
+                {/* Carte du total */}
+                <TotalCard total={animatedStats.total} />
+              </div>
+
+              {/* Section tableau des tickets */}
+              <div>
+                <h4 className="tcc-table-title">Derniers tickets</h4>
+                {sortedTickets.length === 0 ? (
+                  <div className="tcc-empty">
+                    <div className="tcc-empty__head">
+                      {datatableColumns.map((col, idx) => (
+                        <div
+                          key={idx}
+                          className="tcc-empty__cell"
+                          style={{
+                            flex: col.grow || 1,
+                            minWidth: col.minWidth || 'auto',
+                            textAlign: col.center ? 'center' : 'left',
+                          }}
+                        >
+                          {col.name}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="tcc-empty__body">
+                      <div className="tcc-empty__icon" aria-hidden="true">
+                        <FaTicketAlt size={48} />
+                      </div>
+                      <h3 className="tcc-empty__title">Aucun historique trouvé</h3>
+                      <p className="tcc-empty__text">Essayez avec d'autres filtres.</p>
+                    </div>
+                  </div>
+                ) : (
+                  <DataTable
+                    columns={datatableColumns}
+                    data={sortedTickets}
+                    pagination
+                    paginationPerPage={5}
+                    paginationRowsPerPageOptions={[5, 10, 20]}
+                    paginationComponentOptions={paginationOptions}
+                    progressPending={isRefreshing}
+                    progressComponent={<LoadingSpinner />}
+                    customStyles={TABLE_STYLES}
+                    highlightOnHover
+                    pointerOnHover
+                  />
+                )}
+              </div>
+            </div>
           )}
         </>
       ) : (

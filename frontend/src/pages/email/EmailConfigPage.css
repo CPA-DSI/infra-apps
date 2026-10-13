@@ -1,308 +1,293 @@
-@keyframes ecfg-fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+/* ============================================================
+   Pages de configuration des emails (préfixe ecfg-)
+   EmailConfigPage / EmailConfigWeeklyPage / EmailConfigMonthlyPage
+   ============================================================ */
 
-@keyframes ecfg-pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-.modern-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); 
-  border: none; 
-  border-radius: 16px; 
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); 
-  overflow: hidden;
-  animation: ecfg-fadeInUp 0.5s ease-out;
-}
-
-.ecfg-modern-header {
-  background: var(--gradient-brand); 
-  padding: 18px 24px; 
+.ecfg-card {
+  background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-bg-alt) 100%);
   border: none;
-  position: relative;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  animation: fadeInUp 0.5s ease-out;
 }
 
-.ecfg-modern-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  animation: shimmer 3s infinite;
+/* En-tête (PageHeader) collé en haut de la carte */
+.ecfg-card .ecfg-header {
+  margin-bottom: 0;
+  border-radius: 0;
 }
 
-.modern-input {
-  border-radius: 8px; 
-  border: 2px solid #e9ecef; 
-  padding: 8px 12px; 
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-  background: #fafbfc; 
+/* Icône de l'en-tête hebdomadaire : dégradé violet → bleu */
+.ecfg-card .ecfg-header--weekly .page-header__icon {
+  background: linear-gradient(135deg, var(--color-secondary-dark) 0%, var(--color-info-dark) 100%);
+}
+
+.ecfg-card .ecfg-time-display {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  color: var(--color-bg);
+}
+
+.ecfg-card .ecfg-status-badge {
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
   font-size: 0.8rem;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-bg);
+  transition: all 0.3s ease;
 }
 
-.modern-input:focus {
-  border-color: var(--color-brand-start); 
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15), inset 0 2px 4px rgba(0,0,0,0.02); 
-  background: #fff;
+.ecfg-card .ecfg-status-active {
+  background: var(--gradient-import);
+  animation: pulse 2s infinite;
+}
+
+.ecfg-card .ecfg-status-inactive {
+  background: var(--gradient-danger);
+}
+
+/* ---- Champs ---- */
+.ecfg-card .ecfg-input {
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--color-border);
+  padding: 8px 12px;
+  transition: var(--transition-base);
+  background: var(--color-surface-alt);
+  font-size: 0.8rem;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.ecfg-card .ecfg-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: var(--focus-ring), inset 0 2px 4px rgba(0, 0, 0, 0.02);
+  background: var(--color-bg);
   transform: translateY(-1px);
 }
 
-.modern-input::placeholder {
-  color: #adb5bd;
+.ecfg-card .ecfg-input::placeholder {
+  color: var(--color-text-muted);
   font-style: italic;
 }
 
-.modern-label {
+.ecfg-card .ecfg-label {
   font-size: 0.75rem;
   font-weight: 600;
   transition: all 0.3s ease;
 }
 
-.modern-label svg {
-  color: var(--color-brand-start);
+.ecfg-card .ecfg-label svg {
+  color: var(--color-primary);
   transition: all 0.3s ease;
 }
 
-.modern-label:hover svg {
+.ecfg-card .ecfg-label:hover svg {
   transform: scale(1.1);
-  color: var(--color-brand-end);
+  color: var(--color-secondary);
 }
 
-.modern-btn-primary {
-  background: var(--gradient-brand); 
-  border: none; 
-  border-radius: 8px; 
-  padding: 8px 16px; 
-  font-weight: 600; 
-  font-size: 0.8rem; 
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* Bouton afficher / masquer le mot de passe */
+.ecfg-card .ecfg-pass-toggle {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+}
+
+/* ---- Boutons ---- */
+.ecfg-card .ecfg-btn-primary {
   position: relative;
   overflow: hidden;
+  background: var(--gradient-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  transition: var(--transition-base);
 }
 
-.modern-btn-primary::before {
+.ecfg-card .ecfg-btn-primary::before {
   content: '';
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
   transition: all 0.5s ease;
 }
 
-.modern-btn-primary:hover::before {
+.ecfg-card .ecfg-btn-primary:hover::before {
   left: 100%;
 }
 
-.modern-btn-primary:hover {
-  transform: translateY(-2px); 
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+.ecfg-card .ecfg-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
 }
 
-.modern-btn-primary:active {
+.ecfg-card .ecfg-btn-primary:active {
   transform: translateY(0);
 }
 
-.modern-btn-outline {
-  border: 2px solid #6c757d;
-  border-radius: 8px; 
-  padding: 8px 16px; 
-  font-weight: 600; 
-  font-size: 0.8rem; 
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.ecfg-card .ecfg-btn-outline {
+  border: 2px solid var(--color-text-sub);
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  transition: var(--transition-base);
   background: transparent;
-  color: #6c757d;
+  color: var(--color-text-sub);
 }
 
-.modern-btn-outline:hover {
-  background: #6c757d;
-  color: white;
+.ecfg-card .ecfg-btn-outline:hover {
+  background: var(--color-text-sub);
+  color: var(--color-bg);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+  box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3);
 }
 
-.modern-toggle-container {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); 
-  border-radius: 12px; 
-  padding: 14px 20px; 
-  display: flex; 
-  align-items: center; 
+/* ---- Interrupteur du robot ---- */
+.ecfg-card .ecfg-toggle-container {
+  display: flex;
+  align-items: center;
   gap: 14px;
-  transition: all 0.3s ease;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, var(--color-bg-alt) 0%, var(--color-border-light) 100%);
+  border-radius: var(--radius-md);
   border: 2px solid transparent;
+  transition: all 0.3s ease;
 }
 
-.modern-toggle-container:hover {
-  border-color: rgba(102, 126, 234, 0.2);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+.ecfg-card .ecfg-toggle-container:hover {
+  border-color: rgba(99, 102, 241, 0.2);
+  box-shadow: var(--shadow-sm);
 }
 
-.modern-toggle {
-  position: relative; 
-  width: 56px; 
-  height: 28px; 
-  background: #ced4da; 
-  border-radius: 14px; 
-  cursor: pointer; 
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+.ecfg-card .ecfg-toggle {
+  position: relative;
+  flex-shrink: 0;
+  width: 56px;
+  height: 28px;
+  background: var(--color-border-strong);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: var(--transition-base);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.modern-toggle.active {
-  background: var(--gradient-brand);
+.ecfg-card .ecfg-toggle.active {
+  background: var(--gradient-primary);
 }
 
-.modern-toggle::after {
-  content: ''; 
-  position: absolute; 
-  top: 3px; 
-  left: 3px; 
-  width: 22px; 
-  height: 22px; 
-  background: white; 
-  border-radius: 50%; 
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+.ecfg-card .ecfg-toggle::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  background: var(--color-bg);
+  border-radius: 50%;
+  transition: var(--transition-base);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
-.modern-toggle.active::after {
+.ecfg-card .ecfg-toggle.active::after {
   left: 31px;
 }
 
-.modern-toggle:hover::after {
+.ecfg-card .ecfg-toggle:hover::after {
   transform: scale(1.1);
 }
 
-.ecfg-status-badge {
-  padding: 6px 14px; 
-  border-radius: 20px; 
-  font-size: 0.8rem; 
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+/* ---- Encadré d'information ---- */
+.ecfg-card .ecfg-info-box {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  border-left: 4px solid var(--color-primary);
   transition: all 0.3s ease;
 }
 
-.status-active {
-  background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); 
-  color: white;
-  animation: ecfg-pulse 2s infinite;
-}
-
-.status-inactive {
-  background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%); 
-  color: white;
-}
-
-.info-box {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%); 
-  border-radius: 12px; 
-  padding: 14px 18px; 
-  border-left: 4px solid var(--color-brand-start);
-  transition: all 0.3s ease;
-}
-
-.info-box:hover {
+.ecfg-card .ecfg-info-box:hover {
   transform: translateX(4px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
 }
 
-.form-section {
-  background: white; 
-  border-radius: 14px; 
-  padding: 18px; 
+/* ---- Sections du formulaire ---- */
+.ecfg-card .ecfg-section {
+  background: var(--color-bg);
+  border-radius: 14px;
+  padding: 18px;
   margin-bottom: 16px;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--color-border);
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
 }
 
-.form-section:hover {
-  border-color: rgba(102, 126, 234, 0.3);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+.ecfg-card .ecfg-section:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
 }
 
-.form-section-title {
-  font-size: 0.75rem; 
-  font-weight: 700; 
-  color: var(--color-brand-start); 
-  text-transform: uppercase; 
-  letter-spacing: 1px; 
-  margin-bottom: 14px; 
-  padding-bottom: 10px; 
-  border-bottom: 2px solid #f0f0f0;
+.ecfg-card .ecfg-section-title {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--color-border-light);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
-.form-section-title svg {
+.ecfg-card .ecfg-section-title svg {
   animation: float 3s ease-in-out infinite;
 }
 
-.icon-pulse {
-  animation: ecfg-pulse 2s ease-in-out infinite;
+.ecfg-card .ecfg-icon-pulse {
+  animation: pulse 2s ease-in-out infinite;
 }
 
-.page-row {
-  animation: ecfg-fadeInUp 0.6s ease-out;
-  margin-top: 0.5rem !important;
-  gap: 0.5rem !important;
-}
-
-.page-container {
-  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
-  min-height: 100vh;
-  padding: 24px;
-}
-
-.ecfg-loading-spinner {
+.ecfg-card .ecfg-loading-spinner {
   display: inline-block;
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(255,255,255,0.3);
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
-  border-top-color: white;
+  border-top-color: var(--color-bg);
   animation: spin 1s ease-in-out infinite;
 }
 
-.ecfg-header-icon {
-  background: rgba(255,255,255,0.2);
-  padding: 10px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.time-display {
-  background: rgba(255,255,255,0.15);
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-weight: 500;
-}
-
-.alert-custom {
-  border-radius: 12px;
+.ecfg-card .ecfg-alert {
+  border-radius: var(--radius-md);
   border: none;
   padding: 14px 18px;
   font-weight: 500;
-  animation: ecfg-fadeInUp 0.4s ease-out;
+  animation: fadeInUp 0.4s ease-out;
 }
 
-.form-control:disabled {
-  background: #e9ecef;
-  opacity: 0.7;
-}
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .ecfg-card .ecfg-header .page-header__actions {
+    justify-content: flex-start;
+  }
 
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  .ecfg-card .ecfg-section {
+    padding: 14px;
+  }
+
+  .ecfg-card .ecfg-toggle-container {
+    flex-wrap: wrap;
+    padding: 12px 14px;
+  }
 }

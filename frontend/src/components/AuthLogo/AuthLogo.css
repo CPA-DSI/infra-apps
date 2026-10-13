@@ -1,0 +1,11 @@
+.auth-logo {
+  display: block;
+}
+
+.auth-logo-stop-start {
+  stop-color: var(--color-brand-start);
+}
+
+.auth-logo-stop-end {
+  stop-color: var(--color-brand-end);
+}

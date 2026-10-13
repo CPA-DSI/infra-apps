@@ -11,36 +11,27 @@ import {
 } from 'react-icons/fa';
 import { getHistoriqueArrivees } from '../../services/api';
 import dayjs from 'dayjs';
+import './HistoriqueArriveesChart.css';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
 dayjs.extend(isSameOrAfter);
 
-// --- Composant KPI Card ---
-const KpiCard = ({ icon: Icon, label, value, color, bg }) => (
-    <Card 
-        className="border-0 h-100" 
-        style={{ 
-            borderRadius: '16px', 
-            background: bg, 
-            boxShadow: '0 4px 15px rgba(0,0,0,0.07)' 
-        }}
-    >
+// ApexCharts a besoin de vraies couleurs : on lit les tokens de styles/theme.css
+const cssVar = (name, fallback) =>
+    getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+
+// --- Composant KPI Card (variant : primary | success | warning | info) ---
+const KpiCard = ({ icon: Icon, label, value, variant }) => (
+    <Card className={`border-0 h-100 hac-kpi hac-kpi--${variant}`}>
         <Card.Body className="d-flex align-items-center gap-3 p-3">
-            <div 
-                style={{ 
-                    width: 48, height: 48, borderRadius: '12px', 
-                    background: color, display: 'flex', 
-                    alignItems: 'center', justifyContent: 'center', 
-                    flexShrink: 0 
-                }}
-            >
-                <Icon style={{ color: '#fff', fontSize: '1.3rem' }} />
+            <div className="hac-kpi__icon" aria-hidden="true">
+                <Icon />
             </div>
             <div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e293b', lineHeight: 1.1 }}>
+                <div className="hac-kpi__value">
                     {value}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500, marginTop: 2 }}>
+                <div className="hac-kpi__label">
                     {label}
                 </div>
             </div>
@@ -183,7 +174,7 @@ const HistoriqueArriveesChart = () => {
             bar: { borderRadius: 4, columnWidth: '70%' },
         },
         dataLabels: { enabled: false },
-        colors: ['rgba(99, 102, 241, 1)', 'rgba(16, 185, 129, 1)'],
+        colors: [cssVar('--color-primary', '#6366f1'), cssVar('--color-success', '#10b981')],
         xaxis: {
             categories: chartData.map(item => item.nom_produit),
             labels: {
@@ -210,9 +201,9 @@ const HistoriqueArriveesChart = () => {
 
     if (loading) {
         return (
-            <Container className="d-flex justify-content-center align-items-center" style={{ height: '400px' }}>
+            <Container className="d-flex justify-content-center align-items-center hac-chart-loading">
                 <div className="text-center">
-                    <Spinner animation="grow" variant="primary" style={{ width: '3rem', height: '3rem' }} />
+                    <Spinner animation="grow" variant="primary" />
                     <p className="text-muted mt-3 small">Chargement des données...</p>
                 </div>
             </Container>
@@ -235,24 +226,21 @@ const HistoriqueArriveesChart = () => {
             {/* En-tête */}
             <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
                 <div>
-                    <h5 className="fw-bold text-dark mb-1" style={{ letterSpacing: '-0.3px' }}>
+                    <h5 className="fw-bold text-dark mb-1 hac-chart-title">
                         Analyse des Mouvements de Stock
                     </h5>
                     <p className="text-muted small mb-0">
                         {aggregatedData.length} produits distincts - {filteredData.length} enregistrements
                     </p>
                 </div>
-                <ButtonGroup size="sm">
+                <ButtonGroup size="sm" className="hac-period-group" aria-label="Période">
                     {PERIODS.map(p => (
                         <Button
                             key={p.value}
                             variant={period === p.value ? 'primary' : 'outline-secondary'}
                             onClick={() => setPeriod(p.value)}
-                            style={{ 
-                                borderRadius: period === p.value ? '8px' : undefined, 
-                                fontWeight: 600, 
-                                fontSize: '0.78rem' 
-                            }}
+                            className={`hac-period-btn ${period === p.value ? 'is-active' : ''}`}
+                            aria-pressed={period === p.value}
                         >
                             {p.label}
                         </Button>
@@ -267,8 +255,7 @@ const HistoriqueArriveesChart = () => {
                         icon={FaBoxOpen} 
                         label="Total Arrivées" 
                         value={kpis.totalArrivees.toLocaleString()} 
-                        color="linear-gradient(135deg, #6366f1, #818cf8)" 
-                        bg="linear-gradient(135deg, #eef2ff, #f5f3ff)" 
+                        variant="primary"
                     />
                 </Col>
                 <Col xs={6} md={3}>
@@ -276,8 +263,7 @@ const HistoriqueArriveesChart = () => {
                         icon={FaCubes} 
                         label="Produits Distincts" 
                         value={kpis.produitsDistincts} 
-                        color="linear-gradient(135deg, #10b981, #34d399)" 
-                        bg="linear-gradient(135deg, #ecfdf5, #f0fdf4)" 
+                        variant="success"
                     />
                 </Col>
                 <Col xs={6} md={3}>
@@ -285,8 +271,7 @@ const HistoriqueArriveesChart = () => {
                         icon={FaWarehouse} 
                         label="Stock Moyen" 
                         value={kpis.stockMoyen.toLocaleString()} 
-                        color="linear-gradient(135deg, #f59e0b, #fbbf24)" 
-                        bg="linear-gradient(135deg, #fffbeb, #fefce8)" 
+                        variant="warning"
                     />
                 </Col>
                 <Col xs={6} md={3}>
@@ -294,14 +279,13 @@ const HistoriqueArriveesChart = () => {
                         icon={FaChartLine} 
                         label="Dernier Arrivage" 
                         value={kpis.dernierArrivage} 
-                        color="linear-gradient(135deg, #0ea5e9, #38bdf8)" 
-                        bg="linear-gradient(135deg, #f0f9ff, #e0f2fe)" 
+                        variant="info"
                     />
                 </Col>
             </Row>
 
             {/* Section Graphique */}
-            <Card className="border-0 mb-4" style={{ borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
+            <Card className="border-0 mb-4 hac-chart-card">
                 <Card.Body className="p-4">
                     <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
                         <div>
@@ -311,10 +295,10 @@ const HistoriqueArriveesChart = () => {
                         <div className="d-flex align-items-center gap-2">
                             <Form.Select 
                                 size="sm" 
-                                className="w-auto"
+                                className="w-auto hac-chart-select"
+                                aria-label="Nombre de produits affichés"
                                 value={topN}
                                 onChange={(e) => setTopN(Number(e.target.value))}
-                                style={{ borderRadius: '8px' }}
                             >
                                 {TOP_N_OPTIONS.map(option => (
                                     <option key={option.value} value={option.value}>
@@ -325,8 +309,7 @@ const HistoriqueArriveesChart = () => {
                             <Badge 
                                 bg="light" 
                                 text="dark" 
-                                className="px-3 py-2 rounded-pill"
-                                style={{ fontSize: '0.72rem', fontWeight: 700, border: '1px solid #e2e8f0' }}
+                                className="px-3 py-2 rounded-pill hac-chart-count"
                             >
                                 {chartData.length} produits affichés
                             </Badge>
@@ -334,7 +317,7 @@ const HistoriqueArriveesChart = () => {
                     </div>
 
                     {chartData.length > 0 ? (
-                        <div style={{ height: '400px' }}>
+                        <div className="hac-chart-area">
                             <Chart options={chartOptions} series={chartSeries} type="bar" height="100%" />
                         </div>
                     ) : (

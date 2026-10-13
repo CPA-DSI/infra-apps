@@ -1,52 +1,37 @@
-/* Styles pour ProduitLocaux - Extraits de ProduitLocaux.js */
+/* ============================================================
+   PRODUITS & LOCAUX — styles scopés sous .prod-page
+   ============================================================ */
 
-.prod-modern-header {
-  background: var(--gradient-brand);
-  padding: 20px 24px;
-  border: none;
-  border-radius: 16px;
-  margin-bottom: 20px;
+.prod-page {
+  background-color: var(--color-surface-alt);
+  min-height: 100vh;
 }
 
-.prod-modern-header h1,
-.prod-modern-header h2 {
-  color: white;
-  font-weight: 700;
-  margin: 0;
+.prod-loading {
+  min-height: 60vh;
 }
 
-.prod-modern-header h2 {
-  font-size: 1.5rem;
-  text-align: left;
+.prod-loading-spinner {
+  width: 3rem;
+  height: 3rem;
 }
 
-.prod-modern-header p {
-  color: rgba(255, 255, 255, 0.85);
-  margin: 4px 0 0 0;
-  font-size: 0.875rem;
-}
-
-.header-icon-wrapper {
-  width: 48px;
-  height: 48px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-}
-
-.card-header.modern-card-header {
+/* ---- En-têtes des cartes ---- */
+.prod-page .card-header.prod-card-header {
   background: var(--gradient-brand);
   border: none;
-  border-radius: 12px 12px 0 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
   padding: 16px 20px;
   position: relative;
   overflow: hidden;
 }
 
-.modern-card-header::before {
+.prod-page .card-header.prod-card-header--success {
+  background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+}
+
+/* Reflet au survol */
+.prod-page .prod-card-header::before {
   content: '';
   position: absolute;
   top: 0;
@@ -57,18 +42,18 @@
   transition: left 0.5s;
 }
 
-.modern-card-header:hover::before {
+.prod-page .prod-card-header:hover::before {
   left: 100%;
 }
 
-.modern-card-header h4 {
+.prod-page .prod-card-header h4 {
   color: white;
   font-weight: 600;
   margin: 0;
   font-size: 1.1rem;
 }
 
-.header-icon-box {
+.prod-card-header-icon {
   width: 40px;
   height: 40px;
   background: rgba(255, 255, 255, 0.2);
@@ -82,107 +67,12 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.card-header.modern-card-header-success {
-  background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
-  border: none;
-  border-radius: 12px 12px 0 0;
-  padding: 16px 20px;
-  position: relative;
-  overflow: hidden;
-}
-
-.modern-card-header-success::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-  transition: left 0.5s;
-}
-
-.modern-card-header-success:hover::before {
-  left: 100%;
-}
-
-.modern-card-header-success h4 {
-  color: white;
-  font-weight: 600;
-  margin: 0;
-  font-size: 1.1rem;
-}
-
-.modern-btn-excel {
-  border-radius: 50px;
-  padding: 8px 16px;
-  font-weight: 600;
-  font-size: 0.875rem;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.modern-btn-add {
-  border-radius: 50px;
-  padding: 8px 16px;
-  font-weight: 600;
-  font-size: 0.875rem;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--gradient-brand);
-  border: none;
-  color: white;
-}
-
-.modern-btn-add:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-  color: white;
-}
-
-.search-pill-wrapper {
-  position: relative;
-}
-
-.search-pill-wrapper .search-pill-icon {
-  position: absolute;
-  left: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #9ca3af;
-  z-index: 2;
-  pointer-events: none;
-}
-
-.search-pill-wrapper .search-pill-input {
-  border-radius: 50px;
-  padding: 10px 16px 10px 42px;
-  border: 1px solid #e5e7eb;
-  background-color: #f9fafb;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  transition: all 0.2s ease;
-  width: 100%;
-}
-
-.search-pill-wrapper .search-pill-input:focus {
-  border-color: var(--color-brand-start);
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.12);
-  background-color: #ffffff;
-  outline: none;
-}
-
-.search-pill-wrapper .search-pill-input::placeholder {
-  color: #9ca3af;
-}
-
-.count-badge {
-  background: rgba(255, 255, 255, 0.25) !important;
+/* <Badge bg="light"> : on pilote .bg-light par ses variables plutôt que par !important */
+.prod-page .badge.prod-count-badge {
+  --bs-light-rgb: 255, 255, 255;
+  --bs-bg-opacity: 0.25;
   padding: 4px 12px;
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
   font-size: 0.8rem;
   margin-left: 12px;
   font-weight: 600;
@@ -192,155 +82,89 @@
   transition: all 0.3s ease;
 }
 
-.count-badge:hover {
+.prod-page .badge.prod-count-badge:hover {
   transform: scale(1.05);
-  background: rgba(255, 255, 255, 0.35) !important;
+  --bs-bg-opacity: 0.35;
 }
 
-/* ============================================================================
-   BOUTONS PRINCIPAUX - DESIGN ROUNDED PILL (STYLE IMAGE)
-   .btn.xxx : passe devant .btn / .btn:hover de Bootstrap sans !important
-   ============================================================================ */
-
-/* ---- Base pour tous les boutons principaux ---- */
-.btn.btn-prod-export,
-.btn.btn-prod-add,
-.btn.btn-prod-add-location {
-    position: relative;
-    overflow: hidden;
-    border-radius: 50px;
-    padding: 8px 22px;
-    font-weight: 700;
-    color: white;
-    font-size: 0.88rem;
-    border: none;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    letter-spacing: 0.3px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    white-space: nowrap;
+/* ---- Recherche ---- */
+.prod-search {
+  position: relative;
 }
 
-.btn.btn-prod-export:active:not(:disabled),
-.btn.btn-prod-add:active:not(:disabled),
-.btn.btn-prod-add-location:active:not(:disabled) {
-    transform: scale(0.97);
+.prod-search .prod-search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  z-index: 2;
+  pointer-events: none;
 }
 
-.btn.btn-prod-export:disabled,
-.btn.btn-prod-add:disabled,
-.btn.btn-prod-add-location:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    filter: grayscale(20%);
+.prod-search .prod-search-input {
+  border-radius: var(--radius-pill);
+  padding: 10px 16px 10px 42px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface-alt);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+  width: 100%;
 }
 
-/* ---- Ripple effet au survol ---- */
-.btn.btn-prod-export::before,
-.btn.btn-prod-add::before,
-.btn.btn-prod-add-location::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
-    transform: translate(-50%, -50%);
-    transition: width 0.5s ease, height 0.5s ease;
+.prod-search .prod-search-input:focus {
+  border-color: var(--color-brand-start);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.12);
+  background-color: var(--color-bg);
+  outline: none;
 }
 
-.btn.btn-prod-export:hover:not(:disabled)::before,
-.btn.btn-prod-add:hover:not(:disabled)::before,
-.btn.btn-prod-add-location:hover:not(:disabled)::before {
-    width: 320px;
-    height: 320px;
+.prod-search .prod-search-input::placeholder {
+  color: var(--color-text-muted);
 }
 
-/* ---- Bouton Ajouter Produit (Bleu dégradé) ---- */
-.btn.btn-prod-add {
-    background: linear-gradient(135deg, #2563eb 0%, var(--color-info) 100%);
-    box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+/* ---- En-tête affiché quand le tableau est vide ---- */
+.prod-nodata-head {
+  display: flex;
+  background-color: var(--color-surface-alt);
+  border-bottom: 2px solid var(--color-border);
+  min-height: 52px;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
-.btn.btn-prod-add:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+.prod-nodata-cell {
+  padding: 14px 16px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-body);
+  letter-spacing: 0.02em;
+  text-transform: capitalize;
+  text-align: left;
+  user-select: none;
 }
 
-/* ---- Bouton Ajouter Local (Vert dégradé) ---- */
-.btn.btn-prod-add-location {
-    background: linear-gradient(135deg, #059669 0%, var(--color-success) 100%);
-    box-shadow: 0 2px 10px rgba(5, 150, 105, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+/* ---- Modales ---- */
+.prod-modal-error {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.btn.btn-prod-add-location:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-    background: linear-gradient(135deg, #047857 0%, #059669 100%);
-}
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .prod-toolbar {
+    flex-wrap: wrap;
+  }
 
-/* ---- Bouton Exporter (Orange dégradé) ---- */
-.btn.btn-prod-export {
-    background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
-    box-shadow: 0 2px 10px rgba(234, 88, 12, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
+  .prod-toolbar .prod-search {
+    flex-basis: 100%;
+  }
 
-.btn.btn-prod-export:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(234, 88, 12, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-    background: linear-gradient(135deg, #c2410c 0%, #ea580c 100%);
-}
-
-/* ---- Bouton Rafraîchir (Style glass circulaire) ---- */
-.btn.btn-prod-refresh {
-    width: 42px;
-    height: 42px;
-    padding: 0;
-    border-radius: 50%;
-    border: none;
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    color: white;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-}
-
-.btn.btn-prod-refresh:hover:not(:disabled) {
-    transform: translateY(-2px);
-    background: rgba(255, 255, 255, 0.25);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-    color: white;
-}
-
-.btn.btn-prod-refresh:hover:not(:disabled) svg {
-    transform: rotate(180deg);
-    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.btn.btn-prod-refresh:active:not(:disabled) {
-    transform: scale(0.92);
-    background: rgba(255, 255, 255, 0.3);
-}
-
-.btn.btn-prod-refresh:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.btn.btn-prod-refresh:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.4), 0 2px 8px rgba(0, 0, 0, 0.08);
+  .prod-page .prod-card-header {
+    flex-wrap: wrap;
+  }
 }

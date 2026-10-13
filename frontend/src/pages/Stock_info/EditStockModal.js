@@ -14,10 +14,10 @@ const EditStockModal = ({ show, onClose, item, onSuccess }) => {
         <Modal show={show} onHide={onClose} centered size="lg" className="custom-edit-modal" >
             <Modal.Header closeButton className="border-0 pb-0">
                 <div>
-                    <Modal.Title className="h4 fw-bold text-dark">
+                    <Modal.Title className="h4 fw-bold">
                         ✏️ Modifier le mouvement
                     </Modal.Title>
-                    <p className="text-muted mb-0 small">
+                    <p className="mb-0 small">
                         Modifiez les informations du mouvement sélectionné
                     </p>
                 </div>

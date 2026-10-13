@@ -8,7 +8,8 @@ import { FaVideo, FaNetworkWired, FaUsb, FaPlug, FaCheckCircle, FaTimesCircle, F
 import FormItem from '../../components/FormItem/FormItem';
 import { getMaterielFieldIcon } from './materielFieldIcons';
 import AffectationModal from './AffectationModal';
-import './Materiels.css';
+import AppModal from '../../components/AppModal/AppModal';
+import './MaterielsModals.css';
 
 // États posés par la mise en stock (affectation), jamais enregistrés par le
 // PUT : les choisir ici déclenche la vraie mise en stock.
@@ -30,13 +31,13 @@ const customSelectStyles = {
         ...provided,
         padding: '4px 0',
         borderRadius: '10px',
-        borderColor: '#e2e8f0',
+        borderColor: 'var(--color-border)',
         fontSize: '0.85rem',
-        color: '#1e293b',
+        color: 'var(--color-text-main)',
         backgroundColor: 'white',
         minHeight: '40px',
         '&:hover': {
-            borderColor: '#e2e8f0',
+            borderColor: 'var(--color-border)',
         },
     }),
     valueContainer: (provided) => ({
@@ -55,36 +56,36 @@ const customSelectStyles = {
     dropdownIndicator: (provided) => ({
         ...provided,
         padding: '8px',
-        color: '#64748b',
+        color: 'var(--color-text-sub)',
     }),
     clearIndicator: (provided) => ({
         ...provided,
         padding: '8px',
-        color: '#64748b',
+        color: 'var(--color-text-sub)',
     }),
     menu: (provided) => ({
         ...provided,
         borderRadius: '10px',
         boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
         overflow: 'hidden',
-        zIndex: 10000,
+        zIndex: 'var(--z-dropdown)',
     }),
     option: (provided, state) => ({
         ...provided,
-        backgroundColor: state.isSelected ? '#6366f1' : state.isFocused ? '#f1f5f9' : 'white',
-        color: state.isSelected ? 'white' : '#1e293b',
+        backgroundColor: state.isSelected ? 'var(--color-primary)' : state.isFocused ? 'var(--color-border-light)' : 'white',
+        color: state.isSelected ? 'white' : 'var(--color-text-main)',
         fontSize: '0.85rem',
         padding: '8px 12px',
         cursor: 'pointer',
     }),
     placeholder: (provided) => ({
         ...provided,
-        color: '#94a3b8',
+        color: 'var(--color-text-muted)',
         fontSize: '0.85rem',
     }),
     singleValue: (provided) => ({
         ...provided,
-        color: '#1e293b',
+        color: 'var(--color-text-main)',
         fontSize: '0.85rem',
     }),
 };
@@ -107,7 +108,7 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
 
     const showNotification = (message, type = 'success') => {
         MySwal.fire({
-            icon: type, title: type === 'success' ? 'Succès' : 'Erreur', text: message, timer: 3000, timerProgressBar: true, showConfirmButton: false, toast: true, position: 'top-end', background: type === 'success' ? '#10b981' : '#ef4444', color: '#ffffff', iconColor: '#ffffff'
+            icon: type, title: type === 'success' ? 'Succès' : 'Erreur', text: message, timer: 3000, timerProgressBar: true, showConfirmButton: false, toast: true, position: 'top-end', background: type === 'success' ? '#10b981' : '#ef4444', color: 'white', iconColor: 'white'
         });
     };
 
@@ -207,8 +208,6 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
                 confirmButtonText: '📥 Mettre en stock',
                 denyButtonText: "Enregistrer sans changer l'état",
                 cancelButtonText: 'Annuler',
-                // Au-dessus de la modale (.add-modal-overlay = z-index 9999).
-                customClass: { container: 'swal-au-dessus-modale' },
             });
             if (choix.isDismissed) return;
             confirmerStock = choix.isConfirmed;
@@ -265,7 +264,18 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
     }
 
     if (error) {
-        return <div className="add-modal-overlay">Erreur : {error}</div>;
+        return (
+            <AppModal
+                show
+                onClose={onClose}
+                size="sm"
+                title="Erreur"
+                contentClassName="mat-modal"
+                footer={<button type="button" onClick={onClose} className="add-modal-cancel-btn">Fermer</button>}
+            >
+                Erreur : {error}
+            </AppModal>
+        );
     }
 
     // Les autres champs sont déjà enregistrés : fermer ou valider recharge la liste.
@@ -285,241 +295,182 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
         );
     }
 
+    const header = (
+        <div className="add-modal-header">
+            <div className="d-flex align-items-center gap-3">
+                <div className="add-modal-icon-wrapper" aria-hidden="true">
+                    <FaEdit />
+                </div>
+                <div>
+                    <h2 className="add-modal-title">
+                        Modification Matériel N°{formData.id_n || ''}
+                    </h2>
+                    <p className="add-modal-subtitle">
+                        Modifiez les informations ci-dessous
+                    </p>
+                </div>
+            </div>
+            <div className="mat-modal-header-actions">
+                {formData.code_pc && (
+                    <div className="mat-modal-code-badge">
+                        <span className="mat-modal-code-badge-label">Code</span>
+                        <span className="mat-modal-code-badge-value">{formData.code_pc}</span>
+                    </div>
+                )}
+                <button onClick={onClose} className="add-modal-close-btn" type="button" aria-label="Fermer">
+                    <FaTimes />
+                </button>
+            </div>
+        </div>
+    );
+
     return (
-        <div className="add-modal-overlay">
-            <form onSubmit={handleSubmit} className="add-modal-content" style={{
-                maxWidth: '900px', maxHeight: '90vh', overflowY: 'auto', borderRadius: '20px', boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
-            }}>
-                {/* Header amélioré */}
-                <div className="add-modal-header" style={{
-                    background: 'linear-gradient(135deg, #1E293B, #0F172A)',
-                    borderBottom: '1px solid rgba(255,255,255,0.1)'
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <div className="add-modal-icon-wrapper" style={{
-                            background: 'linear-gradient(135deg, #F59E0B, #D97706)',
-                            boxShadow: '0 4px 15px rgba(245, 158, 11, 0.3)'
-                        }}>
-                            <FaEdit style={{ color: 'white' }} />
-                        </div>
-                        <div>
-                            <h2 className="add-modal-title" style={{ color: 'white' }}>
-                                Modification Matériel N°{formData.id_n || ''}
-                            </h2>
-                            <p className="add-modal-subtitle" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                                Modifiez les informations ci-dessous
-                            </p>
-                        </div>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        {formData.code_pc && (
-                            <div style={{
-                                background: 'rgba(255,255,255,0.1)', padding: '4px 14px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.15)'
-                            }}>
-                                <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem' }}>Code</span>
-                                <span style={{ color: 'white', fontSize: '0.85rem', fontWeight: '600', marginLeft: '6px' }}>
-                                    {formData.code_pc}
-                                </span>
-                            </div>
-                        )}
-                        <button onClick={onClose} className="add-modal-close-btn" type="button" style={{
-                            background: 'rgba(255,255,255,0.1)',
-                            color: 'white',
-                            border: '1px solid rgba(255,255,255,0.15)'
-                        }}>
-                            <FaTimes />
-                        </button>
-                    </div>
-                </div>
-                
-                <div className="add-modal-body" style={{
-                    padding: '24px',
-                    background: '#F8FAFC'
-                }}>
-                    {/* Section d'information */}
-                    <div style={{
-                        background: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)', borderRadius: '12px', padding: '12px 16px', marginBottom: '20px', border: '1px solid #BFDBFE', display: 'flex', alignItems: 'center', gap: '12px'
-                    }}>
-                        <FaInfoCircle style={{ color: '#3B82F6', fontSize: '1.2rem' }} />
-                        <span style={{ color: '#1E40AF', fontSize: '0.85rem' }}>
-                            Modifiez les champs souhaités et cliquez sur Sauvegarder. Le matricule, l'utilisateur, le statut Actif
-                            et l'écran se changent depuis le détail du matériel (« Réaffecter le PC » / « Déplacer l'écran »)
-                            ou le bouton Status de la liste, pour garder l'historique.
-                        </span>
-                    </div>
-                    
-                    <div className="add-modal-form-grid" style={{
-                       display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px'
-                    }}>
-                        <div style={{ gridColumn: '1', gridRow: '1' }}>
-                            <FormItem label="N° Matricule" name="id_n" formData={formData} handleChange={handleChange} disabled icon={getMaterielFieldIcon("id_n")} />
-                        </div>
-                        <div style={{ gridColumn: '2', gridRow: '1' }}>
-                            <FormItem label="Utilisateur (via « Réaffecter le PC »)" name="utilisateur" formData={formData} handleChange={handleChange} disabled icon={getMaterielFieldIcon("utilisateur")} />
-                        </div>
-
-                        <div style={{ gridColumn: '1', gridRow: '2' }}>
-                            <FormItem label="Marque Laptop" name="id_marque" type="select" options={marqueOptions} formData={formData} handleChange={handleChange} onSelectChange={handleSelectChange} disabled={isLoadingMarques} isClearable selectStyles={customSelectStyles} noOptionsMessage={() => "Aucune option disponible"} icon={getMaterielFieldIcon("id_marque")} />
-                        </div>
-                        <div style={{ gridColumn: '2', gridRow: '2' }}>
-                            <FormItem label="Code PC" name="code_pc" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("code_pc")} />
-                        </div>
-
-                        <div style={{ gridColumn: '1', gridRow: '3' }}>
-                            <FormItem label="Marque Écran" name="ecran" formData={formData} handleChange={handleChange} disabled icon={getMaterielFieldIcon("ecran")} />
-                        </div>
-                        <div style={{ gridColumn: '2', gridRow: '3' }}>
-                            <FormItem label="Code Écran" name="code_ecran" formData={formData} handleChange={handleChange} disabled icon={getMaterielFieldIcon("code_ecran")} />
-                        </div>
-
-                        <div style={{ gridColumn: '1', gridRow: '4' }}>
-                            <FormItem label="Équipe" name="equipe" formData={formData} handleChange={handleChange} required icon={getMaterielFieldIcon("equipe")} />
-                        </div>
-                        <div style={{ gridColumn: '1', gridRow: '5' }}>
-                            <FormItem label="Date PC" name="date_pc" type="date" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("date_pc")} />
-                        </div>
-                        {/* Le bloc Connectiques occupe exactement les lignes de grille "Équipe" + "Date PC",
-                            ce qui garantit l'alignement de "Date Écran" avec "Mot de passe local" ci-dessous. */}
-                        <div className="add-modal-form-group" style={{ gridColumn: '2', gridRow: '4 / span 2' }}>
-                            <label className="add-modal-label" style={{
-                                display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', fontWeight: '600', color: '#1E293B'
-                            }}>
-                                <FaPlug /> Connectiques
-                            </label>
-                            <div className="add-modal-connectiques" style={{
-                                display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', background: '#F1F5F9', padding: '12px', borderRadius: '12px', border: '1px solid #E2E8F0'
-                            }}>
-                                <label className="add-modal-connectique-label" style={{
-                                    display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px', background: 'white', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s ease', fontSize: '0.8rem'
-                                }}>
-                                    <input type="checkbox" name="hdmi" checked={formData.hdmi || false} onChange={handleChange} className="add-modal-checkbox" />
-                                    <FaVideo className="add-modal-connectique-icon" style={{ color: '#8B5CF6' }} />
-                                    Adapteur HDMI
-                                </label>
-                                <label className="add-modal-connectique-label" style={{
-                                    display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px', background: 'white', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s ease', fontSize: '0.8rem'
-                                }}>
-                                    <input type="checkbox" name="lan" checked={formData.lan || false} onChange={handleChange} className="add-modal-checkbox" />
-                                    <FaNetworkWired className="add-modal-connectique-icon" style={{ color: '#3B82F6' }} />
-                                    Adapteur LAN
-                                </label>
-                                <label className="add-modal-connectique-label" style={{
-                                    display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px', background: 'white', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s ease', fontSize: '0.8rem'
-                                }}>
-                                    <input type="checkbox" name="usb" checked={formData.usb || false} onChange={handleChange} className="add-modal-checkbox" />
-                                    <FaUsb className="add-modal-connectique-icon" style={{ color: '#10B981' }} />
-                                    Adapteur USB
-                                </label>
-                                <label className="add-modal-connectique-label" style={{
-                                    display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px', background: 'white', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s ease', fontSize: '0.8rem'
-                                }}>
-                                    <input type="checkbox" name="clavier" checked={formData.clavier || false} onChange={handleChange} className="add-modal-checkbox" />
-                                    <FaKeyboardIcon className="add-modal-connectique-icon" style={{ color: '#F59E0B' }} />
-                                    Clavier Externe
-                                </label>
-                            </div>
-                        </div>
-
-                        <div style={{ gridColumn: '1', gridRow: '6' }}>
-                            <FormItem label="Date Écran" name="date_ecran" type="date" formData={formData} handleChange={handleChange} disabled icon={getMaterielFieldIcon("date_ecran")} />
-                        </div>
-                        <div style={{ gridColumn: '2', gridRow: '6' }}>
-                            <FormItem label="Mot de passe local" name="mdp_pc" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("mdp_pc")} />
-                        </div>
-
-                        <div style={{ gridColumn: '1', gridRow: '7' }}>
-                            <FormItem label="salle" name="salle" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("salle")} />
-                        </div>
-                        <div style={{ gridColumn: '2', gridRow: '7' }}>
-                            <FormItem label="Mot de passe Admin" name="mdp_admin" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("mdp_admin")} />
-                        </div>
-
-                        <div style={{ gridColumn: '1', gridRow: '8' }}>
-                            <FormItem label="Local(s)" name="id_local" type="select" options={localOptions} formData={formData} handleChange={handleChange} onSelectChange={handleSelectChange} disabled={isLoadingLocaux} isClearable selectStyles={customSelectStyles} noOptionsMessage={() => "Aucune option disponible"} icon={getMaterielFieldIcon("id_local")} />
-                        </div>
-                        <div style={{ gridColumn: '2', gridRow: '8' }}>
-                            <FormItem label="État Batterie" name="etat_batterie" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("etat_batterie")} />
-                        </div>
-
-                        <div style={{ gridColumn: '1', gridRow: '9' }}>
-                            <FormItem label="État PC" name="etat_pc" type="select" icon={getMaterielFieldIcon("etat_pc")}
-                                options={etatOptions}
-                                formData={formData}
-                                handleChange={handleChange}
-                                onSelectChange={handleSelectChange}
-                                isClearable
-                                selectStyles={customSelectStyles}
-                                noOptionsMessage={() => "Aucune option disponible"}
-                            />
-                        </div>
-                        <div className="add-modal-form-group add-modal-actif-group" style={{ gridColumn: '2', gridRow: '9' }}>
-                            <label className="add-modal-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: '600', color: '#1E293B' }}>
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    Actif
-                                    {formData.est_actif ? (
-                                        <FaCheckCircle className="add-modal-actif-icon" style={{
-                                            color: '#10B981',
-                                            fontSize: '0.9rem',
-                                            transition: 'all 0.2s ease'
-                                        }} />
-                                    ) : (
-                                        <FaTimesCircle className="add-modal-actif-icon" style={{
-                                            color: '#EF4444',
-                                            fontSize: '0.9rem',
-                                            transition: 'all 0.2s ease'
-                                        }} />
-                                    )}
-                                </span>
-                                {/* Lecture seule : le statut se change via le bouton Status de la liste. */}
-                                <div
-                                    className="add-modal-toggle"
-                                    title="Statut modifiable depuis le bouton Status de la liste"
-                                    style={{
-                                        backgroundColor: formData.est_actif ? '#10B981' : '#EF4444',
-                                        opacity: 0.6,
-                                        cursor: 'not-allowed',
-                                    }}
-                                >
-                                    <div className="add-modal-toggle-knob" style={{
-                                        left: formData.est_actif ? '22px' : '2px',
-                                    }} />
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div className="add-modal-form-grid" style={{
-                       display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px'
-                    }}>
-                        <FormItem label="Caractéristiques" name="caracteristiques" type="textarea" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("caracteristiques")} />
-                        <FormItem label="Commentaire" name="commentaire" type="textarea" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("commentaire")} />
-                    </div>
-                </div>
-
-                <div className="add-modal-footer" style={{
-                    background: '#F1F5F9', borderTop: '1px solid #E2E8F0', padding: '16px 24px', display: 'flex', justifyContent: 'flex-end', gap: '12px'
-                }}>
-                    <button type="button" onClick={onClose} className="add-modal-cancel-btn" style={{
-                        background: 'white', color: '#1E293B', border: '1px solid #CBD5E1', padding: '10px 28px', borderRadius: '12px', fontWeight: '500', fontSize: '0.9rem', transition: 'all 0.2s ease', cursor: 'pointer'
-                    }}>
+        <AppModal
+            show={isOpen}
+            onClose={onClose}
+            as="form"
+            onSubmit={handleSubmit}
+            header={header}
+            ariaLabel={`Modification Matériel N°${formData.id_n || ''}`}
+            contentClassName="mat-modal mat-modal--edit"
+            footer={
+                <>
+                    <button type="button" onClick={onClose} className="add-modal-cancel-btn">
                         Annuler
                     </button>
-                    <button type="submit" className="add-modal-submit-btn" style={{
-                        background: 'linear-gradient(135deg, #F59E0B, #D97706)', color: 'white', border: 'none', padding: '10px 32px', borderRadius: '12px', fontWeight: '500', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s ease', cursor: 'pointer', boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.target.style.transform = 'translateY(-2px)';
-                        e.target.style.boxShadow = '0 6px 20px rgba(245, 158, 11, 0.4)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.target.style.transform = 'translateY(0)';
-                        e.target.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.3)';
-                    }}>
-                        <FaSave /> Sauvegarder
+                    <button type="submit" className="add-modal-submit-btn">
+                        <FaSave aria-hidden="true" /> Sauvegarder
                     </button>
+                </>
+            }
+        >
+            {/* Section d'information */}
+            <div className="mat-info-band">
+                <FaInfoCircle aria-hidden="true" />
+                <span>
+                    Modifiez les champs souhaités et cliquez sur Sauvegarder. Le matricule, l'utilisateur, le statut Actif
+                    et l'écran se changent depuis le détail du matériel (« Réaffecter le PC » / « Déplacer l'écran »)
+                    ou le bouton Status de la liste, pour garder l'historique.
+                </span>
+            </div>
+
+            {/* Placement automatique en deux colonnes ; le bloc Connectiques occupe les
+                lignes « Équipe » + « Date PC » (cf. .mat-form-2col--edit), ce qui aligne
+                « Date Écran » avec « Mot de passe local ». */}
+            <div className="add-modal-form-grid mat-form-2col mat-form-2col--edit">
+                <div>
+                    <FormItem label="N° Matricule" name="id_n" formData={formData} handleChange={handleChange} disabled icon={getMaterielFieldIcon("id_n")} />
                 </div>
-            </form>
-        </div>
+                <div>
+                    <FormItem label="Utilisateur (via « Réaffecter le PC »)" name="utilisateur" formData={formData} handleChange={handleChange} disabled icon={getMaterielFieldIcon("utilisateur")} />
+                </div>
+
+                <div>
+                    <FormItem label="Marque Laptop" name="id_marque" type="select" options={marqueOptions} formData={formData} handleChange={handleChange} onSelectChange={handleSelectChange} disabled={isLoadingMarques} isClearable selectStyles={customSelectStyles} noOptionsMessage={() => "Aucune option disponible"} icon={getMaterielFieldIcon("id_marque")} />
+                </div>
+                <div>
+                    <FormItem label="Code PC" name="code_pc" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("code_pc")} />
+                </div>
+
+                <div>
+                    <FormItem label="Marque Écran" name="ecran" formData={formData} handleChange={handleChange} disabled icon={getMaterielFieldIcon("ecran")} />
+                </div>
+                <div>
+                    <FormItem label="Code Écran" name="code_ecran" formData={formData} handleChange={handleChange} disabled icon={getMaterielFieldIcon("code_ecran")} />
+                </div>
+
+                <div>
+                    <FormItem label="Équipe" name="equipe" formData={formData} handleChange={handleChange} required icon={getMaterielFieldIcon("equipe")} />
+                </div>
+                <div>
+                    <FormItem label="Date PC" name="date_pc" type="date" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("date_pc")} />
+                </div>
+                <div className="add-modal-form-group mat-connectiques-cell">
+                    <span className="add-modal-label mat-form-title-label">
+                        <FaPlug aria-hidden="true" /> Connectiques
+                    </span>
+                    <div className="add-modal-connectiques">
+                        <label className="add-modal-connectique-label">
+                            <input type="checkbox" name="hdmi" checked={formData.hdmi || false} onChange={handleChange} className="add-modal-checkbox" />
+                            <FaVideo className="add-modal-connectique-icon is-hdmi" aria-hidden="true" />
+                            Adapteur HDMI
+                        </label>
+                        <label className="add-modal-connectique-label">
+                            <input type="checkbox" name="lan" checked={formData.lan || false} onChange={handleChange} className="add-modal-checkbox" />
+                            <FaNetworkWired className="add-modal-connectique-icon is-lan" aria-hidden="true" />
+                            Adapteur LAN
+                        </label>
+                        <label className="add-modal-connectique-label">
+                            <input type="checkbox" name="usb" checked={formData.usb || false} onChange={handleChange} className="add-modal-checkbox" />
+                            <FaUsb className="add-modal-connectique-icon is-usb" aria-hidden="true" />
+                            Adapteur USB
+                        </label>
+                        <label className="add-modal-connectique-label">
+                            <input type="checkbox" name="clavier" checked={formData.clavier || false} onChange={handleChange} className="add-modal-checkbox" />
+                            <FaKeyboardIcon className="add-modal-connectique-icon is-clavier" aria-hidden="true" />
+                            Clavier Externe
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <FormItem label="Date Écran" name="date_ecran" type="date" formData={formData} handleChange={handleChange} disabled icon={getMaterielFieldIcon("date_ecran")} />
+                </div>
+                <div>
+                    <FormItem label="Mot de passe local" name="mdp_pc" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("mdp_pc")} />
+                </div>
+
+                <div>
+                    <FormItem label="salle" name="salle" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("salle")} />
+                </div>
+                <div>
+                    <FormItem label="Mot de passe Admin" name="mdp_admin" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("mdp_admin")} />
+                </div>
+
+                <div>
+                    <FormItem label="Local(s)" name="id_local" type="select" options={localOptions} formData={formData} handleChange={handleChange} onSelectChange={handleSelectChange} disabled={isLoadingLocaux} isClearable selectStyles={customSelectStyles} noOptionsMessage={() => "Aucune option disponible"} icon={getMaterielFieldIcon("id_local")} />
+                </div>
+                <div>
+                    <FormItem label="État Batterie" name="etat_batterie" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("etat_batterie")} />
+                </div>
+
+                <div>
+                    <FormItem label="État PC" name="etat_pc" type="select" icon={getMaterielFieldIcon("etat_pc")}
+                        options={etatOptions}
+                        formData={formData}
+                        handleChange={handleChange}
+                        onSelectChange={handleSelectChange}
+                        isClearable
+                        selectStyles={customSelectStyles}
+                        noOptionsMessage={() => "Aucune option disponible"}
+                    />
+                </div>
+                <div className="add-modal-form-group add-modal-actif-group">
+                    <label className="add-modal-label mat-form-title-label">
+                        <span className="add-modal-actif-state">
+                            Actif
+                            {formData.est_actif ? (
+                                <FaCheckCircle className="add-modal-actif-icon is-on" aria-hidden="true" />
+                            ) : (
+                                <FaTimesCircle className="add-modal-actif-icon" aria-hidden="true" />
+                            )}
+                        </span>
+                        {/* Lecture seule : le statut se change via le bouton Status de la liste. */}
+                        <div
+                            className={`add-modal-toggle is-readonly ${formData.est_actif ? 'is-on' : ''}`}
+                            title="Statut modifiable depuis le bouton Status de la liste"
+                        >
+                            <div className="add-modal-toggle-knob" />
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div className="add-modal-form-grid mat-form-2col">
+                <FormItem label="Caractéristiques" name="caracteristiques" type="textarea" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("caracteristiques")} />
+                <FormItem label="Commentaire" name="commentaire" type="textarea" formData={formData} handleChange={handleChange} icon={getMaterielFieldIcon("commentaire")} />
+            </div>
+        </AppModal>
     );
 };
 

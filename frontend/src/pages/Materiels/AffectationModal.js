@@ -7,29 +7,27 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { MySwal } from '../../utils/swal';
-import { FaTimes, FaExchangeAlt, FaDesktop, FaLaptop, FaSave, FaInfoCircle } from 'react-icons/fa';
+import { FaExchangeAlt, FaDesktop, FaLaptop, FaSave, FaInfoCircle } from 'react-icons/fa';
 import {
     fetchBeneficiaires, affecterMateriel, fetchAllMateriels, fetchALocaux,
     fetchEcrans, affecterEcran, STATUTS_ECRAN_LABELS,
 } from '../../services/api';
 import SearchableSelect from '../../components/SearchableSelect/SearchableSelect';
-import './Materiels.css';
+import AppModal from '../../components/AppModal/AppModal';
+import './MaterielsModals.css';
 
 const STOCK = '__STOCK__';
 const HORS_POSTE = ['EN_STOCK', 'EN_REPARATION', 'REFORME'];
 
+// Passé à SearchableSelect (prop style).
 const selectStyle = {
-    backgroundColor: '#fff', height: '40px', fontSize: '0.85rem', color: '#1e293b', border: '1px solid #e2e8f0',
+    backgroundColor: 'var(--color-bg)', height: '40px', fontSize: '0.85rem', color: 'var(--color-text-main)', border: '1px solid var(--color-border)',
 };
-const inputStyle = {
-    width: '100%', padding: '9px 12px', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '0.85rem', boxSizing: 'border-box', fontFamily: 'inherit',
-};
-const labelStyle = { display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#1E293B', marginBottom: '6px' };
 
 const Field = ({ label, required, children }) => (
     <div>
-        <label style={labelStyle}>
-            {label}{required && <span style={{ color: '#EF4444', marginLeft: '4px' }}>*</span>}
+        <label className="mat-field-label">
+            {label}{required && <span className="mat-required">*</span>}
         </label>
         {children}
     </div>
@@ -181,136 +179,123 @@ const AffectationModal = ({ mode, materiel, onClose, onDone, miseEnStock = false
             : `Poste de ${materiel.utilisateur} — aucun écran`;
 
     return (
-        // Au-dessus de DetailsModal (.add-modal-overlay = z-index 9999, cf. styles/ModalSystem.css).
-        <div className="add-modal-overlay" style={{ zIndex: 10000 }}>
-            <form onSubmit={handleSubmit} className="add-modal-content" style={{
-                maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto', borderRadius: '20px', boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
-            }}>
-                <div className="add-modal-header" style={{ background: 'linear-gradient(135deg, #1E293B, #0F172A)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <div className="add-modal-icon-wrapper" style={{ background: 'linear-gradient(135deg, #0EA5E9, #6366F1)', boxShadow: '0 4px 15px rgba(14, 165, 233, 0.3)' }}>
-                            {isPC ? <FaLaptop style={{ color: 'white' }} /> : <FaDesktop style={{ color: 'white' }} />}
-                        </div>
-                        <div>
-                            <h2 className="add-modal-title" style={{ color: 'white' }}>{titre}</h2>
-                            <p className="add-modal-subtitle" style={{ color: 'rgba(255,255,255,0.7)' }}>{sousTitre}</p>
-                        </div>
-                    </div>
-                    <button onClick={onClose} className="add-modal-close-btn" type="button" style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.15)' }}>
-                        <FaTimes />
+        // Ouverte depuis DetailsModal : au-dessus de celle-ci.
+        <AppModal
+            show
+            nested
+            onClose={onClose}
+            size="md"
+            as="form"
+            onSubmit={handleSubmit}
+            title={titre}
+            subtitle={sousTitre}
+            icon={isPC ? <FaLaptop /> : <FaDesktop />}
+            contentClassName="mat-modal mat-modal--affectation"
+            bodyClassName="mat-affectation-body"
+            footer={
+                <>
+                    <button type="button" onClick={onClose} className="add-modal-cancel-btn">
+                        Annuler
                     </button>
-                </div>
-
-                <div className="add-modal-body" style={{ padding: '24px', background: '#F8FAFC', display: 'grid', gap: '16px' }}>
-                    {loading ? (
-                        <div style={{ textAlign: 'center', color: '#64748b', padding: '20px' }}>Chargement...</div>
-                    ) : (
+                    <button type="submit" disabled={loading || submitting} className="add-modal-submit-btn">
+                        <FaSave aria-hidden="true" /> {submitting ? 'Enregistrement...' : 'Valider'}
+                    </button>
+                </>
+            }
+        >
+            {loading ? (
+                <div className="mat-list-state">Chargement...</div>
+            ) : (
+                <>
+                    {isPC && (
                         <>
-                            {isPC && (
-                                <>
-                                    <Field label="Nouveau bénéficiaire" required>
-                                        <SearchableSelect value={cible} onChange={handleBeneficiaireChange} options={beneficiaireOptions} placeholder="Choisir un utilisateur sans poste..." style={selectStyle} />
-                                    </Field>
-                                    {cible && cible !== STOCK && (
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                            <Field label="Nom du bénéficiaire" required>
-                                                <input style={inputStyle} value={utilisateur} onChange={e => setUtilisateur(e.target.value)} />
-                                            </Field>
-                                            <Field label="Équipe">
-                                                <input style={inputStyle} value={equipe} onChange={e => setEquipe(e.target.value)} />
-                                            </Field>
-                                        </div>
-                                    )}
-                                    <Field label="Local">
-                                        <select style={inputStyle} value={idLocal} onChange={e => setIdLocal(e.target.value)}>
-                                            <option value="">Non attribué</option>
-                                            {locaux.map(l => <option key={l.id_local} value={l.id_local}>{l.nom_local}</option>)}
-                                        </select>
-                                    </Field>
-                                    {cible === STOCK ? (
-                                        <div style={{ fontSize: '0.8rem', color: '#1E40AF', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                            <FaInfoCircle /> {materiel.utilisateur} gardera une fiche vide (« Sans poste »)
-                                            {materiel.id_ecran ? ` et l'écran ${materiel.code_ecran} partira en stock.` : '.'}
-                                        </div>
-                                    ) : (materiel.id_n || materiel.id_ecran) && (
-                                        <div style={{ fontSize: '0.8rem', color: '#1E40AF', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                            <FaInfoCircle />
-                                            {materiel.id_n && ` ${materiel.utilisateur} gardera une fiche vide (« Sans poste »).`}
-                                            {materiel.id_ecran && ` L'écran ${materiel.code_ecran} reste sur ce poste et suit le PC.`}
-                                        </div>
-                                    )}
-                                </>
-                            )}
-
-                            {!isPC && aUnEcran && (
-                                <>
-                                    <Field label="Destination" required>
-                                        <SearchableSelect value={cible} onChange={setCible} options={posteOptions} placeholder="Choisir un poste ou un statut..." style={selectStyle} />
-                                    </Field>
-                                    {conflitEcran && (
-                                        <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: '12px', padding: '12px 14px', fontSize: '0.85rem', color: '#92400E' }}>
-                                            <div style={{ fontWeight: 600, marginBottom: '8px' }}>
-                                                Ce poste a déjà l'écran {posteCible.code_ecran}. Que faire de cet écran ?
-                                            </div>
-                                            <label style={{ display: 'flex', gap: '8px', alignItems: 'center', cursor: 'pointer' }}>
-                                                <input type="radio" checked={modeConflit === 'echanger'} onChange={() => setModeConflit('echanger')} />
-                                                <FaExchangeAlt /> Échanger : il vient sur le poste de {materiel.utilisateur}
-                                            </label>
-                                            <label style={{ display: 'flex', gap: '8px', alignItems: 'center', cursor: 'pointer', marginTop: '6px' }}>
-                                                <input type="radio" checked={modeConflit === 'stock'} onChange={() => setModeConflit('stock')} />
-                                                📦 Le mettre en stock
-                                            </label>
-                                        </div>
-                                    )}
-                                </>
-                            )}
-
-                            {!isPC && !aUnEcran && (
-                                <Field label="Écran à installer" required>
-                                    {ecranOptions.length === 0 ? (
-                                        <div style={{ fontSize: '0.85rem', color: '#64748b' }}>Aucun écran en stock ou en réparation.</div>
-                                    ) : (
-                                        <SearchableSelect value={ecranChoisi} onChange={setEcranChoisi} options={ecranOptions} placeholder="Choisir un écran..." style={selectStyle} />
-                                    )}
-                                </Field>
-                            )}
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                <Field label="Motif">
-                                    <input style={inputStyle} value={motif} onChange={e => setMotif(e.target.value)} placeholder="Arrivée, départ, panne..." />
-                                </Field>
-                                <Field label="État à la remise">
-                                    <input style={inputStyle} value={etatRemise} onChange={e => setEtatRemise(e.target.value)} placeholder="Bon état, rayure..." />
-                                </Field>
-                            </div>
-                            <Field label="Commentaire">
-                                <textarea style={{ ...inputStyle, resize: 'vertical', minHeight: '70px' }} value={commentaire} onChange={e => setCommentaire(e.target.value)} />
+                            <Field label="Nouveau bénéficiaire" required>
+                                <SearchableSelect value={cible} onChange={handleBeneficiaireChange} options={beneficiaireOptions} placeholder="Choisir un utilisateur sans poste..." style={selectStyle} />
                             </Field>
-
-                            {error && (
-                                <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#991B1B', borderRadius: '10px', padding: '10px 14px', fontSize: '0.85rem' }}>
-                                    {error}
+                            {cible && cible !== STOCK && (
+                                <div className="mat-two-cols">
+                                    <Field label="Nom du bénéficiaire" required>
+                                        <input className="mat-field-input" value={utilisateur} onChange={e => setUtilisateur(e.target.value)} />
+                                    </Field>
+                                    <Field label="Équipe">
+                                        <input className="mat-field-input" value={equipe} onChange={e => setEquipe(e.target.value)} />
+                                    </Field>
+                                </div>
+                            )}
+                            <Field label="Local">
+                                <select className="mat-field-input" value={idLocal} onChange={e => setIdLocal(e.target.value)}>
+                                    <option value="">Non attribué</option>
+                                    {locaux.map(l => <option key={l.id_local} value={l.id_local}>{l.nom_local}</option>)}
+                                </select>
+                            </Field>
+                            {cible === STOCK ? (
+                                <div className="mat-info-line">
+                                    <FaInfoCircle aria-hidden="true" /> {materiel.utilisateur} gardera une fiche vide (« Sans poste »)
+                                    {materiel.id_ecran ? ` et l'écran ${materiel.code_ecran} partira en stock.` : '.'}
+                                </div>
+                            ) : (materiel.id_n || materiel.id_ecran) && (
+                                <div className="mat-info-line">
+                                    <FaInfoCircle aria-hidden="true" />
+                                    {materiel.id_n && ` ${materiel.utilisateur} gardera une fiche vide (« Sans poste »).`}
+                                    {materiel.id_ecran && ` L'écran ${materiel.code_ecran} reste sur ce poste et suit le PC.`}
                                 </div>
                             )}
                         </>
                     )}
-                </div>
 
-                <div className="add-modal-footer" style={{ background: '#F1F5F9', borderTop: '1px solid #E2E8F0', padding: '16px 24px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                    <button type="button" onClick={onClose} className="add-modal-cancel-btn" style={{
-                        background: 'white', color: '#1E293B', border: '1px solid #CBD5E1', padding: '10px 28px', borderRadius: '12px', fontWeight: '500', fontSize: '0.9rem', cursor: 'pointer'
-                    }}>
-                        Annuler
-                    </button>
-                    <button type="submit" disabled={loading || submitting} className="add-modal-submit-btn" style={{
-                        background: 'linear-gradient(135deg, #0EA5E9, #6366F1)', color: 'white', border: 'none', padding: '10px 32px', borderRadius: '12px', fontWeight: '500', fontSize: '0.9rem',
-                        display: 'flex', alignItems: 'center', gap: '8px', cursor: loading || submitting ? 'not-allowed' : 'pointer', opacity: loading || submitting ? 0.6 : 1
-                    }}>
-                        <FaSave /> {submitting ? 'Enregistrement...' : 'Valider'}
-                    </button>
-                </div>
-            </form>
-        </div>
+                    {!isPC && aUnEcran && (
+                        <>
+                            <Field label="Destination" required>
+                                <SearchableSelect value={cible} onChange={setCible} options={posteOptions} placeholder="Choisir un poste ou un statut..." style={selectStyle} />
+                            </Field>
+                            {conflitEcran && (
+                                <div className="mat-conflict-box">
+                                    <div className="mat-conflict-title">
+                                        Ce poste a déjà l'écran {posteCible.code_ecran}. Que faire de cet écran ?
+                                    </div>
+                                    <label className="mat-radio-label">
+                                        <input type="radio" checked={modeConflit === 'echanger'} onChange={() => setModeConflit('echanger')} />
+                                        <FaExchangeAlt /> Échanger : il vient sur le poste de {materiel.utilisateur}
+                                    </label>
+                                    <label className="mat-radio-label">
+                                        <input type="radio" checked={modeConflit === 'stock'} onChange={() => setModeConflit('stock')} />
+                                        📦 Le mettre en stock
+                                    </label>
+                                </div>
+                            )}
+                        </>
+                    )}
+
+                    {!isPC && !aUnEcran && (
+                        <Field label="Écran à installer" required>
+                            {ecranOptions.length === 0 ? (
+                                <div className="mat-muted-text">Aucun écran en stock ou en réparation.</div>
+                            ) : (
+                                <SearchableSelect value={ecranChoisi} onChange={setEcranChoisi} options={ecranOptions} placeholder="Choisir un écran..." style={selectStyle} />
+                            )}
+                        </Field>
+                    )}
+
+                    <div className="mat-two-cols">
+                        <Field label="Motif">
+                            <input className="mat-field-input" value={motif} onChange={e => setMotif(e.target.value)} placeholder="Arrivée, départ, panne..." />
+                        </Field>
+                        <Field label="État à la remise">
+                            <input className="mat-field-input" value={etatRemise} onChange={e => setEtatRemise(e.target.value)} placeholder="Bon état, rayure..." />
+                        </Field>
+                    </div>
+                    <Field label="Commentaire">
+                        <textarea className="mat-field-input" value={commentaire} onChange={e => setCommentaire(e.target.value)} />
+                    </Field>
+
+                    {error && (
+                        <div className="mat-alert-error">
+                            {error}
+                        </div>
+                    )}
+                </>
+            )}
+        </AppModal>
     );
 };
 

@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
-import { FaEnvelope, FaLock, FaPlus, FaEdit, FaTimes, FaShieldAlt, FaCheck } from 'react-icons/fa';
+import { FaEnvelope, FaLock, FaPlus, FaEdit, FaShieldAlt, FaCheck } from 'react-icons/fa';
 import { addUserEmail, updateUserEmail } from '../../services/api';
+import AppModal from '../../components/AppModal/AppModal';
+import '../../styles/DetailsSection.css';
+import './MailModals.css';
 
 function EmailFormFields({ formData, handleChange, disabled, mode }) {
     return (
         <>
             <div className="add-modal-form-group">
                 <label className="add-modal-label">
-                    <FaEnvelope style={{ color: '#6366f1' }} /> Adresse Email
+                    <FaEnvelope className="mail-modal-accent-icon" aria-hidden="true" /> Adresse Email
                 </label>
                 <input
                     type="email"
@@ -24,7 +27,7 @@ function EmailFormFields({ formData, handleChange, disabled, mode }) {
 
             <div className="add-modal-form-group">
                 <label className="add-modal-label">
-                    <FaLock style={{ color: '#6366f1' }} /> Mot de passe compte
+                    <FaLock className="mail-modal-accent-icon" aria-hidden="true" /> Mot de passe compte
                 </label>
                 <input
                     type="text"
@@ -40,7 +43,7 @@ function EmailFormFields({ formData, handleChange, disabled, mode }) {
 
             <div className="add-modal-form-group">
                 <label className="add-modal-label">
-                    <FaLock style={{ color: '#6366f1' }} /> Mot de passe messagerie
+                    <FaLock className="mail-modal-accent-icon" aria-hidden="true" /> Mot de passe messagerie
                 </label>
                 <input
                     type="text"
@@ -55,30 +58,28 @@ function EmailFormFields({ formData, handleChange, disabled, mode }) {
 
             <div className="add-modal-form-group">
                 <label className="add-modal-label">
-                    <FaShieldAlt style={{ color: '#6366f1' }} /> Options
+                    <FaShieldAlt className="mail-modal-accent-icon" aria-hidden="true" /> Options
                 </label>
-                <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', padding: '4px 0' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.9rem', color: '#1e293b' }}>
+                <div className="mail-modal-options">
+                    <label className="mail-modal-option">
                         <input
                             type="checkbox"
                             name="is_primary"
                             checked={formData.is_primary}
                             onChange={handleChange}
                             disabled={disabled}
-                            style={{ width: '16px', height: '16px', accentColor: '#6366f1', cursor: 'pointer' }}
                         />
-                        <FaShieldAlt style={{ color: '#8B5CF6' }} /> Email principal
+                        <FaShieldAlt className="mail-modal-option-primary" aria-hidden="true" /> Email principal
                     </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.9rem', color: '#1e293b' }}>
+                    <label className="mail-modal-option">
                         <input
                             type="checkbox"
                             name="is_verified"
                             checked={formData.is_verified}
                             onChange={handleChange}
                             disabled={disabled}
-                            style={{ width: '16px', height: '16px', accentColor: '#6366f1', cursor: 'pointer' }}
                         />
-                        <FaCheck style={{ color: '#22c55e' }} /> Vérifié
+                        <FaCheck className="mail-modal-option-verified" aria-hidden="true" /> Vérifié
                     </label>
                 </div>
             </div>
@@ -195,115 +196,84 @@ function EditEmailModal({ show, handleClose, userData, emailData, onSaved }) {
 
     if (!show || !userData) return null;
 
-    const headerGradient = isEdit
-        ? 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)'
-        : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)';
+    const footer = (
+        <>
+            <button type="button" onClick={handleCloseModal} className="add-modal-cancel-btn" disabled={loading}>
+                Annuler
+            </button>
+            <button type="submit" className="add-modal-submit-btn" disabled={loading}>
+                {loading ? (
+                    <><span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />Enregistrement...</>
+                ) : (
+                    isEdit ? <><FaEdit aria-hidden="true" /> Enregistrer</> : <><FaPlus aria-hidden="true" /> Ajouter l'email</>
+                )}
+            </button>
+        </>
+    );
 
     return (
-        <div className="add-modal-overlay">
-            <div className="add-modal-content" style={{
-                maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', borderRadius: '20px',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
-            }}>
-                <div className="add-modal-header" style={{
-                    background: headerGradient, borderBottom: '1px solid rgba(255,255,255,0.1)'
+        <AppModal
+            show={show}
+            onClose={handleCloseModal}
+            nested
+            size="md"
+            as="form"
+            onSubmit={handleSubmit}
+            contentClassName="mail-modal"
+            headerBg={isEdit ? 'linear-gradient(135deg, var(--color-warning) 0%, #fbbf24 100%)' : undefined}
+            icon={isEdit ? <FaEdit /> : <FaPlus />}
+            title={isEdit ? 'Modifier un email' : 'Ajouter un email'}
+            subtitle={userData.materiel?.utilisateur || 'cet utilisateur'}
+            footer={footer}
+        >
+            {loading && (
+                <div className="mail-modal-alert mail-modal-alert--loading" role="status">
+                    <span className="spinner-border spinner-border-sm" aria-hidden="true" />
+                    Traitement en cours...
+                </div>
+            )}
+            {error && (
+                <div className="mail-modal-alert mail-modal-alert--error" role="alert">
+                    <FaShieldAlt aria-hidden="true" /> {error}
+                </div>
+            )}
+            {success && (
+                <div className="mail-modal-alert mail-modal-alert--success" role="status">
+                    <FaCheck aria-hidden="true" /> {isEdit ? 'Modifié' : 'Ajouté'} avec succès !
+                </div>
+            )}
+
+            <div className="details-section mail-modal-section mail-modal-section--roomy">
+                <div className="details-section-header" style={isEdit ? {
+                    background: 'linear-gradient(135deg, var(--color-warning), #fbbf24)',
+                    border: '1px solid rgba(245,158,11,0.2)',
+                    boxShadow: '0 2px 8px rgba(245,158,11,0.2)'
+                } : {
+                    background: 'var(--gradient-primary)',
+                    border: '1px solid rgba(99,102,241,0.2)',
+                    boxShadow: '0 2px 8px rgba(99,102,241,0.2)'
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <div className="add-modal-icon-wrapper" style={{
-                            background: 'linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.1))',
-                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-                        }}>
-                            {isEdit ? <FaEdit style={{ color: 'white' }} /> : <FaPlus style={{ color: 'white' }} />}
-                        </div>
-                        <div>
-                            <h2 className="add-modal-title" style={{ color: 'white' }}>
-                                {isEdit ? 'Modifier un email' : 'Ajouter un email'}
-                            </h2>
-                            <p className="add-modal-subtitle" style={{ margin: 0, fontSize: '0.85rem', opacity: 0.85 }}>
-                                {userData.materiel?.utilisateur || 'cet utilisateur'}
-                            </p>
-                        </div>
+                    <div className="section-icon-wrapper mail-modal-section-icon" aria-hidden="true">
+                        <FaEnvelope />
                     </div>
-                    <button type="button" onClick={handleCloseModal} className="add-modal-close-btn" style={{
-                        background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.15)'
-                    }}>
-                        <FaTimes />
-                    </button>
+                    <div className="d-flex flex-column">
+                        <h3 className="details-section-title mail-modal-section-title">
+                            {isEdit ? 'Modifier l\'email' : 'Nouvel email'}
+                        </h3>
+                        <span className="mail-modal-section-subtitle">
+                            📧 {isEdit ? 'Mettez à jour les informations' : 'Ajoutez une nouvelle adresse email'}
+                        </span>
+                    </div>
                 </div>
 
-                <div className="add-modal-body">
-                    {loading && (
-                        <div style={{ marginBottom: '16px', padding: '12px', background: 'rgba(99,102,241,0.1)', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '8px', color: '#6366f1' }}>
-                            <span className="spinner-border spinner-border-sm" />
-                            Traitement en cours...
-                        </div>
-                    )}
-                    {error && (
-                        <div style={{ marginBottom: '16px', padding: '12px', background: 'rgba(239,68,68,0.1)', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '8px', color: '#ef4444' }}>
-                            <FaShieldAlt /> {error}
-                        </div>
-                    )}
-                    {success && (
-                        <div style={{ marginBottom: '16px', padding: '12px', background: 'rgba(34,197,94,0.1)', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '8px', color: '#15803d' }}>
-                            <FaCheck /> {isEdit ? 'Modifié' : 'Ajouté'} avec succès !
-                        </div>
-                    )}
-
-                    <form onSubmit={handleSubmit}>
-                        <div className="details-section" style={{
-                            background: 'white', borderRadius: '16px', padding: '24px', marginBottom: '20px',
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid #E2E8F0'
-                        }}>
-                            <div className="details-section-header" style={{
-                                background: isEdit ? 'linear-gradient(135deg, #f59e0b, #fbbf24)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                                border: `1px solid ${isEdit ? 'rgba(245,158,11,0.2)' : 'rgba(99,102,241,0.2)'}`,
-                                borderRadius: '12px', padding: '10px 18px', marginBottom: '18px',
-                                display: 'flex', alignItems: 'center', gap: '14px',
-                                boxShadow: `0 2px 8px ${isEdit ? 'rgba(245,158,11,0.2)' : 'rgba(99,102,241,0.2)'}`
-                            }}>
-                                <div className="section-icon-wrapper" style={{
-                                    background: 'rgba(255,255,255,0.25)', borderRadius: '50%', width: '40px', height: '40px',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', color: 'white'
-                                }}>
-                                    <FaEnvelope />
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <h3 className="details-section-title" style={{
-                                        color: 'white', fontSize: '0.95rem', fontWeight: '600', margin: 0, letterSpacing: '0.5px',
-                                        textShadow: '0 1px 2px rgba(0,0,0,0.1)'
-                                    }}>
-                                        {isEdit ? 'Modifier l\'email' : 'Nouvel email'}
-                                    </h3>
-                                    <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.7rem', fontWeight: '400' }}>
-                                        📧 {isEdit ? 'Mettez à jour les informations' : 'Ajoutez une nouvelle adresse email'}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <EmailFormFields
-                                formData={formData}
-                                handleChange={handleChange}
-                                disabled={loading}
-                                mode={isEdit ? 'edit' : 'add'}
-                            />
-                        </div>
-
-                        <div className="add-modal-footer">
-                            <button type="button" onClick={handleCloseModal} className="add-modal-cancel-btn" disabled={loading}>
-                                Annuler
-                            </button>
-                            <button type="submit" className="add-modal-submit-btn" disabled={loading}>
-                                {loading ? (
-                                    <><span className="spinner-border spinner-border-sm me-2" />Enregistrement...</>
-                                ) : (
-                                    isEdit ? <><FaEdit /> Enregistrer</> : <><FaPlus /> Ajouter l'email</>
-                                )}
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                <EmailFormFields
+                    formData={formData}
+                    handleChange={handleChange}
+                    disabled={loading}
+                    mode={isEdit ? 'edit' : 'add'}
+                />
             </div>
-        </div>
+        </AppModal>
     );
 }
 

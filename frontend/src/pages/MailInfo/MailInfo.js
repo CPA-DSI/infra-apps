@@ -2,10 +2,10 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import DataTable from 'react-data-table-component';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-import { Button, Alert, Spinner } from 'react-bootstrap';
+import { Alert, Spinner } from 'react-bootstrap';
 import Swal from 'sweetalert2';
 
-import { FaFileExcel, FaPlus, FaSearch, FaTimes, FaSync, FaEnvelope, FaFileImport, FaUsers, FaUpload, FaCheckCircle, FaFileUpload, FaInfoCircle } from 'react-icons/fa';
+import { FaFileExcel, FaPlus, FaSearch, FaTimes, FaSync, FaEnvelope, FaFileImport, FaUsers } from 'react-icons/fa';
 import { fetchUsers, fetchAllMaterielsByIdN, updateUser, updateUserStatus } from '../../services/api';
 import { ROLE_PERMISSIONS, ROLES } from '../../config/api';
 import DetailsMailModal from './DetailsMailModal';
@@ -20,11 +20,25 @@ import StatCard from './StatCard';
 import ActionButtons from './ActionButtons';
 import ExpandableEmailRow from './ExpandableEmailRow';
 import SearchableSelect from '../../components/SearchableSelect/SearchableSelect';
-import { STATS_CONFIG, PAGINATION_OPTIONS } from './mailInfoTableConfig';
+import PageHeader from '../../components/PageHeader/PageHeader';
+import ExcelImportPanel from '../../components/ExcelImportPanel/ExcelImportPanel';
+import { tableStyles, paginationOptions } from '../../styles/dataTableTheme';
+import { STATS_CONFIG } from './mailInfoTableConfig';
 import { useUserImportExport } from './useUserImportExport';
 import { escapeHtml } from '../../utils/escapeHtml';
 
 import './Mail.css';
+
+// Thème partagé ; seules les dimensions diffèrent (lignes plus hautes, cellules plus serrées).
+const mailTableStyles = tableStyles({
+    headCells: { style: { paddingLeft: '12px', paddingRight: '12px' } },
+    cells: { style: { paddingLeft: '12px', paddingRight: '12px' } },
+    rows: { style: { minHeight: '56px' } },
+    noData: { style: { padding: 0, backgroundColor: 'transparent' } },
+});
+
+const filterClass = (value) => `form-select filter-pill ${value ? 'is-active' : ''}`;
+
 
 const UsersManager = () => {
 
@@ -87,29 +101,8 @@ const UsersManager = () => {
         await loadMaterielsList();
     };
 
-    const {
-        showImportSection,
-        importFile,
-        importProgress,
-        isImporting,
-        importSuccess,
-        importSuccessStats,
-        importError,
-        importPreview,
-        importData,
-        importWarnings,
-        importErrors,
-        isDragging,
-        fileInputRef,
-        toggleImportSection,
-        handleDragEnter,
-        handleDragLeave,
-        handleDragOver,
-        handleDrop,
-        handleFileSelect,
-        handleRemoveFile,
-        handleImportSubmit,
-    } = useUserImportExport({ onImported: handleRefresh });
+        const importExport = useUserImportExport({ onImported: handleRefresh });
+    const { showImportSection, isImporting, toggleImportSection } = importExport;
 
     const handleResetFilters = () => {
         setFilterText('');
@@ -182,57 +175,6 @@ const UsersManager = () => {
         const usedIds = new Set(users.map(u => u.materiel?.id_n || u.id_n).filter(Boolean));
         return allMateriels.filter(m => !usedIds.has(m.id_n));
     }, [users, allMateriels]);
-
-    const modernStyles = {
-        table: {
-            style: {
-                backgroundColor: 'transparent', borderRadius: '20px', overflow: 'hidden',
-            },
-        },
-        headRow: {
-            style: {
-               backgroundColor: '#f0f4f8', border: 'none', minHeight: '56px', borderRadius: '10px 10px 0 0', borderBottom: '2px solid #e2e8f0', fontWeight: 700,
-            },
-        },
-        headCells: {
-            style: {
-                fontSize: '0.7rem', fontWeight: '700', color: '#374151', letterSpacing: '0.05em', textTransform: 'capitalize', paddingLeft: '12px', paddingRight: '12px', paddingTop: '14px', paddingBottom: '14px', verticalAlign: 'middle', textAlign: 'left', backgroundColor: '#f3f4f6', borderBottom: '2px solid #e5e7eb', whiteSpace: 'nowrap', userSelect: 'none',
-            },
-        },
-        rows: {
-            style: {
-                fontSize: '12px', fontWeight: '500', color: '#334155', minHeight: '56px', paddingLeft: '12px', paddingRight: '12px', borderBottom: '1px solid #e2e8f0', transition: 'all 0.3s ease',
-                '&:hover': {
-                    backgroundColor: '#f8fafc',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-                },
-            },
-            highlightOnHoverStyle: {
-                backgroundColor: '#f0f8ff', color: '#0056b3', cursor: 'pointer', transitionDuration: '0.2s',
-            },
-        },
-        pagination: {
-            style: {
-                border: 'none', fontSize: '13px', color: '#6c757d', paddingTop: '20px', backgroundColor: 'transparent',
-            },
-            pageButtonsStyle: {
-                borderRadius: '4px', height: '32px', cursor: 'pointer', transition: 'all 0.3s',
-                '&:hover:not(:disabled)': {
-                    backgroundColor: '#667eea',
-                    color: 'white',
-                },
-                '&:disabled': {
-                    cursor: 'unset',
-                    opacity: 0.5,
-                },
-            },
-        },
-        noData: {
-            style: {
-                display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent',
-            },
-        },
-    };
 
     const exportToExcel = () => {
         const dataToExport = users.map(u => ({
@@ -486,7 +428,7 @@ const UsersManager = () => {
             grow: 1,
             wrap: true,
             cell: row => (
-                <span className="fw-medium" style={{ color: '#3b82f6', fontSize: '0.8rem' }}>
+                <span className="fw-medium mail-user-name">
                     {row.materiel?.utilisateur || 'N/A'}
                 </span>
             ),
@@ -505,12 +447,7 @@ const UsersManager = () => {
                     return <span className="text-muted small">N/A</span>;
                 }
                 return (
-                    <span 
-                        className="badge rounded-pill fw-medium" 
-                        style={{ 
-                            backgroundColor: '#eef2ff', color: '#4f46e5', border: '1px solid #c7d2fe', fontSize: '0.75rem', padding: '5px 12px', letterSpacing: '0.3px'
-                        }}
-                    >
+                    <span className="badge rounded-pill fw-medium mail-tag mail-tag--team">
                         {equipe}
                     </span>
                 );
@@ -530,12 +467,7 @@ const UsersManager = () => {
                     return <span className="text-muted small">N/A</span>;
                 }
                 return (
-                    <span 
-                        className="badge rounded-pill fw-medium" 
-                        style={{ 
-                           backgroundColor: '#fef3c7', color: '#b45309', border: '1px solid #fcd34d', fontSize: '0.75rem', padding: '5px 12px', letterSpacing: '0.3px'
-                        }}
-                    >
+                    <span className="badge rounded-pill fw-medium mail-tag mail-tag--site">
                         {site}
                     </span>
                 );
@@ -564,12 +496,10 @@ const UsersManager = () => {
                 const { label, bg, text, border, Icon } = formatUserStatus(row.is_active);
                 return (
                     <span
-                        className="badge rounded-pill d-inline-flex align-items-center gap-1"
-                        style={{
-                            backgroundColor: bg, color: text, border: `1px solid ${border}`, fontSize: '0.75rem', padding: '4px 12px', gap: '6px', transition: 'all 0.2s ease', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', cursor: 'default', letterSpacing: '0.3px', fontWeight: 600
-                        }}
+                        className="badge rounded-pill mail-status-pill"
+                        style={{ backgroundColor: bg, color: text, borderColor: border }}
                     >
-                        <Icon style={{ fontSize: '0.6rem' }} aria-hidden="true" />
+                        <Icon className="mail-status-pill-icon" aria-hidden="true" />
                         <span>{label}</span>
                     </span>
                 );
@@ -599,7 +529,7 @@ const UsersManager = () => {
                         onClick={() => copyToClipboard(getPrimaryEmail(row), 'Email principal')}
                         title={emailCount > 1 ? 'Cliquez pour copier l\'email principal. Développez pour voir tous les emails.' : 'Cliquez pour copier'}
                     >
-                        <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getPrimaryEmail(row)}</span>
+                        <span className="mail-email-text">{getPrimaryEmail(row)}</span>
                         {isVerified ? (
                             <span className="email-badge-verified">✓ Vérifié</span>
                         ) : (
@@ -608,12 +538,7 @@ const UsersManager = () => {
                         {emailCount > 1 && (
                             <FaUsers
                                 size={10}
-                                style={{
-                                    marginLeft: '6px',
-                                    color: '#6366f1',
-                                    opacity: 0.7,
-                                    flexShrink: 0
-                                }}
+                                className="mail-email-multi"
                                 title={`${emailCount} email(s) au total. Développez pour voir tous les emails.`}
                             />
                         )}
@@ -632,30 +557,13 @@ const UsersManager = () => {
                 const hasMultiple = count > 1;
 
                 return (
-                    <div style={{ textAlign: 'center' }}>
-                        <div style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            padding: '4px 10px',
-                            borderRadius: '12px',
-                            backgroundColor: hasMultiple ? '#6366f1' : '#f1f5f9',
-                            color: hasMultiple ? 'white' : '#64748b',
-                            fontWeight: '600',
-                            fontSize: '0.85rem',
-                            transition: 'all 0.2s ease',
-                            cursor: hasMultiple ? 'pointer' : 'default'
-                        }}>
-                            <FaEnvelope size={9} />
+                    <div className="text-center">
+                        <div className={`mail-email-count ${hasMultiple ? 'has-multiple' : ''}`}>
+                            <FaEnvelope size={9} aria-hidden="true" />
                             {count}
                         </div>
                         {count > 0 && (
-                            <div style={{
-                                fontSize: '0.65rem',
-                                color: verified > 0 ? '#15803d' : '#b45309',
-                                marginTop: '3px',
-                                fontWeight: '500'
-                            }}>
+                            <div className={`mail-verified-count ${verified > 0 ? 'is-verified' : ''}`}>
                                 ✓{verified}
                             </div>
                         )}
@@ -688,408 +596,66 @@ const UsersManager = () => {
     ], [columnWidths, handleRoleUpdate, handleToggleStatus]);
 
     return (
-        <div className="container-fluid py-2 px-2 page-mail" style={{ backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+        <div className="container-fluid py-2 px-2 page-mail">
 
-            <div 
-                className="d-flex justify-content-between align-items-center mb-4 p-2 p-md-3 rounded-3" 
-                style={{ 
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', boxShadow: '0 6px 24px rgba(102, 126, 234, 0.18)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.1)', minHeight: '80px'
-                }}
-            >
-            <div className="d-flex align-items-center gap-2">
-                    <div 
-                        className="d-flex align-items-center justify-content-center flex-shrink-0" 
-                            style={{
-                                background: 'rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(10px)', width: '45px', height: '45px', borderRadius: '50%', border: '1px solid rgba(255, 255, 255, 0.2)', transition: 'all 0.3s ease', cursor: 'pointer'
-                            }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.25)';
-                            e.currentTarget.style.transform = 'rotate(-15deg) scale(1.08)';
-                            e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 255, 255, 0.15)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                            e.currentTarget.style.transform = 'rotate(0deg) scale(1)';
-                            e.currentTarget.style.boxShadow = 'none';
-                        }}
-                    >
-                        <FaEnvelope className="text-white" style={{ fontSize: '1.2rem' }} />
-                    </div>
-                    <div>
-                        <h1 className="h5 fw-bold text-white mb-1" style={{ letterSpacing: '0.3px', fontSize: '1.35rem' }}>
-                            Gestion des Utilisateurs
-                        </h1>
-                        <p className="text-white mb-0" style={{ fontSize: '0.8rem', opacity: 0.8, fontWeight: '300' }}>
-                            Administrez les accès et rôles de vos collaborateurs
-                        </p>
-                    </div>
-                </div>
-                <div className="d-flex gap-2">
-                    <button className="btn-pill btn-pill-ghost btn-refresh" onClick={handleRefresh} disabled={loading} title="Actualiser" >
-                        <FaSync className={loading ? 'fa-spin' : ''} />
-                    </button>
+            <PageHeader
+                icon={<FaEnvelope />}
+                title="Gestion des Utilisateurs"
+                subtitle="Administrez les accès et rôles de vos collaborateurs"
+                background="var(--gradient-brand)"
+                actions={
+                    <>
+                        <button type="button" className="btn-refresh" onClick={handleRefresh} disabled={loading} title="Actualiser" aria-label="Actualiser">
+                            <FaSync className={loading ? 'fa-spin' : ''} />
+                        </button>
 
-                    <button className={`btn-pill btn-pill-success shadow-sm ${showImportSection ? 'active' : ''}`} onClick={toggleImportSection} disabled={isImporting} title="Importer des données" >
-                        {isImporting ? <Spinner animation="border" size="sm" style={{ color: 'white' }} /> : <FaFileImport size={13} />}
-                        <span>{isImporting ? 'Import...' : 'Importer'}</span>
-                    </button>
+                        <button type="button" className={`btn-pill btn-pill-success shadow-sm ${showImportSection ? 'active' : ''}`} onClick={toggleImportSection} disabled={isImporting} title="Importer des données">
+                            {isImporting ? <Spinner animation="border" size="sm" /> : <FaFileImport size={13} />}
+                            <span>{isImporting ? 'Import...' : 'Importer'}</span>
+                        </button>
 
-                    <button className="btn-pill btn-pill-warning shadow-sm" onClick={exportToExcel} title="Exporter les données" >
-                        <FaFileExcel size={13} />
-                        <span>Exporter</span>
-                    </button>
+                        <button type="button" className="btn-pill btn-pill-warning shadow-sm" onClick={exportToExcel} title="Exporter les données">
+                            <FaFileExcel size={13} />
+                            <span>Exporter</span>
+                        </button>
 
-                    <button className="btn-pill btn-pill-primary shadow-sm" onClick={() => { setUserModalData(null); setUserModalMode('add'); setShowUserModal(true); }} title="Ajouter un nouvel utilisateur" >
-                        <FaPlus size={14} />
-                        <span>Ajouter</span>
-                    </button>
-                </div>
-            </div>
+                        <button type="button" className="btn-pill btn-pill-primary shadow-sm" onClick={() => { setUserModalData(null); setUserModalMode('add'); setShowUserModal(true); }} title="Ajouter un nouvel utilisateur">
+                            <FaPlus size={14} />
+                            <span>Ajouter</span>
+                        </button>
+                    </>
+                }
+            />
 
             {showImportSection && (
-                <div className="mail-import-section mb-4 rounded-3" style={{
-                    background: 'white', border: '1px solid #e5e7eb', borderRadius: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden'
-                }}>
-                    <div className="d-flex justify-content-between align-items-center p-4 pb-3">
-                        <h6 className="fw-bold mb-0 d-flex align-items-center gap-2" style={{ color: '#1F2937', fontSize: '1rem' }}>
-                            <div style={{
-                                width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, #667eea, #764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white'
-                            }}>
-                                <FaFileImport size={14} />
-                            </div>
-                            Importer des utilisateurs
-                        </h6>
-                        <button
-                            className="btn btn-sm rounded-circle border-0"
-                            onClick={toggleImportSection}
-                            style={{
-                                width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s ease', color: '#9ca3af'
-                            }}
-                            disabled={isImporting}
-                            title="Fermer"
-                        >
-                            <FaTimes size={14} />
-                        </button>
-                    </div>
-
-                    {!importSuccess ? (
-                        <>
-                            <div
-                                className={`mail-import-drop-zone mx-4 mb-3 ${isDragging ? 'dragover' : ''} ${importFile ? 'has-file' : ''}`}
-                                onDragEnter={handleDragEnter} onDragLeave={handleDragLeave} onDragOver={handleDragOver} onDrop={handleDrop}
-                                onClick={() => fileInputRef.current?.click()}
-                            >
-                                <input
-                                    ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFileSelect} style={{ display: 'none' }} disabled={isImporting}
-                                />
-
-                                {importFile ? (
-                                    <div className="d-flex align-items-center justify-content-center gap-4">
-                                        <div className="mail-import-file-icon" style={{
-                                            fontSize: '2.5rem', color: '#217346', filter: 'drop-shadow(0 2px 4px rgba(33, 115, 70, 0.15))'
-                                        }}>
-                                            <FaFileExcel />
-                                        </div>
-                                        <div className="text-start flex-grow-1">
-                                            <div className="fw-semibold" style={{ color: '#1F2937', fontSize: '0.95rem' }}>{importFile.name}</div>
-                                            <div className="text-muted" style={{ fontSize: '0.8rem' }}>
-                                                {(importFile.size / 1024).toFixed(1)} Ko
-                                            </div>
-                                            <div className="text-success mt-1" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
-                                                <FaCheckCircle className="me-1" size={12} /> Fichier prêt à importer
-                                            </div>
-                                        </div>
-                                        <button
-                                            className="btn btn-sm rounded-circle border-0 mail-import-remove-btn"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleRemoveFile();
-                                            }}
-                                            disabled={isImporting}
-                                            style={{
-                                                width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s ease', color: '#ef4444', backgroundColor: '#fef2f2'
-                                            }}
-                                        >
-                                            <FaTimes size={14} />
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div>
-                                        <div className="mail-import-drop-icon">
-                                            <FaFileUpload />
-                                        </div>
-                                        <div style={{ fontWeight: '600', color: '#374151', fontSize: '0.95rem', marginBottom: '0.4rem' }}>
-                                            Glissez-déposez votre fichier Excel ici
-                                        </div>
-                                        <div style={{ color: '#6b7280', fontSize: '0.85rem', marginBottom: '1rem' }}>
-                                            ou <span className="mail-import-browse-link">parcourez vos fichiers</span>
-                                        </div>
-                                        <div style={{
-                                            color: '#6b7280', fontSize: '0.8rem', backgroundColor: '#f3f4f6', display: 'inline-block', padding: '4px 14px', borderRadius: '20px'
-                                        }}>
-                                            Formats acceptés : <span className="fw-semibold" style={{ color: '#667eea' }}>.xlsx, .xls</span>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            {importPreview.length > 0 && !isImporting && (
-                                <div className="mx-4 mb-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '1rem' }}>
-                                    <div className="d-flex justify-content-between align-items-center mb-3">
-                                        <h6 className="mb-0" style={{ fontSize: '0.85rem', fontWeight: '600', color: '#374151' }}>
-                                            <FaSearch className="me-2" style={{ color: '#667eea', fontSize: '0.75rem' }} />
-                                            Aperçu des données
-                                        </h6>
-                                        <span className="badge" style={{
-                                            backgroundColor: '#eef2ff', color: '#4338ca', fontSize: '0.75rem', padding: '4px 12px', borderRadius: '20px', fontWeight: '500'
-                                        }}>
-                                            {importData.length} lignes au total
-                                        </span>
-                                    </div>
-                                    <div className="table-responsive table-scroll-preview" style={{ maxHeight: '250px', overflow: 'auto', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                                        <table className="table table-sm table-hover mb-0" style={{ fontSize: '0.75rem' }}>
-                                            <thead className="table-light" style={{
-                                                position: 'sticky', top: 0, backgroundColor: '#f9fafb', zIndex: 10
-                                            }}>
-                                                <tr>
-                                                    {Object.keys(importPreview[0] || {}).map((key, index) => (
-                                                        <th key={index} style={{
-                                                            fontSize: '0.7rem', whiteSpace: 'nowrap', fontWeight: '600', color: '#374151', padding: '10px 12px', borderBottom: '2px solid #e5e7eb'
-                                                        }}>
-                                                            {key}
-                                                        </th>
-                                                    ))}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {importPreview.map((row, rowIndex) => (
-                                                    <tr key={rowIndex}>
-                                                        {Object.values(row).map((value, cellIndex) => (
-                                                            <td key={cellIndex} style={{
-                                                                fontSize: '0.75rem', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: '8px 12px', color: '#4b5563'
-                                                            }}>
-                                                                {String(value || '')}
-                                                            </td>
-                                                        ))}
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <small className="text-muted mt-2 d-block" style={{ fontSize: '0.75rem' }}>
-                                        <FaInfoCircle className="me-1" style={{ fontSize: '0.7rem' }} />
-                                        Aperçu des 5 premières lignes
-                                    </small>
-                                </div>
-                            )}
-
-                            {importWarnings.length > 0 && !isImporting && (
-                                <div className="mx-4 mb-3" style={{
-                                    borderRadius: '10px', background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e', padding: '0.75rem 1rem', fontSize: '0.8rem'
-                                }}>
-                                    <div className="d-flex align-items-center gap-2 fw-semibold mb-1">
-                                        <FaInfoCircle style={{ fontSize: '0.85rem' }} />
-                                        <span>{importWarnings.length} doublon(s) détecté(s) dans le fichier</span>
-                                    </div>
-                                    <ul className="mb-0 ps-4" style={{ fontSize: '0.78rem' }}>
-                                        {importWarnings.map((w, idx) => <li key={idx}>{w}</li>)}
-                                    </ul>
-                                    <div className="mt-1" style={{ fontSize: '0.75rem', opacity: 0.85 }}>
-                                        Ces lignes seront ignorées lors de l'import.
-                                    </div>
-                                </div>
-                            )}
-
-                            {isImporting && (
-                                <div className="mx-4 mb-3">
-                                    <div className="d-flex justify-content-between align-items-center mb-2">
-                                        <div className="d-flex align-items-center gap-2">
-                                            <Spinner animation="border" size="sm" style={{ color: '#667eea' }} />
-                                            <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#374151' }}>
-                                                {importProgress < 25 ? 'Analyse du fichier Excel...' :
-                                                 importProgress < 70 ? 'Envoi des données au serveur...' :
-                                                 importProgress < 100 ? 'Traitement des données...' :
-                                                 'Importation terminée !'}
-                                            </span>
-                                        </div>
-                                        <span style={{
-                                            fontWeight: '600',
-                                            color: importProgress === 100 ? '#10b981' : '#667eea',
-                                            fontSize: '0.9rem'
-                                        }}>
-                                            {importProgress}%
-                                        </span>
-                                    </div>
-                                    <div className="mail-progress-container" style={{
-                                        height: '10px', borderRadius: '10px', backgroundColor: '#f3f4f6', overflow: 'hidden', position: 'relative'
-                                    }}>
-                                        <div
-                                            className="mail-progress-bar-fill"
-                                            style={{
-                                                height: '100%',
-                                                borderRadius: '10px',
-                                                background: importProgress === 100
-                                                    ? 'linear-gradient(90deg, #10b981, #059669)'
-                                                    : 'linear-gradient(90deg, #667eea, #764ba2)',
-                                                width: `${importProgress}%`,
-                                                transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                            )}
-
-                            {importError && (
-                                <div className="mx-4 mb-3">
-                                    <div style={{
-                                        borderRadius: '10px', background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', padding: '0.75rem 1rem', fontSize: '0.85rem'
-                                    }}>
-                                        <div className="d-flex align-items-center gap-2">
-                                            <FaTimes style={{ fontSize: '0.9rem' }} />
-                                            <span>{importError}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {!isImporting && !importSuccess && (
-                                <div className="d-flex justify-content-end gap-2 p-4 pt-0">
-                                    <button
-                                        className="btn rounded-pill px-4"
-                                        onClick={toggleImportSection}
-                                        disabled={isImporting}
-                                        style={{
-                                           transition: 'all 0.2s ease', border: '1px solid #d1d5db', color: '#374151', backgroundColor: 'white', fontSize: '0.85rem', fontWeight: '500',
-                                            opacity: isImporting ? 0.6 : 1
-                                        }}
-                                    >
-                                        <FaTimes className="me-2" size={12} />
-                                        Annuler
-                                    </button>
-                                    <button
-                                        className="btn rounded-pill px-4"
-                                        onClick={handleImportSubmit}
-                                        disabled={!importFile || isImporting}
-                                        style={{
-                                            background: !importFile || isImporting ? '#d1d5db' : '#10b981', color: 'white', border: 'none', fontWeight: '600', fontSize: '0.85rem', transition: 'all 0.3s ease',
-                                            opacity: !importFile || isImporting ? 0.6 : 1,
-                                            cursor: !importFile || isImporting ? 'not-allowed' : 'pointer'
-                                        }}
-                                    >
-                                        {isImporting ? (
-                                            <>
-                                                <Spinner animation="border" size="sm" className="me-2" />
-                                                Import en cours...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <FaUpload className="me-2" size={12} />
-                                                Importer
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
-                            )}
-                        </>
-                    ) : (
-                        <div className="text-center py-5">
-                            <div style={{
-                                fontSize: '3.5rem', color: '#10b981', marginBottom: '1rem'
-                            }}>
-                                <FaCheckCircle />
-                            </div>
-                            <div style={{ fontSize: '1.2rem', fontWeight: '600', color: '#1F2937', marginTop: '0.5rem', marginBottom: '0.75rem' }}>
-                                {importSuccessStats && (importSuccessStats.success || 0) > 0 ? 'Importation réussie !' : 'Import terminé'}
-                            </div>
-                            <div style={{ color: '#6b7280', fontSize: '0.9rem', maxWidth: '400px', margin: '0 auto' }}>
-                                {importSuccessStats ? (
-                                    <div className="d-flex flex-column gap-2 mt-3">
-                                        {(importSuccessStats.success || 0) > 0 && (
-                                            <div className="d-flex align-items-center justify-content-center gap-2">
-                                                <div style={{
-                                                    width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#d1fae5', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                                }}>
-                                                    <FaCheckCircle style={{ color: '#10b981', fontSize: '0.8rem' }} />
-                                                </div>
-                                                <span style={{ fontWeight: '500', color: '#065f46', fontSize: '0.9rem' }}>
-                                                    {importSuccessStats.success} utilisateur(s) importé(s)
-                                                </span>
-                                            </div>
-                                        )}
-                                        {(importSuccessStats.failed || 0) > 0 && (
-                                            <div className="d-flex align-items-center justify-content-center gap-2">
-                                                <div style={{
-                                                    width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                                }}>
-                                                    <FaTimes style={{ color: '#f59e0b', fontSize: '0.8rem' }} />
-                                                </div>
-                                                <span style={{ fontWeight: '500', color: '#92400e', fontSize: '0.9rem' }}>
-                                                    {importSuccessStats.failed} échec(s)
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <div style={{
-                                        padding: '10px 20px', backgroundColor: '#d1fae5', borderRadius: '10px', display: 'inline-block', marginTop: '0.5rem', color: '#065f46', fontSize: '0.9rem'
-                                    }}>
-                                        Les utilisateurs ont été importés avec succès.
-                                    </div>
-                                )}
-                            </div>
-
-                            {importErrors.length > 0 && (
-                                <div className="mx-4 mt-4 text-start" style={{
-                                    borderRadius: '10px', background: '#fef2f2', border: '1px solid #fecaca', padding: '0.75rem 1rem', maxHeight: '220px', overflowY: 'auto'
-                                }}>
-                                    <div className="fw-semibold mb-2" style={{ color: '#991b1b', fontSize: '0.85rem' }}>
-                                        Détail des lignes ignorées :
-                                    </div>
-                                    <ul className="mb-0 ps-3" style={{ fontSize: '0.78rem', color: '#991b1b' }}>
-                                        {importErrors.map((err, idx) => <li key={idx}>{err}</li>)}
-                                    </ul>
-                                </div>
-                            )}
-
-                            {importSuccessStats && (importSuccessStats.failed || 0) > 0 && (
-                                <div className="text-center mt-4">
-                                    <button
-                                        className="btn rounded-pill px-4"
-                                        onClick={toggleImportSection}
-                                        style={{ border: '1px solid #d1d5db', color: '#374151', backgroundColor: 'white', fontSize: '0.85rem', fontWeight: '500' }}
-                                    >
-                                        Fermer
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
+                <ExcelImportPanel
+                    {...importExport}
+                    title="Importer des utilisateurs"
+                    variant="brand"
+                    successLabel="utilisateur(s) importé(s)"
+                    successFallback="Les utilisateurs ont été importés avec succès."
+                    showCloseOnFailure
+                />
             )}
 
             {copyToast.show && (
-                <div 
-                    className="position-fixed bottom-0 end-0 m-4 p-3 bg-success text-white rounded shadow"
-                    style={{ zIndex: 9999, animation: 'fadeIn 0.3s ease' }}
-                >
+                <div className="position-fixed bottom-0 end-0 m-4 p-3 bg-success text-white rounded shadow mail-copy-toast" role="status">
                     ✓ {copyToast.message}
                 </div>
             )}
 
-            <div className="border-0 shadow-lg" style={{ borderRadius: '25px', fontFamily: 'var(--font-sans)' }}>
+            <div className="border-0 shadow-lg mail-main-card">
                 <div className="p-4 p-lg-5">
 
-                    {error && <Alert variant="danger" className="mb-3" style={{ borderRadius: '12px' }}>{error}</Alert>}
-                    {successMessage && <Alert variant="success" className="mb-3" style={{ borderRadius: '12px' }}>{successMessage}</Alert>}
+                    {error && <Alert variant="danger" className="mb-3">{error}</Alert>}
+                    {successMessage && <Alert variant="success" className="mb-3">{successMessage}</Alert>}
 
                     <div className="row mb-4 g-3">
                         {STATS_CONFIG.map((config, index) => (
-                            <div 
-                                className="col-6 col-lg-3" 
+                            <div
+                                className="col-6 col-lg-3 mail-stat-col"
                                 key={config.key}
-                                style={{
-                                    animation: 'mail-fadeInUp 0.5s ease forwards', opacity: 0, animationDelay: `${index * 0.1}s`
-                                }}
+                                style={{ animationDelay: `${index * 0.1}s` }}
                             >
                                 <StatCard icon={config.icon} value={stats[config.key]} label={config.label} colorScheme={config.colorScheme} tooltip={config.tooltip} />
                             </div>
@@ -1098,19 +664,14 @@ const UsersManager = () => {
 
                     <div className="row mb-4 g-3">
                         <div className="col-md-3 col-lg-3">
-                            <div className="bg-light rounded-pill px-3 py-2 border-0 shadow-sm" style={{ display: 'flex', alignItems: 'center' }}>
-                                <span style={{ color: '#6c757d', marginRight: '8px' }}><FaSearch /></span>
+                            <div className="bg-light rounded-pill px-3 py-2 border-0 shadow-sm mail-search">
+                                <span className="mail-search-icon" aria-hidden="true"><FaSearch /></span>
                                 <input
-                                    type="text" placeholder="Rechercher un collaborateur..." value={filterText} onChange={e => setFilterText(e.target.value)}
-                                    style={{
-                                        flex: 1, border: 'none', outline: 'none', backgroundColor: 'transparent', fontSize: '14px'
-                                    }}
+                                    type="text" placeholder="Rechercher un collaborateur..." aria-label="Rechercher un collaborateur" value={filterText} onChange={e => setFilterText(e.target.value)}
+                                    className="mail-search-input"
                                 />
                                 {filterText && (
-                                    <button
-                                        onClick={() => setFilterText('')}
-                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6c757d' }}
-                                    >
+                                    <button type="button" className="mail-search-clear" onClick={() => setFilterText('')} aria-label="Effacer la recherche">
                                         <FaTimes />
                                     </button>
                                 )}
@@ -1124,7 +685,7 @@ const UsersManager = () => {
                                 options={[...new Set(users.map(u => u.materiel?.equipe).filter(Boolean))]}
                                 allLabel="Toutes les équipes"
                                 variant="filter"
-                                style={{ backgroundColor: '#f8f9fa', fontSize: '0.9rem' }}
+                                styleClass={filterClass(filterEquipe)}
                             />
                         </div>
 
@@ -1132,8 +693,8 @@ const UsersManager = () => {
                             <select
                                 value={filterLocal}
                                 onChange={(e) => setFilterLocal(e.target.value)}
-                                className="form-select rounded-pill border-0 shadow-sm"
-                                style={{ backgroundColor: '#f8f9fa', fontSize: '0.9rem' }}
+                                className={filterClass(filterLocal)}
+                                aria-label="Filtrer par site"
                             >
                                 <option value="">Tous les sites</option>
                                 {[...new Set(users.map(u => u.materiel?.local?.nom_local).filter(Boolean))].map(local => (
@@ -1144,7 +705,7 @@ const UsersManager = () => {
 
                         <div className="col-md-2 col-lg-2">
                             <select
-                                value={filterRole} onChange={(e) => setFilterRole(e.target.value)} className="form-select rounded-pill border-0 shadow-sm" style={{ backgroundColor: '#f8f9fa', fontSize: '0.9rem' }}
+                                value={filterRole} onChange={(e) => setFilterRole(e.target.value)} className={filterClass(filterRole)} aria-label="Filtrer par rôle"
                             >
                                 <option value="">Tous les rôles</option>
                                 {Object.entries(ROLES).map(([value, { label }]) => (
@@ -1155,7 +716,7 @@ const UsersManager = () => {
 
                         <div className="col-md-2 col-lg-2">
                             <select
-                                value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="form-select rounded-pill border-0 shadow-sm" style={{ backgroundColor: '#f8f9fa', fontSize: '0.9rem' }}
+                                value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className={filterClass(filterStatus)} aria-label="Filtrer par statut"
                             >
                                 <option value="">Tous les statuts</option>
                                 <option value="Actif">Actif</option>
@@ -1166,16 +727,10 @@ const UsersManager = () => {
                         <div className="col-md-auto">
                             <div className="d-flex gap-2 align-items-center">
                                 {(filterText || filterEquipe || filterLocal || filterRole || filterStatus) && (
-                                    <Button
-                                        className="rounded-pill border-0"
-                                        style={{
-                                            background: '#f8f9fa', color: '#495057', fontWeight: '500', padding: '10px 18px', transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', gap: '6px'
-                                        }}
-                                        onClick={handleResetFilters}
-                                    >
-                                        <FaTimes size={12} />
+                                    <button type="button" className="mail-reset-btn" onClick={handleResetFilters}>
+                                        <FaTimes size={12} aria-hidden="true" />
                                         Réinitialiser
-                                    </Button>
+                                    </button>
                                 )}
                             </div>
                         </div>
@@ -1186,23 +741,23 @@ const UsersManager = () => {
                             columns={columns}
                             data={filteredUsers}
                             pagination
-                            paginationComponentOptions={PAGINATION_OPTIONS}
+                            paginationComponentOptions={paginationOptions}
                             highlightOnHover
                             pointerOnHover
                             responsive
-                            customStyles={modernStyles}
+                            customStyles={mailTableStyles}
                             progressPending={loading}
                             progressComponent={
                                 <div className="p-5 text-center">
-                                    <div className="spinner-grow text-primary" role="status" style={{ width: '3rem', height: '3rem', marginRight: '8px' }}></div>
+                                    <div className="spinner-grow text-primary mail-loading-spinner" role="status"></div>
                                     <p className="text-muted mt-3">Chargement des données...</p>
                                 </div>
                             }
                             noDataComponent={
-                                <div style={{ padding: '48px', textAlign: 'center', color: '#94a3b8' }}>
-                                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>📭</div>
-                                    <p style={{ margin: 0, fontSize: '16px', fontWeight: '500' }}>Aucun utilisateur ne correspond aux critères</p>
-                                    <p style={{ margin: '8px 0 0 0', fontSize: '14px' }}>Réessayez avec d'autres filtres</p>
+                                <div className="mail-empty">
+                                    <div className="mail-empty-icon" aria-hidden="true">📭</div>
+                                    <p className="mail-empty-title">Aucun utilisateur ne correspond aux critères</p>
+                                    <p className="mail-empty-hint">Réessayez avec d'autres filtres</p>
                                 </div>
                             }
                         />

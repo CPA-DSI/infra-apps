@@ -3,14 +3,16 @@ import { FaUsers, FaMapMarkerAlt, FaUserCircle, FaDesktop } from 'react-icons/fa
 import { statusConfig } from '../../Materiels/materielsTableConfig';
 import './UserMaterielCard.css';
 
+// Couleurs issues de statusConfig (partagé avec la page Matériels) : seules
+// valeurs restées inline. Statut inconnu -> couleurs neutres du CSS.
 const StatutBadge = ({ etatPc }) => {
-  const config = statusConfig[etatPc] || { emoji: '❓', color: '#4b5563', bg: '#f3f4f6', border: '#e5e7eb' };
+  const config = statusConfig[etatPc];
   return (
     <span
       className="userMaterielStatusBadge"
-      style={{ backgroundColor: config.bg, color: config.color, border: `1px solid ${config.border}` }}
+      style={config && { backgroundColor: config.bg, color: config.color, borderColor: config.border }}
     >
-      <span>{config.emoji}</span>
+      <span>{config?.emoji || '❓'}</span>
       {etatPc || 'Inconnu'}
     </span>
   );
@@ -30,14 +32,7 @@ const MarqueBadge = ({ marque }) => {
 const ActifBadge = ({ estActif }) => {
   const isActive = estActif === true || estActif === 'true' || estActif === 'Oui' || estActif === 'oui';
   return (
-    <span
-      className="userMaterielActifBadge"
-      style={{
-        backgroundColor: isActive ? '#d1fae5' : '#fee2e2',
-        color: isActive ? '#065f46' : '#991b1b',
-        border: `1px solid ${isActive ? '#10b981' : '#ef4444'}`,
-      }}
-    >
+    <span className={`userMaterielActifBadge userMaterielActifBadge--${isActive ? 'on' : 'off'}`}>
       <span>{isActive ? '✅' : '❌'}</span>
       {isActive ? 'Actif' : 'Inactif'}
     </span>

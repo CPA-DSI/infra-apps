@@ -4,6 +4,7 @@ import { Form, Button, Alert, Card, Row, Col } from 'react-bootstrap';
 import { updateWeeklyEmailConfig, sendTestEmailHebdomadaire, getCronStatus } from '../../services/api';
 import Swal from 'sweetalert2';
 import { FaEnvelope, FaLock, FaClock, FaPaperPlane, FaSave, FaCog, FaCalendarWeek, FaEye, FaEyeSlash } from 'react-icons/fa';
+import PageHeader from '../../components/PageHeader/PageHeader';
 import './EmailConfigPage.css';
 
 export default function EmailConfigWeeklyPage({ initialConfig, onConfigUpdate }) {
@@ -141,33 +142,28 @@ export default function EmailConfigWeeklyPage({ initialConfig, onConfigUpdate })
 
   return (
     <>
-      <div className="modern-card">
-        <div className="ecfg-modern-header d-flex align-items-center justify-content-between">
-          <div className="d-flex align-items-center gap-3">
-            <div className="ecfg-header-icon" style={{ background: 'linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)' }}>
-              <FaCalendarWeek className="fs-4 text-white" />
-            </div>
-            <div>
-              <h2 className="h5 mb-0 text-white fw-bold">
-                Configuration Robot d'envoi Hebdomadaire
-              </h2>
-              <small className="text-white-50">Gérez vos paramètres d'envoi automatique hebdomadaire</small>
-            </div>
-          </div>
-          <div className="d-flex align-items-center gap-3">
-            <div className="time-display text-white">
-              <FaClock className="me-2" />
-              <span className="fw-semibold">{form.heure_envoi}</span>
-            </div>
-            <span className={`ecfg-status-badge ${form.cron_actif_hebdo ? 'status-active' : 'status-inactive'}`}>
-              {form.cron_actif_hebdo ? '● Active' : '○ Inactive'}
-            </span>
-          </div>
-        </div>
+      <div className="ecfg-card">
+        <PageHeader
+          className="ecfg-header ecfg-header--weekly"
+          icon={<FaCalendarWeek />}
+          title="Configuration Robot d'envoi Hebdomadaire"
+          subtitle="Gérez vos paramètres d'envoi automatique hebdomadaire"
+          actions={
+            <>
+              <div className="ecfg-time-display">
+                <FaClock className="me-2" aria-hidden="true" />
+                <span className="fw-semibold">{form.heure_envoi}</span>
+              </div>
+              <span className={`ecfg-status-badge ${form.cron_actif_hebdo ? 'ecfg-status-active' : 'ecfg-status-inactive'}`}>
+                {form.cron_actif_hebdo ? '● Active' : '○ Inactive'}
+              </span>
+            </>
+          }
+        />
         
         <Card.Body className="p-2">
           {message.text && (
-            <Alert variant={message.type} className="alert-custom mb-4">
+            <Alert variant={message.type} className="ecfg-alert mb-4">
               <FaEnvelope className="me-2" />
               {message.text}
             </Alert>
@@ -177,36 +173,36 @@ export default function EmailConfigWeeklyPage({ initialConfig, onConfigUpdate })
             <Row className="g-4">
               {/* Colonne gauche - Destinataires + Identifiants */}
               <Col lg={5}>
-                <div className="form-section">
-                  <div className="form-section-title d-flex align-items-center gap-2">
-                    <FaEnvelope className="icon-pulse" /> Destinataires
+                <div className="ecfg-section">
+                  <div className="ecfg-section-title d-flex align-items-center gap-2">
+                    <FaEnvelope className="ecfg-icon-pulse" /> Destinataires
                   </div>
                   <Form.Group className="mb-3">
-                    <Form.Label className="modern-label">
+                    <Form.Label className="ecfg-label">
                       <FaEnvelope /> Adresse(s) email
                     </Form.Label>
-                    <Form.Control as="textarea" rows={3} name="email_dest" value={form.email_dest} onChange={handleChange} className="modern-input" placeholder="email1@exemple.com, email2@exemple.com" required />
+                    <Form.Control as="textarea" rows={3} name="email_dest" value={form.email_dest} onChange={handleChange} className="ecfg-input" placeholder="email1@exemple.com, email2@exemple.com" required />
                   </Form.Group>
                 </div>
                 
-                <div className="form-section">
-                  <div className="form-section-title d-flex align-items-center gap-2">
-                    <FaLock className="icon-pulse" /> Identifiants IONOS
+                <div className="ecfg-section">
+                  <div className="ecfg-section-title d-flex align-items-center gap-2">
+                    <FaLock className="ecfg-icon-pulse" /> Identifiants IONOS
                   </div>
                   <Form.Group className="mb-3">
-                    <Form.Label className="modern-label">
+                    <Form.Label className="ecfg-label">
                       <FaEnvelope /> Adresse email
                     </Form.Label>
-                    <Form.Control type="email" name="email_exp" value={form.email_exp} onChange={handleChange} className="modern-input" placeholder="votre@email.com" required />
+                    <Form.Control type="email" name="email_exp" value={form.email_exp} onChange={handleChange} className="ecfg-input" placeholder="votre@email.com" required />
                   </Form.Group>
                   <Form.Group className="mb-0">
-                    <Form.Label className="modern-label">
+                    <Form.Label className="ecfg-label">
                       <FaLock /> Mot de passe
                     </Form.Label>
                     <div className="position-relative">
-                      <Form.Control type={showPassword ? 'text' : 'password'} name="email_pass" value={form.email_pass} onChange={handleChange} className="modern-input pe-5" placeholder={form.hasPassword ? '•••••• (inchangé)' : '••••••••••••'} autoComplete="new-password" required={!form.hasPassword} />
-                      <button type="button" className="btn btn-link position-absolute top-50 end-0 translate-middle-y text-muted" style={{ background: 'none', border: 'none', padding: '0.5rem' }} onClick={() => setShowPassword(!showPassword)}>
-                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                      <Form.Control type={showPassword ? 'text' : 'password'} name="email_pass" value={form.email_pass} onChange={handleChange} className="ecfg-input pe-5" placeholder={form.hasPassword ? '•••••• (inchangé)' : '••••••••••••'} autoComplete="new-password" required={!form.hasPassword} />
+                      <button type="button" className="btn btn-link position-absolute top-50 end-0 translate-middle-y text-muted ecfg-pass-toggle" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}>
+                        {showPassword ? <FaEyeSlash aria-hidden="true" /> : <FaEye aria-hidden="true" />}
                       </button>
                     </div>
                   </Form.Group>
@@ -215,22 +211,22 @@ export default function EmailConfigWeeklyPage({ initialConfig, onConfigUpdate })
               
               {/* Colonne droite - Planification + Toggle */}
               <Col lg={7}>
-                <div className="form-section h-100">
-                  <div className="form-section-title d-flex align-items-center gap-2">
-                    <FaCalendarWeek className="icon-pulse" /> Planification Hebdomadaire
+                <div className="ecfg-section h-100">
+                  <div className="ecfg-section-title d-flex align-items-center gap-2">
+                    <FaCalendarWeek className="ecfg-icon-pulse" /> Planification Hebdomadaire
                   </div>
                   
                   {/* Sélecteur du jour de la semaine */}
                   <Row className="mb-3">
                     <Col sm={6}>
-                      <Form.Label className="modern-label">
+                      <Form.Label className="ecfg-label">
                         <FaCalendarWeek /> Jour d'envoi
                       </Form.Label>
                       <Form.Select 
                         name="jour_envoi" 
                         value={form.jour_envoi} 
                         onChange={handleJourChange} 
-                        className="modern-input"
+                        className="ecfg-input"
                         required
                       >
                         {joursSemaine.map(jour => (
@@ -241,15 +237,15 @@ export default function EmailConfigWeeklyPage({ initialConfig, onConfigUpdate })
                       </Form.Select>
                     </Col>
                     <Col sm={6}>
-                      <Form.Label className="modern-label">
+                      <Form.Label className="ecfg-label">
                         <FaClock /> Heure d'envoi
                       </Form.Label>
-                      <Form.Control type="time" name="heure_envoi" value={form.heure_envoi} onChange={handleChange} className="modern-input" required />
+                      <Form.Control type="time" name="heure_envoi" value={form.heure_envoi} onChange={handleChange} className="ecfg-input" required />
                     </Col>
                   </Row>
                   
                   <Form.Group className="mb-3">
-                    <Form.Label className="modern-label">
+                    <Form.Label className="ecfg-label">
                       <FaPaperPlane /> Objet du mail hebdomadaire
                     </Form.Label>
                     <Form.Control 
@@ -257,14 +253,14 @@ export default function EmailConfigWeeklyPage({ initialConfig, onConfigUpdate })
                       name="objet_mail_hebdo" 
                       value={form.objet_mail_hebdo} 
                       onChange={handleChange} 
-                      className="modern-input" 
+                      className="ecfg-input" 
                       placeholder="Rapport Hebdomadaire des Stocks"
                       required 
                     />
                   </Form.Group>
                   
                   <Form.Group className="mb-3">
-                    <Form.Label className="modern-label">
+                    <Form.Label className="ecfg-label">
                       <FaEnvelope /> Message du mail
                     </Form.Label>
                     <Form.Control 
@@ -273,26 +269,34 @@ export default function EmailConfigWeeklyPage({ initialConfig, onConfigUpdate })
                       name="message_mail_hebdo" 
                       value={form.message_mail_hebdo} 
                       onChange={handleChange} 
-                      className="modern-input" 
+                      className="ecfg-input" 
                       placeholder="Bonjour, veuillez trouver ci-joint le rapport hebdomadaire des stocks." 
                     />
                   </Form.Group>
                   
-                  <div className="info-box mb-4">
+                  <div className="ecfg-info-box mb-4">
                     <FaCalendarWeek className="me-2 text-primary" />
                     <small className="text-muted">
                       Le rapport sera envoyé <strong>une fois par semaine</strong> le <strong>{getJourLabel()}</strong> à l'heure indiquée
                     </small>
                   </div>
                   
-                  <div className="modern-toggle-container">
+                  <div className="ecfg-toggle-container">
                     <FaCog className="text-muted fs-5" />
                     <span className="fw-bold text-dark">Robot Hebdomadaire</span>
                     <div 
-                      className={`modern-toggle ${form.cron_actif_hebdo ? 'active' : ''}`}
+                      className={`ecfg-toggle ${form.cron_actif_hebdo ? 'active' : ''}`}
                       onClick={() => setForm({ ...form, cron_actif_hebdo: !form.cron_actif_hebdo })}
                       role="switch"
                       aria-checked={form.cron_actif_hebdo}
+                      aria-label="Activer le robot"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          e.currentTarget.click();
+                        }
+                      }}
                     />
                     <span className={`fw-bold ${form.cron_actif_hebdo ? 'text-success' : 'text-muted'}`}>
                       {form.cron_actif_hebdo ? '● Active' : '○ Inactive'}
@@ -301,7 +305,7 @@ export default function EmailConfigWeeklyPage({ initialConfig, onConfigUpdate })
                   
                   <Row className="mt-4 g-3">
                     <Col sm={6}>
-                      <Button variant="outline-secondary" onClick={handleSendTest} disabled={testLoading || loading} className="w-100 modern-btn-outline" >
+                      <Button variant="outline-secondary" onClick={handleSendTest} disabled={testLoading || loading} className="w-100 ecfg-btn-outline" >
                         {testLoading ? (
                           <span className="ecfg-loading-spinner"></span>
                         ) : (
@@ -313,7 +317,7 @@ export default function EmailConfigWeeklyPage({ initialConfig, onConfigUpdate })
                       </Button>
                     </Col>
                     <Col sm={6}>
-                      <Button variant="primary" type="submit" disabled={loading || testLoading} className="w-100 modern-btn-primary" >
+                      <Button variant="primary" type="submit" disabled={loading || testLoading} className="w-100 ecfg-btn-primary" >
                         {loading ? (
                           <span className="ecfg-loading-spinner"></span>
                         ) : (

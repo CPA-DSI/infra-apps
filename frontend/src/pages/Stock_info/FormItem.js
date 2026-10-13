@@ -3,12 +3,11 @@ import { Spinner, Alert } from 'react-bootstrap';
 import dayjs from 'dayjs';
 
 import { fetchProduits, fetchLocaux, fetchMateriels, createMouvement } from '../../services/api';
-import { FaBox, FaMapMarkerAlt, FaUser, FaCalendarAlt, FaArrowRight, FaArrowLeft, FaPlus, FaMinus, FaFileAlt, FaCheck, FaExclamationTriangle } from 'react-icons/fa';
+import { FaBox, FaMapMarkerAlt, FaUser, FaCalendarAlt, FaArrowRight, FaArrowLeft, FaPlus, FaFileAlt, FaCheck, FaExclamationTriangle } from 'react-icons/fa';
 import { escapeHtml } from '../../utils/escapeHtml';
 import { MySwal } from '../../utils/swal';
 import SharedFormItem from '../../components/FormItem/FormItem';
-
-import './HomeStock.css';
+import AppModal from '../../components/AppModal/AppModal';
 
 // Icône affichée devant le libellé de chaque champ du formulaire de mouvement.
 const STOCK_FIELD_ICONS = {
@@ -462,38 +461,31 @@ const FormItem = ({ initialData = {}, onSave, onClose, isModal = true }) => {
         </>
     );
 
-    if (loadingInitialData) {
-        return <div className="text-center p-4"><Spinner animation="border" /></div>;
-    }
-    if (errorInitialData) {
-        return <Alert variant="danger">{errorInitialData}</Alert>;
-    }
-
     if (isModal) {
         // Configuration dynamique du header selon le type de mouvement
         const getHeaderConfig = () => {
             const configs = {
                 'ENTREE': {
-                    color: '#10b981',
+                    color: 'var(--color-success)',
                     title: '📥 Entrée Matériel DSI',
                     icon: <FaArrowLeft />,
-                    subtitle: 'Enregistrement d\'un nouveau matériel DSI'
+                    subtitle: "Enregistrement d'un nouveau matériel DSI"
                 },
                 'ENTREE_QUANTITE': {
-                    color: '#3b82f6',
+                    color: 'var(--color-info)',
                     title: '📦 Entrée Quantité Produit',
                     icon: <FaArrowLeft />,
                     subtitle: 'Ajout de quantité de produit en stock'
                 },
                 'SORTIE': {
-                    color: '#f59e0b',
+                    color: 'var(--color-warning)',
                     title: '📤 Sortie Produit',
                     icon: <FaArrowRight />,
                     subtitle: 'Destockage de produits'
                 }
             };
             return configs[mouvementType] || {
-                color: '#6b7280',
+                color: 'var(--color-text-sub)',
                 title: '➕ Nouveau Mouvement',
                 icon: <FaPlus />,
                 subtitle: 'Sélectionnez le type de mouvement ci-dessous'
@@ -501,42 +493,41 @@ const FormItem = ({ initialData = {}, onSave, onClose, isModal = true }) => {
         };
 
         const headerConfig = getHeaderConfig();
-        
-        return (
-            <div className="add-modal-overlay">
-                <form onSubmit={handleSubmit} className="add-modal-content">
-                    <div className="add-modal-header" style={{ backgroundColor: headerConfig.color }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                            <div className="add-modal-icon-wrapper">
-                                {headerConfig.icon}
-                            </div>
-                            <div>
-                                <h2 className="add-modal-title">
-                                    {headerConfig.title}
-                                </h2>
-                                <p className="add-modal-subtitle">{headerConfig.subtitle}</p>
-                            </div>
-                        </div>
-                        <button type="button" onClick={onClose} className="add-modal-close-btn">
-                            <FaMinus />
-                        </button>
-                    </div>
-                    
-                    <div className="add-modal-body">
-                        {renderFormContent()}
-                    </div>
+        const isReady = !loadingInitialData && !errorInitialData;
 
-                    <div className="add-modal-footer">
+        return (
+            <AppModal
+                show
+                onClose={onClose}
+                as="form"
+                onSubmit={handleSubmit}
+                title={headerConfig.title}
+                subtitle={headerConfig.subtitle}
+                icon={headerConfig.icon}
+                headerBg={headerConfig.color}
+                footer={
+                    <>
                         <button type="button" onClick={onClose} className="add-modal-cancel-btn">
                             Annuler
                         </button>
-                        <button type="submit" className="add-modal-submit-btn" disabled={isSubmitting}>
+                        <button type="submit" className="add-modal-submit-btn" disabled={isSubmitting || !isReady}>
                             {isSubmitting ? <Spinner as="span" animation="border" size="sm" /> : <><FaPlus /> Enregistrer Mouvement</>}
                         </button>
-                    </div>
-                </form>
-            </div>
+                    </>
+                }
+            >
+                {loadingInitialData && <div className="text-center p-4"><Spinner animation="border" /></div>}
+                {errorInitialData && <Alert variant="danger">{errorInitialData}</Alert>}
+                {isReady && renderFormContent()}
+            </AppModal>
         );
+    }
+
+    if (loadingInitialData) {
+        return <div className="text-center p-4"><Spinner animation="border" /></div>;
+    }
+    if (errorInitialData) {
+        return <Alert variant="danger">{errorInitialData}</Alert>;
     }
 
     return (

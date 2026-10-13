@@ -18,56 +18,14 @@ import AddDocModal from './AddDocModal';
 import DocumentDetailModal from './DocumentDetailModal';
 import QuickPreviewModal from './QuickPreviewModal';
 import { fetchDocuments, fetchMateriels, fetchAMarques, fetchProduits, getTickets, deleteDocument, getDocumentFileUrl, getPieceJointeFileUrl } from '../../services/api';
+import PageHeader from '../../components/PageHeader/PageHeader';
+import { tableStyles, stickyHeadRow, paginationOptions } from '../../styles/dataTableTheme';
 import './Documents.css';
 
-// ==========================================================
-// --- Styles 2026 pour React-Data-Table-Component ---
-// ==========================================================
-const modernStyles = {
-  table: {
-    style: {
-      backgroundColor: 'transparent',
-      borderRadius: '16px',
-    },
-  },
-  headRow: {
-    // Pas de fixedHeader sur ce DataTable : il défile avec la page, donc
-    // "top: 0" collerait l'en-tête sous la navbar fixe (qui le recouvrirait
-    // au scroll). On colle plutôt juste sous la navbar via --navbar-height
-    // (mesurée dans FixedNavbarWithLogo.js).
-    style: {
-      backgroundColor: '#f9fafb', border: 'none', minHeight: '52px', borderRadius: '12px 12px 0 0',
-      boxShadow: '0 1px 2px rgba(0,0,0,0.03)', position: 'sticky', top: 'var(--navbar-height, 90px)', zIndex: 10
-    },
-  },
-  headCells: {
-    style: {
-      fontSize: '0.75rem', fontWeight: '600', color: '#374151', letterSpacing: '0.02em',
-      textTransform: 'uppercase', paddingLeft: '16px', paddingRight: '16px', paddingTop: '14px',
-      paddingBottom: '14px', verticalAlign: 'middle', textAlign: 'left', backgroundColor: '#f9fafb',
-      borderBottom: '2px solid #e5e7eb', whiteSpace: 'nowrap', userSelect: 'none'
-    },
-  },
-  rows: {
-    style: {
-      fontSize: '0.85rem', fontWeight: '500', color: '#212529', minHeight: '52px',
-      backgroundColor: '#ffffff', transition: 'all 0.2s ease', borderBottom: '1px solid #f3f4f6'
-    },
-    highlightOnHoverStyle: {
-      backgroundColor: '#eef2ff', color: '#1e3a8a', cursor: 'pointer', transitionDuration: '0.2s'
-    },
-  },
-  pagination: {
-    style: {
-      border: 'none', fontSize: '12px', color: '#6c757d', paddingTop: '16px', paddingBottom: '16px'
-    },
-  },
-};
-
-// --- Configuration de la pagination ---
-const paginationOptions = {
-  rowsPerPageText: 'Lignes par page :', rangeSeparatorText: 'sur', selectAllRowsItem: true, selectAllRowsItemText: 'Tout'
-};
+// --- Thème commun des tableaux ---
+// Pas de fixedHeader sur ce DataTable : il défile avec la page, l'en-tête
+// colle donc juste sous la navbar fixe (stickyHeadRow, via --navbar-height).
+const tableCustomStyles = tableStyles(stickyHeadRow);
 
 // --- Catégories de documents (alignées sur le schéma Prisma) ---
 const CATEGORY_CONFIG = {
@@ -340,44 +298,30 @@ function Documents() {
     const renderCategorie = (row) => {
       const cfg = CATEGORY_CONFIG[row.categorie] || CATEGORY_CONFIG.AUTRE;
       return (
-        <span style={{
-          backgroundColor: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`,
-          padding: '4px 12px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: '600',
-          display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap',
-        }}>
-          <FaTag size={10} />
+        <span className="doc-chip" style={{ backgroundColor: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}>
+          <FaTag size={10} aria-hidden="true" />
           {cfg.label}
         </span>
       );
     };
 
     const renderPublic = (row) => (
-      <span style={{
-        backgroundColor: row.est_public ? '#d1fae5' : '#f3f4f6',
-        color: row.est_public ? '#065f46' : '#6b7280',
-        border: `1px solid ${row.est_public ? '#a7f3d0' : '#e5e7eb'}`,
-        padding: '4px 12px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: '600',
-        display: 'inline-flex', alignItems: 'center', gap: '6px',
-      }}>
-        {row.est_public ? <FaGlobe size={10} /> : <FaLock size={10} />}
+      <span className={`doc-chip ${row.est_public ? 'doc-chip--public' : 'doc-chip--private'}`}>
+        {row.est_public ? <FaGlobe size={10} aria-hidden="true" /> : <FaLock size={10} aria-hidden="true" />}
         {row.est_public ? 'Public' : 'Privé'}
       </span>
     );
 
     const renderFile = (row) => (
       <div className="d-flex align-items-center gap-2">
-        <div style={{
-          width: '34px', height: '34px', borderRadius: '8px',
-          background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-        }}>
-          <FaFileAlt size={14} className="text-white" />
+        <div className="doc-file-icon" aria-hidden="true">
+          <FaFileAlt size={14} />
         </div>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontWeight: '600', fontSize: '0.85rem', color: '#1f2937', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <div className="doc-file-info">
+          <div className="doc-file-name">
             {row.nom_fichier}
           </div>
-          <div style={{ fontSize: '0.72rem', color: '#9ca3af' }}>
+          <div className="doc-file-meta">
             {row.type_mime || 'Type inconnu'} · {formatSize(row.taille)}
           </div>
         </div>
@@ -386,23 +330,18 @@ function Documents() {
 
     const renderActions = (row) => (
       <div className="d-flex gap-1" role="group" aria-label="Actions">
-        <Button variant="light" className="shadow-sm border-0 p-2 rounded-circle doc-btn-action" onClick={() => handleView(row)} title="Voir détails">
-          <FaEye size={14} className="text-info" />
-        </Button>
-        <Button 
-          variant="light" 
-          className="shadow-sm border-0 p-2 rounded-circle doc-btn-action" 
-          onClick={() => openQuickPreview(row)} 
-          title="Prévisualiser rapidement"
-        >
-          <FaFileAlt size={14} className="text-success" />
-        </Button>
-        <Button variant="light" className="shadow-sm border-0 p-2 rounded-circle doc-btn-action" onClick={() => handleEdit(row)} title="Modifier">
-          <FaEdit size={14} className="text-warning" />
-        </Button>
-        <Button variant="light" className="shadow-sm border-0 p-2 rounded-circle doc-btn-action" onClick={() => confirmDelete(row)} title="Supprimer">
-          <FaTrash size={14} className="text-danger" />
-        </Button>
+        <button type="button" className="btn-icon btn-icon--info" onClick={() => handleView(row)} title="Voir détails" aria-label="Voir détails">
+          <FaEye size={14} aria-hidden="true" />
+        </button>
+        <button type="button" className="btn-icon btn-icon--success" onClick={() => openQuickPreview(row)} title="Prévisualiser rapidement" aria-label="Prévisualiser rapidement">
+          <FaFileAlt size={14} aria-hidden="true" />
+        </button>
+        <button type="button" className="btn-icon btn-icon--warning" onClick={() => handleEdit(row)} title="Modifier" aria-label="Modifier">
+          <FaEdit size={14} aria-hidden="true" />
+        </button>
+        <button type="button" className="btn-icon btn-icon--danger" onClick={() => confirmDelete(row)} title="Supprimer" aria-label="Supprimer">
+          <FaTrash size={14} aria-hidden="true" />
+        </button>
       </div>
     );
 
@@ -415,19 +354,12 @@ function Documents() {
       return (
         <div className="d-flex flex-wrap gap-1">
           {visible.map((name, i) => (
-            <span key={i} style={{
-              backgroundColor: '#e0e7ff', color: '#4338ca', border: '1px solid #c7d2fe',
-              padding: '2px 8px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: '600',
-              whiteSpace: 'nowrap',
-            }}>
+            <span key={i} className="doc-tag doc-tag--materiel">
               {name}
             </span>
           ))}
           {remaining > 0 && (
-            <span style={{
-              backgroundColor: '#f3f4f6', color: '#6b7280', border: '1px solid #e5e7eb',
-              padding: '2px 8px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: '600',
-            }}>
+            <span className="doc-tag doc-tag--more">
               +{remaining}
             </span>
           )}
@@ -444,19 +376,12 @@ function Documents() {
       return (
         <div className="d-flex flex-wrap gap-1">
           {visible.map((name, i) => (
-            <span key={i} style={{
-              backgroundColor: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0',
-              padding: '2px 8px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: '600',
-              whiteSpace: 'nowrap',
-            }}>
+            <span key={i} className="doc-tag doc-tag--produit">
               {name}
             </span>
           ))}
           {remaining > 0 && (
-            <span style={{
-              backgroundColor: '#f3f4f6', color: '#6b7280', border: '1px solid #e5e7eb',
-              padding: '2px 8px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: '600',
-            }}>
+            <span className="doc-tag doc-tag--more">
               +{remaining}
             </span>
           )}
@@ -468,11 +393,7 @@ function Documents() {
       const name = getRelatedName(row, 'id_ticket', relationData.tickets, 'id_ticket', 'titre');
       if (!name) return <span className="text-muted">N/A</span>;
       return (
-        <span style={{
-          backgroundColor: '#fff7ed', color: '#9a3412', border: '1px solid #fed7aa',
-          padding: '2px 10px', borderRadius: '12px', fontSize: '0.72rem', fontWeight: '600',
-          whiteSpace: 'nowrap',
-        }}>
+        <span className="doc-tag doc-tag--wide doc-tag--ticket">
           {name}
         </span>
       );
@@ -482,12 +403,8 @@ function Documents() {
       const piecesCount = (row.pieces_jointes && Array.isArray(row.pieces_jointes)) ? row.pieces_jointes.length : 0;
       const total = 1 + piecesCount;
       return (
-        <span style={{
-          backgroundColor: '#fdf2f8', color: '#9d174d', border: '1px solid #fbcfe8',
-          padding: '2px 10px', borderRadius: '12px', fontSize: '0.72rem', fontWeight: '600',
-          display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap',
-        }}>
-          <FaFileAlt size={10} />
+        <span className="doc-tag doc-tag--wide doc-tag--files">
+          <FaFileAlt size={10} aria-hidden="true" />
           {total}
         </span>
       );
@@ -505,8 +422,8 @@ function Documents() {
       {
         name: 'Uploadé par', selector: row => getUploaderName(row), sortable: true, grow: 1, width: '150px',
         cell: (row) => (
-          <span className="d-inline-flex align-items-center gap-2" style={{ fontSize: '0.82rem', color: '#374151' }}>
-            <FaUser size={11} className="text-muted" />
+          <span className="doc-cell-meta">
+            <FaUser size={11} className="text-muted" aria-hidden="true" />
             {getUploaderName(row)}
           </span>
         ),
@@ -514,8 +431,8 @@ function Documents() {
       {
         name: 'Date d\'upload', selector: row => row.date_upload, sortable: true, grow: 1, width: '130px',
         cell: (row) => (
-          <span className="d-inline-flex align-items-center gap-2" style={{ fontSize: '0.82rem', color: '#6b7280' }}>
-            <FaCalendarAlt size={11} className="text-muted" />
+          <span className="doc-cell-meta doc-cell-meta--muted">
+            <FaCalendarAlt size={11} className="text-muted" aria-hidden="true" />
             {formatDate(row.date_upload)}
           </span>
         ),
@@ -527,46 +444,34 @@ function Documents() {
   const hasActiveFilters = searchTerm || activeTab || filterPublic;
 
   return (
-    <div className="container-fluid py-2 px-2 doc-page" style={{ backgroundColor: '#f9fafb', minHeight: '100vh' }}>
-      {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4 p-3 rounded-3 doc-header">
-        <div style={{
-          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.08) 0%, transparent 50%)', pointerEvents: 'none'
-        }} />
-        <div className="d-flex align-items-center gap-3 position-relative">
-          <div className="d-flex align-items-center justify-content-center flex-shrink-0 doc-header-icon">
-            <FaFileAlt className="text-white" style={{ fontSize: '1.25rem' }} />
-          </div>
-          <div>
-            <h1 className="h5 fw-bold text-white mb-0">Gestion Documentaire (GED)</h1>
-            <p className="text-white mb-0" style={{ fontSize: '0.8rem', opacity: 0.85 }}>
-              Consultez et gérez vos documents, factures, contrats et plus
-            </p>
-          </div>
-        </div>
-
-        <div className="d-flex gap-2 position-relative">
-          <Button className="btn-pill btn-pill-ghost btn-refresh" onClick={fetchDocs} title="Rafraîchir">
-            <FaSync />
-          </Button>
-          <Button className="btn-pill btn-pill-success" title="Importer">
-            <FaFileImport size={14} />
-            <span className="ms-2">Importer</span>
-          </Button>
-          <Button className="btn-pill btn-pill-warning" onClick={handleExportExcel} title="Exporter en Excel">
-            <FaFileExcel size={14} />
-            <span className="ms-2">Exporter</span>
-          </Button>
-          <Button className="btn-pill btn-pill-primary" onClick={handleOpenAdd} title="Ajouter un document">
-            <FaPlus size={14} />
-            <span className="ms-2">Ajouter</span>
-          </Button>
-        </div>
-      </div>
+    <div className="container-fluid py-2 px-2 doc-page">
+      <PageHeader
+        icon={<FaFileAlt />}
+        title="Gestion Documentaire (GED)"
+        subtitle="Consultez et gérez vos documents, factures, contrats et plus"
+        actions={
+          <>
+            <button type="button" className="btn-refresh" onClick={fetchDocs} title="Rafraîchir" aria-label="Rafraîchir">
+              <FaSync aria-hidden="true" />
+            </button>
+            <button type="button" className="btn-pill btn-pill-success" title="Importer">
+              <FaFileImport size={14} aria-hidden="true" />
+              <span>Importer</span>
+            </button>
+            <button type="button" className="btn-pill btn-pill-warning" onClick={handleExportExcel} title="Exporter en Excel">
+              <FaFileExcel size={14} aria-hidden="true" />
+              <span>Exporter</span>
+            </button>
+            <button type="button" className="btn-pill btn-pill-primary" onClick={handleOpenAdd} title="Ajouter un document">
+              <FaPlus size={14} aria-hidden="true" />
+              <span>Ajouter</span>
+            </button>
+          </>
+        }
+      />
 
       {/* Carte principale */}
-      <Card className="border-0" style={{ borderRadius: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+      <Card className="doc-main-card border-0">
         <Card.Body className="p-4 p-lg-5">
           {error && <Alert variant="danger" className="mb-3">{error}</Alert>}
           {successMessage && <Alert variant="success" className="mb-3">{successMessage}</Alert>}
@@ -574,20 +479,20 @@ function Documents() {
           {/* Filtres */}
           <div className="row mb-3 g-3">
             <div className="col-md-4">
-              <InputGroup className="bg-light rounded-pill px-3 py-2 border-0 shadow-sm" style={{ transition: 'all 0.2s ease' }}>
-                <InputGroup.Text className="bg-transparent border-0">
+              <InputGroup className="bg-light rounded-pill px-3 py-2 border-0 shadow-sm">
+                <InputGroup.Text className="bg-transparent border-0" aria-hidden="true">
                   <FaSearch className="text-muted" />
                 </InputGroup.Text>
                 <Form.Control
-                  className="bg-transparent border-0 shadow-none p-0"
+                  className="doc-search-input bg-transparent border-0 shadow-none p-0"
                   placeholder="Rechercher par nom, description, type..."
+                  aria-label="Rechercher un document"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  style={{ fontSize: '0.85rem' }}
                 />
                 {searchTerm && (
-                  <Button variant="link" className="text-muted p-0 ms-2" onClick={() => setSearchTerm('')}>
-                    <FaTimes />
+                  <Button variant="link" className="text-muted p-0 ms-2" onClick={() => setSearchTerm('')} aria-label="Effacer la recherche">
+                    <FaTimes aria-hidden="true" />
                   </Button>
                 )}
               </InputGroup>
@@ -611,13 +516,8 @@ function Documents() {
               <Form.Select
                 value={filterPublic}
                 onChange={(e) => setFilterPublic(e.target.value)}
-                className="rounded-pill border-0 shadow-sm"
-                style={{
-                  backgroundColor: filterPublic ? '#e0e7ff' : '#f8f9fa',
-                  height: '38px', fontSize: '0.85rem',
-                  color: filterPublic ? '#4338ca' : '#374151',
-                  fontWeight: filterPublic ? '600' : '400', transition: 'all 0.2s ease',
-                }}
+                className={`filter-pill rounded-pill border-0 shadow-sm ${filterPublic ? 'is-active' : ''}`.trim()}
+                aria-label="Filtrer par visibilité"
               >
                 <option value="">Tous les accès</option>
                 <option value="public">Public</option>
@@ -627,18 +527,15 @@ function Documents() {
 
             <div className="col-md-auto">
               <div className="d-flex gap-2 align-items-center">
-                <div className="bg-light rounded-pill px-3 py-2 border-0 shadow-sm" style={{
-                  backgroundColor: hasActiveFilters ? '#fef3c7' : '#f8f9fa', transition: 'all 0.2s ease'
-                }}>
+                <div className="bg-light rounded-pill px-3 py-2 border-0 shadow-sm">
                   <small className="text-muted">
-                    <strong style={{ color: hasActiveFilters ? '#92400e' : '#374151' }}>{filteredDocuments.length}</strong> document{filteredDocuments.length > 1 ? 's' : ''}
+                    <strong className={`doc-count-value ${hasActiveFilters ? 'is-active' : ''}`.trim()}>{filteredDocuments.length}</strong> document{filteredDocuments.length > 1 ? 's' : ''}
                   </small>
                 </div>
                 {hasActiveFilters && (
-                  <Button variant="outline-warning" size="sm" className="border-0 rounded-pill"
-                    onClick={handleResetFilters}
-                    style={{ backgroundColor: '#fef3c7', color: '#92400e', fontWeight: '600', fontSize: '0.8rem' }}>
-                    <FaTimes size={14} className="me-1" />Réinitialiser
+                  <Button variant="outline-warning" size="sm" className="doc-reset-btn border-0 rounded-pill"
+                    onClick={handleResetFilters}>
+                    <FaTimes size={14} className="me-1" aria-hidden="true" />Réinitialiser
                   </Button>
                 )}
               </div>
@@ -660,24 +557,20 @@ function Documents() {
                   <div className="p-5 text-center">
                     <div className="d-flex flex-column align-items-center gap-3">
                       <Spinner animation="grow" variant="primary" size="sm" />
-                      <span className="text-muted" style={{ fontSize: '0.9rem' }}>Chargement des documents...</span>
+                      <span className="doc-loading-text text-muted">Chargement des documents...</span>
                     </div>
                   </div>
                 }
-                customStyles={modernStyles}
+                customStyles={tableCustomStyles}
               />
             </div>
           ) : filteredDocuments.length === 0 ? (
             <div className="table-responsive">
-              <table className="table table-sm" style={{ fontSize: '0.85rem', minWidth: '100%' }}>
+              <table className="doc-empty-table table table-sm">
                 <thead>
                   <tr>
                     {columns.map((col, i) => (
-                      <th key={i} style={{
-                        fontSize: '0.75rem', fontWeight: '600', color: '#374151', paddingLeft: '16px', paddingRight: '16px',
-                        paddingTop: '14px', paddingBottom: '14px', textAlign: 'left', backgroundColor: '#f9fafb',
-                        borderBottom: '2px solid #e5e7eb', whiteSpace: 'nowrap', userSelect: 'none'
-                      }}>
+                      <th key={i}>
                         {col.name}
                       </th>
                     ))}
@@ -686,9 +579,9 @@ function Documents() {
                 <tbody>
                   <tr>
                     <td colSpan={columns.length} className="text-center py-5">
-                      <div style={{ fontSize: '3rem', marginBottom: '1rem', color: '#6366f1' }}><FaInbox /></div>
-                      <div style={{ color: '#6c757d', fontSize: '0.95rem', fontWeight: '500' }}>Aucun document trouvé</div>
-                      <div style={{ color: '#9ca3af', fontSize: '0.85rem', marginTop: '0.5rem' }}>
+                      <div className="doc-empty-icon" aria-hidden="true"><FaInbox /></div>
+                      <div className="doc-empty-title">Aucun document trouvé</div>
+                      <div className="doc-empty-text">
                         {hasActiveFilters ? 'Essayez de modifier vos filtres de recherche' : 'Commencez par ajouter un document'}
                       </div>
                     </td>
@@ -706,7 +599,7 @@ function Documents() {
                 highlightOnHover
                 pointerOnHover
                 responsive
-                customStyles={modernStyles}
+                customStyles={tableCustomStyles}
               />
             </div>
           )}

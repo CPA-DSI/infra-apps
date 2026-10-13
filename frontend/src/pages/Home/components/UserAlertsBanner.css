@@ -9,10 +9,10 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #fef3c7;
+  background: var(--color-warning-soft);
   border: 1px solid #fde68a;
   color: #92400e;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 12px 18px;
   font-size: 0.85rem;
   font-weight: 500;
@@ -21,5 +21,5 @@
 .userAlertIcon {
   font-size: 1rem;
   flex-shrink: 0;
-  color: #d97706;
+  color: var(--color-warning-dark);
 }

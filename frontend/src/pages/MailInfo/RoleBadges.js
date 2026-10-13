@@ -2,36 +2,27 @@ import React, { useState } from 'react';
 import { FaUser, FaShieldAlt, FaCrown, FaExclamationCircle, FaEdit } from 'react-icons/fa';
 import { ROLES } from '../../config/api';
 import { formatUserRole } from './mailInfoHelpers';
+import './MailModals.css';
+
+const BADGE_SIZES = ['small', 'normal', 'large'];
 
 // COMPOSANT ROLEBADGE AMÉLIORÉ
 export const RoleBadge = ({ role, showIcon = true, showTooltip = true, size = 'normal' }) => {
     const { label, bg, text, border, Icon, description, isUnknown } = formatUserRole(role);
-
-    const sizeStyles = {
-        small: { fontSize: '0.65rem', padding: '2px 8px', gap: '3px' },
-        normal: { fontSize: '0.75rem', padding: '4px 12px', gap: '6px' },
-        large: { fontSize: '0.85rem', padding: '6px 16px', gap: '8px' }
-    };
-
-    const currentSize = sizeStyles[size] || sizeStyles.normal;
+    const sizeClass = BADGE_SIZES.includes(size) ? size : 'normal';
 
     return (
         <span
-            className={`px-2 py-1 rounded-pill small fw-medium d-inline-flex align-items-center gap-1 role-badge ${isUnknown ? 'role-unknown' : ''}`}
-            style={{
-                backgroundColor: bg, color: text, fontSize: currentSize.fontSize, border: `1px solid ${border}`, padding: currentSize.padding, gap: currentSize.gap, transition: 'all 0.2s ease', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', cursor: 'default', letterSpacing: '0.3px', fontWeight: 600
-            }}
+            className={`px-2 py-1 rounded-pill small fw-medium d-inline-flex align-items-center gap-1 mail-role-badge mail-role-badge--${sizeClass} ${isUnknown ? 'is-unknown' : ''}`}
+            style={{ backgroundColor: bg, color: text, borderColor: border }}
             role="img"
             aria-label={description}
             title={showTooltip ? `${description} (${label})` : undefined}
         >
-             {showIcon && <Icon style={{ fontSize: '0.6rem' }} aria-hidden="true" />}
+            {showIcon && <Icon className="mail-role-badge-icon" aria-hidden="true" />}
             <span>{label}</span>
             {isUnknown && (
-                    <FaExclamationCircle
-                        style={{ fontSize: '0.5rem', marginLeft: '2px' }}
-                    aria-label="Rôle non défini"
-                />
+                <FaExclamationCircle className="mail-role-badge-warn" aria-label="Rôle non défini" />
             )}
         </span>
     );
@@ -61,10 +52,8 @@ export const EditableRoleBadge = ({ row, onRoleChange }) => {
             <select
                 value={selectedRole}
                 onChange={(e) => handleRoleChange(e.target.value)}
-                className="form-select form-select-sm role-edit-select"
-                style={{
-                    width: '140px', fontSize: '0.75rem', fontWeight: 600, borderRadius: '20px', border: '2px solid #6366f1', backgroundColor: '#f8fafc', padding: '4px 8px', cursor: 'pointer', outline: 'none', boxShadow: '0 0 0 3px rgba(99, 102, 241, 0.1)'
-                }}
+                className="form-select form-select-sm mail-role-select"
+                aria-label="Rôle"
                 autoFocus
                 onBlur={() => setIsEditing(false)}
             >
@@ -79,26 +68,12 @@ export const EditableRoleBadge = ({ row, onRoleChange }) => {
 
     return (
         <div
-            className="d-flex align-items-center gap-2 cursor-pointer"
+            className="d-flex align-items-center gap-2 mail-role-editable"
             onClick={() => setIsEditing(true)}
-            style={{
-                transition: 'all 0.2s ease', padding: '2px 4px', borderRadius: '8px'
-            }}
-            onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(99, 102, 241, 0.05)';
-            }}
-            onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-            }}
             title="Cliquez pour modifier le rôle"
         >
             <RoleBadge role={selectedRole} size="normal" />
-            <FaEdit
-                style={{
-                    fontSize: '0.5rem', color: '#94a3b8', opacity: 0.5, transition: 'all 0.2s ease'
-                }}
-                className="role-edit-icon"
-            />
+            <FaEdit className="mail-role-edit-icon" aria-hidden="true" />
         </div>
     );
 };

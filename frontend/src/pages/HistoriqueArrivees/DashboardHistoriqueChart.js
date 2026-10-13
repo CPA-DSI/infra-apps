@@ -22,80 +22,86 @@ const PERIODS = [
 const CURRENT_YEAR = new Date().getFullYear();
 const DEFAULT_YEAR_BOUNDS = { minYear: CURRENT_YEAR - 3, maxYear: CURRENT_YEAR + 1 };
 
+// ApexCharts a besoin de vraies couleurs : on lit les tokens de styles/theme.css
+const cssVar = (name, fallback) =>
+  getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+
+// Rose des sorties : pas d'équivalent dans theme.css
 const THEME = {
-  in:      '#6366f1',
+  in:      cssVar('--color-primary', '#6366f1'),
   out:     '#f43f5e',
-  net:     '#10b981',
-  ratio:   '#f59e0b',
-  sub:     '#64748b',
-  inGrad:  '#818cf8',
+  net:     cssVar('--color-success', '#10b981'),
+  ratio:   cssVar('--color-warning', '#f59e0b'),
+  sub:     cssVar('--color-text-sub', '#64748b'),
+  inGrad:  cssVar('--color-primary-light', '#818cf8'),
   outGrad: '#fda4af',
+  white:   cssVar('--color-bg', '#ffffff'),
 };
 
 // ─── Icônes SVG inline ────────────────────────────────────────────────────────
 const Icons = {
   ArrowUp: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
       <polyline points="18 15 12 9 6 15"/>
     </svg>
   ),
   ArrowDown: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
       <polyline points="6 9 12 15 18 9"/>
     </svg>
   ),
   Chart: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>
     </svg>
   ),
   Box: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
       <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
       <line x1="12" y1="22.08" x2="12" y2="12"/>
     </svg>
   ),
   TrendingUp: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
       <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
       <polyline points="17 6 23 6 23 12"/>
     </svg>
   ),
   TrendingDown: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
       <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/>
       <polyline points="17 18 23 18 23 12"/>
     </svg>
   ),
   BarChart: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <rect x="3" y="12" width="4" height="9"/><rect x="10" y="7" width="4" height="14"/>
       <rect x="17" y="3" width="4" height="18"/>
     </svg>
   ),
   LineChart: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
     </svg>
   ),
   Star: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
     </svg>
   ),
   Table: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/>
     </svg>
   ),
   ChevronDown: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
       <polyline points="6 9 12 15 18 9"/>
     </svg>
   ),
   ChevronUp: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
       <polyline points="18 15 12 9 6 15"/>
     </svg>
   ),
@@ -130,22 +136,22 @@ const StatCard = ({
 
   return (
     <div className={`dhc-stat-card ${type}`}>
-      <div className="stat-card-header">
-        <div className="stat-icon-box">{icon}</div>
+      <div className="dhc-stat-card-header">
+        <div className="dhc-stat-icon-box" aria-hidden="true">{icon}</div>
         <span className="dhc-stat-label">{label}</span>
       </div>
 
-      <div className="stat-card-body">
-        <div className="stat-main-row">
+      <div className="dhc-stat-card-body">
+        <div className="dhc-stat-main-row">
           <span className="dhc-stat-value">
             {typeof value === 'number' ? value.toLocaleString('fr-FR') : value}
           </span>
-          <span className="stat-unit">{unit}</span>
+          <span className="dhc-stat-unit">{unit}</span>
         </div>
 
         {/* Mini sparkline */}
         {sparkData && sparkData.length > 0 && (
-          <div className="stat-sparkline">
+          <div className="dhc-stat-sparkline">
             <Chart
               options={sparkOptions}
               series={sparkSeries}
@@ -156,14 +162,14 @@ const StatCard = ({
           </div>
         )}
 
-        <div className="stat-footer-row">
-          <div className="stat-prev-year">
-            <span className="stat-label-prev">N-1 ({prevYear}) :</span>
-            <span className="stat-value-prev">
+        <div className="dhc-stat-footer-row">
+          <div className="dhc-stat-prev-year">
+            <span className="dhc-stat-label-prev">N-1 ({prevYear}) :</span>
+            <span className="dhc-stat-value-prev">
               {typeof prevValue === 'number' ? prevValue.toLocaleString('fr-FR') : prevValue}
             </span>
           </div>
-          <div className={`stat-trend ${trendClass}`}>
+          <div className={`dhc-stat-trend ${trendClass}`}>
             <TrendIcon />
             <span>{sign}{trendValue.toFixed(1)}%</span>
           </div>
@@ -181,24 +187,24 @@ const FlowProgressBar = ({ entrees, sorties }) => {
   const pctOut = ((sorties / total) * 100).toFixed(1);
 
   return (
-    <div className="flow-progress-bar">
-      <div className="flow-progress-labels">
-        <span className="flow-label-in">
-          <span className="flow-dot dot-in" />
+    <div className="dhc-flow-progress-bar">
+      <div className="dhc-flow-progress-labels">
+        <span className="dhc-flow-label-in">
+          <span className="dhc-flow-dot dhc-dot-in" />
           Entrées {pctIn}%
         </span>
-        <span className="flow-label-out">
+        <span className="dhc-flow-label-out">
           Sorties {pctOut}%
-          <span className="flow-dot dot-out" />
+          <span className="dhc-flow-dot dhc-dot-out" />
         </span>
       </div>
-      <div className="flow-progress-track">
+      <div className="dhc-flow-progress-track">
         <div
-          className="flow-progress-fill fill-in"
+          className="dhc-flow-progress-fill dhc-fill-in"
           style={{ width: `${pctIn}%` }}
         />
         <div
-          className="flow-progress-fill fill-out"
+          className="dhc-flow-progress-fill dhc-fill-out"
           style={{ width: `${pctOut}%` }}
         />
       </div>
@@ -222,16 +228,16 @@ const MonthlyTable = ({ monthlyEntrees, monthlySorties, year, visibleRange }) =>
   }, [monthlyEntrees, monthlySorties, start, end]);
 
   return (
-    <div className="monthly-table-wrapper">
-      <button className="monthly-table-toggle" onClick={() => setOpen(o => !o)}>
+    <div className="dhc-monthly-table-wrapper">
+      <button type="button" className="dhc-monthly-table-toggle" onClick={() => setOpen(o => !o)} aria-expanded={open}>
         <Icons.Table />
         <span>Détail mensuel {year}</span>
         {open ? <Icons.ChevronUp /> : <Icons.ChevronDown />}
       </button>
 
       {open && (
-        <div className="monthly-table-container">
-          <table className="monthly-table">
+        <div className="dhc-monthly-table-container">
+          <table className="dhc-monthly-table">
             <thead>
               <tr>
                 <th>Mois</th>
@@ -369,7 +375,7 @@ const DashboardHistoriqueChart = () => {
         strokeDashArray: 4,
         label: {
           text: '▲ Pic E',
-          style: { color: '#fff', background: THEME.in, fontSize: '10px', fontFamily: "'Inter Variable', system-ui, sans-serif" },
+          style: { color: THEME.white, background: THEME.in, fontSize: '10px', fontFamily: "'Inter Variable', system-ui, sans-serif" },
           position: 'top',
           orientation: 'horizontal',
         },
@@ -382,7 +388,7 @@ const DashboardHistoriqueChart = () => {
         strokeDashArray: 4,
         label: {
           text: '▼ Pic S',
-          style: { color: '#fff', background: THEME.out, fontSize: '10px', fontFamily: "'Inter Variable', system-ui, sans-serif" },
+          style: { color: THEME.white, background: THEME.out, fontSize: '10px', fontFamily: "'Inter Variable', system-ui, sans-serif" },
           position: 'top',
           orientation: 'horizontal',
         },
@@ -575,17 +581,17 @@ const DashboardHistoriqueChart = () => {
 
   // ── États de chargement / erreur ───────────────────────────────────────────
   if (loading) return (
-    <div className="dashboard-historique">
-      <div className="dashboard-loading">
-        <div className="spinner" />
+    <div className="dhc-root">
+      <div className="dhc-loading">
+        <div className="dhc-spinner" />
         <span>Chargement des données {year}…</span>
       </div>
     </div>
   );
 
   if (error) return (
-    <div className="dashboard-historique">
-      <div className="dashboard-error">
+    <div className="dhc-root">
+      <div className="dhc-error">
         <Icons.Chart />
         <span>Erreur : {error}</span>
       </div>
@@ -594,41 +600,41 @@ const DashboardHistoriqueChart = () => {
 
   // ── Rendu principal ────────────────────────────────────────────────────────
   return (
-    <div className="dashboard-historique">
+    <div className="dhc-root">
 
       {/* ── En-tête ── */}
-      <header className="dashboard-header">
-        <div className="dashboard-header-left">
-          <div className="dashboard-icon-box">
+      <header className="dhc-header">
+        <div className="dhc-header-left">
+          <div className="dhc-icon-box">
             <Icons.Chart />
           </div>
           <div>
-            <h2 className="dashboard-title">
-              Bilan <span className="dashboard-year">{year}</span>
+            <h2 className="dhc-title">
+              Bilan <span className="dhc-year">{year}</span>
               {period !== 'all' && (
-                <span className="dashboard-period-badge">
+                <span className="dhc-period-badge">
                   {activePeriod.label}
                 </span>
               )}
             </h2>
-            <p className="dashboard-subtitle">
+            <p className="dhc-subtitle">
               Flux d'arrivées et de sorties&nbsp;•&nbsp;Historique annuel
             </p>
           </div>
         </div>
 
         {/* ── Contrôles ── */}
-        <div className="dashboard-controls">
+        <div className="dhc-controls">
 
           {/* Sélecteur d'année */}
-          <div className="year-selector-dash">
-            <label htmlFor="dashboard-year-select" className="year-selector-label">
+          <div className="dhc-year-selector">
+            <label htmlFor="dashboard-year-select" className="dhc-year-selector-label">
               <i className="fa fa-calendar" aria-hidden="true"></i>
               Année
             </label>
             <select
               id="dashboard-year-select"
-              className="year-selector-select"
+              className="dhc-year-selector-select"
               value={year}
               onChange={(e) => setYear(parseInt(e.target.value, 10))}
             >
@@ -639,11 +645,13 @@ const DashboardHistoriqueChart = () => {
           </div>
 
           {/* Sélecteur de période */}
-          <div className="period-selector">
+          <div className="dhc-period-selector">
             {PERIODS.map(p => (
               <button
                 key={p.key}
-                className={`period-btn ${period === p.key ? 'active' : ''}`}
+                type="button"
+                className={`dhc-period-btn ${period === p.key ? 'active' : ''}`}
+                aria-pressed={period === p.key}
                 onClick={() => setPeriod(p.key)}
                 title={p.label}
               >
@@ -653,16 +661,20 @@ const DashboardHistoriqueChart = () => {
           </div>
 
           {/* Toggle Bar / Line */}
-          <div className="chart-type-toggle">
+          <div className="dhc-chart-type-toggle">
             <button
-              className={`toggle-btn ${chartType === 'bar' ? 'active' : ''}`}
+              type="button"
+              className={`dhc-toggle-btn ${chartType === 'bar' ? 'active' : ''}`}
+              aria-pressed={chartType === 'bar'}
               onClick={() => setChartType('bar')}
               title="Graphique en barres"
             >
               <Icons.BarChart /> Barres
             </button>
             <button
-              className={`toggle-btn ${chartType === 'line' ? 'active' : ''}`}
+              type="button"
+              className={`dhc-toggle-btn ${chartType === 'line' ? 'active' : ''}`}
+              aria-pressed={chartType === 'line'}
               onClick={() => setChartType('line')}
               title="Graphique en courbes"
             >
@@ -673,7 +685,7 @@ const DashboardHistoriqueChart = () => {
       </header>
 
       {/* ── Grille des statistiques ── */}
-      <div className="dashboard-stats-grid">
+      <div className="dhc-stats-grid">
 
         {/* Entrées */}
         <StatCard
@@ -724,28 +736,28 @@ const DashboardHistoriqueChart = () => {
 
       {/* ── Mois les plus actifs ── */}
       {(peakMonth.entrees || peakMonth.sorties) && (
-        <div className="peak-months-bar">
+        <div className="dhc-peak-months-bar">
           {peakMonth.entrees && (
-            <div className="peak-item peak-in">
+            <div className="dhc-peak-item dhc-peak-in">
               <Icons.Star />
-              <span className="peak-label">Pic Entrées :</span>
-              <span className="peak-month">{peakMonth.entrees.month}</span>
-              <span className="peak-value">{peakMonth.entrees.value.toLocaleString('fr-FR')} unités</span>
+              <span className="dhc-peak-label">Pic Entrées :</span>
+              <span className="dhc-peak-month">{peakMonth.entrees.month}</span>
+              <span className="dhc-peak-value">{peakMonth.entrees.value.toLocaleString('fr-FR')} unités</span>
             </div>
           )}
           {peakMonth.sorties && (
-            <div className="peak-item peak-out">
+            <div className="dhc-peak-item dhc-peak-out">
               <Icons.Star />
-              <span className="peak-label">Pic Sorties :</span>
-              <span className="peak-month">{peakMonth.sorties.month}</span>
-              <span className="peak-value">{peakMonth.sorties.value.toLocaleString('fr-FR')} unités</span>
+              <span className="dhc-peak-label">Pic Sorties :</span>
+              <span className="dhc-peak-month">{peakMonth.sorties.month}</span>
+              <span className="dhc-peak-value">{peakMonth.sorties.value.toLocaleString('fr-FR')} unités</span>
             </div>
           )}
         </div>
       )}
 
       {/* ── Graphique principal ── */}
-      <div className="dashboard-chart-container">
+      <div className="dhc-chart-container">
         <Chart
           key={`${chartType}-${period}`}
           options={chartOptions}

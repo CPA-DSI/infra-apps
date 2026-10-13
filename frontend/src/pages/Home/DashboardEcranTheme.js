@@ -4,45 +4,17 @@
  * Thème sombre moderne 2026
  */
 
-// Palette de couleurs principale
-export const ecranTheme = {
-    primary: '#6366f1',
-    primaryLight: '#a5b4fc',
-    primaryDark: '#4f46e5',
-    secondary: '#4f46e5',
-    bg: '#0f172a',
-    bgSecondary: '#1e293b',
-    bgTertiary: '#334155',
-    textMain: '#f1f5f9',
-    textSub: '#94a3b8',
-    accent: '#312e81',
-    success: '#10b981',
-    warning: '#f59e0b',
-    danger: '#ef4444',
-    border: '#334155',
-    colors: [
-        '#6366f1',
-        '#ec4899',
-        '#14b8a6',
-        '#f59e0b',
-        '#8b5cf6',
-        '#ef4444',
-        '#22c55e',
-        '#3b82f6'
-    ]
-};
+import { getChartTheme } from '../../styles/chartTheme';
 
-// Configuration des animations
-export const ecranAnimations = {
-    fadeInUp: {
-        duration: 600,
-        easing: 'ease-out'
-    },
-    transitions: {
-        fast: 150,
-        normal: 300,
-        slow: 500
-    }
+// Couleurs du dashboard, dérivées du thème partagé des graphiques
+export const getEcranTheme = () => {
+    const t = getChartTheme();
+    return {
+        ...t,
+        textMain: t.text,
+        border: t.grid,
+        colors: [t.primary, t.palette[5], t.palette[9], t.warning, t.secondary, t.danger, t.success, t.info],
+    };
 };
 
 // Configuration des graphiques
@@ -52,8 +24,7 @@ export const ecranChartConfig = {
             size: '70%'
         },
         stroke: {
-            width: 2,
-            colors: ['#0f172a']
+            width: 2
         }
     },
     line: {
@@ -93,4 +64,4 @@ export const ecranLabels = {
     }
 };
 
-export default ecranTheme;
+export default getEcranTheme;

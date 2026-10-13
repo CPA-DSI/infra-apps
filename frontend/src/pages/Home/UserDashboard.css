@@ -1,77 +1,43 @@
-/* ========================================
-   UserDashboard.css - Modernized
-   ======================================== */
-
-:root {
-  /* Color System */
-  --ud-bg: #f9fafb;
-  --ud-surface: #ffffff;
-  --ud-border: #eef0f4;
-  --ud-border-light: #f3f4f6;
-  --ud-text-primary: #1f2937;
-  --ud-text-secondary: #4b5563;
-  --ud-text-muted: #9ca3af;
+/* Tokens locaux, scopés sur le root du UserDashboard (toutes ses variantes
+   loading/erreur/vide utilisent .userDashboardContainer). */
+.userDashboardContainer {
+  --ud-bg: var(--color-surface-alt);
+  --ud-surface: var(--color-bg);
+  --ud-border: var(--color-border-light);
+  --ud-text-primary: var(--color-text-main);
+  --ud-text-muted: var(--color-text-muted);
   --ud-accent: var(--color-primary);
-  --ud-accent-light: rgba(99, 102, 241, 0.1);
-  --ud-success: var(--color-success);
-  --ud-success-bg: rgba(16, 185, 129, 0.15);
   --ud-danger: var(--color-danger);
   --ud-danger-bg: rgba(239, 68, 68, 0.1);
   --ud-danger-border: rgba(239, 68, 68, 0.3);
-  --ud-muted-bg: #f3f4f6;
+  --ud-muted-bg: var(--color-border-light);
 
-  /* Spacing Scale */
-  --ud-space-1: 4px;
-  --ud-space-2: 8px;
   --ud-space-3: 12px;
   --ud-space-4: 16px;
   --ud-space-5: 20px;
   --ud-space-6: 24px;
-  --ud-space-7: 28px;
   --ud-space-8: 32px;
   --ud-space-10: 40px;
-  --ud-space-12: 48px;
   --ud-space-20: 80px;
 
-  /* Typography Scale */
-  --ud-text-xs: 0.75rem;
   --ud-text-sm: 0.875rem;
   --ud-text-base: 1rem;
   --ud-text-lg: 1.125rem;
   --ud-text-xl: 1.25rem;
-  --ud-text-2xl: 1.5rem;
-  --ud-text-3xl: 1.875rem;
 
-  /* Border Radius Scale */
-  --ud-radius-sm: 16px;
-  --ud-radius: 20px;
-  --ud-radius-lg: 24px;
+  --ud-radius-lg: var(--radius-2xl);
   --ud-radius-xl: 28px;
 
-  /* Shadow System */
   --ud-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
-  --ud-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  --ud-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --ud-shadow-md: var(--shadow-md);
   --ud-shadow-lg: 0 10px 24px rgba(124, 58, 237, 0.12);
-  --ud-shadow-xl: 0 12px 30px rgba(0, 0, 0, 0.08);
 
-  /* Transitions */
   --ud-transition-fast: 150ms ease;
-  --ud-transition: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-  --ud-transition-slow: 500ms ease;
 
-  /* Font */
-  --ud-font: var(--font-sans);
-
-  /* Container Query support */
-  container-type: inline-size;
-}
-
-.userDashboardContainer {
   padding: var(--ud-space-8) var(--ud-space-6);
   background: var(--ud-bg);
   min-height: 100vh;
-  font-family: var(--ud-font);
+  font-family: var(--font-sans);
   container-type: inline-size;
 }
 
@@ -184,7 +150,7 @@
   padding: var(--ud-space-6);
   border: 1px solid var(--ud-border);
   overflow: hidden;
-  animation: ud-fadeInUp 0.6s ease-out forwards;
+  animation: slideUp 0.6s ease-out forwards;
   opacity: 0;
   animation-delay: 0.2s;
   transition: box-shadow var(--ud-transition-fast), transform var(--ud-transition-fast);
@@ -198,34 +164,23 @@
 
 .userDashboardTabContent {
   margin-block-start: var(--ud-space-5);
-  animation: ud-fadeIn 0.4s ease-out;
+  animation: fadeInOpacity 0.4s ease-out;
 }
 
-@keyframes ud-fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
+/* Le root ne peut pas interroger son propre conteneur : son padding suit le viewport. */
+@media (max-width: 992px) {
+  .userDashboardContainer {
+    padding: var(--ud-space-6) var(--ud-space-4);
   }
 }
 
-@keyframes ud-fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+@media (max-width: 576px) {
+  .userDashboardContainer {
+    padding: var(--ud-space-5) var(--ud-space-3);
   }
 }
 
 @container (max-width: 992px) {
-  .userDashboardContainer {
-    padding: var(--ud-space-6) var(--ud-space-4);
-  }
-
   .userDashboardContent {
     grid-template-columns: 1fr;
     gap: var(--ud-space-5);
@@ -237,13 +192,11 @@
 }
 
 @container (max-width: 576px) {
-  .userDashboardContainer {
-    padding: var(--ud-space-5) var(--ud-space-3);
-  }
-
   .userDashboardTabsCard {
     padding: var(--ud-space-4);
     border-radius: var(--ud-radius-lg);
+    animation: none;
+    opacity: 1;
   }
 
   .userDashboardEmptyState {
@@ -254,27 +207,7 @@
     font-size: var(--ud-text-lg);
   }
 
-  .userDashboardTabsCard {
-    animation: none;
-    opacity: 1;
-  }
-
   .userDashboardTabContent {
-    animation: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .userDashboardTabsCard {
-    animation: none;
-    opacity: 1;
-  }
-
-  .userDashboardTabContent {
-    animation: none;
-  }
-
-  .userDashboardSpinner {
     animation: none;
   }
 }

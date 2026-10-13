@@ -2,15 +2,8 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Chart from 'react-apexcharts';
 import { fetchSSDStats } from '../../services/api';
 import { FaHdd, FaServer } from 'react-icons/fa';
+import { getChartTheme, cssVar } from '../../styles/chartTheme';
 import './DashboardSSD.css';
-
-const THEME = {
-  primary: '#6366f1', secondary: '#8b5cf6', success: '#10b981', warning: '#f59e0b', danger: '#ef4444', background: '#0f172a', cardBg: 'rgba(30, 41, 59, 0.8)', textMain: '#f8fafc', textSub: '#94a3b8',
-  border: 'rgba(99, 102, 241, 0.2)',
-  gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-  shadow: '0 8px 32px rgba(99, 102, 241, 0.15)',
-  glow: '0 0 40px rgba(99, 102, 241, 0.3)',
-};
 
 const DISK_TYPES = {
   SSD: 'SSD',
@@ -50,7 +43,7 @@ const formatCapacity = (capacity) => capacity?.trim() || 'Non spécifié';
 
 const parseQuantity = (value) => parseInt(value, 10) || 0;
 
-const createCapacityChartOptions = (categories) => ({
+const createCapacityChartOptions = (categories, t) => ({
   chart: {
     type: 'bar', height: 280, fontFamily: "'Inter Variable', system-ui, sans-serif", toolbar: { show: false }, background: 'transparent',
     animations: {
@@ -61,7 +54,7 @@ const createCapacityChartOptions = (categories) => ({
       dynamicAnimation: { enabled: true, speed: 350 }
     },
     dropShadow: {
-      enabled: true, top: 4, left: 0, blur: 12, opacity: 0.3, color: THEME.primary
+      enabled: true, top: 4, left: 0, blur: 12, opacity: 0.3, color: t.primary
     }
   },
   plotOptions: {
@@ -72,14 +65,14 @@ const createCapacityChartOptions = (categories) => ({
   fill: {
     type: 'gradient',
     gradient: {
-      shade: 'dark', type: 'horizontal', shadeIntensity: 0.4, gradientToColors: [THEME.secondary], inverseColors: false, opacityFrom: 0.9, opacityTo: 0.9, stops: [0, 100],
+      shade: 'dark', type: 'horizontal', shadeIntensity: 0.4, gradientToColors: [t.secondary], inverseColors: false, opacityFrom: 0.9, opacityTo: 0.9, stops: [0, 100],
       colorStops: [
-        { offset: 0, color: THEME.primary, opacity: 1 },
-        { offset: 100, color: THEME.secondary, opacity: 1 }
+        { offset: 0, color: t.primary, opacity: 1 },
+        { offset: 100, color: t.secondary, opacity: 1 }
       ]
     }
   },
-  colors: ['#6366f1', '#7c3aed', '#8b5cf6', '#a78bfa', '#c4b5fd', '#e9d5ff'],
+  colors: [t.primary, cssVar('--color-secondary-dark'), t.secondary, '#a78bfa', '#c4b5fd', '#e9d5ff'],
   dataLabels: {
     enabled: true,
     textAnchor: 'middle',
@@ -95,7 +88,7 @@ const createCapacityChartOptions = (categories) => ({
     categories,
     labels: {
       show: true,
-      style: { colors: THEME.textSub, fontSize: '11px', fontWeight: 500 },
+      style: { colors: t.textSub, fontSize: '11px', fontWeight: 500 },
       offsetY: 5
     },
     axisBorder: { show: false },
@@ -104,7 +97,7 @@ const createCapacityChartOptions = (categories) => ({
   yaxis: {
     labels: {
       show: true,
-      style: { colors: THEME.textSub, fontSize: '12px', fontWeight: 600 }
+      style: { colors: t.textSub, fontSize: '12px', fontWeight: 600 }
     }
   },
   grid: {
@@ -121,7 +114,7 @@ const createCapacityChartOptions = (categories) => ({
   legend: { show: false }
 });
 
-const createDiskTypeChartOptions = () => ({
+const createDiskTypeChartOptions = (t) => ({
   chart: {
     type: 'donut', fontFamily: "'Inter Variable', system-ui, sans-serif", background: 'transparent',
     animations: {
@@ -131,11 +124,11 @@ const createDiskTypeChartOptions = () => ({
     }
   },
   labels: ['SSD', 'HDD', 'Autre'],
-  colors: [THEME.primary, THEME.warning, THEME.textSub],
+  colors: [t.primary, t.warning, t.textSub],
   stroke: {
     show: true,
     width: 3,
-    colors: [THEME.background]
+    colors: [t.bg]
   },
   dataLabels: {
     enabled: true,
@@ -160,13 +153,13 @@ const createDiskTypeChartOptions = () => ({
         labels: {
           show: true,
           name: {
-            show: true, fontSize: '14px', fontWeight: 600, color: THEME.textMain, offsetY: -10
+            show: true, fontSize: '14px', fontWeight: 600, color: t.text, offsetY: -10
           },
           value: {
-            show: true, fontSize: '28px', fontWeight: 800, color: THEME.textMain, offsetY: 5, formatter: (val) => val
+            show: true, fontSize: '28px', fontWeight: 800, color: t.text, offsetY: 5, formatter: (val) => val
           },
           total: {
-            show: true, label: 'Total', fontSize: '14px', fontWeight: 600, color: THEME.textSub, formatter: (w) => w.globals.series.reduce((a, b) => a + b, 0)
+            show: true, label: 'Total', fontSize: '14px', fontWeight: 600, color: t.textSub, formatter: (w) => w.globals.series.reduce((a, b) => a + b, 0)
           }
         }
       },
@@ -182,7 +175,7 @@ const createDiskTypeChartOptions = () => ({
   legend: {
     show: true, position: 'bottom', horizontalAlign: 'center',
     labels: {
-      colors: [THEME.textMain, THEME.textMain, THEME.textSub],
+      colors: [t.text, t.text, t.textSub],
       useSeriesColors: false
     },
     markers: {
@@ -227,6 +220,7 @@ const EmptyState = () => (
 );
 
 const DashboardSSD = () => {
+  const chartTheme = useMemo(getChartTheme, []);
   const [storageData, setStorageData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
@@ -250,10 +244,10 @@ const DashboardSSD = () => {
   const capacityChartConfig = useMemo(() => {
     const ssdData = filterDataByDiskType(storageData, DISK_TYPES.SSD);
     const categories = ssdData.map(item => formatCapacity(item.capacite_stockage));
-    return createCapacityChartOptions(categories);
-  }, [storageData]);
+    return createCapacityChartOptions(categories, chartTheme);
+  }, [storageData, chartTheme]);
 
-  const diskTypeChartConfig = useMemo(() => createDiskTypeChartOptions(), []);
+  const diskTypeChartConfig = useMemo(() => createDiskTypeChartOptions(chartTheme), [chartTheme]);
 
   const loadStorageData = useCallback(async () => {
     try {
@@ -348,8 +342,8 @@ const DashboardSSD = () => {
           <div className="dashboard-ssd-stats-modern">
             <div className="dashboard-ssd-stat-card ssd">
               <div className="dashboard-ssd-stat-card-header">
-                <div className="dashboard-ssd-stat-icon-modern" style={{ background: THEME.primary }}>
-                  <FaHdd style={{ color: '#fff', fontSize: 16 }} />
+                <div className="dashboard-ssd-stat-icon-modern">
+                  <FaHdd />
                 </div>
                 <span className="dashboard-ssd-stat-type">SSD</span>
               </div>
@@ -358,10 +352,7 @@ const DashboardSSD = () => {
                 <div className="dashboard-ssd-progress-bar">
                   <div 
                     className="dashboard-ssd-progress-fill" 
-                    style={{ 
-                      width: `${storageStats.ssdPercentage}%`,
-                      background: THEME.primary 
-                    }} 
+                    style={{ width: `${storageStats.ssdPercentage}%` }}
                   />
                 </div>
                 <span className="dashboard-ssd-stat-percent">{storageStats.ssdPercentage}%</span>
@@ -370,8 +361,8 @@ const DashboardSSD = () => {
 
             <div className="dashboard-ssd-stat-card hdd">
               <div className="dashboard-ssd-stat-card-header">
-                <div className="dashboard-ssd-stat-icon-modern" style={{ background: THEME.warning }}>
-                  <FaHdd style={{ color: '#fff', fontSize: 16 }} />
+                <div className="dashboard-ssd-stat-icon-modern">
+                  <FaHdd />
                 </div>
                 <span className="dashboard-ssd-stat-type">HDD</span>
               </div>
@@ -380,10 +371,7 @@ const DashboardSSD = () => {
                 <div className="dashboard-ssd-progress-bar">
                   <div 
                     className="dashboard-ssd-progress-fill" 
-                    style={{ 
-                      width: `${storageStats.hddPercentage}%`,
-                      background: THEME.warning 
-                    }} 
+                    style={{ width: `${storageStats.hddPercentage}%` }}
                   />
                 </div>
                 <span className="dashboard-ssd-stat-percent">{storageStats.hddPercentage}%</span>
@@ -404,7 +392,7 @@ const DashboardSSD = () => {
   };
 
   return (
-    <div className="dashboard-ssd-container">
+    <div className="dashboard-ssd-container dash-card">
       <div className="dashboard-ssd-header">
         <div className="dashboard-ssd-icon-container">
           <FaHdd className="dashboard-ssd-icon" />

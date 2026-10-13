@@ -6,7 +6,7 @@ import { MySwal } from '../../utils/swal';
 import { useAuth } from '../../contexts/AuthContext';
 import { apiClient, updateMaterielStatut } from '../../services/api';
 import { Button, Form, InputGroup, Spinner, Card, Alert, Tabs, Tab } from 'react-bootstrap';
-import { FaEye, FaEdit, FaTrash, FaFileExcel, FaSearch, FaSync, FaTimes, FaDesktop, FaFileImport, FaPlus, FaUpload, FaCheckCircle, FaFileUpload, FaHistory, FaInfoCircle, FaInbox, FaUsers, FaMapMarkerAlt, FaCalendarAlt, FaUserCircle, FaBatteryFull, FaTags, FaTrashRestore } from 'react-icons/fa';
+import { FaEye, FaEdit, FaTrash, FaFileExcel, FaSearch, FaSync, FaTimes, FaDesktop, FaFileImport, FaPlus, FaFileUpload, FaHistory, FaInbox, FaUsers, FaMapMarkerAlt, FaCalendarAlt, FaUserCircle, FaBatteryFull, FaTags, FaTrashRestore } from 'react-icons/fa';
 /// --- Importations des Modales ---
 import AddModal from './AddModal';
 import DetailsModal from './DetailsModal';
@@ -16,11 +16,15 @@ import HistoriqueModal from './HistoriqueModal';
 import EcransModal from './EcransModal';
 import CorbeilleModal from './CorbeilleModal';
 import SearchableSelect from '../../components/SearchableSelect/SearchableSelect';
-import { modernStyles, paginationOptions, statusConfig } from './materielsTableConfig';
+import PageHeader from '../../components/PageHeader/PageHeader';
+import ExcelImportPanel from '../../components/ExcelImportPanel/ExcelImportPanel';
+import { paginationOptions } from '../../styles/dataTableTheme';
+import { materielsTableStyles, statusConfig } from './materielsTableConfig';
 import { useMaterielImportExport } from './useMaterielImportExport';
 
-// Import styles from Materiels.css
 import './Materiels.css';
+
+const DEFAULT_STATUS = { emoji: '❓', color: '#4b5563', bg: 'var(--color-border-light)', border: 'var(--color-border)' };
 
 // Onglets de filtre par état (ordre d'affichage)
 const ETATS = ['Très Bon', 'Bon', 'Moyen', 'Mauvais', 'HS', 'Disponible', 'Stock', 'Sans poste'];
@@ -268,12 +272,13 @@ const formatDate = useCallback((dateString) => {
 }, []);
 
 const renderStatus = useCallback((row) => {
-        const currentConfig = statusConfig[row.etat_pc] || { emoji: '❓', color: '#4b5563', bg: '#f3f4f6', border: '#e5e7eb' };
+        const currentConfig = statusConfig[row.etat_pc] || DEFAULT_STATUS;
         return (
-            <span style={{ 
-                backgroundColor: currentConfig.bg, color: currentConfig.color, border: `1px solid ${currentConfig.border}`, padding: "4px 12px", borderRadius: "20px", fontSize: "0.7rem", fontWeight: "600", display: "inline-flex", alignItems: "center", textTransform: "capitalize", gap: "6px", transition: 'all 0.2s ease', boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-            }}>
-                <span style={{ fontSize: '0.8rem' }}>{currentConfig.emoji}</span>
+            <span
+                className="mat-status-badge"
+                style={{ backgroundColor: currentConfig.bg, color: currentConfig.color, borderColor: currentConfig.border }}
+            >
+                <span className="mat-status-emoji" aria-hidden="true">{currentConfig.emoji}</span>
                 {row.etat_pc}
             </span>
         );
@@ -283,83 +288,34 @@ const renderEstActif = useCallback((row) => {
         const val = row.est_actif;
         const isActive = val === true || val === 'true' || val === 'Oui' || val === 'oui';
         const label = isActive ? 'Actif' : 'Inactif';
-        const color = isActive ? '#065f46' : '#991b1b';
-        const bg = isActive ? '#d1fae5' : '#fee2e2';
-        const border = isActive ? '#10b981' : '#ef4444';
-        
+        const stateClass = isActive ? 'is-active' : 'is-inactive';
+
         // PC en stock et fiches « Sans poste » : statut piloté par l'affectation.
         if (userRole === 'USER' || row.est_vide || row.id_n == null) {
             return (
-                <span title={userRole === 'USER' ? undefined : "Statut piloté par l'affectation (« Réaffecter le PC »)"} style={{ 
-                    backgroundColor: bg, color: color, border: `1px solid ${border}`, padding: "4px 12px", borderRadius: "20px", fontSize: "0.7rem", fontWeight: "600", display: "inline-flex", alignItems: "center", gap: "6px"
-                }}>
-                    <span style={{ fontSize: '0.8rem' }}>{isActive ? '✅' : '❌'}</span>
+                <span className={`mat-actif-badge ${stateClass}`} title={userRole === 'USER' ? undefined : "Statut piloté par l'affectation (« Réaffecter le PC »)"}>
+                    <span className="mat-status-emoji" aria-hidden="true">{isActive ? '✅' : '❌'}</span>
                     {label}
                 </span>
             );
         }
-        
+
         return (
             <div
+                className={`mat-actif-toggle ${stateClass}`}
                 onClick={() => handleToggleEstActif(row)}
-                style={{
-                    position: 'relative',
-                    width: '60px',
-                    height: '26px',
-                    borderRadius: '13px',
-                    backgroundColor: bg,
-                    border: `2px solid ${border}`,
-                    cursor: 'pointer',
-                    transition: 'all 0.25s ease',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    padding: '0 4px',
-                    userSelect: 'none',
-                }}
                 title="Cliquer pour changer le statut"
             >
-                <div style={{
-                    width: '16px',
-                    height: '16px',
-                    borderRadius: '50%',
-                    backgroundColor: border,
-                    transform: isActive ? 'translateX(34px)' : 'translateX(0)',
-                    transition: 'transform 0.25s ease',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                }} />
-                <span style={{
-                    position: 'absolute',
-                    fontSize: '0.6rem',
-                    fontWeight: '700',
-                    color: color,
-                    left: isActive ? '8px' : 'auto',
-                    right: isActive ? 'auto' : '6px',
-                }}>
-                    {label}
-                </span>
+                <div className="mat-actif-toggle-knob" />
+                <span className="mat-actif-toggle-label">{label}</span>
             </div>
         );
 }, [userRole, handleToggleEstActif]);
 
 const renderDocumentsCount = useCallback((row) => {
         const count = row.documents_count || 0;
-        const bgColor = count > 0 ? '#eef2ff' : '#f9fafb';
-        const textColor = count > 0 ? '#4338ca' : '#9ca3af';
-        const borderColor = count > 0 ? '#c7d2fe' : '#e5e7eb';
         return (
-            <span style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                minWidth: '28px',
-                padding: '3px 10px',
-                borderRadius: '20px',
-                backgroundColor: bgColor,
-                color: textColor,
-                border: `1px solid ${borderColor}`,
-                fontSize: '0.75rem',
-                fontWeight: '600',
-            }}>
+            <span className={`mat-doc-count ${count > 0 ? 'has-docs' : ''}`}>
                 {count}
             </span>
         );
@@ -369,13 +325,10 @@ const renderMarque = useCallback((row) => {
         const imageUrl = row.url;
         if (imageUrl && imageUrl !== 'Non assigné') {
             return (
-                <div style={{ 
-                    width: '50px', height: '50px', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', transition: 'all 0.2s ease'
-                }}>
+                <div className="mat-marque-logo">
                     <img
                         src={imageUrl}
                         alt={`Logo ${row.nom_marque || 'marque'}`}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         onError={(e) => {
                             e.target.onerror = null;
                             e.target.src = '/chemin/vers/image-par-defaut.png';
@@ -385,10 +338,8 @@ const renderMarque = useCallback((row) => {
             );
         }
         return (
-            <div style={{ 
-                padding: '6px 12px', backgroundColor: '#f3f4f6', borderRadius: '8px', fontSize: '0.8rem', color: '#6b7280', fontWeight: '500'
-            }}>
-                {row.nom_marque || 'Pas d\'image'}
+            <div className="mat-marque-fallback">
+                {row.nom_marque || "Pas d'image"}
             </div>
         );
 }, []);
@@ -399,54 +350,21 @@ const renderMarque = useCallback((row) => {
 // affecté passe d'abord par « Mettre en stock ».
 const renderActions = useCallback((row) => (
         <div className="d-flex gap-1" role="group" aria-label="Actions">
-            <Button 
-                variant="light" 
-                className="shadow-sm border-0 p-2 rounded-circle" 
-                onClick={() => handleView(row)} 
-                title="Voir détails"
-                style={{ 
-                    transition: 'all 0.2s ease', width: '32px', height: '32px'
-                }}
-            >
-                <FaEye size={14} className="text-info" />
-            </Button>
+            <button type="button" className="btn-icon btn-icon--info" onClick={() => handleView(row)} title="Voir détails" aria-label="Voir détails">
+                <FaEye size={14} />
+            </button>
             {userRole !== 'USER' && !isSansPoste(row) && (
-            <Button 
-                variant="light" 
-                className="shadow-sm border-0 p-2 rounded-circle" 
-                onClick={() => handleEdit(row)} 
-                title="Modifier"
-                style={{ 
-                    transition: 'all 0.2s ease', width: '32px', height: '32px'
-                }}
-            >
-                <FaEdit size={14} className="text-warning" />
-            </Button>
+            <button type="button" className="btn-icon btn-icon--warning" onClick={() => handleEdit(row)} title="Modifier" aria-label="Modifier">
+                <FaEdit size={14} />
+            </button>
             )}
-            {/* ✅ Bouton Historique - passe l'objet complet avec id_materiels */}
-            <Button 
-                variant="light" 
-                className="shadow-sm border-0 p-2 rounded-circle" 
-                onClick={() => handleOpenHistoriqueModal(row)} 
-                title="Historique"
-                style={{ 
-                    transition: 'all 0.2s ease', width: '32px', height: '32px'
-                }}
-            >
-                <FaHistory size={14} className="text-primary" />
-            </Button>
+            <button type="button" className="btn-icon btn-icon--primary" onClick={() => handleOpenHistoriqueModal(row)} title="Historique" aria-label="Historique">
+                <FaHistory size={14} />
+            </button>
             {userRole !== 'USER' && (isSansPoste(row) || row.id_n == null) && (
-            <Button
-                variant="light"
-                className="shadow-sm border-0 p-2 rounded-circle"
-                onClick={() => confirmDelete(row)}
-                title="Supprimer"
-                style={{ 
-                    transition: 'all 0.2s ease', width: '32px', height: '32px'
-                }}
-            >
-                <FaTrash size={14} className="text-danger" />
-            </Button>
+            <button type="button" className="btn-icon btn-icon--danger" onClick={() => confirmDelete(row)} title="Supprimer" aria-label="Supprimer">
+                <FaTrash size={14} />
+            </button>
             )}
         </div>
 ), [userRole, handleView, handleEdit, handleOpenHistoriqueModal, confirmDelete]);
@@ -536,458 +454,98 @@ const renderMaterielCard = useCallback((row) => (
 ), [renderMarque, renderStatus, renderEstActif, renderDocumentsCount, renderActions, formatDate]);
 
 // --- Import/Export Excel ---
-const {
-    showImportSection,
-    importFile,
-    importProgress,
-    isImporting,
-    importSuccess,
-    importSuccessStats,
-    importError,
-    importPreview,
-    importData,
-    isDragging,
-    fileInputRef,
-    toggleImportSection,
-    handleDragEnter,
-    handleDragLeave,
-    handleDragOver,
-    handleDrop,
-    handleFileSelect,
-    handleRemoveFile,
-    handleImportSubmit,
-    handleExportExcel,
-    handleExportByLocal,
-} = useMaterielImportExport({ materiels, filteredMateriels, filterNomLocal, fetchMateriels, setFilterMarque });
+const importExport = useMaterielImportExport({ materiels, filteredMateriels, filterNomLocal, fetchMateriels, setFilterMarque });
+const { showImportSection, isImporting, toggleImportSection, handleExportExcel, handleExportByLocal } = importExport;
+
+const hasActiveFilters = Boolean(searchTerm || filterEtat || filterEquipe || filterNomLocal || filterMarque || filterYear || filterEstActif);
+const filterClass = (value) => `filter-pill ${value ? 'is-active' : ''}`;
 
 // --- Rendu du JSX ---
 return (
-    <div className="container-fluid py-2 px-2 page-materiels" style={{ backgroundColor: '#f9fafb', minHeight: '100vh' }}>
-        {/* Header Section */}
-        <div className="d-flex justify-content-between align-items-center mb-4 p-3 rounded-3" style={{ 
-           background: 'linear-gradient(135deg, #7c3aed 0%, #6366f1 100%)', boxShadow: '0 1px 3px rgba(124, 58, 237, 0.15)', borderRadius: '16px', position: 'relative', overflow: 'hidden'
-        }}>
-            <div style={{
-                position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.08) 0%, transparent 50%)', pointerEvents: 'none'
-            }} />
-            
-            <div className="d-flex align-items-center gap-3 position-relative">
-                <div className="d-flex align-items-center justify-content-center flex-shrink-0" style={{ 
-                    background: 'rgba(255, 255, 255, 0.15)', width: '44px', height: '44px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.15)'
-                }}>
-                    <FaDesktop className="text-white" style={{ fontSize: '1.25rem' }} />
-                </div>
-                <div>
-                    <h1 className="h5 fw-bold text-white mb-0">{userRole === 'USER' ? 'Mon matériel' : 'Parc Informatique'}</h1>
-                    <p className="text-white mb-0" style={{ fontSize: '0.8rem', opacity: 0.85 }}>
-                        {userRole === 'USER' ? 'Consultez votre équipement et son état' : 'Gérez et suivez vos matériels en temps réel'}
-                    </p>
-                </div>
-            </div>
-            
-            <div className="d-flex gap-2 position-relative">
-                <Button 
-                    className="btn-pill btn-pill-ghost btn-refresh" 
-                    onClick={fetchMateriels} 
-                    title="Rafraîchir les données"
-                >
-                    <FaSync />
-                </Button>
-                
-                {(userRole !== 'USER') && (
-                <Button 
-                    className={`btn-pill btn-pill-success ${showImportSection ? 'active' : ''}`} 
-                    onClick={toggleImportSection} 
-                    disabled={isImporting}
-                    style={{ borderRadius: '9999px' }}
-                >
-                    {isImporting ? (
-                        <Spinner animation="border" size="sm" style={{ color: 'white' }} />
-                    ) : (
-                        <FaFileImport size={14} />
-                    )}
-                    <span className="ms-2">{isImporting ? 'Import...' : 'Importer'}</span>
-                </Button>
-                )}
-                
-                {!filterNomLocal && (
-                    <Button 
-                        className="btn-pill btn-pill-warning" 
-                        onClick={handleExportExcel}
-                        title="Exporter tous les matériels"
-                        style={{ borderRadius: '9999px' }}
-                    >
-                        <FaFileExcel size={14} />
-                        <span className="ms-2">Exporter</span>
+    <div className="container-fluid py-2 px-2 page-materiels">
+        <PageHeader
+            icon={<FaDesktop />}
+            title={userRole === 'USER' ? 'Mon matériel' : 'Parc Informatique'}
+            subtitle={userRole === 'USER' ? 'Consultez votre équipement et son état' : 'Gérez et suivez vos matériels en temps réel'}
+            actions={
+                <>
+                    <Button className="btn-refresh" onClick={fetchMateriels} title="Rafraîchir les données" aria-label="Rafraîchir les données">
+                        <FaSync />
                     </Button>
-                )}
-                
-                {filterNomLocal && (
-                    <Button 
-                        className="btn-pill btn-pill-warning" 
-                        onClick={handleExportByLocal} 
-                        title={`Exporter le local "${filterNomLocal}"`}
-                        style={{ borderRadius: '9999px' }}
-                    >
-                        <FaFileExcel size={14} />
-                        <span className="ms-2">Exporter ce local</span>
-                    </Button>
-                )}
-                
-                {(userRole !== 'USER') && (
-                <Button 
-                    className="btn-pill btn-pill-primary" 
-                    onClick={handleOpenAddModal}
-                    title="Ajouter un nouveau poste (PC, utilisateur, écran)"
-                    style={{ borderRadius: '9999px' }}
-                >
-                    <FaPlus size={14} />
-                    <span className="ms-2">Nouveau poste</span>
-                </Button>
-                )}
-                
-                {(userRole !== 'USER') && (
-                <Button 
-                    className="btn-pill btn-pill-secondary" 
-                    onClick={handleOpenAddMarque}
-                    title="Gérer les marques de PC (ajout, modification, suppression)"
-                    style={{ borderRadius: '9999px' }}
-                >
-                    <FaTags size={14} />
-                    <span className="ms-2">Marques PC</span>
-                </Button>
-                )}
 
-                {(userRole !== 'USER') && (
-                <Button
-                    className="btn-pill btn-pill-info"
-                    onClick={() => setIsEcransModalOpen(true)}
-                    title="Liste des écrans et ajout en stock"
-                    style={{ borderRadius: '9999px' }}
-                >
-                    <FaDesktop size={14} />
-                    <span className="ms-2">Écrans</span>
-                </Button>
-                )}
-
-                {(userRole !== 'USER') && (
-                <Button
-                    className="btn-pill btn-pill-danger"
-                    onClick={() => setIsCorbeilleOpen(true)}
-                    title="Fiches supprimées ; restauration des PC sortis de l'inventaire"
-                    style={{ borderRadius: '9999px' }}
-                >
-                    <FaTrashRestore size={14} />
-                    <span className="ms-2">Corbeille</span>
-                </Button>
-                )}
-            </div>
-        </div>
-
-        {/* SECTION D'IMPORT INTÉGRÉE */}
-        {showImportSection && (
-            <div className="mat-import-section mb-4 rounded-3" style={{ 
-                background: 'white', border: '1px solid #e5e7eb', borderRadius: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden', animation: 'slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
-            }}>
-                <div className="d-flex justify-content-between align-items-center p-4 pb-3">
-                    <h6 className="fw-bold mb-0 d-flex align-items-center gap-2" style={{ color: '#1F2937', fontSize: '1rem' }}>
-                        <div style={{ 
-                           width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, #7c3aed, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white'
-                        }}>
-                            <FaFileImport size={14} />
-                        </div>
-                        Importer des matériels
-                    </h6>
-                    <button 
-                        className="btn btn-sm rounded-circle border-0"
+                    {(userRole !== 'USER') && (
+                    <Button
+                        className={`btn-pill btn-pill-success ${showImportSection ? 'active' : ''}`}
                         onClick={toggleImportSection}
-                        style={{ 
-                            width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s ease',
-                            color: '#9ca3af'
-                        }}
                         disabled={isImporting}
-                        title="Fermer"
                     >
-                        <FaTimes size={14} />
-                    </button>
-                </div>
-
-                {!importSuccess ? (
-                    <>
-                        <div
-                            className={`mat-import-drop-zone mx-4 mb-3 ${isDragging ? 'dragover' : ''} ${importFile ? 'has-file' : ''}`}
-                            onDragEnter={handleDragEnter} onDragLeave={handleDragLeave} onDragOver={handleDragOver} onDrop={handleDrop}
-                            onClick={() => fileInputRef.current?.click()}
-                        >
-                            <input
-                                ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFileSelect} style={{ display: 'none' }} disabled={isImporting}
-                            />
-
-                            {importFile ? (
-                                <div className="d-flex align-items-center justify-content-center gap-4">
-                                    <div className="mat-import-file-icon" style={{
-                                        fontSize: '2.5rem', color: '#217346', filter: 'drop-shadow(0 2px 4px rgba(33, 115, 70, 0.15))'
-                                    }}>
-                                        <FaFileExcel />
-                                    </div>
-                                    <div className="text-start flex-grow-1">
-                                        <div className="fw-semibold" style={{ color: '#1F2937', fontSize: '0.95rem' }}>{importFile.name}</div>
-                                        <div className="text-muted" style={{ fontSize: '0.8rem' }}>
-                                            {(importFile.size / 1024).toFixed(1)} Ko
-                                        </div>
-                                        <div className="text-success mt-1" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
-                                            <FaCheckCircle className="me-1" size={12} /> Fichier prêt à importer
-                                        </div>
-                                    </div>
-                                    <button
-                                        className="btn btn-sm rounded-circle border-0 mat-import-remove-btn"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleRemoveFile();
-                                        }}
-                                        disabled={isImporting}
-                                        style={{
-                                            width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s ease', color: '#ef4444', backgroundColor: '#fef2f2'
-                                        }}
-                                    >
-                                        <FaTimes size={14} />
-                                    </button>
-                                </div>
-                            ) : (
-                                <div>
-                                    <div className="mat-import-drop-icon">
-                                        <FaFileUpload />
-                                    </div>
-                                    <div style={{ fontWeight: '600', color: '#374151', fontSize: '0.95rem', marginBottom: '0.4rem' }}>
-                                        Glissez-déposez votre fichier Excel ici
-                                    </div>
-                                    <div style={{ color: '#6b7280', fontSize: '0.85rem', marginBottom: '1rem' }}>
-                                        ou <span className="mat-import-browse-link">parcourez vos fichiers</span>
-                                    </div>
-                                    <div style={{
-                                        color: '#6b7280', fontSize: '0.8rem', backgroundColor: '#f3f4f6', display: 'inline-block', padding: '4px 14px', borderRadius: '20px'
-                                    }}>
-                                        Formats acceptés : <span className="fw-semibold" style={{ color: '#7c3aed' }}>.xlsx, .xls</span>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {importPreview.length > 0 && !isImporting && (
-                            <div className="mx-4 mb-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '1rem' }}>
-                                <div className="d-flex justify-content-between align-items-center mb-3">
-                                    <h6 className="mb-0" style={{ fontSize: '0.85rem', fontWeight: '600', color: '#374151' }}>
-                                        <FaSearch className="me-2" style={{ color: '#6366f1', fontSize: '0.75rem' }} />
-                                        Aperçu des données
-                                    </h6>
-                                    <span className="badge" style={{ 
-                                        backgroundColor: '#eef2ff', color: '#4338ca', fontSize: '0.75rem', padding: '4px 12px', borderRadius: '20px', fontWeight: '500'
-                                    }}>
-                                        {importData.length} lignes au total
-                                    </span>
-                                </div>
-                                <div className="table-responsive table-scroll-preview" style={{ maxHeight: '250px', overflow: 'auto', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                                    <table className="table table-sm table-hover mb-0" style={{ fontSize: '0.75rem' }}>
-                                        <thead className="table-light" style={{ 
-                                           position: 'sticky', top: 0, backgroundColor: '#f9fafb', zIndex: 10
-                                        }}>
-                                            <tr>
-                                                {Object.keys(importPreview[0] || {}).map((key, index) => (
-                                                    <th key={index} style={{ 
-                                                        fontSize: '0.7rem', whiteSpace: 'nowrap', fontWeight: '600', color: '#374151', padding: '10px 12px', borderBottom: '2px solid #e5e7eb'
-                                                    }}>
-                                                        {key}
-                                                    </th>
-                                                ))}
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {importPreview.map((row, rowIndex) => (
-                                                <tr key={rowIndex} style={{ 
-                                                    transition: 'background-color 0.15s ease',
-                                                }}>
-                                                    {Object.values(row).map((value, cellIndex) => (
-                                                        <td key={cellIndex} style={{ 
-                                                            fontSize: '0.75rem', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: '8px 12px', color: '#4b5563'
-                                                        }}>
-                                                            {String(value || '')}
-                                                        </td>
-                                                    ))}
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <small className="text-muted mt-2 d-block" style={{ fontSize: '0.75rem' }}>
-                                    <FaInfoCircle className="me-1" style={{ fontSize: '0.7rem' }} />
-                                    Aperçu des 5 premières lignes
-                                </small>
-                            </div>
+                        {isImporting ? (
+                            <Spinner animation="border" size="sm" />
+                        ) : (
+                            <FaFileImport size={14} />
                         )}
+                        <span className="ms-2">{isImporting ? 'Import...' : 'Importer'}</span>
+                    </Button>
+                    )}
 
-                        {isImporting && (
-                            <div className="mx-4 mb-3">
-                                <div className="d-flex justify-content-between align-items-center mb-2">
-                                    <div className="d-flex align-items-center gap-2">
-                                        <Spinner animation="border" size="sm" style={{ color: '#7c3aed' }} />
-                                        <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#374151' }}>
-                                            {importProgress < 25 ? 'Analyse du fichier Excel...' : 
-                                             importProgress < 70 ? 'Envoi des données au serveur...' : 
-                                             importProgress < 100 ? 'Traitement des données...' : 
-                                             'Importation terminée !'}
-                                        </span>
-                                    </div>
-                                    <span style={{ 
-                                        fontWeight: '600', 
-                                        color: importProgress === 100 ? '#10b981' : '#7c3aed',
-                                        fontSize: '0.9rem'
-                                    }}>
-                                        {importProgress}%
-                                    </span>
-                                </div>
-                                <div className="mat-progress-container" style={{ 
-                                    height: '10px', borderRadius: '10px', backgroundColor: '#f3f4f6', overflow: 'hidden', position: 'relative'
-                                }}>
-                                    <div 
-                                        className="mat-progress-bar-fill"
-                                        style={{ 
-                                            height: '100%',
-                                            borderRadius: '10px',
-                                            background: importProgress === 100 
-                                                ? 'linear-gradient(90deg, #10b981, #059669)' 
-                                                : 'linear-gradient(90deg, #7c3aed, #6366f1)',
-                                            width: `${importProgress}%`,
-                                            transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                        )}
+                    {!filterNomLocal && (
+                        <Button className="btn-pill btn-pill-warning" onClick={handleExportExcel} title="Exporter tous les matériels">
+                            <FaFileExcel size={14} />
+                            <span className="ms-2">Exporter</span>
+                        </Button>
+                    )}
 
-                        {importError && (
-                            <div className="mx-4 mb-3">
-                                <div style={{ 
-                                    borderRadius: '10px', background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', padding: '0.75rem 1rem', fontSize: '0.85rem'
-                                }}>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <FaTimes style={{ fontSize: '0.9rem' }} />
-                                        <span>{importError}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                    {filterNomLocal && (
+                        <Button className="btn-pill btn-pill-warning" onClick={handleExportByLocal} title={`Exporter le local "${filterNomLocal}"`}>
+                            <FaFileExcel size={14} />
+                            <span className="ms-2">Exporter ce local</span>
+                        </Button>
+                    )}
 
-                        {!isImporting && !importSuccess && (
-                            <div className="d-flex justify-content-end gap-2 p-4 pt-0">
-                                <button 
-                                    className="btn rounded-pill px-4"
-                                    onClick={toggleImportSection}
-                                    disabled={isImporting}
-                                    style={{ 
-                                       transition: 'all 0.2s ease', border: '1px solid #d1d5db', color: '#374151', backgroundColor: 'white', fontSize: '0.85rem', fontWeight: '500',
-                                        opacity: isImporting ? 0.6 : 1
-                                    }}
-                                >
-                                    <FaTimes className="me-2" size={12} />
-                                    Annuler
-                                </button>
-                                <button 
-                                    className="btn rounded-pill px-4"
-                                    onClick={handleImportSubmit}
-                                    disabled={!importFile || isImporting}
-                                    style={{
-                                        background: !importFile || isImporting ? '#d1d5db' : '#10b981', color: 'white', border: 'none', fontWeight: '600', fontSize: '0.85rem', transition: 'all 0.3s ease',
-                                        opacity: !importFile || isImporting ? 0.6 : 1,
-                                        cursor: !importFile || isImporting ? 'not-allowed' : 'pointer'
-                                    }}
-                                >
-                                    {isImporting ? (
-                                        <>
-                                            <Spinner animation="border" size="sm" className="me-2" />
-                                            Import en cours...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <FaUpload className="me-2" size={12} />
-                                            Importer
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                        )}
-                    </>
-                ) : (
-                    <div className="text-center py-5">
-                        <div style={{ 
-                            fontSize: '3.5rem', color: '#10b981', marginBottom: '1rem'
-                        }}>
-                            <FaCheckCircle />
-                        </div>
-                        <div style={{ fontSize: '1.2rem', fontWeight: '600', color: '#1F2937', marginTop: '0.5rem', marginBottom: '0.75rem' }}>
-                            {importSuccessStats && (importSuccessStats.success || 0) > 0 ? 'Importation réussie !' : 'Import terminé'}
-                        </div>
-                        <div style={{ color: '#6b7280', fontSize: '0.9rem', maxWidth: '400px', margin: '0 auto' }}>
-                            {importSuccessStats ? (
-                                <div className="d-flex flex-column gap-2 mt-3">
-                                    {(importSuccessStats.success || 0) > 0 && (
-                                        <div className="d-flex align-items-center justify-content-center gap-2">
-                                            <div style={{ 
-                                                width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#d1fae5', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                            }}>
-                                                <FaCheckCircle style={{ color: '#10b981', fontSize: '0.8rem' }} />
-                                            </div>
-                                            <span style={{ fontWeight: '500', color: '#065f46', fontSize: '0.9rem' }}>
-                                                {importSuccessStats.success} matériel(s) importé(s)
-                                            </span>
-                                        </div>
-                                    )}
-                                    {(importSuccessStats.failed || 0) > 0 && (
-                                        <div className="d-flex align-items-center justify-content-center gap-2">
-                                            <div style={{ 
-                                                width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                            }}>
-                                                <FaTimes style={{ color: '#f59e0b', fontSize: '0.8rem' }} />
-                                            </div>
-                                            <span style={{ fontWeight: '500', color: '#92400e', fontSize: '0.9rem' }}>
-                                                {importSuccessStats.failed} échec(s)
-                                            </span>
-                                        </div>
-                                    )}
-                                    {(importSuccessStats.warnings || 0) > 0 && (
-                                        <div className="d-flex align-items-center justify-content-center gap-2">
-                                            <div style={{ 
-                                                width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                            }}>
-                                                <FaInfoCircle style={{ color: '#6b7280', fontSize: '0.8rem' }} />
-                                            </div>
-                                            <span style={{ fontWeight: '500', color: '#4b5563', fontSize: '0.9rem' }}>
-                                                {importSuccessStats.warnings} avertissement(s)
-                                            </span>
-                                        </div>
-                                    )}
-                                    {(importSuccessStats.success || 0) === 0 && (importSuccessStats.failed || 0) === 0 && (
-                                        <div style={{ 
-                                            padding: '10px 20px', backgroundColor: '#fef3c7', borderRadius: '10px', display: 'inline-block', marginTop: '0.5rem', color: '#92400e', fontSize: '0.9rem'
-                                        }}>
-                                            L'import a été traité. Vérifiez votre fichier Excel.
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <div style={{ 
-                                    padding: '10px 20px', backgroundColor: '#d1fae5', borderRadius: '10px', display: 'inline-block', marginTop: '0.5rem', color: '#065f46', fontSize: '0.9rem'
-                                }}>
-                                    Les matériels ont été importés avec succès.
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-            </div>
+                    {(userRole !== 'USER') && (
+                    <Button className="btn-pill btn-pill-primary" onClick={handleOpenAddModal} title="Ajouter un nouveau poste (PC, utilisateur, écran)">
+                        <FaPlus size={14} />
+                        <span className="ms-2">Nouveau poste</span>
+                    </Button>
+                    )}
+
+                    {(userRole !== 'USER') && (
+                    <Button className="btn-pill btn-pill-secondary" onClick={handleOpenAddMarque} title="Gérer les marques de PC (ajout, modification, suppression)">
+                        <FaTags size={14} />
+                        <span className="ms-2">Marques PC</span>
+                    </Button>
+                    )}
+
+                    {(userRole !== 'USER') && (
+                    <Button className="btn-pill btn-pill-info" onClick={() => setIsEcransModalOpen(true)} title="Liste des écrans et ajout en stock">
+                        <FaDesktop size={14} />
+                        <span className="ms-2">Écrans</span>
+                    </Button>
+                    )}
+
+                    {(userRole !== 'USER') && (
+                    <Button className="btn-pill btn-pill-danger" onClick={() => setIsCorbeilleOpen(true)} title="Fiches supprimées ; restauration des PC sortis de l'inventaire">
+                        <FaTrashRestore size={14} />
+                        <span className="ms-2">Corbeille</span>
+                    </Button>
+                    )}
+                </>
+            }
+        />
+
+        {/* Import Excel */}
+        {showImportSection && (
+            <ExcelImportPanel
+                {...importExport}
+                title="Importer des matériels"
+                successLabel="matériel(s) importé(s)"
+                successFallback="Les matériels ont été importés avec succès."
+                emptyResultMessage="L'import a été traité. Vérifiez votre fichier Excel."
+            />
         )}
 
         {/* Carte principale */}
-        <Card className="border-0" style={{ borderRadius: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <Card className="border-0 mat-main-card">
             <Card.Body className="p-4 p-lg-5">
                 {/* Messages d'état */}
                 {error && <Alert variant="danger" className="mb-3">{error}</Alert>}
@@ -1003,27 +561,27 @@ return (
                             className="materiel-etat-tabs mb-0"
                             fill
                         >
-                            <Tab eventKey="all" title={<span className="d-inline-flex align-items-center gap-2"><FaDesktop size={12} />Tous ({materielsHorsEtat.length})</span>} />
+                            <Tab eventKey="all" title={<span className="d-inline-flex align-items-center gap-2"><FaDesktop size={12} aria-hidden="true" />Tous ({materielsHorsEtat.length})</span>} />
                             {ETATS.map(etat => (
-                                <Tab key={etat} eventKey={etat} title={<span className="d-inline-flex align-items-center gap-2"><span>{statusConfig[etat].emoji}</span>{etat} ({etatCounts[etat]})</span>} />
+                                <Tab key={etat} eventKey={etat} title={<span className="d-inline-flex align-items-center gap-2"><span aria-hidden="true">{statusConfig[etat].emoji}</span>{etat} ({etatCounts[etat]})</span>} />
                             ))}
                         </Tabs>
                     </div>
                     )}
                     <div className="col-12 col-lg-3">
-                        <InputGroup className="bg-light rounded-pill px-3 py-2 border-0 shadow-sm" style={{ transition: 'all 0.2s ease' }}>
+                        <InputGroup className="bg-light rounded-pill px-3 py-2 border-0 shadow-sm">
                             <InputGroup.Text className="bg-transparent border-0">
-                                <FaSearch className="text-muted" />
+                                <FaSearch className="text-muted" aria-hidden="true" />
                             </InputGroup.Text>
-                            <Form.Control 
-                                className="bg-transparent border-0 shadow-none p-0" 
-                                placeholder="Rechercher..." 
-                                value={searchTerm} 
-                                onChange={(e) => setSearchTerm(e.target.value)} 
-                                style={{ fontSize: '0.85rem' }}
+                            <Form.Control
+                                className="bg-transparent border-0 shadow-none p-0 mat-search-input"
+                                placeholder="Rechercher..."
+                                aria-label="Rechercher un matériel"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
                             />
                             {searchTerm && (
-                                <Button variant="link" className="text-muted p-0 ms-2" onClick={() => setSearchTerm('')} style={{ fontSize: '0.85rem' }}>
+                                <Button variant="link" className="text-muted p-0 ms-2 mat-search-input" onClick={() => setSearchTerm('')} aria-label="Effacer la recherche">
                                     <FaTimes />
                                 </Button>
                             )}
@@ -1038,14 +596,7 @@ return (
                             onChange={setFilterEquipe}
                             placeholder="Equipes"
                             options={[...new Set(materiels.map(m => m.equipe).filter(Boolean))]}
-                            style={{
-                                backgroundColor: filterEquipe ? '#e0e7ff' : '#f8f9fa',
-                                height: '38px',
-                                fontSize: '0.85rem',
-                                color: filterEquipe ? '#4338ca' : '#374151',
-                                fontWeight: filterEquipe ? '600' : '400',
-                                transition: 'all 0.2s ease'
-                            }}
+                            styleClass={filterClass(filterEquipe)}
                         />
                     </div>
 
@@ -1053,15 +604,8 @@ return (
                         <Form.Select
                             value={filterNomLocal}
                             onChange={(e) => setFilterNomLocal(e.target.value)}
-                            className="rounded-pill border-0 shadow-sm"
-                            style={{
-                                backgroundColor: filterNomLocal ? '#e0e7ff' : '#f8f9fa',
-                                height: '38px',
-                                fontSize: '0.85rem',
-                                color: filterNomLocal ? '#4338ca' : '#374151',
-                                fontWeight: filterNomLocal ? '600' : '400',
-                                transition: 'all 0.2s ease'
-                            }}
+                            className={filterClass(filterNomLocal)}
+                            aria-label="Filtrer par local"
                         >
                             <option value="">Locaux</option>
                             {[...new Set(materiels.map(m => m.nom_local).filter(Boolean))].map(nom_local => (
@@ -1078,14 +622,7 @@ return (
                             options={[
                                 ...[...new Set(materiels.map(m => m.date_pc ? new Date(m.date_pc).getFullYear() : null).filter(y => y !== null))].sort((a, b) => b - a).map(year => ({ value: String(year), label: String(year) }))
                             ]}
-                            style={{
-                                backgroundColor: filterYear ? '#e0e7ff' : '#f8f9fa',
-                                height: '38px',
-                                fontSize: '0.85rem',
-                                color: filterYear ? '#4338ca' : '#374151',
-                                fontWeight: filterYear ? '600' : '400',
-                                transition: 'all 0.2s ease'
-                            }}
+                            styleClass={filterClass(filterYear)}
                         />
                     </div>
 
@@ -1095,14 +632,7 @@ return (
                             onChange={setFilterMarque}
                             placeholder="Marques"
                             options={[...new Set(materiels.map(m => m.nom_marque).filter(Boolean))].sort((a, b) => a.localeCompare(b))}
-                            style={{
-                                backgroundColor: filterMarque ? '#e0e7ff' : '#f8f9fa',
-                                height: '38px',
-                                fontSize: '0.85rem',
-                                color: filterMarque ? '#4338ca' : '#374151',
-                                fontWeight: filterMarque ? '600' : '400',
-                                transition: 'all 0.2s ease'
-                            }}
+                            styleClass={filterClass(filterMarque)}
                         />
                     </div>
 
@@ -1110,15 +640,8 @@ return (
                         <Form.Select
                             value={filterEstActif}
                             onChange={(e) => setFilterEstActif(e.target.value)}
-                            className="rounded-pill border-0 shadow-sm"
-                            style={{
-                                backgroundColor: filterEstActif ? '#e0e7ff' : '#f8f9fa',
-                                height: '38px',
-                                fontSize: '0.85rem',
-                                color: filterEstActif ? '#4338ca' : '#374151',
-                                fontWeight: filterEstActif ? '600' : '400',
-                                transition: 'all 0.2s ease'
-                            }}
+                            className={filterClass(filterEstActif)}
+                            aria-label="Filtrer par statut"
                         >
                             <option value="">Status</option>
                             <option value="Actif">Actif</option>
@@ -1130,31 +653,16 @@ return (
 
                     <div className="col-auto">
                         <div className="d-flex gap-2 align-items-center">
-                            <div className="bg-light rounded-pill px-3 py-2 border-0 shadow-sm" style={{ 
-                                backgroundColor: (searchTerm || filterEtat || filterEquipe || filterNomLocal || filterMarque || filterYear || filterEstActif) ? '#fef3c7' : '#f8f9fa',
-                                transition: 'all 0.2s ease'
-                            }}>
-                                <small className="text-muted">
-                                    <strong style={{ 
-                                        color: (searchTerm || filterEtat || filterEquipe || filterNomLocal || filterMarque || filterYear || filterEstActif) ? '#92400e' : '#374151'
-                                    }}>
-                                        {filteredMateriels.length}
-                                    </strong> {' '}résultat{filteredMateriels.length > 1 ? 's' : ''}
+                            <div className={`mat-results-pill ${hasActiveFilters ? 'is-filtered' : ''}`}>
+                                <small>
+                                    <strong>{filteredMateriels.length}</strong> {' '}résultat{filteredMateriels.length > 1 ? 's' : ''}
                                 </small>
                             </div>
-                            {(searchTerm || filterEtat || filterEquipe || filterNomLocal || filterMarque || filterYear || filterEstActif) && (
-                                <Button 
-                                    variant="outline-warning" 
-                                    size="sm" 
-                                    className="border-0 rounded-pill" 
-                                    onClick={handleResetFilters}
-                                    style={{ 
-                                        backgroundColor: '#fef3c7', color: '#92400e', fontWeight: '600', fontSize: '0.8rem', transition: 'all 0.2s ease'
-                                    }}
-                                >
-                                    <FaTimes size={14} className="me-1"/>
+                            {hasActiveFilters && (
+                                <button type="button" className="mat-reset-btn" onClick={handleResetFilters}>
+                                    <FaTimes size={14} className="me-1" aria-hidden="true" />
                                     Réinitialiser
-                                </Button>
+                                </button>
                             )}
                         </div>
                     </div>
@@ -1166,7 +674,7 @@ return (
                         <div className="p-5 text-center">
                             <div className="d-flex flex-column align-items-center gap-3">
                                 <Spinner animation="grow" variant="primary" size="sm" />
-                                <span className="text-muted" style={{ fontSize: '0.9rem' }}>Chargement des données...</span>
+                                <span className="mat-loading-text">Chargement des données...</span>
                             </div>
                         </div>
                     ) : (
@@ -1183,56 +691,48 @@ return (
                                     <div className="p-5 text-center">
                                         <div className="d-flex flex-column align-items-center gap-3">
                                             <Spinner animation="grow" variant="primary" size="sm" />
-                                            <span className="text-muted" style={{ fontSize: '0.9rem' }}>Chargement des données...</span>
+                                            <span className="mat-loading-text">Chargement des données...</span>
                                         </div>
                                     </div>
                                 }
-                                customStyles={modernStyles}
+                                customStyles={materielsTableStyles}
                             />
                         </div>
                     )
                 ) : filteredMateriels.length === 0 ? (
                     userRole === 'USER' ? (
                         <div className="text-center py-5">
-                            <div style={{ fontSize: '3rem', marginBottom: '1rem', color: '#6366f1' }}>
+                            <div className="mat-empty-icon" aria-hidden="true">
                                 <FaInbox />
                             </div>
-                            <div style={{ color: '#6c757d', fontSize: '0.95rem', fontWeight: '500' }}>
+                            <div className="mat-empty-title">
                                 Aucun matériel trouvé
                             </div>
-                            <div style={{ color: '#9ca3af', fontSize: '0.85rem', marginTop: '0.5rem' }}>
+                            <div className="mat-empty-hint">
                                 {searchTerm ? 'Essayez de modifier votre recherche' : 'Aucun matériel ne vous est attribué pour le moment'}
                             </div>
                         </div>
                     ) : (
                         <div className="table-responsive">
-                            <table className="table table-sm" style={{ fontSize: '0.85rem', minWidth: '100%' }}>
+                            <table className="table table-sm mat-empty-table">
                                 <thead>
                                     <tr>
                                         {columns.map((col, i) => (
-                                            <th key={i} style={{
-                                                fontSize: '0.75rem', fontWeight: '600', color: '#374151',
-                                                paddingLeft: '16px', paddingRight: '16px', paddingTop: '14px',
-                                                paddingBottom: '14px', verticalAlign: 'middle', textAlign: 'left',
-                                                backgroundColor: '#f9fafb', borderBottom: '2px solid #e5e7eb',
-                                                whiteSpace: 'nowrap', userSelect: 'none'
-                                            }}>
-                                                {col.name}
-                                            </th>
+                                            <th key={i}>{col.name}</th>
                                         ))}
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
                                         <td colSpan={columns.length} className="text-center py-5">
-                                            <div style={{ fontSize: '3rem', marginBottom: '1rem', color: '#6366f1' }}>
+                                            <div className="mat-empty-icon" aria-hidden="true">
                                                 <FaInbox />
                                             </div>
-                                            <div style={{ color: '#6c757d', fontSize: '0.95rem', fontWeight: '500' }}>
+                                            <div className="mat-empty-title">
                                                 Aucun matériel trouvé
                                             </div>
-                                            <div style={{ color: '#9ca3af', fontSize: '0.85rem', marginTop: '0.5rem' }}>
-                                                {searchTerm || filterEtat || filterEquipe || filterNomLocal || filterMarque || filterYear || filterEstActif
+                                            <div className="mat-empty-hint">
+                                                {hasActiveFilters
                                                     ? 'Essayez de modifier vos filtres de recherche'
                                                     : 'Commencez par ajouter un matériel'}
                                             </div>
@@ -1256,7 +756,7 @@ return (
                             highlightOnHover
                             pointerOnHover
                             responsive
-                            customStyles={modernStyles}
+                            customStyles={materielsTableStyles}
                         />
                     </div>
                 )}
@@ -1282,10 +782,11 @@ return (
         {isEcransModalOpen && <EcransModal onClose={() => setIsEcransModalOpen(false)} />}
         {isCorbeilleOpen && <CorbeilleModal onClose={() => setIsCorbeilleOpen(false)} onRestored={fetchMateriels} />}
 
-        <div style={{ display: isAddMarqueOpen ? 'block' : 'none' }}>
-            <AddMarque 
+        <div className={isAddMarqueOpen ? undefined : 'd-none'}>
+            <AddMarque
                 key={addMarqueKey}
-                onClose={handleCloseAddMarque} 
+                show={isAddMarqueOpen}
+                onClose={handleCloseAddMarque}
                 onMarqueAdded={fetchMateriels}
             />
         </div>

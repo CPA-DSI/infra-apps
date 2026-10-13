@@ -6,34 +6,11 @@ import { API_BASE_URL } from '../../config/api';
 import { CSRF_HEADERS } from '../../services/api/client';
 import { FaLock, FaEye, FaEyeSlash, FaSpinner, FaLongArrowAltLeft } from 'react-icons/fa';
 
+import AuthLogo from '../../components/AuthLogo/AuthLogo';
+
 // --- IMPORTS CSS ---
 import './auth-base.css';
 import './login.css';
-
-// SVG Icon
-const LockIcon = () => (
-  <svg 
-    viewBox="0 0 200 200" 
-    xmlns="http://www.w3.org/2000/svg"
-    style={{ width: '180px', height: '180px' }}
-  >
-    <defs>
-      <linearGradient id="lockGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style={{stopColor: '#667eea', stopOpacity: 1}} />
-        <stop offset="100%" style={{stopColor: '#764ba2', stopOpacity: 1}} />
-      </linearGradient>
-    </defs>
-    <g>
-      {/* Corps du cadenas */}
-      <rect x="50" y="80" width="100" height="80" rx="10" fill="url(#lockGrad)" />
-      {/* Anneau du cadenas */}
-      <path d="M65 80 V55 A35 35 0 0 1 135 55 V80" fill="none" stroke="url(#lockGrad)" strokeWidth="14" strokeLinecap="round" />
-      {/* Trou de serrure */}
-      <circle cx="100" cy="120" r="15" fill="#fff" />
-      <rect x="92" y="120" width="16" height="25" fill="#fff" />
-    </g>
-  </svg>
-);
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -138,7 +115,7 @@ const ResetPassword = () => {
       Swal.fire({
         icon: 'error',
         title: 'Erreur',
-        text: 'Impossible de连接到服务器. Veuillez réessayer plus tard.',
+        text: 'Impossible de se connecter au serveur. Veuillez réessayer plus tard.',
         confirmButtonText: 'OK',
         confirmButtonColor: '#667eea'
       });
@@ -165,14 +142,14 @@ const ResetPassword = () => {
     return (
       <main className="login-container">
         <div className="wrap-login">
-          <div className="login-form" style={{ textAlign: 'center' }}>
+          <div className="login-form text-center">
             <span className="login-title">
               Lien invalide
             </span>
-            <Link to="/forgot-password" className="login-button" style={{ display: 'inline-block', textDecoration: 'none' }}>
+            <Link to="/forgot-password" className="login-button login-button-link">
               Demander un nouveau lien
             </Link>
-            <div className="text-center p-t-12" style={{ marginTop: '20px' }}>
+            <div className="text-center p-t-12 m-t-20">
               <Link to="/login" className="txt2">
                 <FaLongArrowAltLeft className="m-l-5" aria-hidden="true" />
                 Retour à la connexion
@@ -189,7 +166,7 @@ const ResetPassword = () => {
       <div className="wrap-login">
         <Tilt tiltMaxAngleX={15} tiltMaxAngleY={15} scale={1.05} transitionSpeed={400}>
           <div className="login-pic">
-            <LockIcon />
+            <AuthLogo variant="lock" size={180} />
           </div>
         </Tilt>
 
@@ -258,7 +235,7 @@ const ResetPassword = () => {
             </span>
           </div>
           
-          <div style={{ width: '100%' }}>
+          <div className="login-button-wrap">
             <button 
               className={`login-button ${isLoading ? 'loading' : ''}`}
               type="submit"
@@ -276,7 +253,7 @@ const ResetPassword = () => {
             </button>
           </div>
 
-          <div className="text-center p-t-12" style={{ marginTop: '20px' }}>
+          <div className="text-center p-t-12 m-t-20">
             <Link to="/login" className="txt2">
               <FaLongArrowAltLeft className="m-l-5" aria-hidden="true" />
               Retour à la connexion

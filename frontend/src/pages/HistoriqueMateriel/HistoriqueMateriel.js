@@ -8,6 +8,9 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { getHistoriqueMateriel, createHistoriqueMateriel } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
+import PageHeader from '../../components/PageHeader/PageHeader';
+import AppModal from '../../components/AppModal/AppModal';
+import { tableStyles, paginationOptions } from '../../styles/dataTableTheme';
 import './HistoriqueMateriel.css';
 
 const formatDate = (dateString) => {
@@ -20,44 +23,13 @@ const formatDate = (dateString) => {
     });
 };
 
-const modernStyles = {
-    table: {
-        style: {
-            backgroundColor: 'transparent',
-            borderRadius: '16px',
-        },
-    },
-    headRow: {
-        style: {
-            backgroundColor: '#f9fafb', border: 'none', minHeight: '52px', borderRadius: '12px 12px 0 0', borderBottom: '2px solid #e5e7eb', boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
-        },
-    },
-    headCells: {
-        style: {
-            fontSize: '0.75rem', fontWeight: '600', color: '#374151', letterSpacing: '0.02em', textTransform: 'capitalize', paddingLeft: '16px', paddingRight: '16px', paddingTop: '14px', paddingBottom: '14px', verticalAlign: 'middle', textAlign: 'left', backgroundColor: '#f9fafb', borderBottom: '2px solid #e5e7eb', whiteSpace: 'nowrap', userSelect: 'none'
-        },
-    },
+const tableCustomStyles = tableStyles({
+    headCells: { style: { textTransform: 'capitalize' } },
     rows: {
-        style: {
-            fontSize: '0.85rem', fontWeight: '500', color: '#212529', minHeight: '48px', backgroundColor: '#ffffff', borderBottom: '1px solid #f3f4f6', transition: 'all 0.2s ease'
-        },
-        highlightOnHoverStyle: {
-            backgroundColor: '#f5f3ff', color: '#5b21b6', cursor: 'pointer', transitionDuration: '0.2s'
-        },
+        style: { minHeight: '48px' },
+        highlightOnHoverStyle: { backgroundColor: 'var(--color-secondary-soft)', color: '#5b21b6' },
     },
-    pagination: {
-        style: {
-            border: 'none', fontSize: '12px', color: '#6c757d', paddingTop: '16px', paddingBottom: '16px'
-        },
-    },
-};
-
-const paginationOptions = {
-    rowsPerPageText: 'Lignes par page :',
-    rangeSeparatorText: 'sur',
-    selectAllRowsItem: true,
-    selectAllRowsItemText: 'Tout'
-};
+});
 
 const HistoriqueMateriel = () => {
     const { user } = useAuth();
@@ -311,13 +283,13 @@ const HistoriqueMateriel = () => {
             sortable: true,
             grow: 2,
             cell: row => (
-                <span style={{ fontWeight: '500', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '0.9rem' }}>💻</span>
+                <span className="hm-cell-pc">
+                    <span className="hm-cell-pc-code">
+                        <span className="hm-cell-pc-icon" aria-hidden="true">💻</span>
                         {row.materiel?.code_pc || 'N/A'}
                     </span>
                     {row.materiel?.caracteristiques && (
-                        <span style={{ fontSize: '0.72rem', color: '#6c757d', marginLeft: '22px' }}>
+                        <span className="hm-cell-pc-caract">
                             {row.materiel.caracteristiques}
                         </span>
                     )}
@@ -330,11 +302,11 @@ const HistoriqueMateriel = () => {
             sortable: true,
             grow: 1,
             cell: row => (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '0.85rem', color: '#6c757d' }}>
+                <span className="hm-cell-user">
+                    <span className="hm-cell-user-name">
                         {row.materiel?.utilisateur || 'N/A'}
                     </span>
-                    <span style={{ fontWeight: '500', color: '#6366f1' }}>
+                    <span className="hm-cell-user-id">
                         ({row.materiel?.id_n || 'N/A'})
                     </span>
                 </span>
@@ -346,7 +318,7 @@ const HistoriqueMateriel = () => {
             sortable: true,
             grow: 1,
             cell: row => (
-                <span title={row.materiel?.equipe || 'N/A'} className="ha-cell-badge ha-cell-badge--equipe">
+                <span title={row.materiel?.equipe || 'N/A'} className="hm-cell-badge hm-cell-badge--equipe">
                     {row.materiel?.equipe || 'N/A'}
                 </span>
             ),
@@ -357,7 +329,7 @@ const HistoriqueMateriel = () => {
             sortable: true,
             grow: 1,
             cell: row => (
-                <span title={row.materiel?.local?.nom_local || 'N/A'} className="ha-cell-badge ha-cell-badge--local">
+                <span title={row.materiel?.local?.nom_local || 'N/A'} className="hm-cell-badge hm-cell-badge--local">
                     {row.materiel?.local?.nom_local || 'N/A'}
                 </span>
             ),
@@ -367,7 +339,7 @@ const HistoriqueMateriel = () => {
             selector: row => row.ancienne_valeur || '',
             grow: 2,
             cell: row => (
-                <span title={row.ancienne_valeur || 'Aucune'} className="ha-cell-badge ha-cell-badge--ancien">
+                <span title={row.ancienne_valeur || 'Aucune'} className="hm-cell-badge hm-cell-badge--ancien">
                     {row.ancienne_valeur || 'Aucune'}
                 </span>
             ),
@@ -377,7 +349,7 @@ const HistoriqueMateriel = () => {
             selector: row => row.nouvelle_valeur || '',
             grow: 2,
             cell: row => (
-                <span title={row.nouvelle_valeur || 'Aucune'} className="ha-cell-badge ha-cell-badge--nouveau">
+                <span title={row.nouvelle_valeur || 'Aucune'} className="hm-cell-badge hm-cell-badge--nouveau">
                     {row.nouvelle_valeur || 'Aucune'}
                 </span>
             ),
@@ -388,44 +360,41 @@ const HistoriqueMateriel = () => {
             sortable: true,
             grow: 1,
             cell: row => (
-                <span title={row.nom_utilisateur || 'Système'} className="ha-cell-badge ha-cell-badge--modifie">
+                <span title={row.nom_utilisateur || 'Système'} className="hm-cell-badge hm-cell-badge--modifie">
                     {row.nom_utilisateur || 'Système'}
                 </span>
             ),
         },
     ], []);
 
-    return (
-        <div className="container-fluid py-2 px-2" style={{ backgroundColor: '#f9fafb', minHeight: '100vh' }}>
-            <div className="d-flex justify-content-between align-items-center mb-4 p-2 p-md-3 rounded-3" style={{ background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', boxShadow: '0 6px 24px rgba(99, 102, 241, 0.18)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.1)', minHeight: '80px' }}>
-                <div className="d-flex align-items-center gap-3">
-                    <div className="d-flex align-items-center justify-content-center flex-shrink-0" style={{ background: 'rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(10px)', width: '55px', height: '55px', borderRadius: '50%', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
-                        <FaHistory className="text-white" style={{ fontSize: '1.5rem' }} />
-                    </div>
-                    <div>
-                        <h1 className="h5 fw-bold text-white mb-1">{userRole === 'USER' ? 'Mon historique' : 'Historique des Matériels'}</h1>
-                        <p className="text-white mb-0" style={{ fontSize: '0.8rem', opacity: 0.8 }}>{userRole === 'USER' ? 'Suivi des modifications de votre équipement' : 'Suivi complet des modifications apportées aux équipements'}</p>
-                    </div>
-                </div>
+    const isUser = userRole === 'USER';
 
-                <div className="d-flex gap-2">
-                    <Button className="border-0 rounded-circle shadow-sm hm-btn-refresh" onClick={fetchHistorique} title="Rafraîchir">
-                        <FaSync />
-                    </Button>
-                    {userRole !== 'USER' && (
-                    <Button className="mtr-btn-add shadow-md" onClick={handleOpenAddModal} title="Ajouter un historique">
-                        <FaPlus size={15} />
-                        <span className="ms-2">Ajouter</span>
-                    </Button>
-                    )}
-                    {userRole !== 'USER' && (
-                    <Button className="mtr-btn-export shadow-md" onClick={handleExportExcel} disabled={filteredHistorique.length === 0}>
-                        <FaFileExcel size={15} />
-                        <span className="ms-2">Exporter</span>
-                    </Button>
-                    )}
-                </div>
-            </div>
+    return (
+        <div className="container-fluid py-2 px-2 page-historique-materiel">
+            <PageHeader
+                icon={<FaHistory />}
+                title={isUser ? 'Mon historique' : 'Historique des Matériels'}
+                subtitle={isUser ? 'Suivi des modifications de votre équipement' : 'Suivi complet des modifications apportées aux équipements'}
+                actions={
+                    <>
+                        <button type="button" className="btn-refresh" onClick={fetchHistorique} title="Rafraîchir" aria-label="Rafraîchir">
+                            <FaSync aria-hidden="true" />
+                        </button>
+                        {!isUser && (
+                            <button type="button" className="btn-pill btn-pill-primary" onClick={handleOpenAddModal} title="Ajouter un historique">
+                                <FaPlus size={15} aria-hidden="true" />
+                                Ajouter
+                            </button>
+                        )}
+                        {!isUser && (
+                            <button type="button" className="btn-pill btn-pill-warning" onClick={handleExportExcel} disabled={filteredHistorique.length === 0}>
+                                <FaFileExcel size={15} aria-hidden="true" />
+                                Exporter
+                            </button>
+                        )}
+                    </>
+                }
+            />
 
             <Card className="border-0 hm-table-card mb-4">
                 <Card.Body className="p-4 p-lg-5">
@@ -442,7 +411,7 @@ const HistoriqueMateriel = () => {
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
                                 {searchTerm && (
-                                    <Button variant="link" className="text-muted p-0 ms-2" onClick={() => setSearchTerm('')}>
+                                    <Button variant="link" className="text-muted p-0 ms-2" onClick={() => setSearchTerm('')} aria-label="Effacer la recherche">
                                         <FaTimes />
                                     </Button>
                                 )}
@@ -453,8 +422,7 @@ const HistoriqueMateriel = () => {
                             <Form.Select
                                 value={filterMateriel}
                                 onChange={(e) => setFilterMateriel(e.target.value)}
-                                className="rounded-pill border-0 shadow-sm"
-                                style={{ backgroundColor: '#f8f9fa', height: '38px', fontSize: '0.85rem' }}
+                                className={`filter-pill ${filterMateriel ? 'is-active' : ''}`}
                             >
                                 <option value="">Tous les matériels</option>
                                 {[...new Set(historique.map(item => item.materiel?.id_materiels).filter(Boolean))].map(id => {
@@ -475,8 +443,7 @@ const HistoriqueMateriel = () => {
                                     setFilterColumn(e.target.value);
                                     setFilterColumnValue('');
                                 }}
-                                className="rounded-pill border-0 shadow-sm"
-                                style={{ backgroundColor: '#f8f9fa', height: '38px', fontSize: '0.85rem' }}
+                                className={`filter-pill ${filterColumn ? 'is-active' : ''}`}
                             >
                                 <option value="">Toutes les colonnes</option>
                                 <option value="utilisateur">Utilisateur</option>
@@ -490,8 +457,7 @@ const HistoriqueMateriel = () => {
                             <Form.Select
                                 value={filterLocal}
                                 onChange={(e) => setFilterLocal(e.target.value)}
-                                className="rounded-pill border-0 shadow-sm"
-                                style={{ backgroundColor: '#f8f9fa', height: '38px', fontSize: '0.85rem' }}
+                                className={`filter-pill ${filterLocal ? 'is-active' : ''}`}
                             >
                                 <option value="">Tous les locaux</option>
                                 {[...new Set(historique.map(item => item.materiel?.local?.nom_local).filter(Boolean))].sort().map(local => (
@@ -510,8 +476,7 @@ const HistoriqueMateriel = () => {
                                     placeholder="Valeur à filtrer..."
                                     value={filterColumnValue}
                                     onChange={(e) => setFilterColumnValue(e.target.value)}
-                                    className="rounded-pill border-0 shadow-sm"
-                                    style={{ backgroundColor: '#f8f9fa', height: '38px', fontSize: '0.85rem' }}
+                                    className={`filter-pill ${filterColumnValue ? 'is-active' : ''}`}
                                 />
                                 <datalist id="filterColumnValuesList">
                                     {uniqueColumnValues.map(val => (
@@ -531,8 +496,8 @@ const HistoriqueMateriel = () => {
 
                         {(searchTerm || filterMateriel || filterLocal || filterColumn || filterColumnValue) && (
                             <div className="col-md-2 col-lg-2">
-                                <Button variant="outline-secondary" size="sm" className="border-0 rounded-pill w-100" onClick={handleResetFilters} style={{ backgroundColor: '#f0f0f0', color: '#6c757d' }}>
-                                    <FaTimes size={14} className="me-2" />
+                                <Button variant="outline-secondary" size="sm" className="border-0 rounded-pill w-100 hm-btn-reset" onClick={handleResetFilters}>
+                                    <FaTimes size={14} className="me-2" aria-hidden="true" />
                                     Réinitialiser
                                 </Button>
                             </div>
@@ -556,12 +521,12 @@ const HistoriqueMateriel = () => {
                                         <span className="text-muted">Chargement des données...</span>
                                     </div>
                                 }
-                                customStyles={modernStyles}
+                                customStyles={tableCustomStyles}
                                 noDataComponent={
                                 <div className="text-center py-5">
-                                    <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📭</div>
-                                    <h5 style={{ color: '#374151' }}>Aucun historique trouvé</h5>
-                                    <p style={{ color: '#6B7280', fontSize: '0.9rem' }}>
+                                    <div className="hm-empty-icon" aria-hidden="true">📭</div>
+                                    <h5 className="hm-empty-title">Aucun historique trouvé</h5>
+                                    <p className="hm-empty-text">
                                         {error ? error : 'Essayez avec d\'autres filtres.'}
                                     </p>
                                 </div>
@@ -571,91 +536,73 @@ const HistoriqueMateriel = () => {
                 </Card.Body>
             </Card>
 
-            {showAddModal && (
-                <div className="add-modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1050 }}>
-                    <div className="add-modal-content" style={{ background: 'white', width: '100%', maxWidth: '600px', maxHeight: '90vh', borderRadius: '20px', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                        <div className="add-modal-header" style={{ background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', padding: '18px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <div style={{ background: 'rgba(255,255,255,0.2)', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-                                    <FaPlus />
-                                </div>
-                                <div>
-                                    <h2 style={{ color: 'white', margin: 0, fontSize: '1.15rem', fontWeight: '600' }}>Ajouter un historique</h2>
-                                    <p style={{ color: 'rgba(255,255,255,0.7)', margin: 0, fontSize: '0.8rem' }}>Enregistrer une nouvelle modification de matériel</p>
-                                </div>
-                            </div>
-                            <button onClick={handleCloseAddModal} className="add-modal-close-btn" type="button" style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.15)', width: '36px', height: '36px', borderRadius: '10px', cursor: 'pointer' }}>
-                                <FaTimes />
-                            </button>
-                        </div>
-
-                        <div className="add-modal-body" style={{ padding: '24px', overflowY: 'auto', background: '#F8FAFC' }}>
-                            {formError && (
-                                <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '12px', padding: '12px 16px', marginBottom: '20px', color: '#dc2626', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <FaTimes style={{ fontSize: '1rem' }} />
-                                    {formError}
-                                </div>
-                            )}
-
-                            <form onSubmit={handleSubmitForm}>
-                                <div style={{ marginBottom: '16px' }}>
-                                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', fontWeight: '500', color: '#374151' }}>
-                                        Matériel <span style={{ color: '#dc2626' }}>*</span>
-                                    </label>
-                                    <select name="id_materiels" value={formData.id_materiels} onChange={handleFormChange} className="add-modal-select hm-input" required>
-                                        <option value="">Sélectionner un matériel</option>
-                                        {[...new Set(historique.map(item => item.materiel?.id_materiels).filter(Boolean))].map(id => {
-                                            const mat = historique.find(item => item.materiel?.id_materiels === id)?.materiel;
-                                            return (
-                                                <option key={id} value={id}>
-                                                    {mat?.code_pc ? `PC: ${mat.code_pc}` : `ID: ${id}`}
-                                                </option>
-                                            );
-                                        })}
-                                    </select>
-                                </div>
-
-                                <div style={{ marginBottom: '16px' }}>
-                                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', fontWeight: '500', color: '#374151' }}>
-                                        Champ modifié <span style={{ color: '#dc2626' }}>*</span>
-                                    </label>
-                                    <input type="text" name="champ_modifie" value={formData.champ_modifie} onChange={handleFormChange} className="add-modal-select hm-input" placeholder="Ex: etat_pc, equipe, utilisateur..." required />
-                                </div>
-
-                                <div style={{ marginBottom: '16px' }}>
-                                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', fontWeight: '500', color: '#374151' }}>
-                                        Ancienne valeur
-                                    </label>
-                                    <input type="text" name="ancienne_valeur" value={formData.ancienne_valeur} onChange={handleFormChange} className="add-modal-select hm-input" placeholder="Valeur précédente" />
-                                </div>
-
-                                <div style={{ marginBottom: '16px' }}>
-                                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', fontWeight: '500', color: '#374151' }}>
-                                        Nouvelle valeur
-                                    </label>
-                                    <input type="text" name="nouvelle_valeur" value={formData.nouvelle_valeur} onChange={handleFormChange} className="add-modal-select hm-input" placeholder="Nouvelle valeur" />
-                                </div>
-
-                                <div style={{ marginBottom: '20px' }}>
-                                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', fontWeight: '500', color: '#374151' }}>
-                                        Nom de l'utilisateur
-                                    </label>
-                                    <input type="text" name="nom_utilisateur" value={formData.nom_utilisateur} onChange={handleFormChange} className="add-modal-select hm-input" placeholder="Nom de l'utilisateur (laisser vide pour Système)" />
-                                </div>
-
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                                    <button type="button" onClick={handleCloseAddModal} disabled={submitting} style={{ background: 'white', color: '#1E293B', border: '1px solid #CBD5E1', padding: '10px 24px', borderRadius: '12px', fontWeight: '500', fontSize: '0.9rem', cursor: 'pointer' }}>
-                                        Annuler
-                                    </button>
-                                    <button type="submit" disabled={submitting} style={{ background: submitting ? '#a5b4fc' : '#6366f1', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '12px', fontWeight: '500', fontSize: '0.9rem', cursor: 'pointer' }}>
-                                        {submitting ? 'Enregistrement...' : 'Enregistrer'}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
+            <AppModal
+                show={showAddModal}
+                onClose={handleCloseAddModal}
+                title="Ajouter un historique"
+                subtitle="Enregistrer une nouvelle modification de matériel"
+                icon={<FaPlus />}
+                size="md"
+                as="form"
+                onSubmit={handleSubmitForm}
+                bodyClassName="hm-modal-body"
+                footer={
+                    <>
+                        <button type="button" className="add-modal-cancel-btn" onClick={handleCloseAddModal} disabled={submitting}>
+                            Annuler
+                        </button>
+                        <button type="submit" className="add-modal-submit-btn" disabled={submitting}>
+                            {submitting ? 'Enregistrement...' : 'Enregistrer'}
+                        </button>
+                    </>
+                }
+            >
+                {formError && (
+                    <div className="hm-form-error" role="alert">
+                        <FaTimes aria-hidden="true" />
+                        {formError}
                     </div>
+                )}
+
+                <div className="add-modal-form-group">
+                    <label htmlFor="hm-id-materiels" className="add-modal-label">
+                        Matériel <span className="hm-required">*</span>
+                    </label>
+                    <select id="hm-id-materiels" name="id_materiels" value={formData.id_materiels} onChange={handleFormChange} className="add-modal-select" required>
+                        <option value="">Sélectionner un matériel</option>
+                        {[...new Set(historique.map(item => item.materiel?.id_materiels).filter(Boolean))].map(id => {
+                            const mat = historique.find(item => item.materiel?.id_materiels === id)?.materiel;
+                            return (
+                                <option key={id} value={id}>
+                                    {mat?.code_pc ? `PC: ${mat.code_pc}` : `ID: ${id}`}
+                                </option>
+                            );
+                        })}
+                    </select>
                 </div>
-            )}
+
+                <div className="add-modal-form-group">
+                    <label htmlFor="hm-champ-modifie" className="add-modal-label">
+                        Champ modifié <span className="hm-required">*</span>
+                    </label>
+                    <input id="hm-champ-modifie" type="text" name="champ_modifie" value={formData.champ_modifie} onChange={handleFormChange} className="add-modal-input" placeholder="Ex: etat_pc, equipe, utilisateur..." required />
+                </div>
+
+                <div className="add-modal-form-group">
+                    <label htmlFor="hm-ancienne-valeur" className="add-modal-label">Ancienne valeur</label>
+                    <input id="hm-ancienne-valeur" type="text" name="ancienne_valeur" value={formData.ancienne_valeur} onChange={handleFormChange} className="add-modal-input" placeholder="Valeur précédente" />
+                </div>
+
+                <div className="add-modal-form-group">
+                    <label htmlFor="hm-nouvelle-valeur" className="add-modal-label">Nouvelle valeur</label>
+                    <input id="hm-nouvelle-valeur" type="text" name="nouvelle_valeur" value={formData.nouvelle_valeur} onChange={handleFormChange} className="add-modal-input" placeholder="Nouvelle valeur" />
+                </div>
+
+                <div className="add-modal-form-group">
+                    <label htmlFor="hm-nom-utilisateur" className="add-modal-label">Nom de l'utilisateur</label>
+                    <input id="hm-nom-utilisateur" type="text" name="nom_utilisateur" value={formData.nom_utilisateur} onChange={handleFormChange} className="add-modal-input" placeholder="Nom de l'utilisateur (laisser vide pour Système)" />
+                </div>
+            </AppModal>
         </div>
     );
 };

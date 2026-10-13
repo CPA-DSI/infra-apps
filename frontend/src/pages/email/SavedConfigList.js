@@ -11,8 +11,8 @@ const SavedConfigList = ({ configs, activeTab }) => {
   ];
 
   return (
-    <div className="modern-card">
-      <div className="ecfg-modern-header">
+    <div className="scl-card">
+      <div className="scl-header">
         <h3 className="h6 mb-0 text-white fw-bold">Configurations sauvegardées</h3>
       </div>
       <ListGroup variant="flush">
@@ -25,10 +25,10 @@ const SavedConfigList = ({ configs, activeTab }) => {
           return (
             <ListGroup.Item
               key={item.key}
-              className={`saved-config-item ${isActive ? 'saved-config-active' : ''}`}
+              className={`scl-item ${isActive ? 'is-active' : ''}`}
             >
               <div className="d-flex align-items-start gap-2">
-                <Icon className={`mt-1 config-icon ${isActive ? 'text-white' : 'text-primary'}`} />
+                <Icon className={`mt-1 ${isActive ? 'text-white' : 'text-primary'}`} aria-hidden="true" />
                 <div className="flex-grow-1">
                   <div className="d-flex justify-content-between align-items-center">
                     <strong>{item.label}</strong>
@@ -39,7 +39,7 @@ const SavedConfigList = ({ configs, activeTab }) => {
                     )}
                   </div>
                   {hasConfig ? (
-                    <div className="mt-1 small config-details">
+                    <div className="mt-1 small scl-details">
                       <div>📧 {item.data.email_dest ? item.data.email_dest.split(',')[0] + (item.data.email_dest.includes(',') ? '...' : '') : 'Non défini'}</div>
                       <div>🕐 {item.data.heure_envoi || '--:--'}</div>
                       {item.key === 'hebdomadaire' && item.data.jour_envoi && (
@@ -50,7 +50,7 @@ const SavedConfigList = ({ configs, activeTab }) => {
                       )}
                     </div>
                   ) : (
-                    <div className="mt-1 small text-muted">Non configuré</div>
+                    <div className="mt-1 small scl-empty">Non configuré</div>
                   )}
                 </div>
               </div>

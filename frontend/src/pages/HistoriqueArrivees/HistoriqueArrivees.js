@@ -6,11 +6,13 @@ import dayjs from 'dayjs';
 import DataTable from 'react-data-table-component';
 import HistoriqueArriveesChart from './HistoriqueArriveesChart.js';
 import { fetchProduits, getHistoriqueArrivees } from '../../services/api';
+import PageHeader from '../../components/PageHeader/PageHeader';
+import { tableStyles, paginationOptions } from '../../styles/dataTableTheme';
 import './HistoriqueArrivees.css';
 
 const NoDataComponent = ({ filterText }) => (
     <div className="ha-no-data">
-        <div className="ha-no-data-icon">📦</div>
+        <div className="ha-no-data-icon" aria-hidden="true">📦</div>
         <p className="ha-no-data-title">Aucun historique trouvé</p>
         <p className="ha-no-data-subtitle">
             {filterText ? `Aucun résultat pour "${filterText}"` : "Réessayez avec d'autres filtres"}
@@ -18,52 +20,10 @@ const NoDataComponent = ({ filterText }) => (
     </div>
 );
 
-const modernStyles = {
-    table: {
-        style: {
-            backgroundColor: 'transparent', borderRadius: '20px', overflow: 'hidden',
-        },
-    },
-    headRow: {
-        style: {
-            backgroundColor: '#f0f4f8', border: 'none', minHeight: '56px', borderRadius: '10px 10px 0 0', borderBottom: '2px solid #e2e8f0', fontWeight: 700,
-        },
-    },
-    headCells: {
-        style: {
-            fontSize: '0.75rem', fontWeight: '700', color: '#374151', letterSpacing: '0.05em', textTransform: 'capitalize', paddingLeft: '16px', paddingRight: '16px', paddingTop: '16px', paddingBottom: '16px', verticalAlign: 'middle', textAlign: 'left', backgroundColor: '#f3f4f6', borderBottom: '2px solid #e5e7eb', whiteSpace: 'nowrap', userSelect: 'none',
-        },
-    },
-    rows: {
-        style: {
-            fontSize: '14px', fontWeight: '500', color: '#334155', minHeight: '70px', paddingLeft: '16px', paddingRight: '16px', borderBottom: '1px solid #e2e8f0', transition: 'all 0.3s ease',
-        },
-        highlightOnHoverStyle: {
-            backgroundColor: '#f0f8ff', color: '#0056b3', cursor: 'pointer', transitionDuration: '0.2s',
-        },
-    },
-    pagination: {
-        style: {
-            border: 'none', fontSize: '13px', color: '#6c757d', paddingTop: '20px', backgroundColor: 'transparent',
-        },
-        pageButtonsStyle: {
-            borderRadius: '4px', height: '32px', cursor: 'pointer', transition: 'all 0.3s',
-            '&:hover:not(:disabled)': {
-                backgroundColor: '#667eea',
-                color: 'white',
-            },
-            '&:disabled': {
-                cursor: 'unset',
-                opacity: 0.5,
-            },
-        },
-    },
-    noData: {
-        style: {
-            display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent',
-        },
-    },
-};
+// Tableau : thème partagé, seules la taille de police et la hauteur des lignes diffèrent
+const tableCustomStyles = tableStyles({
+    rows: { style: { fontSize: '14px', minHeight: '70px' } },
+});
 
 const HistoriqueArrivees = () => {
     const [data, setData] = useState([]);
@@ -190,7 +150,7 @@ const HistoriqueArrivees = () => {
                 const qty = row.quantite_arrivee || 0;
                 const isPositive = qty >= 0;
                 return (
-                    <span className={isPositive ? "ha-badge-qty-positive" : "ha-badge-qty-negative"}>
+                    <span className={`ha-badge ${isPositive ? 'ha-badge--positive' : 'ha-badge--negative'}`}>
                         {isPositive ? '+' : '-'}{Math.abs(qty)}
                     </span>
                 );
@@ -202,7 +162,7 @@ const HistoriqueArrivees = () => {
             sortable: true,
             center: true,
             cell: row => (
-                <span className="ha-badge-stock">
+                <span className="ha-badge ha-badge--stock">
                     {row.quantite_en_stock ?? 'N/A'}
                 </span>
             ),
@@ -241,7 +201,7 @@ const HistoriqueArrivees = () => {
             sortable: true, 
             center: true,
             cell: row => (
-                <span className="ha-badge-stock-prec">
+                <span className="ha-badge ha-badge--prec">
                     {row.ancienne_quantite_stock !== null && row.ancienne_quantite_stock !== undefined 
                         ? row.ancienne_quantite_stock 
                         : 'N/A'}
@@ -322,62 +282,52 @@ const HistoriqueArrivees = () => {
     }, [finalFilteredData, dateRange]);
 
     return (
-        <div className="container-fluid py-2 px-2 ha-container">
+        <div className="container-fluid py-2 px-2 ha-page">
             
-            <div className="d-flex justify-content-between align-items-center mb-4 p-2 p-md-3 rounded-3 ha-header">
-                <div className="d-flex align-items-center gap-3">
-                    <div className="d-flex align-items-center justify-content-center flex-shrink-0 ha-header-icon">
-                        <FaHistory className="text-white" style={{ fontSize: '1.5rem' }} />
-                    </div>
-                    <div>
-                        <h1 className="h5 fw-bold text-white mb-1 ha-header-title">
-                            Historique des Mouvements
-                        </h1>
-                        <p className="text-white mb-0 ha-header-subtitle">
-                            Suivez l'historique des arrivées de produits en stock
-                        </p>
-                    </div>
-                </div>
-                
-                <div className="d-flex gap-2">
-                    <Button 
-                        className="border-0 rounded-circle shadow-sm ha-btn-refresh" 
+            <PageHeader
+                icon={<FaHistory />}
+                title="Historique des Mouvements"
+                subtitle="Suivez l'historique des arrivées de produits en stock"
+                actions={
+                    <button
+                        type="button"
+                        className="btn-pill btn-pill-ghost btn-refresh"
                         onClick={() => fetchHistoriqueData()}
                         title="Rafraîchir"
+                        aria-label="Rafraîchir"
                         disabled={loading}
                     >
-                        <FaSync className={loading ? 'fa-spin' : ''} />
-                    </Button>
-                </div>
-            </div>
+                        <FaSync className={loading ? 'ha-spin' : ''} aria-hidden="true" />
+                    </button>
+                }
+            />
 
             <div className="mb-4">
-                <div className="border-0 shadow-lg ha-dashboard-card">
-                    <div className="p-4 p-lg-5">
+                <div className="border-0 shadow-lg ha-card">
+                    <div className="p-3 p-md-4 p-lg-5">
                         <HistoriqueArriveesChart data={data} />
                     </div>
                 </div>
             </div>
 
             <div>
-                <div className="border-0 shadow-lg ha-table-card">
-                    <div className="p-4 p-lg-5">
+                <div className="border-0 shadow-lg ha-card">
+                    <div className="p-3 p-md-4 p-lg-5">
                         {/* Titre moderne avec sous-titre et bouton export */}
                         <div className="mb-4">
-                            <div className="d-flex align-items-center justify-content-between">
+                            <div className="d-flex align-items-center justify-content-between ha-table-heading">
                                 <div className="d-flex align-items-center">
-                                    <div className="ha-title-icon me-3">
-                                        <div className="rounded-circle bg-primary bg-opacity-10 p-3 d-flex align-items-center justify-content-center" 
-                                             style={{ width: '48px', height: '48px' }}>
+                                    <div className="me-3" aria-hidden="true">
+                                        <div className="rounded-circle bg-primary bg-opacity-10 p-3 d-flex align-items-center justify-content-center ha-title-icon">
                                             <FaClipboardList size={24} className="text-primary" />
                                         </div>
                                     </div>
                                     <div>
-                                        <h3 className="mb-1 fw-semibold" style={{ color: '#1e293b' }}>
+                                        <h3 className="mb-1 fw-semibold ha-title">
                                             Registre des arrivages
                                         </h3>
                                         <p className="text-muted mb-0 small">
-                                            <FaHistory size={12} className="me-1 text-muted" />
+                                            <FaHistory size={12} className="me-1 text-muted" aria-hidden="true" />
                                             Suivi détaillé des réceptions produit
                                             <span className="mx-2">•</span>
                                             Mise à jour en temps réel
@@ -385,15 +335,16 @@ const HistoriqueArrivees = () => {
                                     </div>
                                 </div>
                                 
-                                <Button 
-                                    variant="success"
-                                    className="border-0 rounded-pill shadow-sm ha-btn-export"
+                                <button
+                                    type="button"
+                                    className="btn-pill btn-pill-success ha-btn-export"
                                     onClick={exportToExcel}
                                     disabled={data.length === 0}
+                                    aria-label="Exporter"
                                 >
-                                    <FaFileExcel size={15} />
+                                    <FaFileExcel size={15} aria-hidden="true" />
                                     <span>Exporter</span>
-                                </Button>
+                                </button>
                             </div>
                         </div>
                         
@@ -401,11 +352,11 @@ const HistoriqueArrivees = () => {
                             <div className="row g-2">
                                 <div className="col-md-4">  {/* au lieu de 3 */}
                                     <div className="bg-light rounded-pill px-3 py-2 border-0 shadow-sm ha-search-bar">
-                                        <FaSearch style={{ color: '#6c757d', marginRight: '8px' }} />
-                                        <input type="text" placeholder="Rechercher dans l'historique..." value={filterText} onChange={(e) => setFilterText(e.target.value)} className="ha-search-input" />
+                                        <FaSearch aria-hidden="true" />
+                                        <input type="text" aria-label="Rechercher dans l'historique" placeholder="Rechercher dans l'historique..." value={filterText} onChange={(e) => setFilterText(e.target.value)} className="ha-search-input" />
                                         {filterText && (
-                                            <button onClick={() => setFilterText('')} className="ha-search-clear-btn">
-                                                <FaTimes />
+                                            <button type="button" onClick={() => setFilterText('')} className="ha-search-clear-btn" aria-label="Effacer la recherche">
+                                                <FaTimes aria-hidden="true" />
                                             </button>
                                         )}
                                     </div>
@@ -413,24 +364,24 @@ const HistoriqueArrivees = () => {
                                 
                                 <div className="col-md-2">
                                     <InputGroup>
-                                        <InputGroup.Text style={{ backgroundColor: '#f8f9fa', border: 'none' }}>
+                                        <InputGroup.Text className="ha-filter-field" aria-hidden="true">
                                             <FaCalendarAlt />
                                         </InputGroup.Text>
-                                        <FormControl type="date" value={dateRange.start} onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })} placeholder="Date début" style={{ backgroundColor: '#f8f9fa', border: 'none' }} />
+                                        <FormControl type="date" value={dateRange.start} onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })} placeholder="Date début" aria-label="Date début" className="ha-filter-field" />
                                     </InputGroup>
                                 </div>
                                 
                                 <div className="col-md-2">
                                     <InputGroup>
-                                        <InputGroup.Text style={{ backgroundColor: '#f8f9fa', border: 'none' }}>
+                                        <InputGroup.Text className="ha-filter-field" aria-hidden="true">
                                             <FaCalendarAlt />
                                         </InputGroup.Text>
-                                        <FormControl type="date" value={dateRange.end} onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })} placeholder="Date fin" style={{ backgroundColor: '#f8f9fa', border: 'none' }} />
+                                        <FormControl type="date" value={dateRange.end} onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })} placeholder="Date fin" aria-label="Date fin" className="ha-filter-field" />
                                     </InputGroup>
                                 </div>
                                 
                                 <div className="col-md-3">  {/* au lieu de 6 */}
-                                    <select className="form-select" value={selectedProduct} onChange={(e) => setSelectedProduct(e.target.value)} style={{ borderRadius: '30px', backgroundColor: '#f8f9fa', border: 'none' }}>
+                                    <select className="form-select ha-filter-field ha-filter-select" aria-label="Filtrer par produit" value={selectedProduct} onChange={(e) => setSelectedProduct(e.target.value)}>
                                         <option value="">Tous les produits</option>
                                         {products.map(product => (
                                             <option key={product.id_produit} value={product.id_produit}>
@@ -441,7 +392,7 @@ const HistoriqueArrivees = () => {
                                 </div>
                                 
                                 <div className="col-md-1 text-md-end">  {/* au lieu de 4 */}
-                                    <Button variant="outline-secondary" onClick={resetFilters} style={{ borderRadius: '30px' }}>
+                                    <Button variant="outline-secondary" onClick={resetFilters} className="ha-btn-reset">
                                         Réinitialiser les filtres
                                     </Button>
                                 </div>
@@ -481,14 +432,9 @@ const HistoriqueArrivees = () => {
                                         <p className="text-muted mt-3">Chargement de l'historique...</p>
                                     </div>
                                 }
-                                customStyles={modernStyles}
+                                customStyles={tableCustomStyles}
                                 noDataComponent={<NoDataComponent filterText={filterText} />}
-                                paginationComponentOptions={{
-                                    rowsPerPageText: 'Lignes par page :',
-                                    rangeSeparatorText: 'sur',
-                                    selectAllRowsItem: true,
-                                    selectAllRowsItemText: 'Tout'
-                                }}
+                                paginationComponentOptions={paginationOptions}
                                 persistTableHead
                             />
                         </div>

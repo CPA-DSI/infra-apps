@@ -16,11 +16,15 @@
   font-family: var(--font-sans);
 }
 
-:where(.login-container) a {
+:where(.login-container) a,
+:where(.login-container) p {
   font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.7;
-  color: #666666;
+  color: var(--color-text-sub);
+}
+
+:where(.login-container) a {
   transition: all 0.4s;
 }
 
@@ -28,23 +32,21 @@
   text-decoration: none;
 }
 
-:where(.login-container) p {
-  font-family: var(--font-sans);
-  font-size: 14px;
-  line-height: 1.7;
-  color: #666666;
-}
-
 :where(.login-container) ul,
 :where(.login-container) li {
   list-style-type: none;
 }
 
+/* Pas d'outline: none ici : le :focus-visible global (index.css) reste actif */
 :where(.login-container) button {
-  outline: none;
   border: none;
   background: transparent;
   cursor: pointer;
+}
+
+.login-container input::placeholder,
+.login-container textarea::placeholder {
+  color: var(--color-text-sub);
 }
 
 .login-container input:focus::placeholder,
@@ -52,56 +54,23 @@
   color: transparent;
 }
 
-.login-container input::placeholder,
-.login-container textarea::placeholder {
-  color: #999999;
-}
-
 /* Utilitaires (ex util.css) */
 .login-container .p-t-12 { padding-top: 12px; }
+.login-container .m-t-20 { margin-top: 20px; }
 .login-container .m-l-5 { margin-left: 5px; }
 
 .login-container .txt2 {
   font-family: var(--font-sans);
   font-size: 13px;
   line-height: 1.5;
-  color: #666666;
+  color: var(--color-text-sub);
 }
 
 .login-container .validate-input {
   position: relative;
 }
 
-/* Première connexion : panneau plus large */
-.login-container .wrap-login.first-login-wrap {
-  max-width: 1400px;
-  padding: 60px 140px 43px 140px;
-}
-
-/* Règles de mot de passe */
-.login-container .password-rules-panel {
-  background: #f7f8fc;
-  border: 1px solid #e3e6f0;
-  border-radius: 10px;
-  padding: 18px 20px;
-  width: 260px;
-  flex-shrink: 0;
-}
-
-.login-container .password-rules-title {
-  display: block;
-  font-family: var(--font-sans);
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 12px;
-}
-
 .login-container .icon-spin {
   display: inline-block;
-  animation: icon-spin-rotate 1s linear infinite;
-}
-
-@keyframes icon-spin-rotate {
-  to { transform: rotate(360deg); }
+  animation: spin 1s linear infinite;
 }

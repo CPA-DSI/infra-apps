@@ -6,35 +6,11 @@ import { API_BASE_URL } from '../../config/api';
 import { CSRF_HEADERS } from '../../services/api/client';
 import { FaEnvelope, FaSpinner, FaLongArrowAltLeft } from 'react-icons/fa';
 
+import AuthLogo from '../../components/AuthLogo/AuthLogo';
+
 // --- IMPORTS CSS ---
 import './auth-base.css';
 import './login.css';
-
-// SVG Icon
-const KeyIcon = () => (
-  <svg 
-    viewBox="0 0 200 200" 
-    xmlns="http://www.w3.org/2000/svg"
-    style={{ width: '180px', height: '180px' }}
-  >
-    <defs>
-      <linearGradient id="keyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style={{stopColor: '#667eea', stopOpacity: 1}} />
-        <stop offset="100%" style={{stopColor: '#764ba2', stopOpacity: 1}} />
-      </linearGradient>
-    </defs>
-    <g>
-      {/* Cercle de la clé */}
-      <circle cx="70" cy="70" r="40" fill="none" stroke="url(#keyGrad)" strokeWidth="12" />
-      <circle cx="70" cy="70" r="18" fill="none" stroke="url(#keyGrad)" strokeWidth="8" />
-      {/* Tige de la clé */}
-      <rect x="105" y="60" width="80" height="20" rx="4" fill="url(#keyGrad)" />
-      {/* Dents de la clé */}
-      <rect x="145" y="80" width="12" height="20" rx="2" fill="url(#keyGrad)" />
-      <rect x="165" y="80" width="12" height="15" rx="2" fill="url(#keyGrad)" />
-    </g>
-  </svg>
-);
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -142,7 +118,7 @@ const ForgotPassword = () => {
       <div className="wrap-login">
         <Tilt tiltMaxAngleX={15} tiltMaxAngleY={15} scale={1.05} transitionSpeed={400}>
           <div className="login-pic">
-            <KeyIcon />
+            <AuthLogo variant="key" size={180} />
           </div>
         </Tilt>
 
@@ -163,7 +139,7 @@ const ForgotPassword = () => {
             </span>
           </div>
           
-          <div style={{ width: '100%' }}>
+          <div className="login-button-wrap">
             <button className={`login-button ${isLoading ? 'loading' : ''}`} type="submit" disabled={isLoading} aria-busy={isLoading} >
               {isLoading ? (
                 <>
@@ -176,7 +152,7 @@ const ForgotPassword = () => {
             </button>
           </div>
 
-          <div className="text-center p-t-12" style={{ marginTop: '20px' }}>
+          <div className="text-center p-t-12 m-t-20">
             <Link to="/login" className="txt2">
               <FaLongArrowAltLeft className="m-l-5" aria-hidden="true" />
               Retour à la connexion

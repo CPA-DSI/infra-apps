@@ -277,11 +277,11 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
   const renderPreview = () => {
     if (!hasPreview) {
       return (
-        <div className="text-center py-5">
-          <div style={{ fontSize: '4rem', marginBottom: '1rem', color: '#9ca3af' }}>
+        <div className="doc-preview-empty text-center py-5">
+          <div className="doc-preview-empty__icon doc-preview-empty__icon--muted" aria-hidden="true">
             <FaFileAlt />
           </div>
-          <div style={{ color: '#6c757d', fontSize: '1.1rem', fontWeight: '500' }}>
+          <div className="doc-preview-empty__title">
             Aucun fichier à prévisualiser
           </div>
         </div>
@@ -291,17 +291,17 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
     // --- PDF ---
     if (isPdf(mime, ext)) {
       return (
-        <div className="preview-section">
-          <div className="preview-frame-wrapper">
+        <div className="doc-preview-section">
+          <div className="doc-preview-frame-wrapper">
             {isLoading && !loadError && (
-              <div className="preview-loading">
+              <div className="doc-preview-loading">
                 <Spinner animation="border" variant="primary" size="sm" />
                 <span className="ms-2">Chargement du PDF…</span>
               </div>
             )}
             {loadError ? (
-              <div className="preview-error">
-                <FaFilePdf size={48} style={{ color: '#dc2626' }} />
+              <div className="doc-preview-error">
+                <FaFilePdf size={48} className="doc-file-type doc-file-type--pdf" aria-hidden="true" />
                 <p className="mt-3 mb-1">Impossible d'afficher le PDF</p>
                 <small className="text-muted">Le fichier n'est peut-être pas accessible directement.</small>
               </div>
@@ -310,14 +310,14 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
                 src={currentFile.previewUrl || currentFile.url}
                 width="100%"
                 height="600px"
-                style={{ border: 'none', borderRadius: '8px' }}
+                className="doc-preview-iframe"
                 title="Prévisualisation PDF"
                 onLoad={handleIframeLoad}
                 onError={handleIframeError}
               />
             )}
           </div>
-          <div className="preview-footer">
+          <div className="doc-preview-footer">
             <span className="text-muted"><FaFilePdf className="me-1" /> PDF — Document portable</span>
             <Button variant="primary" size="sm" href={currentFile.url} target="_blank" rel="noopener noreferrer">
               <FaDownload className="me-1" /> Télécharger
@@ -330,17 +330,17 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
     // --- Image ---
     if (isImage(mime, ext)) {
       return (
-        <div className="preview-section">
-          <div className="preview-frame-wrapper">
+        <div className="doc-preview-section">
+          <div className="doc-preview-frame-wrapper">
             {isLoading && !loadError && (
-              <div className="preview-loading">
+              <div className="doc-preview-loading">
                 <Spinner animation="border" variant="primary" size="sm" />
                 <span className="ms-2">Chargement de l'image…</span>
               </div>
             )}
             {loadError ? (
-              <div className="preview-error">
-                <FaFileImage size={48} style={{ color: '#ea580c' }} />
+              <div className="doc-preview-error">
+                <FaFileImage size={48} className="doc-file-type doc-file-type--image" aria-hidden="true" />
                 <p className="mt-3 mb-1">Impossible d'afficher l'image</p>
                 <small className="text-muted">Le fichier n'est peut-être pas accessible directement.</small>
               </div>
@@ -348,13 +348,13 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
               <img
                 src={currentFile.previewUrl || currentFile.url}
                 alt="Aperçu de l'image"
-                style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain', borderRadius: '8px' }}
+                className="doc-preview-image"
                 onLoad={handleImgLoad}
                 onError={handleImgError}
               />
             )}
           </div>
-          <div className="preview-footer">
+          <div className="doc-preview-footer">
             <span className="text-muted"><FaFileImage className="me-1" /> Image</span>
             <Button variant="primary" size="sm" href={currentFile.url} target="_blank" rel="noopener noreferrer">
               <FaDownload className="me-1" /> Télécharger
@@ -367,42 +367,33 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
     // --- Word ---
     if (isWord(mime, ext)) {
       return (
-        <div className="preview-section">
-          <div className="preview-frame-wrapper">
+        <div className="doc-preview-section">
+          <div className="doc-preview-frame-wrapper">
             {isLoading && !loadError && (
-              <div className="preview-loading">
+              <div className="doc-preview-loading">
                 <Spinner animation="border" variant="primary" size="sm" />
                 <span className="ms-2">Chargement du document Word…</span>
               </div>
             )}
             {docxError ? (
-              <div className="preview-error">
-                <FaFileWord size={48} style={{ color: '#2563eb' }} />
+              <div className="doc-preview-error">
+                <FaFileWord size={48} className="doc-file-type doc-file-type--word" aria-hidden="true" />
                 <p className="mt-3 mb-1">Impossible d'afficher le document</p>
                 <small className="text-muted">La conversion du fichier DOCX a échoué.</small>
               </div>
             ) : docxHtml ? (
               <div
-                className="preview-docx-content"
-                style={{
-                  width: '100%',
-                  maxHeight: '65vh',
-                  overflow: 'auto',
-                  padding: '1rem',
-                  background: '#ffffff',
-                  borderRadius: '8px',
-                  border: '1px solid #e5e7eb',
-                }}
+                className="doc-preview-docx-content"
                 dangerouslySetInnerHTML={{ __html: docxHtml }}
               />
             ) : (
-              <div className="preview-loading">
+              <div className="doc-preview-loading">
                 <Spinner animation="border" variant="primary" size="sm" />
                 <span className="ms-2">Chargement du document Word…</span>
               </div>
             )}
           </div>
-          <div className="preview-footer">
+          <div className="doc-preview-footer">
             <span className="text-muted"><FaFileWord className="me-1" /> Document Word</span>
             <Button variant="primary" size="sm" href={currentFile.url} target="_blank" rel="noopener noreferrer">
               <FaDownload className="me-1" /> Télécharger
@@ -418,23 +409,23 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
       const paginatedXlsxRows = xlsxRows.slice(xlsxPage * XLSX_PAGE_SIZE, (xlsxPage + 1) * XLSX_PAGE_SIZE);
       const hasXlsxTableData = xlsxHeaders.length > 0 && paginatedXlsxRows.length > 0;
       return (
-        <div className="preview-section">
-          <div className="preview-frame-wrapper" style={{ alignItems: 'stretch' }}>
+        <div className="doc-preview-section">
+          <div className="doc-preview-frame-wrapper doc-preview-frame-wrapper--stretch">
             {isLoading && !loadError && (
-              <div className="preview-loading">
+              <div className="doc-preview-loading">
                 <Spinner animation="border" variant="primary" size="sm" />
                 <span className="ms-2">Chargement du tableur…</span>
               </div>
             )}
             {xlsxError ? (
-              <div className="preview-error">
-                <FaFileExcel size={48} style={{ color: '#16a34a' }} />
+              <div className="doc-preview-error">
+                <FaFileExcel size={48} className="doc-file-type doc-file-type--excel" aria-hidden="true" />
                 <p className="mt-3 mb-1">Impossible d'afficher le tableur</p>
                 <small className="text-muted">La lecture du fichier Excel a échoué.</small>
               </div>
             ) : hasXlsxTableData ? (
-              <div style={{ width: '100%', overflow: 'auto', maxHeight: '65vh', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                <table className="preview-csv-table">
+              <div className="doc-preview-table-wrapper">
+                <table className="doc-preview-csv-table">
                   <thead>
                     <tr>
                       <th>#</th>
@@ -448,10 +439,10 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
                       const globalIdx = xlsxPage * XLSX_PAGE_SIZE + rIdx;
                       return (
                         <tr key={rIdx}>
-                          <td className="preview-csv-cell-index">{globalIdx + 1}</td>
+                          <td className="doc-preview-csv-cell-index">{globalIdx + 1}</td>
                           {xlsxHeaders.map((_, cIdx) => (
                             <td key={cIdx}>
-                              <span style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap', display: 'block' }}>{row[xlsxHeaders[cIdx]] ?? ''}</span>
+                              <span className="doc-preview-cell-text">{row[xlsxHeaders[cIdx]] ?? ''}</span>
                             </td>
                           ))}
                         </tr>
@@ -461,16 +452,16 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
                 </table>
               </div>
             ) : (
-              <div className="preview-loading">
+              <div className="doc-preview-loading">
                 <Spinner animation="border" variant="primary" size="sm" />
                 <span className="ms-2">Chargement du tableur…</span>
               </div>
             )}
           </div>
-          <div className="preview-footer" style={{ flexWrap: 'wrap', gap: '8px' }}>
+          <div className="doc-preview-footer doc-preview-footer--wrap">
             <span className="text-muted">
               <FaFileExcel className="me-1" /> Tableur Excel
-              <span className="ms-2" style={{ fontSize: '0.75rem', opacity: 0.8 }}>
+              <span className="doc-preview-footer__meta ms-2">
                 {xlsxRows.length} ligne{xlsxRows.length > 1 ? 's' : ''}
               </span>
             </span>
@@ -481,7 +472,7 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
             </div>
           </div>
           {hasXlsxTableData && totalXlsxPages > 1 && (
-            <div className="preview-csv-pagination">
+            <div className="doc-preview-csv-pagination">
               <span>
                 Page {xlsxPage + 1} / {totalXlsxPages} · {xlsxRows.length} ligne{xlsxRows.length > 1 ? 's' : ''} au total
               </span>
@@ -504,17 +495,17 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
       const hasTableData = csvHeaders.length > 0 && paginatedRows.length > 0;
 
       return (
-        <div className="preview-section">
-          <div className="preview-frame-wrapper" style={{ alignItems: 'stretch' }}>
+        <div className="doc-preview-section">
+          <div className="doc-preview-frame-wrapper doc-preview-frame-wrapper--stretch">
             {csvError ? (
-              <div className="preview-error">
-                <FaFileAlt size={48} style={{ color: '#6366f1' }} />
+              <div className="doc-preview-error">
+                <FaFileAlt size={48} className="doc-file-type doc-file-type--text" aria-hidden="true" />
                 <p className="mt-3 mb-1">Impossible d'afficher le fichier texte</p>
                 <small className="text-muted">Le fichier n'est peut-être pas accessible directement.</small>
               </div>
             ) : hasTableData ? (
-              <div style={{ width: '100%', overflow: 'auto', maxHeight: '65vh', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                <table className="preview-csv-table">
+              <div className="doc-preview-table-wrapper">
+                <table className="doc-preview-csv-table">
                   <thead>
                     <tr>
                       <th>#</th>
@@ -528,7 +519,7 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
                       const globalIdx = csvPage * CSV_PAGE_SIZE + rIdx;
                       return (
                         <tr key={rIdx}>
-                          <td className="preview-csv-cell-index">{globalIdx + 1}</td>
+                          <td className="doc-preview-csv-cell-index">{globalIdx + 1}</td>
                           {csvHeaders.map((_, cIdx) => {
                             const value = row[cIdx] || '';
                             return (
@@ -536,12 +527,12 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
                                 {isEditing ? (
                                   <input
                                     type="text"
-                                    className="preview-csv-input"
+                                    className="doc-preview-csv-input"
                                     value={value}
                                     onChange={(e) => handleCellChange(globalIdx, cIdx, e.target.value)}
                                   />
                                 ) : (
-                                  <span style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap', display: 'block' }}>{value}</span>
+                                  <span className="doc-preview-cell-text">{value}</span>
                                 )}
                               </td>
                             );
@@ -553,32 +544,17 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
                 </table>
               </div>
             ) : (
-              <pre style={{
-                margin: 0,
-                padding: '1rem',
-                width: '100%',
-                maxHeight: '60vh',
-                overflow: 'auto',
-                background: '#ffffff',
-                borderRadius: '8px',
-                border: '1px solid #e5e7eb',
-                fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-                fontSize: '0.85rem',
-                lineHeight: 1.5,
-                color: '#1f2937',
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
-              }}>
+              <pre className="doc-preview-text">
                 {csvContent || 'Chargement du fichier...'}
               </pre>
             )}
           </div>
           {hasTableData && (
-            <div className="preview-footer" style={{ flexWrap: 'wrap', gap: '8px' }}>
+            <div className="doc-preview-footer doc-preview-footer--wrap">
               <span className="text-muted">
                 <FaFileAlt className="me-1" />
                 {ext === 'csv' ? 'CSV — Tableau éditable' : 'Texte'}
-                <span className="ms-2" style={{ fontSize: '0.75rem', opacity: 0.8 }}>
+                <span className="doc-preview-footer__meta ms-2">
                   {editedRows.length} ligne{editedRows.length > 1 ? 's' : ''} · séparateur : « {csvSeparator === '\t' ? 'tabulation' : csvSeparator} »
                 </span>
               </span>
@@ -598,7 +574,7 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
             </div>
           )}
           {hasTableData && totalCsvPages > 1 && (
-            <div className="preview-csv-pagination">
+            <div className="doc-preview-csv-pagination">
               <span>
                 Page {csvPage + 1} / {totalCsvPages} · {editedRows.length} ligne{editedRows.length > 1 ? 's' : ''} au total
               </span>
@@ -618,17 +594,17 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
 
     // --- Fallback ---
     return (
-      <div className="text-center py-5">
-        <div style={{ fontSize: '4rem', marginBottom: '1rem', color: '#6366f1' }}>
+      <div className="doc-preview-empty text-center py-5">
+        <div className="doc-preview-empty__icon" aria-hidden="true">
           <FaFileAlt />
         </div>
-        <div style={{ color: '#6c757d', fontSize: '1.2rem', fontWeight: '500' }}>
+        <div className="doc-preview-empty__title doc-preview-empty__title--lg">
           Aucun aperçu disponible
         </div>
-        <div style={{ color: '#9ca3af', fontSize: '1rem', marginTop: '0.5rem' }}>
+        <div className="doc-preview-empty__text">
           Type « {mime || ext || 'inconnu' } » non pris en charge
         </div>
-        <div style={{ marginTop: '1rem' }}>
+        <div className="mt-3">
           <Button variant="outline-primary" href={currentFile.url} target="_blank" rel="noopener noreferrer">
             <FaDownload className="me-1" /> Télécharger le fichier
           </Button>
@@ -644,49 +620,32 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
       onExited={handleExited}
       size="xl"
       centered
-      className="quick-preview-modal"
+      className="doc-preview-modal"
+      backdropClassName="doc-preview-backdrop"
       keyboard={true}
     >
-      <Modal.Header closeButton style={{ borderBottom: '1px solid #e5e7eb' }}>
-        <Modal.Title style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <FaFileAlt style={{ color: '#6366f1' }} />
+      <Modal.Header closeButton closeLabel="Fermer">
+        <Modal.Title className="doc-preview-title">
+          <FaFileAlt className="doc-preview-title__icon" aria-hidden="true" />
           Prévisualisation rapide
           {currentFile.filename && (
-            <small className="text-muted ms-2" style={{ fontWeight: '400' }}>
+            <small className="doc-preview-title__file text-muted ms-2">
               — {currentFile.filename}
             </small>
           )}
         </Modal.Title>
       </Modal.Header>
 
-      <Modal.Body style={{ padding: '24px' }}>
+      <Modal.Body>
         {files.length > 1 && (
-          <div className="preview-tabs" style={{
-            display: 'flex',
-            gap: '8px',
-            marginBottom: '16px',
-            flexWrap: 'wrap',
-          }}>
+          <div className="doc-preview-tabs">
             {files.map((file, idx) => (
               <button
                 key={idx}
                 type="button"
                 onClick={() => handleTabClick(idx)}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '6px 14px',
-                  borderRadius: '8px',
-                  border: '1px solid',
-                  borderColor: idx === selectedIndex ? '#6366f1' : '#e5e7eb',
-                  backgroundColor: idx === selectedIndex ? '#eef2ff' : '#fff',
-                  color: idx === selectedIndex ? '#4f46e5' : '#374151',
-                  fontSize: '0.85rem',
-                  fontWeight: idx === selectedIndex ? '600' : '500',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                }}
+                className={`doc-preview-tab ${idx === selectedIndex ? 'is-active' : ''}`.trim()}
+                aria-pressed={idx === selectedIndex}
               >
                 {getFileIcon(file.type, file.filename)}
                 {file.filename}
@@ -697,9 +656,9 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
         {renderPreview()}
       </Modal.Body>
 
-      <Modal.Footer style={{ borderTop: '1px solid #e5e7eb', justifyContent: 'flex-end' }}>
+      <Modal.Footer>
         <Button variant="outline-secondary" onClick={onHide}>
-          <FaTimes className="me-1" /> Fermer
+          <FaTimes className="me-1" aria-hidden="true" /> Fermer
         </Button>
       </Modal.Footer>
     </Modal>

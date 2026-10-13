@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Chart from 'react-apexcharts';
 import { fetchUsers } from '../../services/api';
 import { ROLES } from '../../config/api';
+import { cssVar } from '../../styles/chartTheme';
 import './MailChartFromAPI.css';
 
 const sampleUsers = [
@@ -16,6 +17,65 @@ const sampleUsers = [
   { id_n: 9, role: 'USER', emails: [] },
   { id_n: 10, role: 'DIRECTION', emails: [{ is_verified: true, is_primary: true }, { is_verified: true, is_primary: false }] },
 ];
+
+// Couleurs du thème (ApexCharts a besoin de valeurs résolues)
+const getMailChartColors = () => ({
+  text: cssVar('--color-text-main', '#1e293b'),
+  textSub: cssVar('--color-text-sub', '#64748b'),
+  textMuted: cssVar('--color-text-muted', '#94a3b8'),
+  border: cssVar('--color-border', '#e2e8f0'),
+  borderStrong: cssVar('--color-border-strong', '#cbd5e1'),
+  bg: cssVar('--color-bg', '#ffffff'),
+  brandStart: cssVar('--color-brand-start', '#667eea'),
+  brandEnd: cssVar('--color-brand-end', '#764ba2'),
+});
+
+// Teintes propres au widget (vérifiés / non vérifiés / sans email)
+const VERIFIED_COLOR = '#4caf50';
+const UNVERIFIED_COLOR = '#f44336';
+const NO_EMAIL_COLOR = '#9e9e9e';
+
+const donutOptions = (c, colors, labels) => ({
+  chart: {
+    type: 'donut',
+    fontFamily: "'Inter Variable', system-ui, sans-serif",
+    animations: { enabled: true, easing: 'easeinout', speed: 800 },
+  },
+  colors,
+  labels,
+  dataLabels: {
+    enabled: true,
+    formatter: (val) => `${Number.isFinite(val) ? val.toFixed(1) : '0'}%`,
+    style: { fontSize: '11px', colors: [c.bg] },
+  },
+  plotOptions: {
+    pie: {
+      donut: {
+        size: '68%',
+        labels: {
+          show: true,
+          name: { show: true, color: c.textSub, fontSize: '12px' },
+          value: {
+            show: true,
+            color: c.text,
+            fontSize: '14px',
+            fontWeight: 700,
+            formatter: (val) => `${val}`,
+          },
+          total: {
+            show: true,
+            label: 'Total',
+            color: c.textSub,
+            formatter: (w) => w.globals.seriesTotals.reduce((a, b) => a + b, 0),
+          },
+        },
+      },
+    },
+  },
+  tooltip: { theme: 'dark', y: { formatter: (val) => `${val} emails` } },
+  legend: { show: true, position: 'bottom', fontSize: '12px', markers: { width: 10, height: 10, radius: 2 } },
+  stroke: { width: 2, colors: [c.bg] },
+});
 
 const MailChartFromAPI = () => {
   const [users, setUsers] = useState([]);
@@ -110,94 +170,24 @@ const MailChartFromAPI = () => {
 
   const pct = (num, den) => (den > 0 ? Math.round((num / den) * 100) : 0);
 
+  const chartColors = useMemo(() => getMailChartColors(), []);
+
   const donutVerificationOptions = useMemo(
-    () => ({
-      chart: {
-        type: 'donut',
-        fontFamily: "'Inter Variable', system-ui, sans-serif",
-        animations: { enabled: true, easing: 'easeinout', speed: 800 },
-      },
-      colors: ['#4caf50', '#f44336', '#9e9e9e'],
-      labels: ['Vérifiés', 'Non vérifiés', 'Sans email'],
-      dataLabels: {
-        enabled: true,
-        formatter: (val) => `${Number.isFinite(val) ? val.toFixed(1) : '0'}%`,
-        style: { fontSize: '11px', colors: ['#ffffff'] },
-      },
-      plotOptions: {
-        pie: {
-          donut: {
-            size: '68%',
-            labels: {
-              show: true,
-              name: { show: true, color: '#64748b', fontSize: '12px' },
-              value: {
-                show: true,
-                color: '#1e293b',
-                fontSize: '14px',
-                fontWeight: 700,
-                formatter: (val) => `${val}`,
-              },
-              total: {
-                show: true,
-                label: 'Total',
-                color: '#64748b',
-                formatter: (w) => w.globals.seriesTotals.reduce((a, b) => a + b, 0),
-              },
-            },
-          },
-        },
-      },
-      tooltip: { theme: 'dark', y: { formatter: (val) => `${val} emails` } },
-      legend: { show: true, position: 'bottom', fontSize: '12px', markers: { width: 10, height: 10, radius: 2 } },
-      stroke: { width: 2, colors: ['#ffffff'] },
-    }),
-    []
+    () => donutOptions(
+      chartColors,
+      [VERIFIED_COLOR, UNVERIFIED_COLOR, NO_EMAIL_COLOR],
+      ['Vérifiés', 'Non vérifiés', 'Sans email']
+    ),
+    [chartColors]
   );
 
   const donutPrimaryOptions = useMemo(
-    () => ({
-      chart: {
-        type: 'donut',
-        fontFamily: "'Inter Variable', system-ui, sans-serif",
-        animations: { enabled: true, easing: 'easeinout', speed: 800 },
-      },
-      colors: ['#667eea', '#764ba2', '#cbd5e1'],
-      labels: ['Email principal', 'Email secondaire', 'Aucun email'],
-      dataLabels: {
-        enabled: true,
-        formatter: (val) => `${Number.isFinite(val) ? val.toFixed(1) : '0'}%`,
-        style: { fontSize: '11px', colors: ['#ffffff'] },
-      },
-      plotOptions: {
-        pie: {
-          donut: {
-            size: '68%',
-            labels: {
-              show: true,
-              name: { show: true, color: '#64748b', fontSize: '12px' },
-              value: {
-                show: true,
-                color: '#1e293b',
-                fontSize: '14px',
-                fontWeight: 700,
-                formatter: (val) => `${val}`,
-              },
-              total: {
-                show: true,
-                label: 'Total',
-                color: '#64748b',
-                formatter: (w) => w.globals.seriesTotals.reduce((a, b) => a + b, 0),
-              },
-            },
-          },
-        },
-      },
-      tooltip: { theme: 'dark', y: { formatter: (val) => `${val} emails` } },
-      legend: { show: true, position: 'bottom', fontSize: '12px', markers: { width: 10, height: 10, radius: 2 } },
-      stroke: { width: 2, colors: ['#ffffff'] },
-    }),
-    []
+    () => donutOptions(
+      chartColors,
+      [chartColors.brandStart, chartColors.brandEnd, chartColors.borderStrong],
+      ['Email principal', 'Email secondaire', 'Aucun email']
+    ),
+    [chartColors]
   );
 
   const donutVerificationSeries = useMemo(
@@ -219,7 +209,7 @@ const MailChartFromAPI = () => {
         toolbar: { show: false },
         stacked: true,
       },
-      colors: ['#4caf50', '#f44336'],
+      colors: [VERIFIED_COLOR, UNVERIFIED_COLOR],
       plotOptions: {
         bar: {
           borderRadius: 6,
@@ -230,19 +220,19 @@ const MailChartFromAPI = () => {
       dataLabels: { enabled: false },
       xaxis: {
         categories: emailStats.roleBreakdown.map((r) => r.label),
-        labels: { style: { fontSize: '11px', colors: '#64748b', fontWeight: 500 } },
+        labels: { style: { fontSize: '11px', colors: chartColors.textSub, fontWeight: 500 } },
         axisBorder: { show: false },
         axisTicks: { show: false },
       },
       yaxis: {
-        labels: { style: { fontSize: '11px', colors: '#64748b' } },
-        title: { text: "Nombre d'emails", style: { fontSize: '11px', color: '#94a3b8' } },
+        labels: { style: { fontSize: '11px', colors: chartColors.textSub } },
+        title: { text: "Nombre d'emails", style: { fontSize: '11px', color: chartColors.textMuted } },
       },
       tooltip: { theme: 'dark', y: { formatter: (val) => `${val} emails` } },
       legend: { show: true, position: 'top', fontSize: '11px', markers: { width: 10, height: 10, radius: 2 } },
-      grid: { borderColor: '#e2e8f0', strokeDashArray: 4 },
+      grid: { borderColor: chartColors.border, strokeDashArray: 4 },
     }),
-    [emailStats.roleBreakdown]
+    [emailStats.roleBreakdown, chartColors]
   );
 
   const barRoleSeries = useMemo(
@@ -299,7 +289,7 @@ const MailChartFromAPI = () => {
         <div className="mailchart-header">
           <div className="mailchart-header-left">
             <div className="mailchart-icon-box">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="2" y="4" width="20" height="16" rx="2" />
                 <path d="M22 7l-10 7L2 7" />
               </svg>
@@ -324,7 +314,7 @@ const MailChartFromAPI = () => {
         <div className="mailchart-header">
           <div className="mailchart-header-left">
             <div className="mailchart-icon-box">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10" />
                 <line x1="12" y1="8" x2="12" y2="12" />
                 <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -338,8 +328,8 @@ const MailChartFromAPI = () => {
         </div>
         <div className="mailchart-error-container">
           <p className="mailchart-error-message">{error}</p>
-          <button className="mailchart-retry-button" onClick={loadData}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <button type="button" className="mailchart-retry-button" onClick={loadData}>
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="23 4 23 10 17 10" />
               <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
             </svg>
@@ -355,7 +345,7 @@ const MailChartFromAPI = () => {
       <div className="mailchart-header">
         <div className="mailchart-header-left">
           <div className="mailchart-icon-box">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="2" y="4" width="20" height="16" rx="2" />
               <path d="M22 7l-10 7L2 7" />
             </svg>
@@ -371,8 +361,8 @@ const MailChartFromAPI = () => {
               Maj {lastUpdated.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
             </span>
           )}
-          <button className="mailchart-icon-button" onClick={loadData} title="Actualiser">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <button type="button" className="mailchart-icon-button" onClick={loadData} title="Actualiser" aria-label="Actualiser">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="23 4 23 10 17 10" />
               <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
             </svg>
@@ -384,7 +374,7 @@ const MailChartFromAPI = () => {
         {metricCards.map((card, index) => (
           <div key={index} className={`mailchart-metric-card mailchart-metric-card--${card.colorClass}`}>
             <div className="mailchart-metric-header">
-              <span className="mailchart-metric-icon">{card.icon}</span>
+              <span className="mailchart-metric-icon" aria-hidden="true">{card.icon}</span>
               <span className="mailchart-metric-label">{card.label}</span>
             </div>
             <div className="mailchart-metric-value">{card.value}</div>
@@ -436,7 +426,7 @@ const MailChartFromAPI = () => {
 
       <div className="mailchart-total-footer">
         <div className="mailchart-total-left">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
             <circle cx="9" cy="7" r="4" />
             <path d="M23 21v-2a4 4 0 0 0-3-3.87" />

@@ -1,254 +1,479 @@
-/* src/pages/Documents/Documents.css */
+/* src/pages/Documents/Documents.css — page GED (.doc-page) et modale de détails */
 
 .doc-page {
   font-family: var(--font-sans);
+  background-color: var(--color-surface-alt);
+  min-height: 100vh;
 }
 
-/* --- Header --- */
-.doc-header {
-  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
-  box-shadow: 0 1px 3px rgba(79, 70, 229, 0.15);
-  border-radius: 16px !important;
-  position: relative;
-  overflow: hidden;
+.doc-main-card {
+  border-radius: var(--radius-lg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-.doc-header-icon {
-  background: rgba(255, 255, 255, 0.15);
-  width: 44px;
-  height: 44px;
+/* --- Filtres --- */
+.doc-search-input {
+  font-size: 0.85rem;
+}
+
+/* .filter-pill (Buttons.css) réécrit le fond : on rétablit la flèche du select */
+.doc-page .form-select.filter-pill {
+  background-image: var(--bs-form-select-bg-img), var(--bs-form-select-bg-icon, none);
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+  transition: all 0.2s ease;
+}
+
+.doc-count-value {
+  color: var(--color-text-body);
+}
+
+.doc-count-value.is-active {
+  color: #92400e;
+}
+
+.doc-page .btn.doc-reset-btn {
+  background-color: var(--color-warning-soft);
+  color: #92400e;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.doc-loading-text {
+  font-size: 0.9rem;
+}
+
+/* --- Onglets de catégorie (même rendu que .materiel-etat-tabs) ---
+   <Tabs className> s'applique au <ul class="nav nav-tabs"> lui-même. */
+.doc-page .doc-category-tabs {
+  --bs-nav-tabs-border-width: 0;
+  --bs-nav-link-color: var(--color-text-main);
+  --bs-nav-link-hover-color: #1e3a8a;
+  --bs-nav-tabs-link-active-color: #1e3a8a;
+  --bs-nav-tabs-link-active-bg: var(--color-bg);
+  background: var(--color-bg-alt);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  gap: 2px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.doc-page .doc-category-tabs .nav-link {
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 8px 14px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
-/* --- Boutons d'action dans le tableau --- */
-.doc-btn-action {
-  transition: all 0.2s ease !important;
-  width: 32px !important;
-  height: 32px !important;
+.doc-page .doc-category-tabs .nav-link:hover {
+  background: var(--color-primary-soft);
 }
 
-.doc-btn-action:hover {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12) !important;
+.doc-page .doc-category-tabs .nav-link.active {
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--color-border);
 }
 
-/* ==========================================================
-   --- Modal Détails ---
-   ========================================================== */
-.doc-details-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(15, 23, 42, 0.55);
-  backdrop-filter: blur(4px);
-  display: flex;
+.doc-page .doc-category-tabs + .tab-content {
+  display: none;
+}
+
+/* --- Cellules du tableau --- */
+.doc-chip {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  z-index: 1080;
-  padding: 1rem;
-  animation: docFadeIn 0.25s ease;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-xl);
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
-.doc-details-modal {
-  background: var(--color-bg);
-  border-radius: 18px;
-  width: 100%;
-  max-width: 800px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
-  animation: docSlideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.doc-chip--lg {
+  padding: 3px 10px;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
 }
 
-.doc-details-header {
-  display: flex;
+.doc-chip--public {
+  background-color: var(--color-success-soft);
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.doc-chip--private {
+  background-color: var(--color-border-light);
+  color: var(--color-text-sub);
+  border: 1px solid var(--color-border);
+}
+
+.doc-tag {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 1.4rem 1.6rem;
-  border-bottom: 1px solid var(--color-border-light);
-  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
-  border-radius: 18px 18px 0 0;
-  color: #fff;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: var(--radius-md);
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
-.doc-details-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.18);
+.doc-tag--wide {
+  padding: 2px 10px;
+  font-size: 0.72rem;
+}
+
+.doc-tag--lg {
+  padding: 3px 10px;
+  font-size: 0.8rem;
+}
+
+.doc-tag--materiel {
+  background-color: var(--color-primary-soft-strong);
+  color: var(--color-primary-darker);
+  border: 1px solid #c7d2fe;
+}
+
+.doc-tag--produit {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.doc-tag--more {
+  background-color: var(--color-border-light);
+  color: var(--color-text-sub);
+  border: 1px solid var(--color-border);
+}
+
+.doc-tag--button {
+  color: var(--color-text-body);
+  cursor: pointer;
+}
+
+.doc-tag--ticket {
+  background-color: #fff7ed;
+  color: #9a3412;
+  border: 1px solid #fed7aa;
+}
+
+.doc-tag--files {
+  background-color: #fdf2f8;
+  color: #9d174d;
+  border: 1px solid #fbcfe8;
+}
+
+.doc-tag-marque {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.doc-file-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.doc-details-title {
-  font-size: 1.05rem;
-  font-weight: 700;
-  margin: 0;
+.doc-file-info {
+  min-width: 0;
+  flex: 1;
 }
 
-.doc-details-subtitle {
+.doc-file-name {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--color-text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.doc-file-meta {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.doc-cell-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 0.82rem;
-  margin: 0;
-  opacity: 0.85;
+  color: var(--color-text-body);
+}
+
+.doc-cell-meta--muted {
+  color: var(--color-text-sub);
+}
+
+/* --- Tableau vide (en-têtes conservés) --- */
+.doc-empty-table {
+  font-size: 0.85rem;
+  min-width: 100%;
+}
+
+.doc-page .doc-empty-table th {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-body);
+  padding: 14px 16px;
+  text-align: left;
+  background-color: var(--color-surface-alt);
+  border-bottom: 2px solid var(--color-border);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.doc-empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: var(--color-primary);
+}
+
+.doc-empty-title {
+  color: var(--color-text-sub);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.doc-empty-text {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+/* ==========================================================
+   --- Modale Détails (AppModal contentClassName="doc-details-modal") ---
+   ========================================================== */
+.add-modal-overlay .add-modal-content.doc-details-modal {
+  --modal-header-bg: linear-gradient(135deg, var(--color-text-main), var(--color-text-strong));
+  max-width: 800px;
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+}
+
+.doc-details-modal .add-modal-header {
+  padding: 1.4rem 1.6rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.doc-details-modal .add-modal-icon-wrapper {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  font-size: 1rem;
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-secondary-dark));
+  box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+}
+
+.doc-details-modal .add-modal-title {
+  font-size: 1.05rem;
+}
+
+.doc-details-modal .add-modal-subtitle {
+  font-size: 0.82rem;
+  opacity: 0.7;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 380px;
 }
 
-.doc-details-close {
+.doc-details-modal .add-modal-close-btn {
   background: rgba(255, 255, 255, 0.15);
-  border: none;
-  color: #fff;
   width: 32px;
   height: 32px;
+  padding: 0;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  font-size: 1rem;
   flex-shrink: 0;
 }
 
-.doc-details-close:hover {
+.doc-details-modal .add-modal-close-btn:hover {
   background: rgba(255, 255, 255, 0.3);
   transform: rotate(90deg);
 }
 
-.doc-details-body {
-  padding: 1.4rem 1.6rem;
+.doc-details-modal .add-modal-body {
+  padding: 24px;
 }
 
-.doc-detail-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.65rem 0;
-  border-bottom: 1px solid var(--color-border-light);
-  font-size: 0.88rem;
-  color: var(--color-text-main);
-}
-
-.doc-detail-row-column {
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.doc-detail-label {
-  display: inline-flex;
-  align-items: center;
-  color: var(--color-text-sub);
-  font-weight: 500;
-  font-size: 0.82rem;
-}
-
-.doc-detail-description {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--color-text-sub);
-  line-height: 1.5;
-  background: var(--color-bg-alt);
-  border-radius: 10px;
-  padding: 0.75rem 1rem;
-  width: 100%;
-  white-space: pre-wrap;
-}
-
-.doc-details-footer {
-  display: flex;
-  justify-content: flex-end;
+.doc-details-modal .add-modal-footer {
   gap: 0.75rem;
-  padding: 1.2rem 1.6rem;
-  border-top: 1px solid var(--color-border-light);
+  padding: 16px 24px;
+  background: var(--color-border-light);
+  border-top: 1px solid var(--color-border);
 }
 
-.doc-details-footer .btn {
+.doc-details-modal .add-modal-footer .btn {
   border-radius: 10px;
   font-weight: 600;
   font-size: 0.85rem;
   padding: 8px 18px;
 }
 
-@keyframes docFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes docSlideUp {
-  from { opacity: 0; transform: translateY(20px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-/* Scrollbar discret pour la modal */
-.doc-details-modal::-webkit-scrollbar {
+/* Scrollbar discret */
+.doc-details-modal .add-modal-body::-webkit-scrollbar {
   width: 8px;
 }
-.doc-details-modal::-webkit-scrollbar-thumb {
+.doc-details-modal .add-modal-body::-webkit-scrollbar-thumb {
   background: var(--color-border);
   border-radius: 8px;
 }
-.doc-details-modal::-webkit-scrollbar-track {
+.doc-details-modal .add-modal-body::-webkit-scrollbar-track {
   background: transparent;
 }
 
-/* Document Detail Modal - Sections */
-.doc-details-icon-wrapper {
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
+/* --- Sections --- */
 .doc-details-section {
+  background: var(--color-bg);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--color-border);
   animation: fadeInUp 0.3s ease-out;
 }
 
+.doc-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+/* En-tête de section : couleur par modificateur */
 .doc-section-header {
+  --doc-section-bg: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+  --doc-section-border: rgba(79, 70, 229, 0.2);
   position: relative;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 18px;
+  margin-bottom: 18px;
+  border-radius: var(--radius-md);
+  background: var(--doc-section-bg);
+  border: 1px solid var(--doc-section-border);
+  box-shadow: 0 2px 8px var(--doc-section-border);
   transition: all 0.3s ease;
+}
+
+.doc-section-header--classification {
+  --doc-section-bg: linear-gradient(135deg, #0ea5e9, #38bdf8);
+  --doc-section-border: rgba(14, 165, 233, 0.2);
+}
+
+.doc-section-header--info {
+  --doc-section-bg: linear-gradient(135deg, var(--color-secondary), #a78bfa);
+  --doc-section-border: rgba(139, 92, 246, 0.2);
+}
+
+.doc-section-header--relations {
+  --doc-section-bg: linear-gradient(135deg, var(--color-warning), #fbbf24);
+  --doc-section-border: rgba(245, 158, 11, 0.2);
+}
+
+.doc-section-header--pieces_jointes {
+  --doc-section-bg: linear-gradient(135deg, #ec4899, #f472b6);
+  --doc-section-border: rgba(236, 72, 153, 0.2);
+}
+
+.doc-section-header--desc {
+  --doc-section-bg: linear-gradient(135deg, var(--color-success), #34d399);
+  --doc-section-border: rgba(16, 185, 129, 0.2);
 }
 
 .doc-section-header:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .doc-section-header::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
   pointer-events: none;
+}
+
+.doc-section-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.doc-section-text {
+  display: flex;
+  flex-direction: column;
 }
 
 .doc-section-title {
   position: relative;
   z-index: 1;
+  margin: 0;
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
+.doc-section-subtitle {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.7rem;
+  font-weight: 400;
+}
+
+.doc-section-badge {
+  margin-left: auto;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-xl);
+  padding: 2px 12px;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* --- Cartes d'information --- */
 .doc-info-card {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
   background: var(--color-bg);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: all 0.3s ease;
+}
+
+.doc-info-card--full {
+  grid-column: 1 / -1;
 }
 
 .doc-info-card:hover {
@@ -292,87 +517,63 @@
   gap: 5px;
 }
 
-@media (max-width: 768px) {
-  .doc-details-modal {
-    max-width: 100%;
-    margin: 0 10px;
-  }
+.doc-info-value--sm {
+  font-size: 0.75rem;
+}
 
-  .doc-details-body {
-    padding: 16px !important;
+.doc-info-extra {
+  margin-top: 6px;
+}
+
+.doc-details-modal .btn.doc-open-btn {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  border: none;
+  color: white;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.doc-details-modal .btn.doc-open-btn--attachment {
+  background: linear-gradient(135deg, #ec4899, #f472b6);
+  font-size: 0.75rem;
+}
+
+/* Icônes de type de fichier (pièces jointes) */
+.doc-details-modal .doc-file-type { color: var(--color-text-sub); }
+.doc-details-modal .doc-file-type--pdf { color: var(--color-danger-dark); }
+.doc-details-modal .doc-file-type--word { color: var(--color-info-dark); }
+.doc-details-modal .doc-file-type--excel { color: #16a34a; }
+.doc-details-modal .doc-file-type--image { color: #ea580c; }
+
+.doc-detail-description {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #4b5563;
+  line-height: 1.5;
+  background: var(--color-bg-alt);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  width: 100%;
+  white-space: pre-wrap;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+  .doc-details-modal .add-modal-body {
+    padding: 16px;
   }
 
   .doc-details-section {
-    padding: 14px !important;
+    padding: 14px;
   }
 
   .doc-section-header {
-    padding: 8px 14px !important;
+    padding: 8px 14px;
     flex-wrap: wrap;
   }
 
   .doc-details-grid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: 1fr;
   }
-}
-
-@media (max-width: 480px) {
-  .doc-details-header {
-    flex-direction: column;
-    align-items: flex-start !important;
-  }
-
-  .doc-details-header > div:last-child {
-    width: 100%;
-    justify-content: space-between;
-  }
-}
-
-/* ==========================================================
-   --- Onglets de catégorie (Solution 3)
-   ========================================================== */
-.doc-category-tabs {
-  border-bottom: 0 !important;
-}
-
-.doc-category-tabs .nav-tabs {
-  border-bottom: 1px solid var(--color-border) !important;
-  background: var(--color-bg-alt);
-  border-radius: 12px;
-  padding: 4px;
-  gap: 2px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-}
-
-.doc-category-tabs .nav-tabs .nav-link {
-  border: none !important;
-  border-radius: 10px !important;
-  color: var(--color-text-main);
-  font-size: 0.8rem;
-  font-weight: 500;
-  padding: 8px 14px;
-  transition: all 0.2s ease;
-  background: transparent;
-  white-space: nowrap;
-}
-
-.doc-category-tabs .nav-tabs .nav-link:hover {
-  background: #eef2ff;
-  color: #1e3a8a;
-}
-
-.doc-category-tabs .nav-tabs .nav-link.active {
-  background: var(--color-bg) !important;
-  color: #1e3a8a !important;
-  font-weight: 600;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  border: 1px solid var(--color-border) !important;
-  border-bottom: 1px solid var(--color-bg) !important;
-  margin-bottom: -1px;
-  border-radius: 10px !important;
-}
-
-.doc-category-tabs .tab-content {
-  display: none;
 }

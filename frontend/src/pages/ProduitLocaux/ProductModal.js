@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { MySwal } from "../../utils/swal";
-import { FaBox, FaExclamationTriangle, FaCalendarAlt, FaTimes, FaPlus, FaSave } from "react-icons/fa";
+import { FaBox, FaExclamationTriangle, FaCalendarAlt, FaPlus, FaSave } from "react-icons/fa";
 import FormItem from "../../components/FormItem/FormItem";
+import AppModal from "../../components/AppModal/AppModal";
 
 const ProductModal = ({ show, handleClose, handleSave, initialData, errorMessage }) => {
   const [formData, setFormData] = useState({
@@ -63,44 +64,17 @@ const ProductModal = ({ show, handleClose, handleSave, initialData, errorMessage
     }
   };
 
-  if (!show) return null;
-
   return (
-    <div className="add-modal-overlay">
-      <form
-        onSubmit={handleSubmit}
-        className="add-modal-content">
-        <div className="add-modal-header">
-          <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-            <div className="add-modal-icon-wrapper">{initialData ? <FaBox /> : <FaPlus />}</div>
-            <div>
-              <h2 className="add-modal-title">{initialData ? "Modifier le Produit" : "Ajouter un Produit"}</h2>
-              <p className="add-modal-subtitle">Remplissez les informations ci-dessous</p>
-            </div>
-          </div>
-          <button onClick={handleClose} className="add-modal-close-btn" type="button">
-            <FaTimes />
-          </button>
-        </div>
-
-        <div className="add-modal-body">
-          {errorMessage && (
-            <p
-              className="add-modal-error"
-              style={{ marginBottom: "16px", padding: "12px", background: "rgba(239, 68, 68, 0.1)", borderRadius: "10px", display: "flex", alignItems: "center", gap: "8px" }}>
-              <FaExclamationTriangle /> {errorMessage}
-            </p>
-          )}
-
-          <div className="add-modal-form-grid">
-            <FormItem label="Nom du produit" name="nom_produit" type="text" formData={formData} handleChange={handleChange} icon={FaBox} />
-            <FormItem label="Quantité en stock" name="quantite_en_stock" type="number" formData={formData} handleChange={handleChange} icon={FaBox} />
-            <FormItem label="Seuil d'alerte" name="seuil_alerte" type="number" formData={formData} handleChange={handleChange} icon={FaExclamationTriangle} />
-            <FormItem label="Date d'arrivée" name="last_date" type="date" formData={formData} handleChange={handleChange} icon={FaCalendarAlt} />
-          </div>
-        </div>
-
-        <div className="add-modal-footer">
+    <AppModal
+      show={show}
+      onClose={handleClose}
+      as="form"
+      onSubmit={handleSubmit}
+      icon={initialData ? <FaBox /> : <FaPlus />}
+      title={initialData ? "Modifier le Produit" : "Ajouter un Produit"}
+      subtitle="Remplissez les informations ci-dessous"
+      footer={
+        <>
           <button 
             type="button" onClick={handleClose} className="add-modal-cancel-btn" disabled={isLoading}> 
             Annuler 
@@ -111,9 +85,22 @@ const ProductModal = ({ show, handleClose, handleSave, initialData, errorMessage
             disabled={isLoading}>
             <FaSave /> {isLoading ? "Enregistrement..." : initialData ? "Modifier le Produit" : "Ajouter le Produit"}
           </button>
-        </div>
-      </form>
-    </div>
+        </>
+      }
+    >
+      {errorMessage && (
+        <p className="add-modal-error prod-modal-error">
+          <FaExclamationTriangle aria-hidden="true" /> {errorMessage}
+        </p>
+      )}
+
+      <div className="add-modal-form-grid">
+        <FormItem label="Nom du produit" name="nom_produit" type="text" formData={formData} handleChange={handleChange} icon={FaBox} />
+        <FormItem label="Quantité en stock" name="quantite_en_stock" type="number" formData={formData} handleChange={handleChange} icon={FaBox} />
+        <FormItem label="Seuil d'alerte" name="seuil_alerte" type="number" formData={formData} handleChange={handleChange} icon={FaExclamationTriangle} />
+        <FormItem label="Date d'arrivée" name="last_date" type="date" formData={formData} handleChange={handleChange} icon={FaCalendarAlt} />
+      </div>
+    </AppModal>
   );
 };
 

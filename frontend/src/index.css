@@ -8,3 +8,28 @@ body {
 code {
   font-family: var(--font-mono);
 }
+
+/* ---- Accessibilité : focus clavier visible partout ----
+   :focus-visible ne s'affiche qu'à la navigation clavier, pas au clic. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ---- Accessibilité : réduction des animations ---- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* SweetAlert doit rester au-dessus de toutes les modales, y compris
+   lorsqu'il est ouvert depuis une modale. */
+.swal2-container {
+  z-index: var(--z-swal) !important;
+}

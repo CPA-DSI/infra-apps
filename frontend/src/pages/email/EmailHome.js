@@ -21,30 +21,33 @@ const EmailHome = () => {
             <Tab.Container activeKey={activeTab} onSelect={(k) => setActiveTab(k)}>
                 <Row className="mb-2">
                     <Col>
-                        <div className="menu-tabs text-center mb-4">
-                            <ButtonGroup>
+                        <div className="scl-tabs text-center mb-4">
+                            <ButtonGroup aria-label="Type de configuration">
                                 <Button
                                     variant={activeTab === 'quotidien' ? 'secondary' : 'outline-secondary'}
                                     onClick={() => setActiveTab('quotidien')}
-                                    className="menu-btn d-flex align-items-center gap-2"
+                                    className={`scl-tab d-flex align-items-center gap-2 ${activeTab === 'quotidien' ? 'is-active' : ''}`}
+                                    aria-pressed={activeTab === 'quotidien'}
                                 >
-                                    <FaCalendarDay />
+                                    <FaCalendarDay aria-hidden="true" />
                                     Configuration Quotidienne
                                 </Button>
                                 <Button
                                     variant={activeTab === 'hebdomadaire' ? 'secondary' : 'outline-secondary'}
                                     onClick={() => setActiveTab('hebdomadaire')}
-                                    className="menu-btn d-flex align-items-center gap-2"
+                                    className={`scl-tab d-flex align-items-center gap-2 ${activeTab === 'hebdomadaire' ? 'is-active' : ''}`}
+                                    aria-pressed={activeTab === 'hebdomadaire'}
                                 >
-                                    <FaCalendarWeek />
+                                    <FaCalendarWeek aria-hidden="true" />
                                     Configuration Hebdomadaire
                                 </Button>
                                 <Button
                                     variant={activeTab === 'mensuelle' ? 'secondary' : 'outline-secondary'}
                                     onClick={() => setActiveTab('mensuelle')}
-                                    className="menu-btn d-flex align-items-center gap-2"
+                                    className={`scl-tab d-flex align-items-center gap-2 ${activeTab === 'mensuelle' ? 'is-active' : ''}`}
+                                    aria-pressed={activeTab === 'mensuelle'}
                                 >
-                                    <FaCalendarAlt />
+                                    <FaCalendarAlt aria-hidden="true" />
                                     Configuration Mensuelle
                                 </Button>
                             </ButtonGroup>

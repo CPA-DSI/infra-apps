@@ -5,7 +5,9 @@ import { FaExchangeAlt, FaHistory, FaLaptopCode, FaBarcode, FaDesktop, FaCheckCi
 import { MdMonitor, MdComputer, MdSecurity, MdComment } from 'react-icons/md';
 import { fetchAffectationsMateriel } from '../../services/api';
 import AffectationModal from './AffectationModal';
-import './Materiels.css';
+import AppModal from '../../components/AppModal/AppModal';
+import '../../styles/DetailsSection.css';
+import './MaterielsModals.css';
 
 const formatDateFr = (d) => (d ? new Date(d).toLocaleDateString('fr-FR') : '');
 
@@ -25,45 +27,42 @@ function AffectationsHistorique({ idMateriels }) {
         return () => { cancelled = true; };
     }, [idMateriels]);
 
-    if (loading) return <div style={{ color: '#64748b', fontSize: '0.85rem' }}>Chargement...</div>;
-    if (error) return <div style={{ color: '#991B1B', fontSize: '0.85rem' }}>{error}</div>;
-    if (rows.length === 0) return <div style={{ color: '#64748b', fontSize: '0.85rem' }}>Aucune affectation enregistrée.</div>;
-
-    const th = { fontSize: '0.72rem', fontWeight: 600, color: '#475569', padding: '8px 10px', borderBottom: '2px solid #E2E8F0', textAlign: 'left', whiteSpace: 'nowrap' };
-    const td = { fontSize: '0.8rem', color: '#1E293B', padding: '8px 10px', borderBottom: '1px solid #F1F5F9', verticalAlign: 'top' };
+    if (loading) return <div className="mat-muted-text">Chargement...</div>;
+    if (error) return <div className="mat-error-text">{error}</div>;
+    if (rows.length === 0) return <div className="mat-muted-text">Aucune affectation enregistrée.</div>;
 
     return (
-        <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div className="mat-table-scroll">
+            <table className="mat-table mat-table--compact">
                 <thead>
                     <tr>
-                        <th style={th}>Équipement</th>
-                        <th style={th}>Bénéficiaire</th>
-                        <th style={th}>Du</th>
-                        <th style={th}>Au</th>
-                        <th style={th}>Motif</th>
-                        <th style={th}>État remise</th>
-                        <th style={th}>Par</th>
+                        <th>Équipement</th>
+                        <th>Bénéficiaire</th>
+                        <th>Du</th>
+                        <th>Au</th>
+                        <th>Motif</th>
+                        <th>État remise</th>
+                        <th>Par</th>
                     </tr>
                 </thead>
                 <tbody>
                     {rows.map(a => (
                         <tr key={a.id_affectation}>
-                            <td style={td}>
+                            <td>
                                 {a.type_affectation === 'PC'
-                                    ? <span><FaLaptopCode style={{ color: '#4F46E5', marginRight: '6px' }} />PC</span>
-                                    : <span><FaDesktop style={{ color: '#0EA5E9', marginRight: '6px' }} />Écran {a.ecran?.code_ecran}</span>}
+                                    ? <span><FaLaptopCode className="mat-icon-pc" aria-hidden="true" />PC</span>
+                                    : <span><FaDesktop className="mat-icon-ecran" aria-hidden="true" />Écran {a.ecran?.code_ecran}</span>}
                             </td>
-                            <td style={td}>{a.id_n ? `${a.id_n} - ${a.nom_utilisateur}` : (a.nom_utilisateur || 'Stock')}</td>
-                            <td style={td}>{formatDateFr(a.date_debut)}</td>
-                            <td style={td}>
+                            <td>{a.id_n ? `${a.id_n} - ${a.nom_utilisateur}` : (a.nom_utilisateur || 'Stock')}</td>
+                            <td>{formatDateFr(a.date_debut)}</td>
+                            <td>
                                 {a.date_fin ? formatDateFr(a.date_fin) : (
-                                    <span style={{ background: '#D1FAE5', color: '#065F46', borderRadius: '20px', padding: '2px 10px', fontSize: '0.7rem', fontWeight: 600 }}>En cours</span>
+                                    <span className="mat-badge-encours">En cours</span>
                                 )}
                             </td>
-                            <td style={td}>{a.motif || '—'}</td>
-                            <td style={td}>{a.etat_remise || '—'}</td>
-                            <td style={td}>{a.nom_affecte_par || '—'}</td>
+                            <td>{a.motif || '—'}</td>
+                            <td>{a.etat_remise || '—'}</td>
+                            <td>{a.nom_affecte_par || '—'}</td>
                         </tr>
                     ))}
                 </tbody>
@@ -75,23 +74,22 @@ function AffectationsHistorique({ idMateriels }) {
 function PasswordField({ label, value, name, visible, onToggle, toggleKey }) {
     return (
         <div className="add-modal-info-card">
-            <div className="add-modal-info-icon">
+            <div className="add-modal-info-icon" aria-hidden="true">
                 {name === 'mdp_pc' ? <FaKey /> : <FaShieldAlt />}
             </div>
             <div className="add-modal-info-content">
                 <span className="add-modal-info-label">{label}</span>
                 <span className="add-modal-info-value">
-                    <span style={{ fontFamily: 'monospace', letterSpacing: '1px', flex: 1 }}>
+                    <span className="mat-password-value">
                         {value ? (visible ? value : '••••••••') : 'N/A'}
                     </span>
                     {value && (
                         <button
                             type="button"
+                            className="mat-password-toggle"
                             onClick={() => onToggle(toggleKey)}
                             title={visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-                            style={{
-                                padding: 0, margin: 0, color: '#94a3b8', fontSize: '1rem', background: 'none', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', flexShrink: 0
-                            }}
+                            aria-label={visible ? `Masquer : ${label}` : `Afficher : ${label}`}
                         >
                             {visible ? <FaEyeSlash /> : <FaEye />}
                         </button>
@@ -152,299 +150,220 @@ const DetailsModal = ({ isOpen, onClose, data, canManage = false }) => {
 
         return (
             <div className="add-modal-info-card">
-                <div className="add-modal-info-icon">
+                <div className="add-modal-info-icon" aria-hidden="true">
                     {getIcon(name)}
                 </div>
                 <div className="add-modal-info-content">
                     <span className="add-modal-info-label">{label}</span>
                     <span className={`add-modal-info-value ${value === true || value === 'Oui' ? 'add-modal-info-value-oui' : value === false || value === 'Non' ? 'add-modal-info-value-non' : ''}`}>
-                        {displayValue === 'Oui' && <><FaCheckCircle style={{ fontSize: '0.9rem' }} /> Oui</>}
-                        {displayValue === 'Non' && <><FaTimesCircle style={{ fontSize: '0.9rem' }} /> Non</>}
+                        {displayValue === 'Oui' && <><FaCheckCircle className="mat-yesno-icon" aria-hidden="true" /> Oui</>}
+                        {displayValue === 'Non' && <><FaTimesCircle className="mat-yesno-icon" aria-hidden="true" /> Non</>}
                         {displayValue !== 'Oui' && displayValue !== 'Non' && (displayValue || 'N/A')}
-                        {name === 'est_actif' && displayValue === 'Oui' && <FaPowerOff className="est-actif-icon" style={{ fontSize: '0.85rem', marginLeft: '6px' }} />}
-                        {name === 'est_actif' && displayValue === 'Non' && <FaPowerOff className="est-actif-icon est-actif-icon-off" style={{ fontSize: '0.85rem', marginLeft: '6px' }} />}
+                        {name === 'est_actif' && displayValue === 'Oui' && <FaPowerOff className="est-actif-icon" aria-hidden="true" />}
+                        {name === 'est_actif' && displayValue === 'Non' && <FaPowerOff className="est-actif-icon est-actif-icon-off" aria-hidden="true" />}
                     </span>
                 </div>
             </div>
         );
     };
 
-    // Configuration des sections avec icônes et couleurs
+    // Configuration des sections : icône, sous-titre et couleurs de l'en-tête
     const sections = [
         {
             id: 'user',
             title: 'Informations Utilisateur',
+            subtitle: '👤 Informations personnelles',
             icon: <FaUserCircle />,
-            color: '#4F46E5',
-            gradient: 'linear-gradient(135deg, #4F46E5, #6366F1)',
-            bg: 'rgba(79, 70, 229, 0.08)',
+            gradient: 'var(--gradient-primary-dark)',
             border: 'rgba(79, 70, 229, 0.2)'
         },
         {
             id: 'material',
             title: 'Matériel & Écran',
+            subtitle: '💻 Détails techniques',
             icon: <MdComputer />,
-            color: '#0EA5E9',
-            gradient: 'linear-gradient(135deg, #0EA5E9, #38BDF8)',
-            bg: 'rgba(14, 165, 233, 0.08)',
+            gradient: 'linear-gradient(135deg, #0ea5e9, #38bdf8)',
             border: 'rgba(14, 165, 233, 0.2)'
         },
         {
             id: 'connectics',
             title: 'Connectiques',
+            subtitle: '🔌 Périphériques connectés',
             icon: <FaPlug />,
-            color: '#8B5CF6',
-            gradient: 'linear-gradient(135deg, #8B5CF6, #A78BFA)',
-            bg: 'rgba(139, 92, 246, 0.08)',
+            gradient: 'linear-gradient(135deg, var(--color-secondary), #a78bfa)',
             border: 'rgba(139, 92, 246, 0.2)'
         },
         {
             id: 'security',
             title: 'Sécurité & salle',
+            subtitle: '🔒 Accès et salle',
             icon: <MdSecurity />,
-            color: '#F59E0B',
-            gradient: 'linear-gradient(135deg, #F59E0B, #FBBF24)',
-            bg: 'rgba(245, 158, 11, 0.08)',
+            gradient: 'linear-gradient(135deg, var(--color-warning), #fbbf24)',
             border: 'rgba(245, 158, 11, 0.2)'
         },
         {
             id: 'status',
             title: 'État & Commentaire',
+            subtitle: '📊 État et remarques',
             icon: <MdComment />,
-            color: '#10B981',
-            gradient: 'linear-gradient(135deg, #10B981, #34D399)',
-            bg: 'rgba(16, 185, 129, 0.08)',
+            gradient: 'linear-gradient(135deg, var(--color-success), #34d399)',
             border: 'rgba(16, 185, 129, 0.2)'
         }
     ];
 
     const SectionHeader = ({ section }) => (
-        <div className="details-section-header" style={{ 
-           background: section.gradient, border: `1px solid ${section.border}`, borderRadius: '12px', padding: '10px 18px', marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '14px', boxShadow: `0 2px 8px ${section.border}`
+        <div className="details-section-header" style={{
+            background: section.gradient, border: `1px solid ${section.border}`, boxShadow: `0 2px 8px ${section.border}`
         }}>
-            <div className="section-icon-wrapper" style={{
-                background: 'rgba(255, 255, 255, 0.25)', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', color: 'white'
-            }}>
+            <div className="section-icon-wrapper" aria-hidden="true">
                 {section.icon}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <h3 className="details-section-title" style={{
-                    color: 'white', fontSize: '0.95rem', fontWeight: '600', margin: 0, letterSpacing: '0.5px', textShadow: '0 1px 2px rgba(0,0,0,0.1)'
-                }}>
-                    {section.title}
-                </h3>
-                <span style={{
-                    color: 'rgba(255,255,255,0.8)', fontSize: '0.7rem', fontWeight: '400'
-                }}>
-                    {section.id === 'user' ? '👤 Informations personnelles' : 
-                     section.id === 'material' ? '💻 Détails techniques' :
-                     section.id === 'connectics' ? '🔌 Périphériques connectés' :
-                     section.id === 'security' ? '🔒 Accès et salle' :
-                     '📊 État et remarques'}
-                </span>
+            <div className="d-flex flex-column">
+                <h3 className="details-section-title">{section.title}</h3>
+                <span className="mat-details-section-subtitle">{section.subtitle}</span>
             </div>
-            <div style={{ marginLeft: 'auto' }}>
-                <span style={{
-                    background: 'rgba(255,255,255,0.2)', borderRadius: '20px', padding: '2px 12px', color: 'white', fontSize: '0.65rem', fontWeight: '500', letterSpacing: '0.5px', textTransform: 'uppercase'
-                }}>
-                    {section.id}
-                </span>
+            <div className="ms-auto">
+                <span className="section-badge">{section.id}</span>
+            </div>
+        </div>
+    );
+
+    const header = (
+        <div className="add-modal-header">
+            <div className="d-flex align-items-center gap-3">
+                <div className="add-modal-icon-wrapper" aria-hidden="true">
+                    <FaLaptopCode />
+                </div>
+                <div>
+                    <h2 className="add-modal-title">Détails du Matériel</h2>
+                    <p className="add-modal-subtitle">Information complète sur l'équipement</p>
+                </div>
+            </div>
+            <div className="mat-modal-header-actions">
+                {data.code_pc && (
+                    <div className="mat-modal-code-badge">
+                        <span className="mat-modal-code-badge-label">Code</span>
+                        <span className="mat-modal-code-badge-value">{data.code_pc}</span>
+                    </div>
+                )}
+                {data.url && (
+                    <img
+                        src={data.url}
+                        alt="Matériel"
+                        className="add-modal-image-header"
+                        onClick={() => window.open(data.url, '_blank')}
+                    />
+                )}
+                <button onClick={onClose} className="add-modal-close-btn" type="button" aria-label="Fermer">
+                    <FaTimes />
+                </button>
             </div>
         </div>
     );
 
     return (
         <>
-            <div className="add-modal-overlay">
-                <div className="add-modal-content add-modal-details-content" style={{
-                    maxWidth: '1100px', maxHeight: '90vh', overflowY: 'auto', borderRadius: '20px', boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
-                }}>
-                    {/* Header amélioré */}
-                    <div className="add-modal-header" style={{
-                        background: 'linear-gradient(135deg, #1E293B, #0F172A)',
-                        borderBottom: '1px solid rgba(255,255,255,0.1)'
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                            <div className="add-modal-icon-wrapper" style={{
-                                background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
-                                boxShadow: '0 4px 15px rgba(79, 70, 229, 0.3)'
-                            }}>
-                                <FaLaptopCode style={{ color: 'white' }} />
-                            </div>
-                            <div>
-                                <h2 className="add-modal-title" style={{ color: 'white' }}>
-                                    Détails du Matériel
-                                </h2>
-                                <p className="add-modal-subtitle" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                                    Information complète sur l'équipement
-                                </p>
-                            </div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                            {data.code_pc && (
-                                <div style={{
-                                    background: 'rgba(255,255,255,0.1)', padding: '4px 14px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.15)'
-                                }}>
-                                    <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem' }}>Code</span>
-                                    <span style={{ color: 'white', fontSize: '0.85rem', fontWeight: '600', marginLeft: '6px' }}>
-                                        {data.code_pc}
-                                    </span>
-                                </div>
-                            )}
-                            {data.url && (
-                                <img 
-                                    src={data.url} 
-                                    alt="Matériel" 
-                                    className="add-modal-image-header"
-                                    onClick={() => window.open(data.url, '_blank')}
-                                    style={{
-                                        width: '50px', height: '50px', objectFit: 'cover', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.2)', cursor: 'pointer'
-                                    }}
-                                />
-                            )}
-                            <button onClick={onClose} className="add-modal-close-btn" type="button" style={{
-                                background: 'rgba(255,255,255,0.1)',
-                                color: 'white',
-                                border: '1px solid rgba(255,255,255,0.15)'
-                            }}>
-                                <FaTimes />
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div className="add-modal-body" style={{
-                        padding: '24px', background: '#F8FAFC'
-                    }}>
-                        {/* Section 1: Utilisateur */}
-                        <div className="details-section" style={{
-                            background: 'white', borderRadius: '16px', padding: '18px', marginBottom: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid #E2E8F0'
-                        }}>
-                            <SectionHeader section={sections[0]} />
-                            <div className="add-modal-form-grid" style={{
-                                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px'
-                            }}>
-                                <InfoCard label="Utilisateur" value={data.utilisateur} name="utilisateur" />
-                                <InfoCard label="N° Matricule" value={data.id_n} name="id_n" />
-                                <InfoCard label="Équipe" value={data.equipe} name="equipe" />
-                            </div>
-                        </div>
-
-                        {/* Section 2: Matériel et Écran */}
-                        <div className="details-section" style={{
-                            background: 'white', borderRadius: '16px', padding: '18px', marginBottom: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid #E2E8F0'
-                        }}>
-                            <SectionHeader section={sections[1]} />
-                            <div className="add-modal-form-grid" style={{
-                                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px'
-                            }}>
-                                <InfoCard label="Marque Laptop" value={data.nom_marque} name="id_marque" />
-                                <InfoCard label="Code PC" value={data.code_pc} name="code_pc" />
-                                <InfoCard label="Date PC" value={data.date_pc ? new Date(data.date_pc).toLocaleDateString('fr-FR') : 'N/A'} name="date_pc" />
-                                <InfoCard label="État PC" value={data.etat_pc} name="etat_pc" />
-                                <InfoCard label="Marque Écran" value={data.ecran} name="ecran" />
-                                <InfoCard label="Code Écran" value={data.code_ecran} name="code_ecran" />
-                                <InfoCard label="Date Écran" value={data.date_ecran ? new Date(data.date_ecran).toLocaleDateString('fr-FR') : 'N/A'} name="date_ecran" />
-                            </div>
-                        </div>
-
-                        {/* Section 3: Connectiques */}
-                        <div className="details-section" style={{
-                            background: 'white', borderRadius: '16px', padding: '18px', marginBottom: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-                            border: '1px solid #E2E8F0'
-                        }}>
-                            <SectionHeader section={sections[2]} />
-                            <div className="add-modal-form-grid connectiques-grid" style={{
-                                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px'
-                            }}>
-                                <InfoCard label="HDMI" value={data.hdmi} name="hdmi" />
-                                <InfoCard label="LAN" value={data.lan} name="lan" />
-                                <InfoCard label="USB" value={data.usb} name="usb" />
-                                <InfoCard label="Clavier Externe" value={data.clavier} name="clavier" />
-                            </div>
-                        </div>
-
-                        {/* Section 4: Sécurité et salle */}
-                        <div className="details-section" style={{
-                           background: 'white', borderRadius: '16px', padding: '18px', marginBottom: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid #E2E8F0'
-                        }}>
-                            <SectionHeader section={sections[3]} />
-                            <div className="add-modal-form-grid" style={{
-                               display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px'
-                            }}>
-                                <PasswordField label="Mot de passe local" value={data.mdp_pc} name="mdp_pc" visible={visiblePasswords.mdp_pc || false} onToggle={togglePassword} toggleKey="mdp_pc" />
-                                <PasswordField label="Mot de passe Admin" value={data.mdp_admin} name="mdp_admin" visible={visiblePasswords.mdp_admin || false} onToggle={togglePassword} toggleKey="mdp_admin" />
-                                <InfoCard label="salle" value={data.salle} name="salle" />
-                                <InfoCard label="Local" value={data.nom_local} name="id_local" />
-                            </div>
-                        </div>
-
-                        {/* Section 5: État et Commentaire */}
-                        <div className="details-section" style={{
-                           background: 'white', borderRadius: '16px', padding: '18px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid #E2E8F0'
-                        }}>
-                            <SectionHeader section={sections[4]} />
-                            <div className="add-modal-form-grid" style={{
-                                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px'
-                            }}>
-                                <InfoCard label="État Batterie" value={data.etat_batterie} name="etat_batterie" />
-                                <InfoCard label="Caractéristiques" value={data.caracteristiques || 'N/A'} name="caracteristiques" />
-                            </div>
-                            <div className="add-modal-form-grid" style={{
-                                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginTop: '12px'
-                            }}>
-                                <InfoCard label="Commentaire" value={data.commentaire || 'Aucun commentaire'} name="commentaire" />
-                                <InfoCard label="Statut" value={data.est_actif} name="est_actif" />
-                            </div>
-                        </div>
-
-                        {/* Section 6: Historique des affectations */}
-                        {canManage && (
-                            <div className="details-section" style={{
-                               background: 'white', borderRadius: '16px', padding: '18px', marginTop: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid #E2E8F0'
-                            }}>
-                                <div className="details-section-header" style={{
-                                    background: 'linear-gradient(135deg, #0F766E, #14B8A6)', borderRadius: '12px', padding: '10px 18px', marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '14px'
-                                }}>
-                                    <div style={{ background: 'rgba(255, 255, 255, 0.25)', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', color: 'white' }}>
-                                        <FaHistory />
-                                    </div>
-                                    <h3 className="details-section-title" style={{ color: 'white', fontSize: '0.95rem', fontWeight: '600', margin: 0 }}>
-                                        Historique des affectations
-                                    </h3>
-                                </div>
-                                <AffectationsHistorique idMateriels={data.id_materiels} />
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="add-modal-footer" style={{
-                        background: '#F1F5F9', borderTop: '1px solid #E2E8F0', padding: '16px 24px', display: 'flex', justifyContent: 'flex-end', gap: '12px'
-                    }}>
+            <AppModal
+                show={isOpen}
+                onClose={onClose}
+                header={header}
+                ariaLabel="Détails du Matériel"
+                contentClassName="mat-modal mat-modal--details add-modal-details-content mat-details-modal"
+                footer={
+                    <>
                         {canManage && (
                             <>
                                 {/* Un poste vide n'a pas de PC à réaffecter */}
                                 {!data.est_vide && (
-                                <button type="button" onClick={() => setAffectationMode('pc')} style={{
-                                    marginRight: 'auto', background: 'linear-gradient(135deg, #4F46E5, #6366F1)', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '12px', fontWeight: '500', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer'
-                                }}>
-                                    <FaExchangeAlt /> Réaffecter le PC
-                                </button>
+                                    <button type="button" onClick={() => setAffectationMode('pc')} className="add-modal-submit-btn mat-btn-reaffecter">
+                                        <FaExchangeAlt aria-hidden="true" /> Réaffecter le PC
+                                    </button>
                                 )}
-                                <button type="button" onClick={() => setAffectationMode('ecran')} style={{
-                                    background: 'linear-gradient(135deg, #0EA5E9, #38BDF8)', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '12px', fontWeight: '500', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer'
-                                }}>
-                                    <FaDesktop /> {data.id_ecran ? "Déplacer l'écran" : 'Installer un écran'}
+                                <button type="button" onClick={() => setAffectationMode('ecran')} className="add-modal-submit-btn mat-btn-ecran">
+                                    <FaDesktop aria-hidden="true" /> {data.id_ecran ? "Déplacer l'écran" : 'Installer un écran'}
                                 </button>
                             </>
                         )}
-                        <button onClick={onClose} className="add-modal-cancel-btn" style={{
-                            background: 'white', color: '#1E293B', border: '1px solid #CBD5E1', padding: '10px 28px', borderRadius: '12px', fontWeight: '500', fontSize: '0.9rem', transition: 'all 0.2s ease'
-                        }}>
+                        <button type="button" onClick={onClose} className="add-modal-cancel-btn">
                             Fermer
                         </button>
+                    </>
+                }
+            >
+                {/* Section 1: Utilisateur */}
+                <div className="details-section mat-details-section">
+                    <SectionHeader section={sections[0]} />
+                    <div className="add-modal-form-grid mat-info-grid">
+                        <InfoCard label="Utilisateur" value={data.utilisateur} name="utilisateur" />
+                        <InfoCard label="N° Matricule" value={data.id_n} name="id_n" />
+                        <InfoCard label="Équipe" value={data.equipe} name="equipe" />
                     </div>
                 </div>
-            </div>
+
+                {/* Section 2: Matériel et Écran */}
+                <div className="details-section mat-details-section">
+                    <SectionHeader section={sections[1]} />
+                    <div className="add-modal-form-grid mat-info-grid">
+                        <InfoCard label="Marque Laptop" value={data.nom_marque} name="id_marque" />
+                        <InfoCard label="Code PC" value={data.code_pc} name="code_pc" />
+                        <InfoCard label="Date PC" value={data.date_pc ? new Date(data.date_pc).toLocaleDateString('fr-FR') : 'N/A'} name="date_pc" />
+                        <InfoCard label="État PC" value={data.etat_pc} name="etat_pc" />
+                        <InfoCard label="Marque Écran" value={data.ecran} name="ecran" />
+                        <InfoCard label="Code Écran" value={data.code_ecran} name="code_ecran" />
+                        <InfoCard label="Date Écran" value={data.date_ecran ? new Date(data.date_ecran).toLocaleDateString('fr-FR') : 'N/A'} name="date_ecran" />
+                    </div>
+                </div>
+
+                {/* Section 3: Connectiques */}
+                <div className="details-section mat-details-section">
+                    <SectionHeader section={sections[2]} />
+                    <div className="add-modal-form-grid connectiques-grid">
+                        <InfoCard label="HDMI" value={data.hdmi} name="hdmi" />
+                        <InfoCard label="LAN" value={data.lan} name="lan" />
+                        <InfoCard label="USB" value={data.usb} name="usb" />
+                        <InfoCard label="Clavier Externe" value={data.clavier} name="clavier" />
+                    </div>
+                </div>
+
+                {/* Section 4: Sécurité et salle */}
+                <div className="details-section mat-details-section">
+                    <SectionHeader section={sections[3]} />
+                    <div className="add-modal-form-grid mat-info-grid">
+                        <PasswordField label="Mot de passe local" value={data.mdp_pc} name="mdp_pc" visible={visiblePasswords.mdp_pc || false} onToggle={togglePassword} toggleKey="mdp_pc" />
+                        <PasswordField label="Mot de passe Admin" value={data.mdp_admin} name="mdp_admin" visible={visiblePasswords.mdp_admin || false} onToggle={togglePassword} toggleKey="mdp_admin" />
+                        <InfoCard label="salle" value={data.salle} name="salle" />
+                        <InfoCard label="Local" value={data.nom_local} name="id_local" />
+                    </div>
+                </div>
+
+                {/* Section 5: État et Commentaire */}
+                <div className="details-section mat-details-section">
+                    <SectionHeader section={sections[4]} />
+                    <div className="add-modal-form-grid mat-info-grid">
+                        <InfoCard label="État Batterie" value={data.etat_batterie} name="etat_batterie" />
+                        <InfoCard label="Caractéristiques" value={data.caracteristiques || 'N/A'} name="caracteristiques" />
+                    </div>
+                    <div className="add-modal-form-grid mat-info-grid">
+                        <InfoCard label="Commentaire" value={data.commentaire || 'Aucun commentaire'} name="commentaire" />
+                        <InfoCard label="Statut" value={data.est_actif} name="est_actif" />
+                    </div>
+                </div>
+
+                {/* Section 6: Historique des affectations */}
+                {canManage && (
+                    <div className="details-section mat-details-section">
+                        <div className="details-section-header mat-details-section-header--teal">
+                            <div className="section-icon-wrapper" aria-hidden="true">
+                                <FaHistory />
+                            </div>
+                            <h3 className="details-section-title">
+                                Historique des affectations
+                            </h3>
+                        </div>
+                        <AffectationsHistorique idMateriels={data.id_materiels} />
+                    </div>
+                )}
+            </AppModal>
             {affectationMode && (
                 <AffectationModal
                     mode={affectationMode}

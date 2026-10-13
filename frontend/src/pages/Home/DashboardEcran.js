@@ -2,11 +2,12 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Chart from 'react-apexcharts';
 import { FaDesktop, FaRedo, FaChartPie, FaChartLine, FaTrophy, FaExclamationTriangle } from 'react-icons/fa';
 import { fetchEcranStats } from '../../services/api';
-import { ecranTheme, ecranChartConfig, ecranLabels } from './DashboardEcranTheme';
+import { getEcranTheme, ecranChartConfig, ecranLabels } from './DashboardEcranTheme';
 import './DashboardEcran.css';
 const labels = ecranLabels.fr;
 
 const EcranChart = () => {
+    const ecranTheme = useMemo(getEcranTheme, []);
     const [totalEcran, setTotalEcran] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -31,7 +32,7 @@ const EcranChart = () => {
                 enabled: true,
                 formatter: (val) => `${val.toFixed(1)}%`,
                 style: {
-                    fontSize: '11px', colors: ['#c7bfbf']
+                    fontSize: '11px', colors: [ecranTheme.text]
                 }
             },
             plotOptions: {
@@ -65,7 +66,7 @@ const EcranChart = () => {
             },
             stroke: {
                 width: ecranChartConfig.pie.stroke.width,
-                colors: ecranChartConfig.pie.stroke.colors
+                colors: [ecranTheme.bg]
             }
         }
     });
@@ -111,7 +112,7 @@ const EcranChart = () => {
                     colors: [ecranTheme.textMain]
                 },
                 background: {
-                    enabled: true, foreColor: '#000000', padding: 6, borderRadius: 4, borderWidth: 1, borderColor: ecranTheme.border,
+                    enabled: true, foreColor: ecranTheme.bg, padding: 6, borderRadius: 4, borderWidth: 1, borderColor: ecranTheme.border,
                 },
             },
             grid: {
@@ -119,7 +120,7 @@ const EcranChart = () => {
                 strokeDashArray: ecranChartConfig.line.grid.strokeDashArray,
             },
             markers: {
-                size: ecranChartConfig.line.markers.size, colors: ecranTheme.colors, strokeColors: '#fff', strokeWidth: ecranChartConfig.line.markers.strokeWidth,
+                size: ecranChartConfig.line.markers.size, colors: ecranTheme.colors, strokeColors: ecranTheme.text, strokeWidth: ecranChartConfig.line.markers.strokeWidth,
                 hover: { size: ecranChartConfig.line.markers.hover.size }
             },
             tooltip: {
@@ -225,21 +226,19 @@ const EcranChart = () => {
         return total > 0 ? ((count / total) * 100).toFixed(1) : 0;
     }, [totalEcran]);
 
-    const getBrandColor = (index) => ecranTheme.colors[index % ecranTheme.colors.length];
-
     const legendData = useMemo(() => {
         return chartData.series.length > 0 
             ? chartData.series[0].data.map((value, index) => ({
                 name: chartData.options.xaxis.categories[index],
                 value: value,
                 percentage: getPercentage(value),
-                color: getBrandColor(index)
+                color: ecranTheme.colors[index % ecranTheme.colors.length]
             }))
             : [];
-    }, [chartData, getPercentage]);
+    }, [chartData, getPercentage, ecranTheme]);
 
     if (loading) return (
-        <div className="ecran-container" role="status" aria-live="polite">
+        <div className="dash-card dash-card--state ecran-container" role="status" aria-live="polite">
             <div className="ecran-loading">
                 <div className="ecran-loading-spinner" aria-hidden="true"></div>
                 <span className="ecran-loading-text">{labels.loading}</span>
@@ -248,7 +247,7 @@ const EcranChart = () => {
     );
 
     if (error) return (
-        <div className="ecran-container ecran-error" role="alert">
+        <div className="dash-card dash-card--state ecran-container ecran-error" role="alert">
             <div className="ecran-error-content">
                 <FaExclamationTriangle size={32} className="ecran-error-icon" aria-hidden="true" />
                 <h4>{labels.error}</h4>
@@ -261,7 +260,7 @@ const EcranChart = () => {
     );
 
     return (
-        <div className={`ecran-container ${animated ? 'ecran-animated' : ''}`}>
+        <div className={`dash-card ecran-container ${animated ? 'ecran-animated' : ''}`}>
             <header className="ecran-header">
                 <div className="ecran-header-left">
                     <div className="ecran-icon-box" aria-hidden="true">

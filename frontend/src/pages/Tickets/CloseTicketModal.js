@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import Swal from 'sweetalert2';
-import { FaLock, FaTimes, FaInfoCircle, FaTag, FaCheckCircle, FaClock } from 'react-icons/fa';
+import { FaLock, FaInfoCircle, FaTag, FaCheckCircle, FaClock } from 'react-icons/fa';
 import { closeTicket, addCommentaire } from '../../services/api';
+import AppModal from '../../components/AppModal/AppModal';
 import './Tickets.css';
 
 const CloseTicketModal = ({ show, ticketId, onClose, onSuccess }) => {
@@ -62,119 +63,84 @@ const CloseTicketModal = ({ show, ticketId, onClose, onSuccess }) => {
     onClose();
   }, [onClose]);
 
-  if (!show) return null;
-
   return (
-    <>
-      <div className="add-modal-overlay" onClick={handleClose}>
-        <div className="add-modal-content" onClick={e => e.stopPropagation()} style={{
-          maxWidth: '600px',
-        }}>
-          <div className="add-modal-header" style={{
-            background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-            borderBottom: '1px solid rgba(255,255,255,0.1)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-              <div className="add-modal-icon-wrapper" style={{
-                background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-                boxShadow: '0 4px 15px rgba(99, 102, 241, 0.3)'
-              }}>
-                <FaLock style={{ color: 'white' }} />
-              </div>
-              <div>
-                <h2 className="add-modal-title" style={{ color: 'white' }}>
-                  Fermer le ticket
-                </h2>
-                <p className="add-modal-subtitle" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                  Remplissez les informations de clôture
-                </p>
-              </div>
-            </div>
-            <button onClick={handleClose} className="add-modal-close-btn" type="button" style={{
-              background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.15)'
-            }}>
-              <FaTimes />
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit}>
-          <div className="add-modal-body" style={{
-              padding: '24px',
-              background: '#F8FAFC'
-          }}>
-            <div style={{
-              background: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)', borderRadius: '12px', padding: '12px 16px', marginBottom: '20px', border: '1px solid #BFDBFE', display: 'flex', alignItems: 'center', gap: '12px'
-            }}>
-              <FaInfoCircle style={{ color: '#3B82F6', fontSize: '1.2rem' }} />
-              <span style={{ color: '#1E40AF', fontSize: '0.85rem' }}>
-                Les champs marqués d'un <span style={{ color: '#EF4444' }}>*</span> sont obligatoires
-              </span>
-            </div>
-
-            <div className="add-modal-form-group">
-              <label className="add-modal-label">
-                <FaCheckCircle /> Solution apportée *
-              </label>
-              <textarea
-                name="solution"
-                value={solution}
-                onChange={(e) => setSolution(e.target.value)}
-                className="add-modal-textarea"
-                placeholder="Décrivez la solution apportée..."
-                rows={3}
-                required
-                disabled={submitting}
-              />
-            </div>
-            <div className="add-modal-form-group">
-              <label className="add-modal-label">
-                <FaTag /> Motif (optionnel)
-              </label>
-              <input
-                type="text"
-                name="motif"
-                value={motif}
-                onChange={(e) => setMotif(e.target.value)}
-                className="add-modal-input"
-                placeholder="Motif de fermeture..."
-                disabled={submitting}
-              />
-            </div>
-            <div className="add-modal-form-group">
-              <label className="add-modal-label">
-                <FaClock /> Durée de résolution (en minutes, optionnel)
-              </label>
-              <input
-                type="number"
-                name="dureeResolution"
-                min="0"
-                value={dureeResolution}
-                onChange={(e) => setDureeResolution(e.target.value)}
-                className="add-modal-input"
-                placeholder="Durée en minutes..."
-                disabled={submitting}
-              />
-            </div>
-          </div>
-
-          <div className="add-modal-footer" style={{
-            background: '#F1F5F9', borderTop: '1px solid #E2E8F0', padding: '16px 24px', display: 'flex', justifyContent: 'flex-end', gap: '12px'
-          }}>
-            <button type="button" onClick={handleClose} className="add-modal-cancel-btn" style={{
-              background: 'white', color: '#1E293B', border: '1px solid #CBD5E1', padding: '10px 28px', borderRadius: '12px', fontWeight: '500', fontSize: '0.9rem', transition: 'all 0.2s ease', cursor: 'pointer'
-            }} disabled={submitting}>
-              Annuler
-            </button>
-            <button type="submit" className="add-modal-submit-btn" style={{
-              background: 'linear-gradient(135deg, #6366f1, #4f46e5)', color: 'white', border: 'none', padding: '10px 32px', borderRadius: '12px', fontWeight: '500', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s ease', cursor: 'pointer', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)'
-            }} disabled={submitting || !solution.trim()}>
-              <FaCheckCircle /> {submitting ? 'Fermeture...' : 'Fermer'}
-            </button>
-          </div>
-          </form>
-        </div>
+    <AppModal
+      show={show}
+      onClose={handleClose}
+      as="form"
+      onSubmit={handleSubmit}
+      size="md"
+      closeOnBackdrop
+      icon={<FaLock />}
+      title="Fermer le ticket"
+      subtitle="Remplissez les informations de clôture"
+      contentClassName="tck-modal"
+      footer={
+        <>
+          <button type="button" onClick={handleClose} className="add-modal-cancel-btn" disabled={submitting}>
+            Annuler
+          </button>
+          <button type="submit" className="add-modal-submit-btn" disabled={submitting || !solution.trim()}>
+            <FaCheckCircle aria-hidden="true" /> {submitting ? 'Fermeture...' : 'Fermer'}
+          </button>
+        </>
+      }
+    >
+      <div className="tck-modal-info">
+        <FaInfoCircle className="tck-modal-info__icon" aria-hidden="true" />
+        <span className="tck-modal-info__text">
+          Les champs marqués d'un <span className="tck-required">*</span> sont obligatoires
+        </span>
       </div>
-    </>
+
+      <div className="add-modal-form-group">
+        <label className="add-modal-label" htmlFor="tck-close-solution">
+          <FaCheckCircle aria-hidden="true" /> Solution apportée *
+        </label>
+        <textarea
+          id="tck-close-solution"
+          name="solution"
+          value={solution}
+          onChange={(e) => setSolution(e.target.value)}
+          className="add-modal-textarea"
+          placeholder="Décrivez la solution apportée..."
+          rows={3}
+          required
+          disabled={submitting}
+        />
+      </div>
+      <div className="add-modal-form-group">
+        <label className="add-modal-label" htmlFor="tck-close-motif">
+          <FaTag aria-hidden="true" /> Motif (optionnel)
+        </label>
+        <input
+          id="tck-close-motif"
+          type="text"
+          name="motif"
+          value={motif}
+          onChange={(e) => setMotif(e.target.value)}
+          className="add-modal-input"
+          placeholder="Motif de fermeture..."
+          disabled={submitting}
+        />
+      </div>
+      <div className="add-modal-form-group">
+        <label className="add-modal-label" htmlFor="tck-close-duree">
+          <FaClock aria-hidden="true" /> Durée de résolution (en minutes, optionnel)
+        </label>
+        <input
+          id="tck-close-duree"
+          type="number"
+          name="dureeResolution"
+          min="0"
+          value={dureeResolution}
+          onChange={(e) => setDureeResolution(e.target.value)}
+          className="add-modal-input"
+          placeholder="Durée en minutes..."
+          disabled={submitting}
+        />
+      </div>
+    </AppModal>
   );
 };
 

@@ -12,7 +12,7 @@
   color: white;
   font-size: 0.88rem;
   border: none;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: var(--transition-base);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -20,6 +20,12 @@
   letter-spacing: 0.3px;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   white-space: nowrap;
+}
+
+.btn-pill:focus-visible,
+.btn-refresh:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .btn-pill:active:not(:disabled) {
@@ -85,14 +91,14 @@
 }
 
 .btn-pill-info {
-  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  background: var(--gradient-info);
   box-shadow: 0 2px 10px rgba(14, 165, 233, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .btn-pill-info:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(14, 165, 233, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  background: linear-gradient(135deg, #38bdf8, #0369a1);
+  background: var(--gradient-info-hover);
 }
 
 .btn-pill-secondary {
@@ -107,14 +113,14 @@
 }
 
 .btn-pill-danger {
-  background: linear-gradient(135deg, var(--color-danger), #dc2626);
+  background: var(--gradient-danger);
   box-shadow: 0 2px 10px rgba(220, 38, 38, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .btn-pill-danger:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  background: var(--gradient-danger-hover);
 }
 
 .btn-pill-ghost {
@@ -191,4 +197,59 @@
 .btn-refresh:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ---- Bouton d'action carré (icône seule, dans les tableaux) ----
+   Toujours fournir un aria-label au bouton. */
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text-sub);
+  transition: var(--transition-fast);
+  cursor: pointer;
+}
+
+.btn-icon:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-icon:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-icon--info { color: var(--color-info); }
+.btn-icon--info:hover:not(:disabled) { background: var(--color-info-soft); border-color: var(--color-info); }
+.btn-icon--primary { color: var(--color-primary); }
+.btn-icon--primary:hover:not(:disabled) { background: var(--color-primary-soft); border-color: var(--color-primary); }
+.btn-icon--success { color: var(--color-success-dark); }
+.btn-icon--success:hover:not(:disabled) { background: var(--color-success-soft); border-color: var(--color-success); }
+.btn-icon--warning { color: var(--color-warning-dark); }
+.btn-icon--warning:hover:not(:disabled) { background: var(--color-warning-soft); border-color: var(--color-warning); }
+.btn-icon--danger { color: var(--color-danger); }
+.btn-icon--danger:hover:not(:disabled) { background: var(--color-danger-soft); border-color: var(--color-danger); }
+
+/* ---- Filtre en pilule (barres de filtres) ---- */
+.filter-pill {
+  height: 38px;
+  font-size: 0.85rem;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-body);
+}
+
+.filter-pill.is-active {
+  background: var(--color-primary-soft-strong);
+  border-color: var(--color-primary-lighter);
+  color: var(--color-primary-darker);
+  font-weight: 600;
 }

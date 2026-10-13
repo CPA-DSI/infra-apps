@@ -1,4 +1,6 @@
-/* Login Container */
+/* Pages d'authentification : toutes les règles sont limitées à .login-container
+   (racine de chaque page) pour ne pas fuiter sur le reste de l'application. */
+
 .login-container {
   min-height: 100vh;
   display: flex;
@@ -7,15 +9,13 @@
   background: var(--gradient-brand);
   padding: 30px;
   width: 100%;
-  min-width: 100vw;
 }
 
-/* Wrap Login */
-.wrap-login {
+.login-container .wrap-login {
   width: 100%;
   max-width: 1100px;
-  background: #fff;
-  border-radius: 20px;
+  background: var(--color-bg);
+  border-radius: var(--radius-xl);
   overflow: hidden;
   display: flex;
   flex-wrap: wrap;
@@ -25,35 +25,27 @@
   padding: 60px 100px 43px 100px;
 }
 
-/* Login Picture */
-.login-pic {
+/* Première connexion : panneau plus large */
+.login-container .wrap-login.first-login-wrap {
+  max-width: 1400px;
+  padding: 60px 140px 43px 140px;
+}
+
+.login-container .login-pic {
   width: 250px;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.login-image {
-  width: 100%;
-  max-width: 280px;
-  border-radius: 10px;
-  transition: transform 0.3s ease;
-}
-
-.login-image:hover {
-  transform: scale(1.05);
-}
-
-/* Login Form */
-.login-form {
+.login-container .login-form {
   width: 400px;
 }
 
-/* Title */
-.login-title {
+.login-container .login-title {
   font-family: var(--font-sans);
   font-size: 28px;
-  color: #333;
+  color: var(--color-text-main);
   line-height: 1.2;
   text-align: center;
   width: 100%;
@@ -62,87 +54,80 @@
   font-weight: 700;
 }
 
-/* Error Message */
-.error-message {
-  color: #e74c3c;
-  text-align: center;
-  margin-bottom: 15px;
-  font-size: 14px;
-  background: #fde8e8;
-  padding: 10px 15px;
-  border-radius: 8px;
-  border: 1px solid #f5c6cb;
-}
-
-/* Success Message */
-.success-message {
-  color: #155724;
-  text-align: center;
-  margin-bottom: 15px;
-  font-size: 14px;
-  background: #d4edda;
-  padding: 10px 15px;
-  border-radius: 8px;
-  border: 1px solid #c3e6cb;
-}
-
-/* Forgot Password Description */
-.forgot-description {
+.login-container .forgot-description {
   text-align: center;
   margin-bottom: 25px;
   font-size: 14px;
-  color: #666;
+  color: var(--color-text-sub);
   line-height: 1.5;
 }
 
-/* Wrap Input */
-.wrap-input {
+.login-container .first-login-description {
+  text-align: center;
+  margin-bottom: 20px;
+  color: var(--color-text-sub);
+}
+
+/* Champs */
+.login-container .wrap-input {
   position: relative;
   width: 100%;
   z-index: 1;
   margin-bottom: 30px;
 }
 
-/* Input Field */
-.input-field {
+.login-container .input-field {
   font-family: var(--font-sans);
   font-weight: 500;
   font-size: 15px;
   line-height: 1.5;
-  color: #666;
+  color: var(--color-text-sub);
   display: block;
   width: 100%;
-  background: #e6e6e6;
+  background: var(--color-border);
   height: 50px;
   border-radius: 25px;
   padding: 0 30px 0 50px;
-  outline: none;
   border: 2px solid transparent;
   transition: all 0.4s ease;
 }
 
-.input-field:focus,
-.wrap-input:hover .input-field {
-  background: #fff;
+.login-container .input-field:focus,
+.login-container .wrap-input:hover .input-field,
+.login-container .wrap-input.hover .input-field {
+  outline: none;
+  background: var(--color-bg);
   border-color: var(--color-brand-start);
   box-shadow: 0 5px 10px rgba(102, 126, 234, 0.15);
 }
 
-.wrap-input.hover .input-field {
-  background: #fff;
-  border-color: var(--color-brand-start);
-  box-shadow: 0 5px 10px rgba(102, 126, 234, 0.15);
+/* Focus clavier visible (l'outline par défaut est remplacé par l'anneau du thème) */
+.login-container .input-field:focus-visible {
+  box-shadow: 0 5px 10px rgba(102, 126, 234, 0.15), var(--focus-ring);
 }
 
-/* Focus Input */
-.focus-input {
+.login-container .input-field.input-error {
+  border-color: var(--color-danger);
+  background: var(--color-danger-soft);
+}
+
+.login-container .input-field.input-error:focus {
+  border-color: var(--color-danger);
+  box-shadow: 0 5px 10px rgba(231, 76, 60, 0.15);
+}
+
+.login-container .input-field.input-error:focus-visible {
+  box-shadow: 0 5px 10px rgba(231, 76, 60, 0.15), var(--focus-ring);
+}
+
+.login-container .focus-input {
   position: absolute;
   z-index: 0;
   top: 15px;
   left: 50px;
   width: calc(100% - 100px);
   height: 20px;
-  background: #fff;
+  background: var(--color-bg);
   border-radius: 22px;
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
   transition: all 0.4s ease;
@@ -151,13 +136,7 @@
   pointer-events: none;
 }
 
-.wrap-input.focus .focus-input,
-.wrap-input.hover .focus-input {
-  opacity: 0;
-}
-
-/* Symbol Input */
-.symbol-input {
+.login-container .symbol-input {
   font-size: 15px;
   display: flex;
   align-items: center;
@@ -169,25 +148,24 @@
   height: 100%;
   padding-left: 25px;
   pointer-events: none;
-  color: #999;
+  color: var(--color-text-secondary);
   transition: all 0.4s ease;
   z-index: 2;
 }
 
-.wrap-input.focus .symbol-input,
-.wrap-input.hover .symbol-input,
-.wrap-input.has-val .symbol-input {
+.login-container .wrap-input.focus .symbol-input,
+.login-container .wrap-input.hover .symbol-input,
+.login-container .wrap-input.has-val .symbol-input {
   color: var(--color-brand-start);
 }
 
-/* Eye Icon */
-.eye-icon {
+.login-container .eye-icon {
   position: absolute;
   right: 9px;
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
-  color: #666;
+  color: var(--color-text-sub);
   font-size: 18px;
   z-index: 100;
   transition: color 0.3s ease;
@@ -200,18 +178,35 @@
   justify-content: center;
 }
 
-.eye-icon:hover {
+.login-container .eye-icon:hover {
   color: var(--color-brand-start);
 }
 
-/* Checkbox Container */
-.checkbox-container {
-  display: flex;
-  align-items: center;
-  margin-bottom: 30px;
+.login-container .error-text {
+  display: block;
+  color: var(--color-danger);
+  font-size: 12px;
+  margin-top: 5px;
+  margin-left: 50px;
+  position: absolute;
+  bottom: -22px;
+  left: 0;
+  width: 100%;
+  white-space: nowrap;
+  overflow: visible;
 }
 
-.checkbox-input {
+/* Case à cocher "Se souvenir de moi" */
+.login-container .checkbox-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.login-container .checkbox-input {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -222,33 +217,33 @@
   border: 0;
 }
 
-.checkbox-custom {
+.login-container .checkbox-custom {
   display: inline-block;
   position: relative;
   padding-left: 30px;
   cursor: pointer;
   font-family: var(--font-sans);
   font-size: 15px;
-  color: #666;
+  color: var(--color-text-sub);
   user-select: none;
 }
 
-.checkbox-checkmark {
+.login-container .checkbox-checkmark {
   position: absolute;
   top: 2px;
   left: 0;
   height: 20px;
   width: 20px;
-  background-color: #e6e6e6;
+  background-color: var(--color-border);
   border-radius: 5px;
   transition: all 0.3s ease;
 }
 
-.checkbox-input:checked + .checkbox-custom .checkbox-checkmark {
+.login-container .checkbox-input:checked + .checkbox-custom .checkbox-checkmark {
   background: var(--gradient-brand);
 }
 
-.checkbox-input:checked + .checkbox-custom .checkbox-checkmark::after {
+.login-container .checkbox-input:checked + .checkbox-custom .checkbox-checkmark::after {
   content: '';
   position: absolute;
   left: 7px;
@@ -260,13 +255,37 @@
   transform: rotate(45deg);
 }
 
-/* Button */
-.login-button {
+/* La vraie case est masquée : le focus clavier s'affiche sur la case custom */
+.login-container .checkbox-input:focus-visible + .checkbox-custom .checkbox-checkmark {
+  box-shadow: var(--focus-ring);
+}
+
+.login-container .forgot-password-link {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  /* #4f46e5 plutôt que #667eea : contraste WCAG AA (4.5:1) sur fond blanc */
+  color: var(--color-primary-dark);
+  text-decoration: none;
+  margin-left: auto;
+  transition: color 0.3s ease;
+}
+
+.login-container .forgot-password-link:hover {
+  color: var(--color-brand-end);
+  text-decoration: underline;
+}
+
+/* Bouton principal */
+.login-container .login-button-wrap {
+  width: 100%;
+}
+
+.login-container .login-button {
   font-family: var(--font-sans);
   font-weight: 500;
   font-size: 15px;
   line-height: 1.5;
-  color: #fff;
+  color: white;
   text-transform: uppercase;
   width: 100%;
   height: 50px;
@@ -282,113 +301,112 @@
   box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
 }
 
-.login-button:hover {
+.login-container .login-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
 }
 
-.login-button:active {
+.login-container .login-button:active {
   transform: translateY(0);
   box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
 }
 
-/* Forgot Password Link */
-.forgot-password-link {
-  font-family: var(--font-sans);
-  font-size: 14px;
-  /* #4f46e5 plutôt que #667eea : contraste WCAG AA (4.5:1) sur fond blanc */
-  color: var(--color-primary-dark);
-  text-decoration: none;
-  margin-left: auto;
-  transition: color 0.3s ease;
-}
-
-.forgot-password-link:hover {
-  color: var(--color-brand-end);
-  text-decoration: underline;
-}
-
-/* Checkbox Container Updated */
-.checkbox-container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 30px;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-/* Input Error State */
-.input-field.input-error {
-  border-color: #e74c3c;
-  background: #fde8e8;
-}
-
-.input-field.input-error:focus {
-  border-color: #e74c3c;
-  box-shadow: 0 5px 10px rgba(231, 76, 60, 0.15);
-}
-
-/* Error Text */
-.error-text {
-  display: block;
-  color: #e74c3c;
-  font-size: 12px;
-  margin-top: 5px;
-  margin-left: 50px;
-  position: absolute;
-  bottom: -22px;
-  left: 0;
-  width: 100%;
-  white-space: nowrap;
-  overflow: visible;
-}
-
-/* Button Loading State */
-.login-button.loading {
+.login-container .login-button.loading {
   background: linear-gradient(135deg, #a0a0a0 0%, #b0b0b0 100%);
   cursor: not-allowed;
   pointer-events: none;
 }
 
-.login-button:disabled {
+.login-container .login-button:disabled {
   opacity: 0.8;
 }
 
-.login-button .fa-spinner {
+.login-container .login-button .fa-spinner {
   margin-right: 8px;
 }
 
-/* Brand Text Login (augmenté)*/
-.login-brand-text-wrapper {
+/* Bouton rendu comme lien (page "Lien invalide") */
+.login-container .login-button.login-button-link {
+  display: inline-block;
+  text-decoration: none;
+}
+
+/* Marque "InvTech IT" (plus grande que dans la navbar) */
+.login-container .login-brand-text-wrapper {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
   margin-bottom: 30px;
 }
-.login-brand-text {
-  font-size: 3.5rem !important;
+
+.login-container .login-brand-text {
+  font-size: 3.5rem;
   font-weight: 800;
   letter-spacing: 1.5px;
+  background: linear-gradient(135deg, var(--color-text-main) 0%, var(--color-primary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-/* Responsive */
+.login-container .text-accent {
+  color: var(--color-primary);
+}
+
+/* Règles de mot de passe (première connexion) */
+.login-container .password-rules-panel {
+  background: var(--color-bg-alt);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 18px 20px;
+  width: 260px;
+  flex-shrink: 0;
+}
+
+.login-container .password-rules-title {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-main);
+  margin-bottom: 12px;
+}
+
+.login-container .password-rule {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: var(--color-danger-dark);
+}
+
+.login-container .password-rule.is-passed {
+  color: var(--color-success-dark);
+}
+
+.login-container .password-rule-icon {
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+/* Responsive : mêmes sélecteurs que les règles de base pour les surcharger */
 @media (max-width: 768px) {
-  .wrap-login {
+  .login-container .wrap-login,
+  .login-container .wrap-login.first-login-wrap {
     padding: 40px 30px 30px 30px;
   }
-  
-  .login-form {
+
+  .login-container .login-form,
+  .login-container .password-rules-panel {
     width: 100%;
   }
 
-  .password-rules-panel {
-    width: 100%;
-  }
-
-  .checkbox-container {
+  .login-container .checkbox-container {
     flex-direction: column;
     align-items: flex-start;
   }
-  
-  .forgot-password-link {
+
+  .login-container .forgot-password-link {
     margin-left: 0;
     margin-top: 5px;
   }

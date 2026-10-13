@@ -4,10 +4,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { MySwal } from '../../utils/swal';
 import Select from 'react-select';
 import {
-    FaTicketAlt, FaUser, FaHdd, FaSave, FaTimes, FaInfoCircle,
+    FaTicketAlt, FaUser, FaHdd, FaSave, FaInfoCircle,
     FaTag, FaCommentAlt, FaQrcode, FaCheckCircle, FaShieldAlt,
     FaUserPlus, FaUserCircle, FaIdBadge
 } from 'react-icons/fa';
+import AppModal from '../../components/AppModal/AppModal';
 import './Tickets.css';
 
 const FormItem = memo(({ label, name, type = 'text', options = [], formData, handleChange, disabled = false, required = false }) => {
@@ -57,11 +58,11 @@ const FormItem = memo(({ label, name, type = 'text', options = [], formData, han
                         control: (provided) => ({
                             ...provided,
                             minHeight: '42px',
-                            border: '1px solid #e2e8f0',
+                            border: '1px solid var(--color-border)',
                             borderRadius: '10px',
                             fontSize: '0.9rem',
                             boxShadow: 'none',
-                            '&:hover': { borderColor: '#6366f1' },
+                            '&:hover': { borderColor: 'var(--color-primary)' },
                         }),
                         menu: (provided) => ({
                             ...provided,
@@ -70,7 +71,7 @@ const FormItem = memo(({ label, name, type = 'text', options = [], formData, han
                         }),
                         placeholder: (provided) => ({
                             ...provided,
-                            color: '#94a3b8',
+                            color: 'var(--color-text-muted)',
                         }),
                     }}
                 />
@@ -105,7 +106,7 @@ const FormItem = memo(({ label, name, type = 'text', options = [], formData, han
         <div className="add-modal-form-group">
             <label className="add-modal-label">
                 {getIcon()} {label}
-                {required && <span style={{ color: '#EF4444', marginLeft: '4px' }}>*</span>}
+                {required && <span className="tck-required">*</span>}
             </label>
             {renderInput()}
         </div>
@@ -362,121 +363,77 @@ const TicketModal = ({ show, onClose, type, ticketData, onSaveSuccess, onError }
     ];
 
     return (
-        <>
-            <div className="add-modal-overlay" onClick={onClose}>
-                <div className="add-modal-content" onClick={e => e.stopPropagation()} style={{
-                    maxWidth: '850px',
-                }}>
-                    <div className="add-modal-header" style={{
-                        background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-                        borderBottom: '1px solid rgba(255,255,255,0.1)'
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                            <div className="add-modal-icon-wrapper" style={{
-                                background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-                                boxShadow: '0 4px 15px rgba(99, 102, 241, 0.3)'
-                            }}>
-                                <FaTicketAlt style={{ color: 'white' }} />
-                            </div>
-                            <div>
-                                <h2 className="add-modal-title" style={{ color: 'white' }}>
-                                    {type === 'add' ? 'Nouveau Ticket' : `Modifier Ticket #${formData.idTicket}`}
-                                </h2>
-                                <p className="add-modal-subtitle" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                                    {type === 'add' ? 'Remplissez les informations ci-dessous' : 'Modifiez les champs du ticket'}
-                                </p>
-                            </div>
-                        </div>
-                        <button onClick={onClose} className="add-modal-close-btn" type="button" style={{
-                            background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.15)'
-                        }}>
-                            <FaTimes />
-                        </button>
-                    </div>
-
-                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-                    <div className="add-modal-body" style={{
-                        flex: 1,
-                        overflowY: 'auto',
-                        padding: '24px',
-                        background: '#F8FAFC'
-                    }}>
-                        <div style={{
-                            background: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)', borderRadius: '12px', padding: '12px 16px', marginBottom: '20px', border: '1px solid #BFDBFE', display: 'flex', alignItems: 'center', gap: '12px'
-                        }}>
-                            <FaInfoCircle style={{ color: '#3B82F6', fontSize: '1.2rem' }} />
-                            <span style={{ color: '#1E40AF', fontSize: '0.85rem' }}>
-                                Les champs marqués d'un <span style={{ color: '#EF4444' }}>*</span> sont obligatoires
-                            </span>
-                        </div>
-
-                        {formData.numeroTicket && (
-                            <div style={{ marginBottom: '20px' }}>
-                                <div className="add-modal-form-group">
-                                    <label className="add-modal-label">
-                                        <FaTicketAlt /> N° Ticket
-                                    </label>
-                                    <span style={{
-                                        padding: '10px 12px', borderRadius: '10px', border: '1px solid #e2e8f0',
-                                        backgroundColor: '#f8fafc', color: '#334155', fontWeight: '600', fontSize: '0.85rem'
-                                    }}>
-                                        {formData.numeroTicket}
-                                    </span>
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="add-modal-form-grid" style={{
-                            display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px'
-                        }}>
-                            <FormItem label="Titre" name="titre" formData={formData} handleChange={handleChange} required />
-                            <FormItem label="Description" name="description" type="textarea" formData={formData} handleChange={handleChange} required />
-                            <FormItem label="Demandeur" name="idDemandeur" type="searchable-select"
-                                options={usersList.map(u => ({ value: u.id_n, label: u.nom_full }))}
-                                formData={formData}
-                                handleChange={handleChange}
-                                disabled={isRestrictedUser}
-                                required
-                            />
-                            <FormItem label="Matériel concerné" name="idMateriels" type="searchable-select"
-                                options={materielsList
-                                    .filter(m => String(m.id_n_proprietaire) === String(formData.idDemandeur))
-                                    .map(m => ({ value: m.id_materiels, label: m.nom_materiel }))}
-                                formData={formData} handleChange={handleChange}
-                                disabled={isRestrictedUser && (type === 'edit' || materielsList.length === 1)}
-                                required />
-                            {/* Un USER peut proposer un technicien à la création, pas réassigner ensuite */}
-                            {!(isRestrictedUser && type === 'edit') && (
-                                <FormItem label="Assigné à (DSI)" name="idAssigne" type="searchable-select"
-                                    options={usersItList.map(t => ({ value: t.id_n, label: t.nom_avec_matricule }))}
-                                    formData={formData} handleChange={handleChange} />
-                            )}
-                            {/* Le statut est géré par la DSI (un ticket USER est créé NOUVEAU) */}
-                            {!isRestrictedUser && (
-                                <FormItem label="Statut" name="statut" type="select" options={statutOptions} formData={formData} handleChange={handleChange} />
-                            )}
-                            <FormItem label="Priorité" name="priorite" type="select" options={prioriteOptions} formData={formData} handleChange={handleChange} />
-                        </div>
-                    </div>
-
-                    <div className="add-modal-footer" style={{
-                        background: '#F1F5F9', borderTop: '1px solid #E2E8F0', padding: '16px 24px', display: 'flex', justifyContent: 'flex-end', gap: '12px'
-                    }}>
-                        <button type="button" onClick={onClose} className="add-modal-cancel-btn" style={{
-                            background: 'white', color: '#1E293B', border: '1px solid #CBD5E1', padding: '10px 28px', borderRadius: '12px', fontWeight: '500', fontSize: '0.9rem', transition: 'all 0.2s ease', cursor: 'pointer'
-                        }}>
-                            Annuler
-                        </button>
-                        <button type="submit" className="add-modal-submit-btn" style={{
-                            background: 'linear-gradient(135deg, #6366f1, #4f46e5)', color: 'white', border: 'none', padding: '10px 32px', borderRadius: '12px', fontWeight: '500', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s ease', cursor: 'pointer', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)'
-                        }}>
-                            <FaSave /> Sauvegarder
-                        </button>
-                    </div>
-                    </form>
-                </div>
+        <AppModal
+            show={show}
+            onClose={onClose}
+            as="form"
+            onSubmit={handleSubmit}
+            closeOnBackdrop
+            icon={<FaTicketAlt />}
+            title={type === 'add' ? 'Nouveau Ticket' : `Modifier Ticket #${formData.idTicket}`}
+            subtitle={type === 'add' ? 'Remplissez les informations ci-dessous' : 'Modifiez les champs du ticket'}
+            contentClassName="tck-modal"
+            footer={
+                <>
+                    <button type="button" onClick={onClose} className="add-modal-cancel-btn">
+                        Annuler
+                    </button>
+                    <button type="submit" className="add-modal-submit-btn">
+                        <FaSave aria-hidden="true" /> Sauvegarder
+                    </button>
+                </>
+            }
+        >
+            <div className="tck-modal-info">
+                <FaInfoCircle className="tck-modal-info__icon" aria-hidden="true" />
+                <span className="tck-modal-info__text">
+                    Les champs marqués d'un <span className="tck-required">*</span> sont obligatoires
+                </span>
             </div>
-        </>
+
+            {formData.numeroTicket && (
+                <div className="tck-modal-section">
+                    <div className="add-modal-form-group">
+                        <span className="add-modal-label">
+                            <FaTicketAlt aria-hidden="true" /> N° Ticket
+                        </span>
+                        <span className="tck-readonly-value">
+                            {formData.numeroTicket}
+                        </span>
+                    </div>
+                </div>
+            )}
+
+            <div className="add-modal-form-grid tck-form-grid">
+                <FormItem label="Titre" name="titre" formData={formData} handleChange={handleChange} required />
+                <FormItem label="Description" name="description" type="textarea" formData={formData} handleChange={handleChange} required />
+                <FormItem label="Demandeur" name="idDemandeur" type="searchable-select"
+                    options={usersList.map(u => ({ value: u.id_n, label: u.nom_full }))}
+                    formData={formData}
+                    handleChange={handleChange}
+                    disabled={isRestrictedUser}
+                    required
+                />
+                <FormItem label="Matériel concerné" name="idMateriels" type="searchable-select"
+                    options={materielsList
+                        .filter(m => String(m.id_n_proprietaire) === String(formData.idDemandeur))
+                        .map(m => ({ value: m.id_materiels, label: m.nom_materiel }))}
+                    formData={formData} handleChange={handleChange}
+                    disabled={isRestrictedUser && (type === 'edit' || materielsList.length === 1)}
+                    required />
+                {/* Un USER peut proposer un technicien à la création, pas réassigner ensuite */}
+                {!(isRestrictedUser && type === 'edit') && (
+                    <FormItem label="Assigné à (DSI)" name="idAssigne" type="searchable-select"
+                        options={usersItList.map(t => ({ value: t.id_n, label: t.nom_avec_matricule }))}
+                        formData={formData} handleChange={handleChange} />
+                )}
+                {/* Le statut est géré par la DSI (un ticket USER est créé NOUVEAU) */}
+                {!isRestrictedUser && (
+                    <FormItem label="Statut" name="statut" type="select" options={statutOptions} formData={formData} handleChange={handleChange} />
+                )}
+                <FormItem label="Priorité" name="priorite" type="select" options={prioriteOptions} formData={formData} handleChange={handleChange} />
+            </div>
+        </AppModal>
     );
 };
 

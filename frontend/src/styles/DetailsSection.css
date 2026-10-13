@@ -1,0 +1,142 @@
+/* ============================================================
+   DETAILS SECTION — sections et cartes d'information des modales
+   de détail (DetailsModal, DetailsMailModal, UserFormModal…)
+   ============================================================ */
+
+.add-modal-content.add-modal-details-content {
+    max-width: 1300px;
+}
+
+/* ---- Section à en-tête coloré ---- */
+.details-section {
+    animation: fadeInUp 0.3s ease-out;
+}
+
+.details-section-header {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 18px;
+    margin-bottom: 18px;
+    border-radius: var(--radius-md);
+    transition: var(--transition-base);
+}
+
+/* Fond, bordure et ombre de l'en-tête varient par section : passés en inline. */
+.details-section-header:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important; /* l'emporte sur l'ombre inline */
+}
+
+.details-section-header::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+.details-section-header .section-icon-wrapper {
+    transition: var(--transition-base);
+    flex-shrink: 0;
+}
+
+.details-section-header:hover .section-icon-wrapper {
+    transform: scale(1.05) rotate(-5deg);
+}
+
+.details-section-title {
+    position: relative;
+    z-index: 1;
+}
+
+.details-section-header .section-badge {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-pill);
+    padding: 2px 12px;
+    color: var(--color-bg);
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+/* ---- Carte d'information (icône + libellé + valeur) ---- */
+.add-modal-info-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--color-bg);
+    border-radius: var(--radius-md);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: var(--transition-base);
+}
+
+.add-modal-info-card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.add-modal-info-icon {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.add-modal-info-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.add-modal-info-label {
+    font-size: 0.65rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.add-modal-info-value {
+    font-size: 0.85rem;
+    color: var(--color-text-main);
+    font-weight: 500;
+    word-break: break-all;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.add-modal-info-value-oui {
+    color: var(--color-success);
+    font-weight: 600;
+}
+
+.add-modal-info-value-non {
+    color: var(--color-danger);
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .details-section {
+        padding: 14px !important; /* l'emporte sur le padding inline des sections */
+    }
+
+    .details-section-header {
+        padding: 8px 14px;
+        flex-wrap: wrap;
+    }
+
+    .details-section-header .section-badge {
+        display: none;
+    }
+}

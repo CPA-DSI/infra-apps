@@ -2,43 +2,31 @@
    QuickPreviewModal.css
    ============================================ */
 
-/* Fond du modal : correction de la transparence */
-.quick-preview-modal .modal-content {
-  background-color: #ffffff !important;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+/* Modal react-bootstrap (portée dans <body>) : réglages via ses variables */
+.doc-preview-modal {
+  --bs-modal-border-color: var(--color-border);
+  --bs-modal-border-radius: var(--radius-md);
+  --bs-modal-box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  --bs-modal-header-padding: 1rem 1.5rem;
+  --bs-modal-header-border-color: var(--color-border);
+  --bs-modal-padding: 1.5rem;
+  --bs-modal-footer-border-color: var(--color-border);
+}
+
+.doc-preview-modal .modal-content {
   overflow: hidden;
+  animation: docPreviewIn 0.25s ease-out;
 }
 
-.quick-preview-modal .modal-header {
-  border-bottom: 1px solid #e5e7eb !important;
-  padding: 1rem 1.5rem !important;
-  background-color: #ffffff !important;
-}
-
-.quick-preview-modal .modal-body {
-  padding: 1.5rem !important;
-  background-color: #ffffff !important;
-}
-
-.quick-preview-modal .modal-footer {
-  border-top: 1px solid #e5e7eb !important;
-  padding: 1rem 1.5rem !important;
-  background-color: #ffffff !important;
-}
-
-.quick-preview-modal .modal-backdrop {
-  background: rgba(15, 23, 42, 0.6) !important;
+/* Fond assombri (backdropClassName="doc-preview-backdrop") */
+.modal-backdrop.doc-preview-backdrop {
+  --bs-backdrop-bg: var(--dash-bg);
+  --bs-backdrop-opacity: 0.6;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 }
 
-.quick-preview-modal .modal-content {
-  animation: modalFadeIn 0.25s ease-out;
-}
-
-@keyframes modalFadeIn {
+@keyframes docPreviewIn {
   from {
     opacity: 0;
     transform: translateY(-10px) scale(0.98);
@@ -49,14 +37,103 @@
   }
 }
 
+.doc-preview-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.doc-preview-title__icon {
+  color: var(--color-primary);
+}
+
+.doc-preview-title__file {
+  font-weight: 400;
+}
+
+/* --- Onglets de fichiers (fichier principal + pièces jointes) --- */
+.doc-preview-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.doc-preview-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg);
+  color: var(--color-text-body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.doc-preview-tab.is-active {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary-dark);
+  font-weight: 600;
+}
+
+.doc-preview-tab:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.doc-preview-tab:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+}
+
+/* --- Icônes de type de fichier --- */
+.doc-preview-modal .doc-file-type--pdf { color: var(--color-danger-dark); }
+.doc-preview-modal .doc-file-type--image { color: #ea580c; }
+.doc-preview-modal .doc-file-type--word { color: var(--color-info-dark); }
+.doc-preview-modal .doc-file-type--excel { color: #16a34a; }
+.doc-preview-modal .doc-file-type--text { color: var(--color-primary); }
+
+/* --- États vides --- */
+.doc-preview-empty__icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  color: var(--color-primary);
+}
+
+.doc-preview-empty__icon--muted {
+  color: var(--color-text-muted);
+}
+
+.doc-preview-empty__title {
+  color: var(--color-text-sub);
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.doc-preview-empty__title--lg {
+  font-size: 1.2rem;
+}
+
+.doc-preview-empty__text {
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  margin-top: 0.5rem;
+}
+
 /* --- Sections de prévisualisation --- */
-.preview-section {
+.doc-preview-section {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.preview-frame-wrapper {
+.doc-preview-frame-wrapper {
   position: relative;
   min-height: 200px;
   display: flex;
@@ -64,10 +141,10 @@
   justify-content: center;
   background: var(--color-bg-alt);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 
-.preview-loading {
+.doc-preview-loading {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -77,7 +154,7 @@
   font-size: 0.875rem;
 }
 
-.preview-error {
+.doc-preview-error {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -87,92 +164,138 @@
   text-align: center;
 }
 
-.preview-error p {
+.doc-preview-error p {
   margin: 0;
-  color: #334155;
+  color: var(--color-text-body);
   font-weight: 500;
 }
 
-.preview-error small {
+.doc-preview-error small {
   color: var(--color-text-muted);
 }
 
-.preview-footer {
+.doc-preview-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 4px;
 }
 
-.preview-footer .text-muted {
+.doc-preview-footer--wrap {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.doc-preview-footer__meta {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.doc-preview-footer .text-muted {
   font-size: 0.8rem;
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.preview-tabs button:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+.doc-preview-frame-wrapper--stretch {
+  align-items: stretch;
 }
 
-.preview-tabs button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: all 0.2s ease;
+.doc-preview-iframe {
+  border: none;
+  border-radius: var(--radius-sm);
 }
 
-/* --- CSV / Texte --- */
-.preview-csv-table {
+.doc-preview-image {
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+}
+
+/* --- CSV / Texte / Excel --- */
+.doc-preview-table-wrapper {
+  width: 100%;
+  overflow: auto;
+  max-height: 65vh;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+.doc-preview-cell-text {
+  display: block;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.doc-preview-text {
+  margin: 0;
+  padding: 1rem;
+  width: 100%;
+  max-height: 60vh;
+  overflow: auto;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--color-text-main);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.doc-preview-csv-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.85rem;
   table-layout: auto;
 }
 
-.preview-csv-table thead th {
+.doc-preview-csv-table thead th {
   position: sticky;
   top: 0;
   z-index: 2;
   padding: 10px 12px;
-  border-bottom: 2px solid #e5e7eb;
-  border-right: 1px solid #f3f4f6;
+  border-bottom: 2px solid var(--color-border);
+  border-right: 1px solid var(--color-border-light);
   text-align: left;
   font-weight: 600;
-  color: #374151;
+  color: var(--color-text-body);
   background-color: var(--color-bg-alt);
   white-space: nowrap;
   min-width: 120px;
 }
 
-.preview-csv-table tbody td {
+.doc-preview-csv-table tbody td {
   padding: 6px 8px;
-  border-bottom: 1px solid #f3f4f6;
-  border-right: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--color-border-light);
+  border-right: 1px solid var(--color-border-light);
   vertical-align: top;
 }
 
-.preview-csv-table tbody tr:nth-child(even) {
-  background-color: #ffffff;
+.doc-preview-csv-table tbody tr:nth-child(even) {
+  background-color: var(--color-bg);
 }
 
-.preview-csv-table tbody tr:nth-child(odd) {
-  background-color: #f9fafb;
+.doc-preview-csv-table tbody tr:nth-child(odd) {
+  background-color: var(--color-surface-alt);
 }
 
-.preview-csv-table tbody tr:hover {
-  background-color: #eef2ff;
+.doc-preview-csv-table tbody tr:hover {
+  background-color: var(--color-primary-soft);
 }
 
-.preview-csv-cell-index {
-  color: #9ca3af;
+.doc-preview-csv-cell-index {
+  color: var(--color-text-muted);
   font-weight: 600;
   text-align: center;
   white-space: nowrap;
   user-select: none;
 }
 
-.preview-csv-input {
+.doc-preview-csv-input {
   width: 100%;
   min-width: 80px;
   padding: 6px 8px;
@@ -180,87 +303,94 @@
   border-radius: 6px;
   font-size: 0.85rem;
   font-family: inherit;
-  background-color: #eef2ff;
+  background-color: var(--color-primary-soft);
   outline: none;
   box-sizing: border-box;
-  color: #1f2937;
+  color: var(--color-text-main);
 }
 
-.preview-csv-pagination {
+.doc-preview-csv-pagination {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-top: 8px;
   font-size: 0.8rem;
-  color: #6b7280;
+  color: var(--color-text-sub);
 }
 
-.preview-csv-pagination .btn-group {
+.doc-preview-csv-pagination .btn-group {
   gap: 8px;
 }
 
 /* --- Word (mammoth) --- */
-.preview-docx-content {
+.doc-preview-docx-content {
+  width: 100%;
+  max-height: 65vh;
+  overflow: auto;
+  padding: 1rem;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
   font-family: var(--font-sans);
   font-size: 0.95rem;
   line-height: 1.6;
-  color: #1f2937;
+  color: var(--color-text-main);
 }
 
-.preview-docx-content h1,
-.preview-docx-content h2,
-.preview-docx-content h3,
-.preview-docx-content h4,
-.preview-docx-content h5,
-.preview-docx-content h6 {
+.doc-preview-docx-content h1,
+.doc-preview-docx-content h2,
+.doc-preview-docx-content h3,
+.doc-preview-docx-content h4,
+.doc-preview-docx-content h5,
+.doc-preview-docx-content h6 {
   margin-top: 1.2em;
   margin-bottom: 0.6em;
   font-weight: 600;
-  color: #111827;
+  color: var(--color-text-strong);
 }
 
-.preview-docx-content p {
+.doc-preview-docx-content p {
   margin: 0 0 0.8em;
 }
 
-.preview-docx-content table {
+.doc-preview-docx-content table {
   border-collapse: collapse;
   width: 100%;
   margin: 0.8em 0;
   font-size: 0.9rem;
 }
 
-.preview-docx-content th,
-.preview-docx-content td {
-  border: 1px solid #d1d5db;
+.doc-preview-docx-content th,
+.doc-preview-docx-content td {
+  border: 1px solid var(--color-border-strong);
   padding: 6px 10px;
   text-align: left;
   vertical-align: top;
 }
 
-.preview-docx-content th {
-  background-color: #f3f4f6;
+.doc-preview-docx-content th {
+  background-color: var(--color-border-light);
   font-weight: 600;
 }
 
-.preview-docx-content ul,
-.preview-docx-content ol {
+.doc-preview-docx-content ul,
+.doc-preview-docx-content ol {
   padding-left: 1.5em;
   margin: 0 0 0.8em;
 }
 
-.preview-docx-content img {
+.doc-preview-docx-content img {
   max-width: 100%;
   height: auto;
   border-radius: 6px;
 }
 
-.preview-docx-content blockquote {
+.doc-preview-docx-content blockquote {
   border-left: 4px solid var(--color-primary);
   padding-left: 1em;
   margin: 0.8em 0;
-  color: #374151;
-  background: #f9fafb;
+  color: var(--color-text-body);
+  background: var(--color-surface-alt);
   padding: 0.6em 1em;
   border-radius: 0 6px 6px 0;
 }

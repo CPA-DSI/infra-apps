@@ -1,9 +1,38 @@
 .statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
   letter-spacing: 0.3px;
+  white-space: nowrap;
+  color: var(--ud-tone-fg);
+  background-color: var(--ud-tone-bg);
+  border: 1px solid var(--ud-tone-border);
+  border-radius: 20px;
   transition: all 0.2s ease;
 }
 
 .statusBadge:hover {
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.statusBadge--sm {
+  padding: 2px 8px;
+  font-size: 11px;
+}
+
+.statusBadge--lg {
+  padding: 6px 16px;
+  font-size: 13px;
+}
+
+.statusBadgeIcon {
+  font-size: 8px;
+}
+
+.statusBadge--lg .statusBadgeIcon {
+  font-size: 10px;
 }

@@ -1,99 +1,115 @@
-.saved-config-item {
+/* ============================================================
+   EmailHome : onglets + liste des configurations (préfixe scl-)
+   ============================================================ */
+
+/* ---- Carte « Configurations sauvegardées » ---- */
+.scl-card {
+  background: var(--color-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.scl-card .scl-header {
+  padding: 18px 24px;
+  background: var(--gradient-header);
+  color: var(--color-bg);
+}
+
+.scl-card .scl-item {
   cursor: pointer;
   transition: all 0.3s ease;
   border-left: 3px solid transparent;
 }
 
-.saved-config-item:hover {
-  background: rgba(102, 126, 234, 0.05);
-  border-left-color: var(--color-brand-start);
+.scl-card .scl-item:hover {
+  background: rgba(99, 102, 241, 0.05);
+  border-left-color: var(--color-primary);
 }
 
-.saved-config-active {
-  background: var(--gradient-brand) !important;
-  color: white !important;
-  border-left-color: var(--color-brand-start) !important;
+.scl-card .scl-item.is-active {
+  background: var(--gradient-primary);
+  color: var(--color-bg);
+  border-left-color: var(--color-primary-dark);
 }
 
-.saved-config-active .text-muted {
-  color: rgba(255, 255, 255, 0.8) !important;
+.scl-card .scl-item.is-active strong {
+  color: var(--color-bg);
 }
 
-.saved-config-active strong {
-  color: white !important;
-}
-
-.saved-config-active .badge {
+.scl-card .scl-item.is-active .badge {
   font-size: 0.7rem;
 }
 
-.config-details div {
+.scl-card .scl-empty {
+  color: var(--color-text-sub);
+}
+
+.scl-card .scl-item.is-active .scl-empty {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.scl-card .scl-details div {
   line-height: 1.4;
 }
 
-/* Onglets du menu Email (ex assets/css/main.css) */
-.menu-tabs .btn {
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-weight: 500;
-    transition: all 0.3s ease;
+/* ---- Onglets Quotidien / Hebdomadaire / Mensuel ---- */
+.scl-tabs .btn.scl-tab {
+  --bs-btn-color: var(--color-primary);
+  --bs-btn-border-color: var(--color-primary);
+  --bs-btn-hover-color: var(--color-bg);
+  --bs-btn-hover-bg: var(--color-primary);
+  --bs-btn-hover-border-color: var(--color-primary);
+  --bs-btn-active-color: var(--color-bg);
+  --bs-btn-active-bg: var(--color-primary-dark);
+  --bs-btn-active-border-color: var(--color-primary-dark);
+  padding: 12px 24px;
+  border-width: 2px;
+  font-weight: 500;
+  background-color: transparent;
+  transition: all 0.3s ease;
 }
 
-.menu-tabs .btn-primary {
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
-    border: none;
-    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+.scl-tabs .btn.scl-tab:hover {
+  background-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
-.menu-tabs .btn-primary:hover {
-    background: linear-gradient(135deg, #5558e3 0%, #7c4ddb 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+.scl-tabs .btn.scl-tab.is-active {
+  background: var(--gradient-primary);
+  border-color: transparent;
+  color: var(--color-bg);
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
 }
 
-.menu-tabs .btn-outline-primary {
-    border: 2px solid var(--color-primary);
-    color: var(--color-primary);
-    background: transparent;
+.scl-tabs .btn.scl-tab.is-active:hover {
+  background: var(--gradient-primary-dark);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
 }
 
-.menu-tabs .btn-outline-primary:hover {
-    background: var(--color-primary);
-    color: #fff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+.scl-tabs .btn.scl-tab svg {
+  transition: transform 0.3s ease;
 }
 
-.menu-tabs .btn-secondary {
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
-    border: none;
-    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+.scl-tabs .btn.scl-tab:hover svg {
+  transform: scale(1.1);
 }
 
-.menu-tabs .btn-secondary:hover {
-    background: linear-gradient(135deg, #5558e3 0%, #7c4ddb 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
-}
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .scl-tabs .btn-group {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 
-.menu-tabs .btn-outline-secondary {
-    border: 2px solid var(--color-primary);
-    color: var(--color-primary);
-    background: transparent;
-}
+  .scl-tabs .btn.scl-tab {
+    padding: 10px 14px;
+    font-size: 0.85rem;
+  }
 
-.menu-tabs .btn-outline-secondary:hover {
-    background: var(--color-primary);
-    color: #fff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  .scl-card .scl-header {
+    padding: 14px 16px;
+  }
 }
-
-.menu-tabs .btn svg {
-    transition: transform 0.3s ease;
-}
-
-.menu-tabs .btn:hover svg {
-    transform: scale(1.1);
-}
-

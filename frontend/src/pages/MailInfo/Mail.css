@@ -1,567 +1,282 @@
 /* ============================================================================
-   Mail.css — Modern Header & Components
+   PAGE UTILISATEURS (MailInfo) — styles propres à la page
+   (import Excel : styles/ImportPanel.css ; modales : MailModals.css)
    ============================================================================ */
 
-.mail-modern-header {
-    background: var(--gradient-brand);
-    padding: 14px 20px;
-    border: none;
-    border-radius: 12px;
-    margin-bottom: 20px;
+.page-mail {
+    min-height: 100vh;
+    background-color: var(--color-surface-alt);
 }
 
-.mail-modern-header h1 {
-    color: white !important;
-    font-weight: 700;
-    margin: 0;
-    font-size: 1.5rem;
+.page-mail .mail-main-card {
+    border-radius: 25px;
+    font-family: var(--font-sans);
 }
 
-.mail-modern-header p {
-    color: rgba(255, 255, 255, 0.85) !important;
-    margin: 4px 0 0 0;
-    font-size: 0.875rem;
-}
-
-.cursor-pointer {
+.page-mail .cursor-pointer {
     cursor: pointer;
 }
 
-/* Animation fadeInUp pour les cartes de statistiques */
-@keyframes mail-fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+/* ---- Cartes de statistiques (apparition décalée, délai inline) ---- */
+.page-mail .mail-stat-col {
+    opacity: 0;
+    animation: fadeInUp 0.5s ease forwards;
 }
 
-/* Styles pour les cartes de statistiques */
-.mail-stat-card {
-    padding: 16px 20px;
-    border-radius: 14px;
+/* ---- Recherche et filtres ---- */
+.page-mail .mail-search {
+    display: flex;
+    align-items: center;
+}
+
+.page-mail .mail-search-icon {
+    margin-right: 8px;
+    color: var(--color-text-sub);
+}
+
+.page-mail .mail-search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background-color: transparent;
+    font-size: 14px;
+}
+
+.page-mail .mail-search-clear {
+    border: none;
+    background: none;
+    color: var(--color-text-sub);
+    cursor: pointer;
+}
+
+.page-mail .mail-reset-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 18px;
+    border: none;
+    border-radius: var(--radius-pill);
+    background: var(--color-bg-alt);
+    color: var(--color-text-secondary);
+    font-weight: 500;
+    transition: var(--transition-base);
+}
+
+.page-mail .mail-reset-btn:hover {
+    background: var(--color-border-light);
+}
+
+/* ---- Cellules du tableau ---- */
+.page-mail .mail-user-name {
+    color: var(--color-info);
+    font-size: 0.8rem;
+}
+
+.page-mail .mail-tag {
+    padding: 5px 12px;
+    border: 1px solid transparent;
+    font-size: 0.75rem;
+    letter-spacing: 0.3px;
+}
+
+.page-mail .mail-tag--team {
+    background-color: var(--color-primary-soft);
+    border-color: #c7d2fe;
+    color: var(--color-primary-dark);
+}
+
+.page-mail .mail-tag--site {
+    background-color: var(--color-warning-soft);
+    border-color: #fcd34d;
+    color: #b45309;
+}
+
+/* Couleurs du statut passées en inline (STATUS_CONFIG) */
+.page-mail .mail-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border: 1px solid transparent;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     cursor: default;
-    user-select: none;
+    transition: var(--transition-base);
 }
 
-/* ============================================================================
-   STYLES - Email Cells
-   ============================================================================ */
+.page-mail .mail-status-pill-icon {
+    font-size: 0.6rem;
+}
 
-.email-cell {
+.page-mail .mail-email-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.page-mail .mail-email-multi {
+    flex-shrink: 0;
+    margin-left: 6px;
+    color: var(--color-primary);
+    opacity: 0.7;
+}
+
+.page-mail .mail-email-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: var(--radius-md);
+    background-color: var(--color-border-light);
+    color: var(--color-text-sub);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: default;
+    transition: var(--transition-base);
+}
+
+.page-mail .mail-email-count.has-multiple {
+    background-color: var(--color-primary);
+    color: var(--color-bg);
+    cursor: pointer;
+}
+
+.page-mail .mail-verified-count {
+    margin-top: 3px;
+    color: #b45309;
+    font-size: 0.65rem;
+    font-weight: 500;
+}
+
+.page-mail .mail-verified-count.is-verified {
+    color: #15803d;
+}
+
+/* ---- Cellules email (tableau et lignes dépliées) ---- */
+.page-mail .email-cell {
     display: flex;
     align-items: center;
     gap: 8px;
     padding: 6px 12px;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     font-weight: 600;
-    transition: all 0.2s ease;
+    transition: var(--transition-base);
     box-shadow: 0 2px 8px -2px rgba(139, 92, 246, 0.1);
 }
 
-.email-cell:hover {
+.page-mail .email-cell:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px -2px rgba(139, 92, 246, 0.15);
 }
 
-.email-primary {
+.page-mail .email-primary {
     background: rgba(139, 92, 246, 0.08);
     border: 1px solid rgba(139, 92, 246, 0.2);
-    color: #7c3aed;
+    color: var(--color-secondary-dark);
 }
 
-.email-secondary {
+.page-mail .email-secondary {
     background: rgba(59, 130, 246, 0.08);
     border: 1px solid rgba(59, 130, 246, 0.2);
     color: #1e40af;
 }
 
-.email-password {
-    background: rgba(245, 158, 11, 0.08);
-    border: 1px solid rgba(245, 158, 11, 0.2);
+.page-mail .email-badge-primary,
+.page-mail .email-badge-secondary {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.page-mail .email-badge-primary {
+    background: rgba(139, 92, 246, 0.15);
+    color: var(--color-secondary-dark);
+}
+
+.page-mail .email-badge-secondary {
+    background: rgba(59, 130, 246, 0.15);
+    color: #1e40af;
+}
+
+.page-mail .email-badge-verified,
+.page-mail .email-badge-unverified {
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 0.6rem;
+    font-weight: 600;
+}
+
+.page-mail .email-badge-verified {
+    background: rgba(34, 197, 94, 0.15);
+    color: #15803d;
+}
+
+.page-mail .email-badge-unverified {
+    background: rgba(245, 158, 11, 0.15);
     color: #b45309;
 }
 
-.email-password-secondary {
-    background: rgba(16, 185, 129, 0.08);
-    border: 1px solid rgba(16, 185, 129, 0.2);
-    color: #047857;
+/* ---- Toast « copié » et états du tableau ---- */
+.page-mail .mail-copy-toast {
+    z-index: var(--z-toast);
+    animation: fadeIn 0.3s ease;
 }
 
-/* ============================================================================
-   STYLES - Role Badge & Edition
-   ============================================================================ */
-
-/* Badge de rôle avec animation */
-.role-badge {
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
+.page-mail .mail-loading-spinner {
+    width: 3rem;
+    height: 3rem;
+    margin-right: 8px;
 }
 
-.role-badge::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
+.page-mail .mail-empty {
+    padding: 48px;
+    text-align: center;
+    color: var(--color-text-muted);
 }
 
-.role-badge:hover::after {
-    opacity: 1;
+.page-mail .mail-empty-icon {
+    margin-bottom: 16px;
+    font-size: 48px;
 }
 
-.role-badge:hover {
-    transform: scale(1.05) translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
-}
-
-.role-badge.role-unknown {
-    border-style: dashed;
-    opacity: 0.8;
-    animation: pulseUnknown 2s ease-in-out infinite;
-}
-
-@keyframes pulseUnknown {
-    0%, 100% { opacity: 0.8; }
-    50% { opacity: 1; }
-}
-
-/* Animation d'entrée des badges */
-.role-badge {
-    animation: fadeInBadge 0.3s ease forwards;
-}
-
-@keyframes fadeInBadge {
-    from {
-        opacity: 0;
-        transform: scale(0.85) translateY(5px);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-    }
-}
-
-/* Sélecteur d'édition de rôle */
-.role-edit-select {
-    transition: all 0.3s ease;
-}
-
-.role-edit-select:focus {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-}
-
-.role-edit-select option {
-    padding: 8px 12px;
+.page-mail .mail-empty-title {
+    margin: 0;
+    font-size: 16px;
     font-weight: 500;
 }
 
-/* Icône d'édition de rôle */
-.role-edit-icon {
-    transition: all 0.3s ease;
-}
-
-[title="Cliquez pour modifier le rôle"]:hover .role-edit-icon {
-    opacity: 1 !important;
-    transform: rotate(15deg) scale(1.1);
-}
-
-/* Tooltip personnalisé pour les badges */
-.role-badge[title] {
-    position: relative;
-}
-
-/* Styles spécifiques pour chaque rôle dans le sélecteur */
-.role-edit-select option[value="USER"] {
-    color: #16a34a;
-}
-
-.role-edit-select option[value="IT_ADMIN"] {
-    color: #dc2626;
-}
-
-.role-edit-select option[value="DIRECTION"] {
-    color: #7c3aed;
+.page-mail .mail-empty-hint {
+    margin: 8px 0 0;
+    font-size: 14px;
 }
 
 /* ============================================================================
-   STYLES - Nouvelles colonnes (Statut, Emails, Tickets)
-   ============================================================================ */
-
-.mail-status-badge {
-    font-size: 0.7rem;
-    font-weight: 600;
-    padding: 4px 10px;
-    letter-spacing: 0.3px;
-    border-radius: 50px !important;
-    transition: all 0.2s ease;
-}
-
-.mail-status-badge:hover {
-    transform: scale(1.05);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.email-count-badge {
-    font-size: 0.65rem;
-    padding: 2px 6px;
-    border-radius: 50px !important;
-    font-weight: 600;
-}
-
-.ticket-badge {
-    font-size: 0.6rem;
-    padding: 2px 5px;
-    border-radius: 50px !important;
-    font-weight: 600;
-    cursor: help;
-    transition: all 0.2s ease;
-}
-
-.ticket-badge:hover {
-    transform: scale(1.1);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-
-/* Amélioration des cellules d'email avec indicateur primaire/secondaire */
-.email-primary .email-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.email-secondary .email-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.email-badge-primary {
-    background: rgba(139, 92, 246, 0.15);
-    color: #7c3aed;
-    font-size: 0.65rem;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-}
-
-.email-badge-secondary {
-    background: rgba(59, 130, 246, 0.15);
-    color: #1e40af;
-    font-size: 0.65rem;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-}
-
-.email-badge-verified {
-    background: rgba(34, 197, 94, 0.15);
-    color: #15803d;
-    font-size: 0.6rem;
-    padding: 1px 5px;
-    border-radius: 4px;
-    font-weight: 600;
-}
-
-.email-badge-unverified {
-    background: rgba(245, 158, 11, 0.15);
-    color: #b45309;
-    font-size: 0.6rem;
-    padding: 1px 5px;
-    border-radius: 4px;
-    font-weight: 600;
-}
-
-/* ============================================================================
-   STYLES - Expandable Email Rows
-   ============================================================================ */
-
-.email-cell-email-row {
-    transition: all 0.2s ease;
-}
-
-.email-cell-email-row:hover {
-    transform: translateX(4px);
-}
-
-.expandable-email-row {
-    animation: expandRowFadeIn 0.3s ease forwards;
-}
-
-.email-count-badge-table {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-weight: 600;
-    font-size: 0.85rem;
-    transition: all 0.2s ease;
-    cursor: default;
-}
-
-.email-count-badge-table.has-multiple {
-    background-color: var(--color-primary);
-    color: white;
-    cursor: pointer;
-}
-
-.email-count-badge-table.single {
-    background-color: var(--color-bg-alt);
-    color: var(--color-text-sub);
-}
-
-.email-count-badge-table:hover {
-    transform: scale(1.05);
-}
-
-.verified-count-badge {
-    font-size: 0.65rem;
-    font-weight: 500;
-    margin-top: 3px;
-    transition: all 0.2s ease;
-}
-
-.email-primary-expandable {
-    background: rgba(139, 92, 246, 0.08);
-    border: 1px solid rgba(139, 92, 246, 0.2);
-    color: #7c3aed;
-}
-
-.email-secondary-expandable {
-    background: rgba(59, 130, 246, 0.08);
-    border: 1px solid rgba(59, 130, 246, 0.2);
-    color: #1e40af;
-}
-
-.email-badge-primary-expandable {
-    background: rgba(139, 92, 246, 0.15);
-    color: #7c3aed;
-    font-size: 0.65rem;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-}
-
-.email-badge-secondary-expandable {
-    background: rgba(59, 130, 246, 0.15);
-    color: #1e40af;
-    font-size: 0.65rem;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-}
-
-.email-badge-verified-expandable {
-    background: rgba(34, 197, 94, 0.15);
-    color: #15803d;
-    font-size: 0.6rem;
-    padding: 1px 5px;
-    border-radius: 4px;
-    font-weight: 600;
-}
-
-.email-badge-unverified-expandable {
-    background: rgba(245, 158, 11, 0.15);
-    color: #b45309;
-    font-size: 0.6rem;
-    padding: 1px 5px;
-    border-radius: 4px;
-    font-weight: 600;
-}
-
-/* ============================================================================
-   STYLES - Scoped Bootstrap Alert Overrides (Mail page)
+   SURCHARGES BOOTSTRAP — page Utilisateurs uniquement
    ============================================================================ */
 
 .page-mail .alert {
-    border-radius: 12px;
-    border: none;
+    --bs-alert-border-radius: var(--radius-md);
+    --bs-alert-padding-x: 16px;
+    --bs-alert-padding-y: 12px;
     font-size: 0.875rem;
     font-weight: 500;
-    padding: 12px 16px;
     margin-bottom: 1rem;
     animation: fadeIn 0.3s ease;
 }
 
 .page-mail .alert-danger {
-    background-color: #fef2f2;
-    color: #991b1b;
-    border: 1px solid #fecaca;
+    --bs-alert-bg: #fef2f2;
+    --bs-alert-color: #991b1b;
+    --bs-alert-border-color: #fecaca;
 }
 
 .page-mail .alert-success {
-    background-color: #f0fdf4;
-    color: #166534;
-    border: 1px solid #bbf7d0;
-}
-
-/* ==========================================================
-   IMPORT SECTION (alignée sur la page Matériels)
-   ========================================================== */
-
-@keyframes mail-slideDown {
-    from { opacity: 0; transform: translateY(-8px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.mail-import-section {
-    animation: mail-slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.mail-import-section .table-responsive {
-    border-radius: 10px;
-    border: 1px solid var(--color-border);
-    overflow: hidden;
-}
-
-.mail-import-section .table thead th {
-    background-color: var(--color-bg-alt);
-    color: var(--color-text-main);
-    font-weight: 600;
-    font-size: 0.7rem;
-    border-bottom: 2px solid var(--color-border);
-    padding: 10px 12px;
-    white-space: nowrap;
-}
-
-.mail-import-section .table tbody tr {
-    transition: background-color 0.15s ease;
-}
-
-.mail-import-section .table tbody tr:hover {
-    background-color: var(--color-bg-alt);
-}
-
-.mail-import-drop-zone {
-    position: relative;
-    margin: 0 1.25rem 1.25rem 1.25rem;
-    padding: 3rem 2rem;
-    text-align: center;
-    cursor: pointer;
-    border-radius: 16px;
-    background-color: #fafbfc;
-    background-image:
-        linear-gradient(90deg, #d1d5db 50%, transparent 50%),
-        linear-gradient(90deg, #d1d5db 50%, transparent 50%),
-        linear-gradient(0deg, #d1d5db 50%, transparent 50%),
-        linear-gradient(0deg, #d1d5db 50%, transparent 50%);
-    background-position: 0 0, 0 100%, 0 0, 100% 0;
-    background-size: 16px 2px, 16px 2px, 2px 16px, 2px 16px;
-    background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
-    transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.mail-import-drop-zone:hover {
-    background-color: #f5f5ff;
-    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.08);
-}
-
-.mail-import-drop-zone:hover .mail-import-drop-icon {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(124, 58, 237, 0.28);
-}
-
-.mail-import-drop-zone.dragover {
-    background-color: #f5f3ff;
-    transform: scale(1.01);
-    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.16);
-    background-image:
-        linear-gradient(90deg, var(--color-primary) 50%, transparent 50%),
-        linear-gradient(90deg, var(--color-primary) 50%, transparent 50%),
-        linear-gradient(0deg, var(--color-primary) 50%, transparent 50%),
-        linear-gradient(0deg, var(--color-primary) 50%, transparent 50%);
-    animation: dashSlide 0.6s linear infinite;
-}
-
-.mail-import-drop-zone.dragover .mail-import-drop-icon {
-    transform: scale(1.08) translateY(-2px);
-    box-shadow: 0 10px 24px rgba(99, 102, 241, 0.35);
-}
-
-.mail-import-drop-zone.has-file {
-    cursor: default;
-    background-color: #f0fdf4;
-    background-image:
-        linear-gradient(90deg, #bbf7d0 50%, transparent 50%),
-        linear-gradient(90deg, #bbf7d0 50%, transparent 50%),
-        linear-gradient(0deg, #bbf7d0 50%, transparent 50%),
-        linear-gradient(0deg, #bbf7d0 50%, transparent 50%);
-}
-
-.mail-import-drop-zone.has-file:hover {
-    box-shadow: none;
-}
-
-@keyframes dashSlide {
-    to { background-position: 16px 0, -16px 100%, 0 -16px, 100% 16px; }
-}
-
-.mail-import-drop-icon {
-    width: 68px;
-    height: 68px;
-    margin: 0 auto 1.1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 18px;
-    font-size: 1.7rem;
-    color: #ffffff;
-    background: linear-gradient(135deg, #7c3aed, var(--color-primary));
-    box-shadow: 0 6px 16px rgba(124, 58, 237, 0.22);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    animation: floatIcon 2.6s ease-in-out infinite;
-}
-
-@keyframes floatIcon {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-5px); }
-}
-
-.mail-import-browse-link {
-    color: var(--color-primary);
-    font-weight: 600;
-    text-decoration: underline;
-    text-decoration-color: rgba(99, 102, 241, 0.35);
-    text-underline-offset: 2px;
-}
-
-.mail-import-file-icon {
-    animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-@keyframes popIn {
-    from { transform: scale(0.6); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-}
-
-.mail-import-remove-btn:hover:not(:disabled) {
-    background-color: #fee2e2 !important;
-    transform: rotate(90deg);
-}
-
-.mail-import-section .mail-progress-container {
-    position: relative;
-    overflow: hidden;
-    border-radius: 10px;
-}
-
-.mail-import-section .mail-progress-bar-fill {
-    position: relative;
-    overflow: hidden;
-    border-radius: 10px;
+    --bs-alert-bg: #f0fdf4;
+    --bs-alert-color: #166534;
+    --bs-alert-border-color: #bbf7d0;
 }

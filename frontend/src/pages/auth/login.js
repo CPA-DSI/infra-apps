@@ -6,38 +6,11 @@ import Tilt from 'react-parallax-tilt';
 import Swal from 'sweetalert2';
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaSpinner } from 'react-icons/fa';
 
+import AuthLogo from '../../components/AuthLogo/AuthLogo';
+
 // --- IMPORTS CSS ---
 import './auth-base.css';
 import './login.css';
-
-const SVGIllustration = () => (
-  <svg
-    viewBox="0 0 200 200"
-    xmlns="http://www.w3.org/2000/svg"
-    style={{ width: '200px', height: '200px' }}
-    aria-hidden="true"
-  >
-    <defs>
-      <linearGradient id="screenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style={{ stopColor: '#667eea', stopOpacity: 1 }} />
-        <stop offset="100%" style={{ stopColor: '#764ba2', stopOpacity: 1 }} />
-      </linearGradient>
-    </defs>
-    <g>
-      <rect x="20" y="20" width="160" height="110" rx="8" ry="8" fill="#333" />
-      <rect x="28" y="28" width="144" height="94" rx="4" ry="4" fill="url(#screenGrad)" />
-      <text x="35" y="50" fill="#fff" fontFamily="monospace" fontSize="14">SUPPORT IT</text>
-      <text x="35" y="65" fill="#fff" fontFamily="monospace" fontSize="10">Help Desk</text>
-      <text x="35" y="80" fill="#fff" fontFamily="monospace" fontSize="10">Tickets</text>
-      <text x="35" y="95" fill="#fff" fontFamily="monospace" fontSize="10">data</text>
-      <rect x="70" y="130" width="60" height="25" fill="#444" />
-      <rect x="50" y="155" width="100" height="8" rx="4" ry="4" fill="#333" />
-      <rect x="40" y="170" width="120" height="15" rx="3" ry="3" fill="#444" />
-      <line x1="50" y1="175" x2="150" y2="175" stroke="#555" strokeWidth="2" />
-      <ellipse cx="160" cy="172" rx="8" ry="12" fill="#444" />
-    </g>
-  </svg>
-);
 
 const Login = () => {
   const navigate = useNavigate();
@@ -159,7 +132,7 @@ const Login = () => {
       <div className="wrap-login">
         <Tilt tiltMaxAngleX={15} tiltMaxAngleY={15} scale={1.05} transitionSpeed={400}>
           <div className="login-pic">
-            <SVGIllustration />
+            <AuthLogo />
           </div>
           <div className="brand-text-wrapper login-brand-text-wrapper">
             <span className="brand-text login-brand-text">
@@ -258,7 +231,7 @@ const Login = () => {
             </Link>
           </div>
 
-          <div style={{ width: '100%' }}>
+          <div className="login-button-wrap">
             <button
               className={`login-button ${isLoading ? 'loading' : ''}`}
               type="submit"

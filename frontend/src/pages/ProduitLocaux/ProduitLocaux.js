@@ -7,40 +7,17 @@ import { MySwal } from '../../utils/swal';
 import { FaEdit, FaSync, FaFileExcel, FaWarehouse, FaTrash, FaSearch, FaBox, FaMapMarkerAlt, FaPlus } from 'react-icons/fa';
 import { fetchProduits, fetchLocaux, addProduct, updateProduct, deleteProduct, addLocation, updateLocation, deleteLocation } from '../../services/api';
 import ProductModal from './ProductModal';
+import PageHeader from '../../components/PageHeader/PageHeader';
+import { tableStyles, paginationOptions } from '../../styles/dataTableTheme';
 import LocationModal from './LocationModal';
 
-// --- Styles modernes ---
-const modernStyles = {
-    table: {
-        style: {
-            backgroundColor: 'transparent', borderRadius: '20px',
-        },
-    },
-    headRow: {
-        style: {
-            backgroundColor: '#f8f9fa', border: 'none', minHeight: '56px', borderRadius: '10px 10px 0 0',
-        },
-    },
-    headCells: {
-            style: {
-                fontSize: '0.75rem', fontWeight: '700', color: '#374151', letterSpacing: '0.05em', textTransform: 'capitalize', paddingLeft: '16px', paddingRight: '16px', paddingTop: '16px', paddingBottom: '16px', verticalAlign: 'middle', textAlign: 'left', backgroundColor: '#f3f4f6', borderBottom: '2px solid #e5e7eb', whiteSpace: 'nowrap', userSelect: 'none',
-            },
-        },
-    rows: {
-        style: {
-            fontSize: '14px', fontWeight: '500', color: '#495057', minHeight: '65px', '&:not(:last-of-type)': { borderBottom: '1px solid #f1f1f1', },
-        },
-        highlightOnHoverStyle: {
-            backgroundColor: '#EBF4FF', color: '#0056b3', cursor: 'pointer', transitionDuration: '0.2s',
-        },
-    },
-    pagination: {
-        style: {
-            border: 'none', fontSize: '13px', color: '#6c757d', paddingTop: '20px',
-        },
-    },
-};
+// Thème commun + spécificités de la page (lignes plus hautes, en-têtes non capitalisés)
+const tableCustomStyles = tableStyles({
+  headCells: { style: { textTransform: 'capitalize' } },
+  rows: { style: { fontSize: '14px', minHeight: '65px' } },
+});
 
+const ROWS_PER_PAGE_OPTIONS = [5, 10, 20, 50, 100];
 
 const ProduitLocaux = () => {
   const [products, setProducts] = useState([]);
@@ -260,12 +237,12 @@ const ProduitLocaux = () => {
           name: 'Actions',
           cell: row => (
               <div className="d-flex gap-2" role="group" aria-label="Actions Produits">
-                  <Button variant="light" size="sm" onClick={() => handleEditProduct(row)} title="Modifier" className="shadow-sm border-0 p-2 rounded-circle">
-                      <FaEdit size={14} className="text-warning" />
-                  </Button>
-                  <Button variant="light" size="sm" onClick={() => confirmDeleteProduct(row)} title="Supprimer" className="shadow-sm border-0 p-2 rounded-circle">
-                      <FaTrash size={14} className="text-danger" />
-                  </Button>
+                  <button type="button" onClick={() => handleEditProduct(row)} title="Modifier" aria-label="Modifier" className="btn-icon btn-icon--warning">
+                      <FaEdit size={14} aria-hidden="true" />
+                  </button>
+                  <button type="button" onClick={() => confirmDeleteProduct(row)} title="Supprimer" aria-label="Supprimer" className="btn-icon btn-icon--danger">
+                      <FaTrash size={14} aria-hidden="true" />
+                  </button>
               </div>
           ),
           ignoreRowClick: true, allowOverflow: true, button: true, width: '110px', grow: 1,
@@ -279,12 +256,12 @@ const ProduitLocaux = () => {
         name: 'Actions',
         cell: row => (
             <div className="d-flex gap-2" role="group" aria-label="Actions Locaux">
-                <Button variant="light" size="sm" onClick={() => handleEditLocation(row)} title="Modifier" className="shadow-sm border-0 p-2 rounded-circle">
-                    <FaEdit size={14} className="text-warning" />
-                </Button>
-                <Button variant="light" size="sm" onClick={() => confirmDeleteLocation(row)} title="Supprimer" className="shadow-sm border-0 p-2 rounded-circle">
-                    <FaTrash size={14} className="text-danger" />
-                </Button>
+                <button type="button" onClick={() => handleEditLocation(row)} title="Modifier" aria-label="Modifier" className="btn-icon btn-icon--warning">
+                      <FaEdit size={14} aria-hidden="true" />
+                  </button>
+                <button type="button" onClick={() => confirmDeleteLocation(row)} title="Supprimer" aria-label="Supprimer" className="btn-icon btn-icon--danger">
+                      <FaTrash size={14} aria-hidden="true" />
+                  </button>
             </div>
         ),
         ignoreRowClick: true, allowOverflow: true, button: true, width: '110px', grow: 1,
@@ -292,8 +269,8 @@ const ProduitLocaux = () => {
   ], [handleEditLocation, confirmDeleteLocation]);
 
   if (loading) return (
-    <div className="d-flex flex-column align-items-center justify-content-center p-5" style={{ minHeight: '60vh' }}>
-        <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+    <div className="prod-loading d-flex flex-column align-items-center justify-content-center p-5">
+        <div className="spinner-border text-primary prod-loading-spinner" role="status">
             <span className="visually-hidden">Chargement...</span>
         </div>
         <div className="mt-3 text-muted">Chargement des données...</div>
@@ -316,9 +293,9 @@ const ProduitLocaux = () => {
 
   const NoDataWithHeaderProducts = () => (
     <div>
-      <div style={{ display: 'flex', backgroundColor: '#f3f4f6', borderBottom: '2px solid #e5e7eb', minHeight: '56px', borderRadius: '10px 10px 0 0' }}>
+      <div className="prod-nodata-head">
         {columnsProducts.map((col, idx) => (
-          <div key={idx} style={{ flex: col.grow || 1, width: col.width || 'auto', padding: '16px', fontSize: '0.75rem', fontWeight: '700', color: '#374151', letterSpacing: '0.05em', textTransform: 'capitalize', verticalAlign: 'middle', textAlign: 'left', userSelect: 'none' }}>
+          <div key={idx} className="prod-nodata-cell" style={{ flex: col.grow || 1, width: col.width || 'auto' }}>
             {col.name}
           </div>
         ))}
@@ -332,9 +309,9 @@ const ProduitLocaux = () => {
 
   const NoDataWithHeaderLocations = () => (
     <div>
-      <div style={{ display: 'flex', backgroundColor: '#f3f4f6', borderBottom: '2px solid #e5e7eb', minHeight: '56px', borderRadius: '10px 10px 0 0' }}>
+      <div className="prod-nodata-head">
         {columnsLocations.map((col, idx) => (
-          <div key={idx} style={{ flex: col.grow || 1, width: col.width || 'auto', padding: '16px', fontSize: '0.75rem', fontWeight: '700', color: '#374151', letterSpacing: '0.05em', textTransform: 'capitalize', verticalAlign: 'middle', textAlign: 'left', userSelect: 'none' }}>
+          <div key={idx} className="prod-nodata-cell" style={{ flex: col.grow || 1, width: col.width || 'auto' }}>
             {col.name}
           </div>
         ))}
@@ -347,53 +324,47 @@ const ProduitLocaux = () => {
   );
 
   return (
-    <div className="container-fluid py-2 px-2" style={{ backgroundColor: '#f9fafb', minHeight: '100vh' }}>
-      <div className="prod-modern-header">
-        <div className="d-flex justify-content-between align-items-center">
-          <div className="d-flex align-items-center">
-            <div className="header-icon-wrapper me-3">
-              <FaWarehouse size={24} />
-            </div>
-            <div>
-              <h2 className="mb-0">Catalogue et Emplacements</h2>
-              <p className="mb-0 opacity-75">Gérez vos produits et localisations</p>
-            </div>
-          </div>
-          <Button className="btn-prod-refresh" onClick={handleRefresh} title="Actualiser toutes les données">
-            <FaSync />
-          </Button>
-        </div>
-      </div>
+    <div className="prod-page container-fluid py-2 px-2">
+      <PageHeader
+        icon={<FaWarehouse />}
+        title="Catalogue et Emplacements"
+        subtitle="Gérez vos produits et localisations"
+        actions={
+          <button type="button" className="btn-refresh" onClick={handleRefresh} title="Actualiser toutes les données" aria-label="Actualiser toutes les données">
+            <FaSync aria-hidden="true" />
+          </button>
+        }
+      />
 
       <div className="row g-4">  
         <div className="col-12 col-lg-6">
           <div className="card shadow-sm h-100">
-            <div className="card-header modern-card-header d-flex justify-content-between align-items-center">
+            <div className="card-header prod-card-header d-flex justify-content-between align-items-center">
               <div className="d-flex align-items-center">
-                <div className="header-icon-box">
+                <div className="prod-card-header-icon" aria-hidden="true">
                   <FaBox />
                 </div>
                 <h4 className="mb-0">Catalogue Produits</h4>
-                <Badge bg="light" text="dark" className="count-badge">
+                <Badge bg="light" text="dark" className="prod-count-badge">
                   {filteredProducts.length} / {products.length}
                 </Badge>
               </div>
             </div>
              <div className="card-body">
-               <div className="d-flex gap-3 align-items-center mb-3">
-                 <div className="search-pill-wrapper flex-grow-1 mb-0">
-                   <FaSearch className="search-pill-icon" />
-                   <Form.Control type="text" placeholder="Rechercher..." className="search-pill-input" value={searchProducts} onChange={(e) => setSearchProducts(e.target.value)} />
+               <div className="prod-toolbar d-flex gap-3 align-items-center mb-3">
+                 <div className="prod-search flex-grow-1 mb-0">
+                   <FaSearch className="prod-search-icon" aria-hidden="true" />
+                   <Form.Control type="text" placeholder="Rechercher..." className="prod-search-input" value={searchProducts} onChange={(e) => setSearchProducts(e.target.value)} />
                  </div>
                  <div className="d-flex gap-2">
-                    <Button className="btn-prod-export" onClick={handleExportExcelProducts}>
-                        <FaFileExcel size={15} />
+                    <button type="button" className="btn-pill btn-pill-warning" onClick={handleExportExcelProducts}>
+                        <FaFileExcel size={15} aria-hidden="true" />
                         <span>Exporter</span>
-                    </Button>
-                    <Button className="btn-prod-add" onClick={handleOpenAddModalProduct}>
-                        <FaPlus size={16} />
+                    </button>
+                    <button type="button" className="btn-pill btn-pill-primary" onClick={handleOpenAddModalProduct}>
+                        <FaPlus size={16} aria-hidden="true" />
                         <span>Ajouter Produit</span>
-                    </Button>
+                    </button>
                 </div>
                </div>
 
@@ -404,17 +375,10 @@ const ProduitLocaux = () => {
                 highlightOnHover
                 responsive
                 pointerOnHover
-                customStyles={modernStyles}
+                customStyles={tableCustomStyles}
                 noDataComponent={<NoDataWithHeaderProducts />}
-                rowsPerPageText="Lignes par page :"
-                rowsPerPageOptions={[
-                  { label: '5 lignes', value: 5 },
-                  { label: '10 lignes', value: 10 },
-                  { label: '20 lignes', value: 20 },
-                  { label: '50 lignes', value: 50 },
-                  { label: '100 lignes', value: 100 }
-                ]}
-                rangeSeparatorText="à"
+                paginationComponentOptions={paginationOptions}
+                paginationRowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
               />
             </div>
           </div>
@@ -422,35 +386,35 @@ const ProduitLocaux = () => {
 
         <div className="col-12 col-lg-6">
           <div className="card shadow-sm h-100">
-            <div className="card-header modern-card-header-success d-flex justify-content-between align-items-center">
+            <div className="card-header prod-card-header prod-card-header--success d-flex justify-content-between align-items-center">
               <div className="d-flex align-items-center">
-                <div className="header-icon-box">
+                <div className="prod-card-header-icon" aria-hidden="true">
                   <FaMapMarkerAlt />
                 </div>
                 <h4 className="mb-0">Emplacements Locaux</h4>
-                <Badge bg="light" text="dark" className="count-badge">
+                <Badge bg="light" text="dark" className="prod-count-badge">
                   {filteredLocations.length} / {locations.length}
                 </Badge>
               </div>
             </div>
              <div className="card-body">
-                <div className="d-flex gap-3 align-items-center mb-3">
-                  <div className="search-pill-wrapper flex-grow-1 mb-0">
-                    <FaSearch className="search-pill-icon" />
+                <div className="prod-toolbar d-flex gap-3 align-items-center mb-3">
+                  <div className="prod-search flex-grow-1 mb-0">
+                    <FaSearch className="prod-search-icon" aria-hidden="true" />
                     <Form.Control
-                      type="text" placeholder="Rechercher..." className="search-pill-input"
+                      type="text" placeholder="Rechercher..." className="prod-search-input"
                       value={searchLocations} onChange={(e) => setSearchLocations(e.target.value)}
                     />
                   </div>
                   <div className="d-flex gap-2">
-                      <Button className="btn-prod-export" onClick={handleExportExcelLocations}>
-                          <FaFileExcel size={15} />
+                      <button type="button" className="btn-pill btn-pill-warning" onClick={handleExportExcelLocations}>
+                          <FaFileExcel size={15} aria-hidden="true" />
                           <span>Exporter</span>
-                      </Button>
-                      <Button className="btn-prod-add-location" onClick={handleOpenAddModalLocation}>
-                          <FaPlus size={16} />
+                      </button>
+                      <button type="button" className="btn-pill btn-pill-success" onClick={handleOpenAddModalLocation}>
+                          <FaPlus size={16} aria-hidden="true" />
                           <span>Ajouter Local</span>
-                      </Button>
+                      </button>
                   </div>
                 </div>
 
@@ -461,17 +425,10 @@ const ProduitLocaux = () => {
                 highlightOnHover
                 responsive
                 pointerOnHover
-                customStyles={modernStyles}
+                customStyles={tableCustomStyles}
                 noDataComponent={<NoDataWithHeaderLocations />}
-                rowsPerPageText="Lignes par page :"
-                rowsPerPageOptions={[
-                  { label: '5 lignes', value: 5 },
-                  { label: '10 lignes', value: 10 },
-                  { label: '20 lignes', value: 20 },
-                  { label: '50 lignes', value: 50 },
-                  { label: '100 lignes', value: 100 }
-                ]}
-                rangeSeparatorText="à"
+                paginationComponentOptions={paginationOptions}
+                paginationRowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
               />
             </div>
           </div>

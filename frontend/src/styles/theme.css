@@ -3,49 +3,105 @@
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace;
   --bs-body-font-family: var(--font-sans);
 
+  /* ---- Couleurs de marque ---- */
   --color-primary: #6366f1;
   --color-primary-dark: #4f46e5;
+  --color-primary-darker: #4338ca;
   --color-primary-light: #818cf8;
   --color-primary-lighter: #a5b4fc;
+  --color-primary-soft: #eef2ff;
+  --color-primary-soft-strong: #e0e7ff;
   --color-secondary: #8b5cf6;
+  --color-secondary-dark: #7c3aed;
+  --color-secondary-soft: #f5f3ff;
   --color-success: #10b981;
+  --color-success-dark: #059669;
+  --color-success-soft: #d1fae5;
   --color-warning: #f59e0b;
+  --color-warning-dark: #d97706;
+  --color-warning-soft: #fef3c7;
   --color-danger: #ef4444;
+  --color-danger-dark: #dc2626;
+  --color-danger-darker: #b91c1c;
+  --color-danger-soft: #fee2e2;
   --color-info: #3b82f6;
+  --color-info-dark: #2563eb;
+  --color-info-soft: #dbeafe;
   --color-cyan: #06b6d4;
   --color-brand-start: #667eea;
   --color-brand-end: #764ba2;
 
+  /* ---- Dégradés ---- */
   --gradient-brand: linear-gradient(135deg, var(--color-brand-start) 0%, var(--color-brand-end) 100%);
-  --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  --gradient-primary-dark: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
-  --gradient-add: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-  --gradient-add-hover: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+  --gradient-primary: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  --gradient-primary-dark: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+  --gradient-header: linear-gradient(135deg, var(--color-secondary-dark) 0%, var(--color-primary) 100%);
+  --gradient-add: linear-gradient(135deg, var(--color-info-dark) 0%, var(--color-info) 100%);
+  --gradient-add-hover: linear-gradient(135deg, #1d4ed8 0%, var(--color-info-dark) 100%);
   --gradient-export: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
   --gradient-export-hover: linear-gradient(135deg, #c2410c 0%, #ea580c 100%);
-  --gradient-import: linear-gradient(135deg, #059669 0%, #10b981 100%);
-  --gradient-import-hover: linear-gradient(135deg, #047857 0%, #059669 100%);
-  --gradient-marque: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);
-  --gradient-marque-hover: linear-gradient(135deg, #7c3aed 0%, #c026d3 100%);
-  --gradient-refresh: linear-gradient(120deg, #4f46e5 0%, #6366f1 100%);
-  --gradient-refresh-hover: linear-gradient(120deg, #4338ca 0%, #4f46e5 100%);
+  --gradient-import: linear-gradient(135deg, var(--color-success-dark) 0%, var(--color-success) 100%);
+  --gradient-import-hover: linear-gradient(135deg, #047857 0%, var(--color-success-dark) 100%);
+  --gradient-marque: linear-gradient(135deg, var(--color-secondary) 0%, #d946ef 100%);
+  --gradient-marque-hover: linear-gradient(135deg, var(--color-secondary-dark) 0%, #c026d3 100%);
+  --gradient-info: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  --gradient-info-hover: linear-gradient(135deg, #38bdf8 0%, #0369a1 100%);
+  --gradient-danger: linear-gradient(135deg, var(--color-danger) 0%, var(--color-danger-dark) 100%);
+  --gradient-danger-hover: linear-gradient(135deg, var(--color-danger-dark) 0%, var(--color-danger-darker) 100%);
+  --gradient-refresh: linear-gradient(120deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+  --gradient-refresh-hover: linear-gradient(120deg, var(--color-primary-darker) 0%, var(--color-primary-dark) 100%);
 
+  /* ---- Texte et surfaces ---- */
   --color-text-main: #1e293b;
+  --color-text-strong: #0f172a;
+  --color-text-body: #334155;
+  --color-text-secondary: #475569;
   --color-text-sub: #64748b;
   --color-text-muted: #94a3b8;
   --color-bg: #ffffff;
   --color-bg-alt: #f8fafc;
+  --color-surface-alt: #f9fafb;
   --color-border: #e2e8f0;
+  --color-border-strong: #cbd5e1;
   --color-border-light: #f1f5f9;
 
+  /* ---- Surfaces sombres (dashboards de l'accueil) ---- */
+  --dash-bg: #0f172a;
+  --dash-surface: #1e293b;
+  --dash-border: #334155;
+  --dash-text: #f1f5f9;
+  --dash-text-sub: #94a3b8;
+
+  /* ---- Ombres ---- */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.12);
   --shadow-glow: 0 0 30px rgba(99, 102, 241, 0.3);
+  --focus-ring: 0 0 0 3px rgba(99, 102, 241, 0.35);
 
+  /* ---- Rayons ---- */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 20px;
+  --radius-2xl: 24px;
   --radius-pill: 9999px;
+
+  /* ---- Transitions ---- */
+  --transition-fast: all 0.15s ease-out;
+  --transition-base: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ---- Échelle de z-index (alignée sur Bootstrap 5) ---- */
+  --z-sticky: 10;
+  --z-dropdown: 1000;
+  --z-navbar: 1030;
+  --z-modal: 1055;          /* Modal react-bootstrap */
+  --z-overlay: 1060;        /* AppModal / .add-modal-overlay */
+  --z-overlay-nested: 1070; /* modale ouverte depuis une autre modale */
+  --z-popover: 1080;        /* menus portés (react-select menuPortal…) */
+  --z-swal: 1090;           /* SweetAlert : toujours au-dessus des modales */
+  --z-toast: 1100;
+
+  /* Breakpoints de référence (les @media ne lisent pas les variables) :
+     sm 576px · md 768px · lg 992px · xl 1200px */
 }

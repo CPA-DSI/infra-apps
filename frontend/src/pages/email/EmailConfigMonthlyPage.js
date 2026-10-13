@@ -4,6 +4,7 @@ import { Form, Button, Alert, Card, Row, Col } from 'react-bootstrap';
 import { updateMonthlyEmailConfig, sendTestEmailMensuel, getCronStatus } from '../../services/api';
 import Swal from 'sweetalert2';
 import { FaEnvelope, FaLock, FaClock, FaPaperPlane, FaSave, FaCog, FaCalendarAlt, FaEye, FaEyeSlash } from 'react-icons/fa';
+import PageHeader from '../../components/PageHeader/PageHeader';
 import './EmailConfigPage.css';
 
 export default function EmailConfigMonthlyPage({ initialConfig, onConfigUpdate }) {
@@ -106,33 +107,28 @@ export default function EmailConfigMonthlyPage({ initialConfig, onConfigUpdate }
 
   return (
     <>
-      <div className="modern-card">
-        <div className="ecfg-modern-header d-flex align-items-center justify-content-between">
-          <div className="d-flex align-items-center gap-3">
-            <div className="ecfg-header-icon">
-              <FaCalendarAlt className="fs-4 text-white" />
-            </div>
-            <div>
-              <h2 className="h5 mb-0 text-white fw-bold">
-                Configuration Robot d'envoi Mensuel
-              </h2>
-              <small className="text-white-50">Gérez vos paramètres d'envoi automatique mensuel</small>
-            </div>
-          </div>
-          <div className="d-flex align-items-center gap-3">
-            <div className="time-display text-white">
-              <FaClock className="me-2" />
-              <span className="fw-semibold">Jour {form.jour_envoi} - {form.heure_envoi}</span>
-            </div>
-            <span className={`ecfg-status-badge ${form.cron_actif ? 'status-active' : 'status-inactive'}`}>
-              {form.cron_actif ? '● Active' : '○ Inactive'}
-            </span>
-          </div>
-        </div>
+      <div className="ecfg-card">
+        <PageHeader
+          className="ecfg-header"
+          icon={<FaCalendarAlt />}
+          title="Configuration Robot d'envoi Mensuel"
+          subtitle="Gérez vos paramètres d'envoi automatique mensuel"
+          actions={
+            <>
+              <div className="ecfg-time-display">
+                <FaClock className="me-2" aria-hidden="true" />
+                <span className="fw-semibold">Jour {form.jour_envoi} - {form.heure_envoi}</span>
+              </div>
+              <span className={`ecfg-status-badge ${form.cron_actif ? 'ecfg-status-active' : 'ecfg-status-inactive'}`}>
+                {form.cron_actif ? '● Active' : '○ Inactive'}
+              </span>
+            </>
+          }
+        />
         
         <Card.Body className="p-2">
           {message.text && (
-            <Alert variant={message.type} className="alert-custom mb-4">
+            <Alert variant={message.type} className="ecfg-alert mb-4">
               <FaEnvelope className="me-2" />
               {message.text}
             </Alert>
@@ -142,36 +138,36 @@ export default function EmailConfigMonthlyPage({ initialConfig, onConfigUpdate }
             <Row className="g-4">
               {/* Colonne gauche - Destinataires + Identifiants */}
               <Col lg={5}>
-                <div className="form-section">
-                  <div className="form-section-title d-flex align-items-center gap-2">
-                    <FaEnvelope className="icon-pulse" /> Destinataires
+                <div className="ecfg-section">
+                  <div className="ecfg-section-title d-flex align-items-center gap-2">
+                    <FaEnvelope className="ecfg-icon-pulse" /> Destinataires
                   </div>
                   <Form.Group className="mb-3">
-                    <Form.Label className="modern-label">
+                    <Form.Label className="ecfg-label">
                       <FaEnvelope /> Adresse(s) email
                     </Form.Label>
-                    <Form.Control as="textarea" rows={3} name="email_dest" value={form.email_dest} onChange={handleChange} className="modern-input" placeholder="email1@exemple.com, email2@exemple.com" required />
+                    <Form.Control as="textarea" rows={3} name="email_dest" value={form.email_dest} onChange={handleChange} className="ecfg-input" placeholder="email1@exemple.com, email2@exemple.com" required />
                   </Form.Group>
                 </div>
                 
-                <div className="form-section">
-                  <div className="form-section-title d-flex align-items-center gap-2">
-                    <FaLock className="icon-pulse" /> Identifiants IONOS
+                <div className="ecfg-section">
+                  <div className="ecfg-section-title d-flex align-items-center gap-2">
+                    <FaLock className="ecfg-icon-pulse" /> Identifiants IONOS
                   </div>
                   <Form.Group className="mb-3">
-                    <Form.Label className="modern-label">
+                    <Form.Label className="ecfg-label">
                       <FaEnvelope /> Adresse email
                     </Form.Label>
-                    <Form.Control type="email" name="email_exp" value={form.email_exp} onChange={handleChange} className="modern-input" placeholder="votre@email.com" required />
+                    <Form.Control type="email" name="email_exp" value={form.email_exp} onChange={handleChange} className="ecfg-input" placeholder="votre@email.com" required />
                   </Form.Group>
                   <Form.Group className="mb-0">
-                    <Form.Label className="modern-label">
+                    <Form.Label className="ecfg-label">
                       <FaLock /> Mot de passe
                     </Form.Label>
                     <div className="position-relative">
-                      <Form.Control type={showPassword ? 'text' : 'password'} name="email_pass" value={form.email_pass} onChange={handleChange} className="modern-input pe-5" placeholder={form.hasPassword ? '•••••• (inchangé)' : '••••••••••••'} autoComplete="new-password" required={!form.hasPassword} />
-                      <button type="button" className="btn btn-link position-absolute top-50 end-0 translate-middle-y text-muted" style={{ background: 'none', border: 'none', padding: '0.5rem' }} onClick={() => setShowPassword(!showPassword)}>
-                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                      <Form.Control type={showPassword ? 'text' : 'password'} name="email_pass" value={form.email_pass} onChange={handleChange} className="ecfg-input pe-5" placeholder={form.hasPassword ? '•••••• (inchangé)' : '••••••••••••'} autoComplete="new-password" required={!form.hasPassword} />
+                      <button type="button" className="btn btn-link position-absolute top-50 end-0 translate-middle-y text-muted ecfg-pass-toggle" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}>
+                        {showPassword ? <FaEyeSlash aria-hidden="true" /> : <FaEye aria-hidden="true" />}
                       </button>
                     </div>
                   </Form.Group>
@@ -180,55 +176,63 @@ export default function EmailConfigMonthlyPage({ initialConfig, onConfigUpdate }
               
               {/* Colonne droite - Planification + Toggle */}
               <Col lg={7}>
-                <div className="form-section h-100">
-                  <div className="form-section-title d-flex align-items-center gap-2">
-                    <FaClock className="icon-pulse" /> Planification Mensuelle
+                <div className="ecfg-section h-100">
+                  <div className="ecfg-section-title d-flex align-items-center gap-2">
+                    <FaClock className="ecfg-icon-pulse" /> Planification Mensuelle
                   </div>
                   <Row className="mb-3">
                     <Col sm={5}>
-                      <Form.Label className="modern-label">
+                      <Form.Label className="ecfg-label">
                         <FaCalendarAlt /> Jour du mois
                       </Form.Label>
-                     <Form.Control type="number" name="jour_envoi" value={form.jour_envoi} onChange={handleChange} className="modern-input" min="1" max="28" required />
+                     <Form.Control type="number" name="jour_envoi" value={form.jour_envoi} onChange={handleChange} className="ecfg-input" min="1" max="28" required />
                       <small className="text-muted">(1-28, le 29-31 non supporté)</small>
                     </Col>
                     <Col sm={7}>
-                      <Form.Label className="modern-label">
+                      <Form.Label className="ecfg-label">
                         <FaClock /> Heure d'envoi
                       </Form.Label>
-                      <Form.Control type="time" name="heure_envoi" value={form.heure_envoi} onChange={handleChange} className="modern-input" required />
+                      <Form.Control type="time" name="heure_envoi" value={form.heure_envoi} onChange={handleChange} className="ecfg-input" required />
                     </Col>
                   </Row>
                   
                   <Form.Group className="mb-3">
-                    <Form.Label className="modern-label">
+                    <Form.Label className="ecfg-label">
                       <FaPaperPlane /> Objet du mail
                     </Form.Label>
-                    <Form.Control type="text" name="objet_mail" value={form.objet_mail} onChange={handleChange} className="modern-input" required />
+                    <Form.Control type="text" name="objet_mail" value={form.objet_mail} onChange={handleChange} className="ecfg-input" required />
                   </Form.Group>
                   
                   <Form.Group className="mb-3">
-                    <Form.Label className="modern-label">
+                    <Form.Label className="ecfg-label">
                       <FaEnvelope /> Message du mail
                     </Form.Label>
-                    <Form.Control as="textarea" rows={3} name="message_mail" value={form.message_mail} onChange={handleChange} className="modern-input" placeholder="Bonjour, veuillez trouver ci-joint le rapport mensuel des stocks." />
+                    <Form.Control as="textarea" rows={3} name="message_mail" value={form.message_mail} onChange={handleChange} className="ecfg-input" placeholder="Bonjour, veuillez trouver ci-joint le rapport mensuel des stocks." />
                   </Form.Group>
                   
-                  <div className="info-box mb-4">
+                  <div className="ecfg-info-box mb-4">
                     <FaCalendarAlt className="me-2 text-primary" />
                     <small className="text-muted">
                       Le rapport sera envoyé chaque mois le jour {form.jour_envoi} à {form.heure_envoi}
                     </small>
                   </div>
                   
-                  <div className="modern-toggle-container">
+                  <div className="ecfg-toggle-container">
                     <FaCog className="text-muted fs-5" />
                     <span className="fw-bold text-dark">Robot</span>
                     <div 
-                      className={`modern-toggle ${form.cron_actif ? 'active' : ''}`}
+                      className={`ecfg-toggle ${form.cron_actif ? 'active' : ''}`}
                       onClick={() => setForm({ ...form, cron_actif: !form.cron_actif })}
                       role="switch"
                       aria-checked={form.cron_actif}
+                      aria-label="Activer le robot"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          e.currentTarget.click();
+                        }
+                      }}
                     />
                     <span className={`fw-bold ${form.cron_actif ? 'text-success' : 'text-muted'}`}>
                       {form.cron_actif ? '● Active' : '○ Inactive'}
@@ -237,7 +241,7 @@ export default function EmailConfigMonthlyPage({ initialConfig, onConfigUpdate }
                   
                   <Row className="mt-4 g-3">
                     <Col sm={6}>
-                      <Button variant="outline-secondary" onClick={handleSendTest} disabled={testLoading || loading} className="w-100 modern-btn-outline" >
+                      <Button variant="outline-secondary" onClick={handleSendTest} disabled={testLoading || loading} className="w-100 ecfg-btn-outline" >
                         {testLoading ? (
                           <span className="ecfg-loading-spinner"></span>
                         ) : (
@@ -249,7 +253,7 @@ export default function EmailConfigMonthlyPage({ initialConfig, onConfigUpdate }
                       </Button>
                     </Col>
                     <Col sm={6}>
-                      <Button variant="primary" type="submit" disabled={loading || testLoading} className="w-100 modern-btn-primary" >
+                      <Button variant="primary" type="submit" disabled={loading || testLoading} className="w-100 ecfg-btn-primary" >
                         {loading ? (
                           <span className="ecfg-loading-spinner"></span>
                         ) : (
