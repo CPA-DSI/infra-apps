@@ -68,7 +68,8 @@ const sendPasswordResetEmail = async (email, resetToken) => {
     }
 
     const resetUrl = `${APP_URL || ''}/reset-password?token=${resetToken}`;
-    console.log(`[email] Envoi à ${email} depuis ${config.email_exp} URL=${resetUrl}`);
+    // Ne jamais journaliser resetUrl : il contient le jeton de réinitialisation.
+    console.log(`[email] Envoi d'un lien de réinitialisation depuis ${config.email_exp}`);
 
     const mailOptions = {
       from: `"Support IT" <${config.email_exp}>`,
@@ -309,19 +310,19 @@ export const forgotPassword = async (req, res) => {
     return res.status(400).json({ message: "L'email est requis." });
   }
 
+  // Réponse identique que le compte existe ou non, pour ne pas révéler les adresses valides.
+  const genericResponse = {
+    message: 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.',
+  };
+
   try {
-    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedEmail = String(email).trim().toLowerCase();
     const userEmail = await prisma.userEmail.findFirst({
       where: { email: { equals: normalizedEmail, mode: 'insensitive' } },
-      include: { user: true },
     });
 
-    console.log(`[forgotPassword] email=${normalizedEmail} userFound=${!!userEmail}`);
-
     if (!userEmail) {
-      return res.status(200).json({
-        message: 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.',
-      });
+      return res.status(200).json(genericResponse);
     }
 
     const resetToken = crypto.randomBytes(32).toString('hex');
@@ -330,24 +331,23 @@ export const forgotPassword = async (req, res) => {
 
     await prisma.passwordResetToken.create({
       data: {
-        email: normalizedEmail,
+        email: userEmail.email,
         token: resetTokenHash,
         expiresAt,
       },
     });
 
-    const emailSent = await sendPasswordResetEmail(normalizedEmail, resetToken);
+    // Envoi non attendu : le temps de réponse ne doit pas trahir l'existence du compte.
+    sendPasswordResetEmail(userEmail.email, resetToken)
+      .then((sent) => {
+        if (!sent) console.error('[forgotPassword] Échec de l\'envoi de l\'email de réinitialisation.');
+      })
+      .catch((err) => console.error('[forgotPassword] Erreur envoi email:', err?.message || err));
 
-    if (!emailSent) {
-      return res.status(500).json({ message: 'Erreur lors de l\'envoi de l\'email. Veuillez réessayer.' });
-    }
-
-    return res.status(200).json({
-      message: 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.',
-    });
+    return res.status(200).json(genericResponse);
   } catch (error) {
     console.error('Erreur forgotPassword:', error);
-    return res.status(500).json({ message: 'Une erreur est survenue. Veuillez réessayer.' });
+    return res.status(200).json(genericResponse);
   }
 };
 
@@ -433,16 +433,27 @@ export const resetPassword = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
+    const passwordEnc = encryptSecret(password);
 
-    await prisma.userEmail.updateMany({
-      where: { email: resetTokenRecord.email },
-      data: { password: hashedPassword, password_enc: encryptSecret(password) },
+    // Consommation atomique du jeton : seule la première requête concurrente
+    // obtient count === 1 ; les autres n'appliquent aucune modification.
+    const consumed = await prisma.$transaction(async (tx) => {
+      const { count } = await tx.passwordResetToken.updateMany({
+        where: { id: resetTokenRecord.id, usedAt: null, expiresAt: { gt: new Date() } },
+        data: { usedAt: new Date() },
+      });
+      if (count !== 1) return false;
+
+      await tx.userEmail.updateMany({
+        where: { email: { equals: resetTokenRecord.email, mode: 'insensitive' } },
+        data: { password: hashedPassword, password_enc: passwordEnc },
+      });
+      return true;
     });
 
-    await prisma.passwordResetToken.update({
-      where: { id: resetTokenRecord.id },
-      data: { usedAt: new Date() },
-    });
+    if (!consumed) {
+      return res.status(400).json({ message: 'Ce lien a déjà été utilisé ou a expiré. Veuillez faire une nouvelle demande.' });
+    }
 
     return res.status(200).json({ message: 'Mot de passe réinitialisé avec succès.' });
   } catch (error) {
