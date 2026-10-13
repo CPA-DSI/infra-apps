@@ -424,14 +424,14 @@ const columns = useMemo(() => [
     { name: 'N°', selector: row => row.id_n, sortable: true, width: '75px', grow: 1, cell: row => (
         row.id_n == null
             ? <span className="badge bg-secondary" title="Poste en stock">Stock</span>
-            : row.est_vide
-                ? <span title="Utilisateur sans PC (PC mis en stock ou réaffecté)">{row.id_n} <span className="badge bg-warning text-dark">Sans poste</span></span>
-                : row.id_n
+            : row.id_n
     ) },
     { name: 'Utilisateur', selector: row => row.utilisateur, sortable: true, minWidth: '120px', grow: 1, cell: row => (
         <div>
             <div>{row.utilisateur}</div>
-            {!row.id_ecran && !row.est_vide && (
+            {row.est_vide ? (
+                <small className="text-muted fst-italic" title="Utilisateur sans PC (PC mis en stock ou réaffecté)">Sans poste</small>
+            ) : !row.id_ecran && (
                 <small className="text-muted fst-italic" title="Aucun écran affecté à ce poste">Sans écran</small>
             )}
         </div>
