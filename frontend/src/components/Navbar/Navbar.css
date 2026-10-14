@@ -496,8 +496,8 @@
 .custom-navbar .dropdown-title-wrapper {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 12px;
+  gap: 9px;
+  padding: 9px 16px;
   border-radius: 999px;
   transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -509,12 +509,12 @@
   justify-content: center;
   flex-shrink: 0;
   color: var(--color-text-muted);
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   transition: color 0.2s ease;
 }
 
 .custom-navbar .nav-link .nav-item-icon svg {
-  font-size: 0.95rem;
+  font-size: 1.1rem;
 }
 
 .custom-navbar .nav-item-label {
@@ -523,7 +523,7 @@
   gap: 6px;
   font-weight: 500;
   color: var(--color-text-secondary);
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   white-space: nowrap;
   transition: color 0.2s ease;
 }
@@ -551,7 +551,7 @@
 
 /* Chevron (FaChevronDown) : toujours visible, y compris sur l'item actif */
 .custom-navbar .nav-link .dropdown-arrow {
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   color: var(--color-text-muted);
   transition: transform 0.2s ease, color 0.2s ease;
 }
@@ -615,7 +615,7 @@
 @media (min-width: 992px) and (max-width: 1200px) {
   .custom-navbar .nav-item-wrapper,
   .custom-navbar .dropdown-title-wrapper {
-    padding: 8px;
+    padding: 10px;
     gap: 4px;
   }
 
