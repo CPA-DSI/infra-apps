@@ -16,43 +16,47 @@
   --bs-navbar-brand-color: var(--color-text-main);
   --bs-navbar-brand-hover-color: var(--color-text-main);
 
-  padding: 0.9rem 0;
+  --nav-gap: 12px;
+
+  /* Barre flottante : décollée des bords et centrée.
+     Pas de `position` ici : .fixed-top (Bootstrap) doit rester fixed, sinon la
+     navbar occupe sa place dans le flux ET le contenu est décalé par
+     --navbar-height => double espace sous la navbar. `top` reste constant
+     (y compris au scroll) car --navbar-height en dépend (cf. JS). */
+  top: var(--nav-gap);
+  left: var(--nav-gap);
+  right: var(--nav-gap);
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 0.6rem 0;
+  border-radius: 20px;
   background: var(--nav-bg);
   backdrop-filter: blur(var(--nav-blur));
   -webkit-backdrop-filter: blur(var(--nav-blur));
   transition: var(--transition-base);
-  border-bottom: 1px solid rgba(var(--color-primary-rgb), 0.1);
-  box-shadow: 0 4px 12px -6px rgba(var(--color-primary-rgb), 0.15);
-  /* Pas de position ici : .fixed-top (Bootstrap) doit rester fixed, sinon la
-     navbar occupe sa place dans le flux ET le contenu est décalé par
-     --navbar-height => double espace sous la navbar. */
+  border: 1px solid rgba(var(--color-primary-rgb), 0.1);
+  box-shadow: 0 8px 32px -12px rgba(var(--color-primary-rgb), 0.25);
 }
 
-.custom-navbar::before,
-.custom-navbar::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 1px;
+/* Le gabarit est porté par la barre elle-même (max-width ci-dessus) */
+.custom-navbar > .container {
+  max-width: none;
+  padding-inline: 1rem;
 }
 
-.custom-navbar::before {
-  top: 0;
-  background: linear-gradient(90deg, transparent, rgba(var(--color-primary-rgb), 0.2), transparent);
-}
-
-.custom-navbar::after {
-  bottom: 0;
-  background: linear-gradient(90deg, transparent, rgba(var(--color-primary-rgb), 0.1), transparent);
+@media (max-width: 576px) {
+  .navbar.custom-navbar {
+    --nav-gap: 8px;
+    border-radius: 16px;
+  }
 }
 
 /* Effet au scroll */
 .navbar.custom-navbar.navbar-scrolled {
   --nav-bg: rgba(255, 255, 255, 0.9);
-  padding: 0.5rem 0;
-  border-bottom: 1px solid rgba(var(--color-primary-rgb), 0.15);
-  box-shadow: 0 6px 16px -8px rgba(var(--color-primary-rgb), 0.2);
+  padding: 0.4rem 0;
+  border-color: rgba(var(--color-primary-rgb), 0.15);
+  box-shadow: 0 10px 36px -12px rgba(var(--color-primary-rgb), 0.3);
 }
 
 /* Ossature de page : pousse le footer en bas quand le contenu est court */
@@ -105,24 +109,18 @@
   opacity: 0.65;
 }
 
+/* Logo sans cadre : la pastille de navigation porte déjà le relief. */
 .custom-navbar .logo-wrapper {
-  background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-bg-alt) 100%);
-  padding: 6px 8px;
-  border-radius: 14px;
-  box-shadow: 0 4px 16px -2px rgba(var(--color-primary-rgb), 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  display: flex;
   transition: var(--transition-fast);
-  border: 1px solid rgba(var(--color-primary-rgb), 0.1);
 }
 
-.custom-navbar .logo-wrapper:hover {
-  box-shadow: 0 8px 28px -2px rgba(var(--color-primary-rgb), 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  transform: translateY(-3px);
-  background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-border-light) 100%);
+.custom-navbar .brand-container:hover .logo-wrapper {
+  transform: scale(1.05);
 }
 
 .custom-navbar .navbar-logo {
-  /* Icône agrandie : elle remplit mieux son cadre. */
-  height: 38px;
+  height: 36px;
   width: auto;
 }
 
@@ -181,25 +179,30 @@
   }
 }
 
-/* ---- Badge utilisateur ---- */
+/* ---- Badge utilisateur ----
+   Sans cadre : avatar + nom, simple fond au survol, pour ne pas
+   ressembler à un second élément actif. */
 .custom-navbar .user-badge-modern {
-  background: rgba(var(--color-primary-rgb), 0.06);
-  border: 1.5px solid rgba(var(--color-primary-rgb), 0.15);
-  border-radius: 14px;
-  transition: var(--transition-fast);
+  background: transparent;
+  border-radius: 999px;
+  transition: background-color 0.2s ease;
   cursor: pointer;
 }
 
 .custom-navbar .user-badge-modern:hover {
-  background: rgba(var(--color-primary-rgb), 0.12);
-  border-color: rgba(var(--color-primary-rgb), 0.35);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(var(--color-primary-rgb), 0.15);
+  background: rgba(var(--color-primary-rgb), 0.06);
+}
+
+@media (min-width: 992px) {
+  .custom-navbar .user-badge-modern {
+    /* !important : écrase les utilitaires px-3 py-2 du JSX */
+    padding: 4px 12px 4px 4px !important;
+  }
 }
 
 .custom-navbar .user-avatar-wrapper {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
@@ -234,9 +237,9 @@
 }
 
 .custom-navbar .user-name-text {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
-  color: var(--color-primary-darker);
+  color: var(--color-text-main);
   text-transform: capitalize;
 }
 
@@ -465,7 +468,27 @@
    ============================================ */
 
 .custom-navbar .nav-items-wrapper {
-  gap: 4px;
+  gap: 2px;
+}
+
+/* Pastille groupée (desktop) : tous les liens dans un même conteneur,
+   l'élément actif ressort en pastille blanche. */
+@media (min-width: 992px) {
+  .custom-navbar .nav-items-wrapper {
+    padding: 4px;
+    background: rgba(var(--color-primary-rgb), 0.05);
+    border: 1px solid rgba(var(--color-primary-rgb), 0.08);
+    border-radius: 999px;
+  }
+
+  .custom-navbar .nav-items-wrapper .nav-link {
+    padding: 0;
+    margin: 0;
+  }
+
+  .custom-navbar .nav-items-wrapper .nav-link:focus-visible {
+    border-radius: 999px;
+  }
 }
 
 /* Liens simples et titres de dropdown partagent exactement le même gabarit */
@@ -474,23 +497,20 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
-  border-radius: 10px;
-  transition: background-color 0.2s ease;
+  padding: 7px 12px;
+  border-radius: 999px;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+/* Icônes sans carré de fond */
 .custom-navbar .nav-item-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: rgba(var(--color-primary-rgb), 0.1);
-  color: var(--color-primary);
+  color: var(--color-text-muted);
   font-size: 0.95rem;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: color 0.2s ease;
 }
 
 .custom-navbar .nav-link .nav-item-icon svg {
@@ -502,7 +522,7 @@
   align-items: center;
   gap: 6px;
   font-weight: 500;
-  color: var(--color-text-main);
+  color: var(--color-text-secondary);
   font-size: 0.85rem;
   white-space: nowrap;
   transition: color 0.2s ease;
@@ -511,17 +531,14 @@
 /* ---- Survol ---- */
 .custom-navbar .nav-link:hover .nav-item-wrapper,
 .custom-navbar .nav-dropdown-wrapper:hover .dropdown-title-wrapper {
-  background: rgba(var(--color-primary-rgb), 0.06);
+  background: rgba(var(--color-primary-rgb), 0.07);
 }
 
 .custom-navbar .nav-link:hover .nav-item-icon,
-.custom-navbar .nav-dropdown-wrapper:hover .nav-item-icon {
-  background: rgba(var(--color-primary-rgb), 0.18);
-}
-
+.custom-navbar .nav-dropdown-wrapper:hover .nav-item-icon,
 .custom-navbar .nav-link:hover .nav-item-label,
 .custom-navbar .nav-dropdown-wrapper:hover .nav-item-label {
-  color: var(--color-primary);
+  color: var(--color-text-main);
 }
 
 /* ============================================
@@ -578,17 +595,18 @@
 .custom-navbar .nav-active .dropdown-title-wrapper,
 .custom-navbar .nav-link.nav-active:hover .nav-item-wrapper,
 .custom-navbar .nav-dropdown-wrapper:hover .nav-active .dropdown-title-wrapper {
-  background: rgba(var(--color-primary-rgb), 0.1);
+  background: var(--color-white);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 2px 8px -2px rgba(var(--color-primary-rgb), 0.25);
 }
 
 .custom-navbar .nav-active .nav-item-icon,
-.custom-navbar .nav-active:hover .nav-item-icon {
-  background: var(--gradient-primary);
-  color: var(--color-white);
+.custom-navbar .nav-active:hover .nav-item-icon,
+.custom-navbar .nav-active .nav-item-label,
+.custom-navbar .nav-active:hover .nav-item-label {
+  color: var(--color-primary);
 }
 
 .custom-navbar .nav-active .nav-item-label {
-  color: var(--color-primary);
   font-weight: 600;
 }
 

@@ -100,12 +100,15 @@ const FixedNavbarWithLogo = () => {
   // Mesure la hauteur réelle de la navbar (fixe) pour que le contenu ne
   // soit jamais caché dessous, quelle que soit la largeur d'écran, le
   // wrapping du texte, ou l'ouverture du menu mobile.
+  // La barre est flottante (décollée du haut via `top`) : on mesure donc son
+  // bord inférieur, pas seulement sa hauteur.
   useEffect(() => {
     const navEl = navbarRef.current;
     if (!navEl) return undefined;
 
     const updateNavHeight = () => {
-      document.documentElement.style.setProperty('--navbar-height', `${navEl.offsetHeight}px`);
+      const navBottom = navEl.offsetTop + navEl.offsetHeight;
+      document.documentElement.style.setProperty('--navbar-height', `${navBottom}px`);
     };
 
     updateNavHeight();
@@ -231,7 +234,7 @@ const FixedNavbarWithLogo = () => {
           </Navbar.Toggle>
 
           <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="ms-auto align-items-center nav-items-wrapper">
+            <Nav className="mx-auto align-items-center nav-items-wrapper">
               <Nav.Link as={Link} to="/Home" title="Accueil" className={location.pathname === '/Home' ? 'nav-active' : ''} aria-current={ariaCurrent(location.pathname === '/Home')}>
                 <div className="nav-item-wrapper">
                   <div className="nav-item-icon">
@@ -397,9 +400,9 @@ const FixedNavbarWithLogo = () => {
                   </div>
                 </Nav.Link>
               )}
+            </Nav>
 
-               
-
+            <Nav className="align-items-center user-nav">
               {/* Menu Utilisateur */}
               {user && (
                 <div className="user-nav-info d-flex align-items-center ms-lg-3" onMouseEnter={() => setIsUserDropdownOpen(true)} onMouseLeave={() => setIsUserDropdownOpen(false)} >
