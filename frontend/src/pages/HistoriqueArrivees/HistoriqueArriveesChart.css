@@ -39,18 +39,18 @@
 }
 
 .hac-kpi--success {
-  --hac-kpi-icon: linear-gradient(135deg, var(--color-success), #34d399);
-  --hac-kpi-bg: linear-gradient(135deg, #ecfdf5, #f0fdf4);
+  --hac-kpi-icon: linear-gradient(135deg, var(--color-success), var(--color-success-light));
+  --hac-kpi-bg: linear-gradient(135deg, var(--color-success-subtle), var(--color-success-subtle));
 }
 
 .hac-kpi--warning {
-  --hac-kpi-icon: linear-gradient(135deg, var(--color-warning), #fbbf24);
-  --hac-kpi-bg: linear-gradient(135deg, #fffbeb, #fefce8);
+  --hac-kpi-icon: linear-gradient(135deg, var(--color-warning), var(--color-warning-light));
+  --hac-kpi-bg: linear-gradient(135deg, var(--color-warning-subtle), var(--color-warning-subtle));
 }
 
 .hac-kpi--info {
-  --hac-kpi-icon: linear-gradient(135deg, #0ea5e9, #38bdf8);
-  --hac-kpi-bg: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  --hac-kpi-icon: linear-gradient(135deg, var(--color-sky), var(--color-sky-light));
+  --hac-kpi-bg: linear-gradient(135deg, var(--color-sky-subtle), var(--color-sky-soft));
 }
 
 .hac-kpi__icon {

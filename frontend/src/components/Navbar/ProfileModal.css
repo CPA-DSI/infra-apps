@@ -399,7 +399,7 @@
   width: 100%;
   max-width: 360px;
   padding: 1.75rem 1rem 1.5rem;
-  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-secondary-dark) 55%, #9333ea 100%);
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-secondary-dark) 55%, var(--color-secondary-darker) 100%);
   border-radius: var(--radius-xl);
   color: white;
   box-shadow: 0 16px 32px rgba(79, 70, 229, 0.28);

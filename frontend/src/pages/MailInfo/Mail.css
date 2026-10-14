@@ -39,7 +39,7 @@
     border: none;
     outline: none;
     background-color: transparent;
-    font-size: 14px;
+    font-size: 0.875rem;
 }
 
 .page-mail .mail-search-clear {
@@ -81,14 +81,14 @@
 
 .page-mail .mail-tag--team {
     background-color: var(--color-primary-soft);
-    border-color: #c7d2fe;
+    border-color: var(--color-primary-border);
     color: var(--color-primary-dark);
 }
 
 .page-mail .mail-tag--site {
     background-color: var(--color-warning-soft);
-    border-color: #fcd34d;
-    color: #b45309;
+    border-color: var(--color-warning-lighter);
+    color: var(--color-warning-darker);
 }
 
 /* Couleurs du statut passées en inline (STATUS_CONFIG) */
@@ -97,7 +97,9 @@
     align-items: center;
     gap: 6px;
     padding: 4px 12px;
-    border: 1px solid transparent;
+    color: var(--tone-fg);
+    background-color: var(--tone-bg);
+    border: 1px solid var(--tone-border);
     font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.3px;
@@ -146,13 +148,13 @@
 
 .page-mail .mail-verified-count {
     margin-top: 3px;
-    color: #b45309;
+    color: var(--color-warning-darker);
     font-size: 0.65rem;
     font-weight: 500;
 }
 
 .page-mail .mail-verified-count.is-verified {
-    color: #15803d;
+    color: var(--color-success-fg);
 }
 
 /* ---- Cellules email (tableau et lignes dépliées) ---- */
@@ -181,7 +183,7 @@
 .page-mail .email-secondary {
     background: rgba(59, 130, 246, 0.08);
     border: 1px solid rgba(59, 130, 246, 0.2);
-    color: #1e40af;
+    color: var(--color-info-fg);
 }
 
 .page-mail .email-badge-primary,
@@ -200,7 +202,7 @@
 
 .page-mail .email-badge-secondary {
     background: rgba(59, 130, 246, 0.15);
-    color: #1e40af;
+    color: var(--color-info-fg);
 }
 
 .page-mail .email-badge-verified,
@@ -213,12 +215,12 @@
 
 .page-mail .email-badge-verified {
     background: rgba(34, 197, 94, 0.15);
-    color: #15803d;
+    color: var(--color-success-fg);
 }
 
 .page-mail .email-badge-unverified {
     background: rgba(245, 158, 11, 0.15);
-    color: #b45309;
+    color: var(--color-warning-darker);
 }
 
 /* ---- Toast « copié » et états du tableau ---- */
@@ -241,18 +243,18 @@
 
 .page-mail .mail-empty-icon {
     margin-bottom: 16px;
-    font-size: 48px;
+    font-size: 3rem;
 }
 
 .page-mail .mail-empty-title {
     margin: 0;
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 500;
 }
 
 .page-mail .mail-empty-hint {
     margin: 8px 0 0;
-    font-size: 14px;
+    font-size: 0.875rem;
 }
 
 /* ============================================================================
@@ -270,13 +272,13 @@
 }
 
 .page-mail .alert-danger {
-    --bs-alert-bg: #fef2f2;
-    --bs-alert-color: #991b1b;
-    --bs-alert-border-color: #fecaca;
+    --bs-alert-bg: var(--color-danger-subtle);
+    --bs-alert-color: var(--color-danger-fg);
+    --bs-alert-border-color: var(--color-danger-border);
 }
 
 .page-mail .alert-success {
-    --bs-alert-bg: #f0fdf4;
-    --bs-alert-color: #166534;
-    --bs-alert-border-color: #bbf7d0;
+    --bs-alert-bg: var(--color-success-subtle);
+    --bs-alert-color: var(--color-success-fg);
+    --bs-alert-border-color: var(--color-success-border);
 }

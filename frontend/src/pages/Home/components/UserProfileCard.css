@@ -19,7 +19,7 @@
 }
 
 .userProfileAvatar {
-  font-size: 52px;
+  font-size: 3.25rem;
   color: rgba(255, 255, 255, 0.9);
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
   animation: fadeIn 0.8s ease-out;
@@ -33,7 +33,7 @@
 
 .userProfileName {
   color: white;
-  font-size: 34px;
+  font-size: 2.125rem;
   font-weight: 700;
   margin: 0;
   letter-spacing: -0.5px;
@@ -42,7 +42,7 @@
 
 .userProfileGreeting {
   color: rgba(255, 255, 255, 0.9);
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 400;
   margin: 0;
 }
@@ -70,10 +70,10 @@
   }
 
   .userProfileName {
-    font-size: 24px;
+    font-size: 1.5rem;
   }
 
   .userProfileAvatar {
-    font-size: 42px;
+    font-size: 2.625rem;
   }
 }

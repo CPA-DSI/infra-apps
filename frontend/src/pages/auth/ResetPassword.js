@@ -11,6 +11,7 @@ import AuthLogo from '../../components/AuthLogo/AuthLogo';
 // --- IMPORTS CSS ---
 import './auth-base.css';
 import './login.css';
+import { swalButtons } from '../../utils/swal';
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ const ResetPassword = () => {
         title: 'Lien invalide',
         text: 'Lien de réinitialisation invalide. Veuillez demander un nouveau lien.',
         confirmButtonText: 'OK',
-        confirmButtonColor: '#667eea'
+        ...swalButtons('brand')
       });
     } else {
       setIsValidToken(true);
@@ -49,7 +50,7 @@ const ResetPassword = () => {
         title: 'Erreur',
         text: 'Le mot de passe est requis',
         confirmButtonText: 'OK',
-        confirmButtonColor: '#667eea'
+        ...swalButtons('brand')
       });
       return;
     }
@@ -60,7 +61,7 @@ const ResetPassword = () => {
         title: 'Erreur',
         text: 'Le mot de passe doit contenir au moins 7 caractères',
         confirmButtonText: 'OK',
-        confirmButtonColor: '#667eea'
+        ...swalButtons('brand')
       });
       return;
     }
@@ -71,7 +72,7 @@ const ResetPassword = () => {
         title: 'Erreur',
         text: 'Les mots de passe ne correspondent pas',
         confirmButtonText: 'OK',
-        confirmButtonColor: '#667eea'
+        ...swalButtons('brand')
       });
       return;
     }
@@ -96,7 +97,7 @@ const ResetPassword = () => {
           title: 'Mot de passe réinitialisé !',
           text: 'Votre mot de passe a été réinitialisé avec succès.',
           confirmButtonText: 'OK',
-          confirmButtonColor: '#667eea'
+          ...swalButtons('brand')
         }).then(() => {
           navigate('/login');
         });
@@ -108,7 +109,7 @@ const ResetPassword = () => {
           title: 'Erreur',
           text: data.error || data.message || 'Une erreur est survenue. Veuillez réessayer.',
           confirmButtonText: 'OK',
-          confirmButtonColor: '#667eea'
+          ...swalButtons('brand')
         });
       }
     } catch (err) {
@@ -117,7 +118,7 @@ const ResetPassword = () => {
         title: 'Erreur',
         text: 'Impossible de se connecter au serveur. Veuillez réessayer plus tard.',
         confirmButtonText: 'OK',
-        confirmButtonColor: '#667eea'
+        ...swalButtons('brand')
       });
     } finally {
       setIsLoading(false);

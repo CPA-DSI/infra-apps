@@ -44,7 +44,7 @@
 
 .login-container .login-title {
   font-family: var(--font-sans);
-  font-size: 28px;
+  font-size: 1.75rem;
   color: var(--color-text-main);
   line-height: 1.2;
   text-align: center;
@@ -57,7 +57,7 @@
 .login-container .forgot-description {
   text-align: center;
   margin-bottom: 25px;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--color-text-sub);
   line-height: 1.5;
 }
@@ -79,7 +79,7 @@
 .login-container .input-field {
   font-family: var(--font-sans);
   font-weight: 500;
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.5;
   color: var(--color-text-sub);
   display: block;
@@ -137,7 +137,7 @@
 }
 
 .login-container .symbol-input {
-  font-size: 15px;
+  font-size: 0.9375rem;
   display: flex;
   align-items: center;
   position: absolute;
@@ -166,7 +166,7 @@
   transform: translateY(-50%);
   cursor: pointer;
   color: var(--color-text-sub);
-  font-size: 18px;
+  font-size: 1.125rem;
   z-index: 100;
   transition: color 0.3s ease;
   /* Cible tactile >= 24x24px (WCAG 2.5.8 / audit Lighthouse target-size),
@@ -185,7 +185,7 @@
 .login-container .error-text {
   display: block;
   color: var(--color-danger);
-  font-size: 12px;
+  font-size: 0.75rem;
   margin-top: 5px;
   margin-left: 50px;
   position: absolute;
@@ -223,7 +223,7 @@
   padding-left: 30px;
   cursor: pointer;
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: 0.9375rem;
   color: var(--color-text-sub);
   user-select: none;
 }
@@ -262,8 +262,8 @@
 
 .login-container .forgot-password-link {
   font-family: var(--font-sans);
-  font-size: 14px;
-  /* #4f46e5 plutôt que #667eea : contraste WCAG AA (4.5:1) sur fond blanc */
+  font-size: 0.875rem;
+  /* var(--color-primary-dark) plutôt que var(--color-brand-start) : contraste WCAG AA (4.5:1) sur fond blanc */
   color: var(--color-primary-dark);
   text-decoration: none;
   margin-left: auto;
@@ -283,7 +283,7 @@
 .login-container .login-button {
   font-family: var(--font-sans);
   font-weight: 500;
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.5;
   color: white;
   text-transform: uppercase;
@@ -312,7 +312,7 @@
 }
 
 .login-container .login-button.loading {
-  background: linear-gradient(135deg, #a0a0a0 0%, #b0b0b0 100%);
+  background: linear-gradient(135deg, var(--color-text-muted) 0%, var(--color-border-strong) 100%);
   cursor: not-allowed;
   pointer-events: none;
 }
@@ -366,7 +366,7 @@
 .login-container .password-rules-title {
   display: block;
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-text-main);
   margin-bottom: 12px;
@@ -376,7 +376,7 @@
   display: flex;
   align-items: center;
   margin-bottom: 6px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--color-danger-dark);
 }
 
@@ -386,7 +386,7 @@
 
 .login-container .password-rule-icon {
   margin-right: 8px;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 /* Responsive : mêmes sélecteurs que les règles de base pour les surcharger */

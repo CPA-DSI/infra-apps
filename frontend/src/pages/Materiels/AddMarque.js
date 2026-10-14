@@ -1,7 +1,7 @@
 // src/pages/Materiels/AddMarque.js - Version avec suppression améliorée et notifications locales
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { MySwal } from '../../utils/swal';
+import { MySwal, swalButtons } from '../../utils/swal';
 import DataTable from 'react-data-table-component';
 import { Form, Spinner, Row, Col, Alert } from 'react-bootstrap';
 import { FaPlus, FaTimes, FaImage, FaTrash, FaEdit, FaExclamationTriangle, FaCheckCircle } from 'react-icons/fa';
@@ -333,8 +333,7 @@ try {
         `,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
+        ...swalButtons('danger'),
         confirmButtonText: 'Oui, supprimer définitivement',
         cancelButtonText: 'Annuler',
         reverseButtons: true,

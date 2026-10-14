@@ -6,6 +6,7 @@ import {
   ButtonGroup, Button, Form 
 } from 'react-bootstrap';
 import Chart from 'react-apexcharts';
+import { cssVar } from '../../styles/cssVar';
 import {
   FaBoxOpen, FaCubes, FaChartLine, FaWarehouse
 } from 'react-icons/fa';
@@ -17,9 +18,6 @@ import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 dayjs.extend(isSameOrAfter);
 
 // ApexCharts a besoin de vraies couleurs : on lit les tokens de styles/theme.css
-const cssVar = (name, fallback) =>
-    getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
-
 // --- Composant KPI Card (variant : primary | success | warning | info) ---
 const KpiCard = ({ icon: Icon, label, value, variant }) => (
     <Card className={`border-0 h-100 hac-kpi hac-kpi--${variant}`}>
@@ -174,7 +172,7 @@ const HistoriqueArriveesChart = () => {
             bar: { borderRadius: 4, columnWidth: '70%' },
         },
         dataLabels: { enabled: false },
-        colors: [cssVar('--color-primary', '#6366f1'), cssVar('--color-success', '#10b981')],
+        colors: [cssVar('--color-primary'), cssVar('--color-success')],
         xaxis: {
             categories: chartData.map(item => item.nom_produit),
             labels: {

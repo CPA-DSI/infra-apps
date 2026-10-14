@@ -36,7 +36,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 0.625rem;
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
   z-index: 1;
 }
@@ -63,11 +63,11 @@
 }
 
 .historyFieldIcon {
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 .historyFieldName {
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 700;
   color: var(--color-text-main);
   text-transform: capitalize;
@@ -75,7 +75,7 @@
 }
 
 .historyTimelineDate {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--color-text-muted);
   white-space: nowrap;
 }
@@ -88,7 +88,7 @@
 }
 
 .historyValueOld {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--color-danger);
   background: rgba(239, 68, 68, 0.1);
   padding: 3px 10px;
@@ -98,12 +98,12 @@
 }
 
 .historyArrowIcon {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--color-primary);
 }
 
 .historyValueNew {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--color-success);
   background: rgba(16, 185, 129, 0.15);
   padding: 3px 10px;
@@ -113,7 +113,7 @@
 
 .historyTimelineAuthor {
   margin-top: 8px;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--color-text-muted);
   font-style: italic;
 }
@@ -129,13 +129,13 @@
 }
 
 .userHistoryTimelineEmptyIcon {
-  font-size: 32px;
+  font-size: 2rem;
   opacity: 0.6;
 }
 
 .userHistoryTimelineEmpty p {
   margin: 0;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 @media (max-width: 576px) {
@@ -151,7 +151,7 @@
     left: -28px;
     width: 20px;
     height: 20px;
-    font-size: 9px;
+    font-size: 0.5625rem;
   }
 
   .historyTimelineCard {

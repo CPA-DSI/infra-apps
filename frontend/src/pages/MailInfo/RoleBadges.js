@@ -2,19 +2,19 @@ import React, { useState } from 'react';
 import { FaUser, FaShieldAlt, FaCrown, FaExclamationCircle, FaEdit } from 'react-icons/fa';
 import { ROLES } from '../../config/api';
 import { formatUserRole } from './mailInfoHelpers';
+import { toneClass } from '../../utils/tones';
 import './MailModals.css';
 
 const BADGE_SIZES = ['small', 'normal', 'large'];
 
 // COMPOSANT ROLEBADGE AMÉLIORÉ
 export const RoleBadge = ({ role, showIcon = true, showTooltip = true, size = 'normal' }) => {
-    const { label, bg, text, border, Icon, description, isUnknown } = formatUserRole(role);
+    const { label, tone, Icon, description, isUnknown } = formatUserRole(role);
     const sizeClass = BADGE_SIZES.includes(size) ? size : 'normal';
 
     return (
         <span
-            className={`px-2 py-1 rounded-pill small fw-medium d-inline-flex align-items-center gap-1 mail-role-badge mail-role-badge--${sizeClass} ${isUnknown ? 'is-unknown' : ''}`}
-            style={{ backgroundColor: bg, color: text, borderColor: border }}
+            className={`px-2 py-1 rounded-pill small fw-medium d-inline-flex align-items-center gap-1 mail-role-badge mail-role-badge--${sizeClass} tone-chip ${toneClass(tone)} ${isUnknown ? 'is-unknown' : ''}`}
             role="img"
             aria-label={description}
             title={showTooltip ? `${description} (${label})` : undefined}

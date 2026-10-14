@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Chart from 'react-apexcharts';
 import { fetchUsers } from '../../services/api';
 import { ROLES } from '../../config/api';
-import { cssVar } from '../../styles/chartTheme';
+import { cssVar } from '../../styles/cssVar';
 import './MailChartFromAPI.css';
 
 const sampleUsers = [
@@ -20,20 +20,20 @@ const sampleUsers = [
 
 // Couleurs du thème (ApexCharts a besoin de valeurs résolues)
 const getMailChartColors = () => ({
-  text: cssVar('--color-text-main', '#1e293b'),
-  textSub: cssVar('--color-text-sub', '#64748b'),
-  textMuted: cssVar('--color-text-muted', '#94a3b8'),
-  border: cssVar('--color-border', '#e2e8f0'),
-  borderStrong: cssVar('--color-border-strong', '#cbd5e1'),
-  bg: cssVar('--color-bg', '#ffffff'),
-  brandStart: cssVar('--color-brand-start', '#667eea'),
-  brandEnd: cssVar('--color-brand-end', '#764ba2'),
+  text: cssVar('--color-text-main'),
+  textSub: cssVar('--color-text-sub'),
+  textMuted: cssVar('--color-text-muted'),
+  border: cssVar('--color-border'),
+  borderStrong: cssVar('--color-border-strong'),
+  bg: cssVar('--color-bg'),
+  brandStart: cssVar('--color-brand-start'),
+  brandEnd: cssVar('--color-brand-end'),
 });
 
-// Teintes propres au widget (vérifiés / non vérifiés / sans email)
-const VERIFIED_COLOR = '#4caf50';
-const UNVERIFIED_COLOR = '#f44336';
-const NO_EMAIL_COLOR = '#9e9e9e';
+// Teintes du widget (vérifiés / non vérifiés / sans email), lues dans le thème
+const VERIFIED_COLOR = cssVar('--color-success');
+const UNVERIFIED_COLOR = cssVar('--color-danger');
+const NO_EMAIL_COLOR = cssVar('--color-text-muted');
 
 const donutOptions = (c, colors, labels) => ({
   chart: {

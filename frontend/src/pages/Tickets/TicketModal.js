@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
 import { createTicket, updateTicket, fetchAllUsers, fetchAllMateriels, fetchTechnicians } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
-import { MySwal } from '../../utils/swal';
+import { notify } from '../../utils/swal';
 import Select from 'react-select';
 import {
     FaTicketAlt, FaUser, FaHdd, FaSave, FaInfoCircle,
@@ -137,19 +137,7 @@ const TicketModal = ({ show, onClose, type, ticketData, onSaveSuccess, onError }
     });
 
     const showNotification = (message, type = 'success') => {
-        MySwal.fire({
-            icon: type,
-            title: type === 'success' ? 'Succès' : 'Erreur',
-            text: message,
-            timer: 3000,
-            timerProgressBar: true,
-            showConfirmButton: false,
-            toast: true,
-            position: 'top-end',
-            background: type === 'success' ? '#10b981' : '#ef4444',
-            color: '#ffffff',
-            iconColor: '#ffffff'
-        });
+        notify(message, type);
     };
 
     useEffect(() => {

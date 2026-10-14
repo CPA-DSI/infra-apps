@@ -24,10 +24,12 @@ import PageHeader from '../../components/PageHeader/PageHeader';
 import ExcelImportPanel from '../../components/ExcelImportPanel/ExcelImportPanel';
 import { tableStyles, paginationOptions } from '../../styles/dataTableTheme';
 import { STATS_CONFIG } from './mailInfoTableConfig';
+import { toneClass } from '../../utils/tones';
 import { useUserImportExport } from './useUserImportExport';
 import { escapeHtml } from '../../utils/escapeHtml';
 
 import './Mail.css';
+import { swalButtons } from '../../utils/swal';
 
 // Thème partagé ; seules les dimensions diffèrent (lignes plus hautes, cellules plus serrées).
 const mailTableStyles = tableStyles({
@@ -250,15 +252,13 @@ const UsersManager = () => {
 
     const handleToggleStatus = useCallback((user, newStatus) => {
         const actionLabel = newStatus ? 'activer' : 'désactiver';
-        const actionColor = newStatus ? '#22c55e' : '#dc3545';
 
         Swal.fire({
             title: 'Êtes-vous sûr ?',
             html: `Cette action va <strong>${actionLabel}</strong> le compte de <strong>${escapeHtml(user.materiel?.utilisateur || 'cet utilisateur')}</strong>.`,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: actionColor,
-            cancelButtonColor: '#6c757d',
+            ...swalButtons(newStatus ? 'success' : 'danger'),
             confirmButtonText: `Oui, ${actionLabel}`,
             cancelButtonText: 'Annuler',
             reverseButtons: true
@@ -493,12 +493,9 @@ const UsersManager = () => {
             width: '120px',
             center: true,
             cell: row => {
-                const { label, bg, text, border, Icon } = formatUserStatus(row.is_active);
+                const { label, tone, Icon } = formatUserStatus(row.is_active);
                 return (
-                    <span
-                        className="badge rounded-pill mail-status-pill"
-                        style={{ backgroundColor: bg, color: text, borderColor: border }}
-                    >
+                    <span className={`badge rounded-pill mail-status-pill ${toneClass(tone)}`}>
                         <Icon className="mail-status-pill-icon" aria-hidden="true" />
                         <span>{label}</span>
                     </span>
@@ -657,7 +654,7 @@ const UsersManager = () => {
                                 key={config.key}
                                 style={{ animationDelay: `${index * 0.1}s` }}
                             >
-                                <StatCard icon={config.icon} value={stats[config.key]} label={config.label} colorScheme={config.colorScheme} tooltip={config.tooltip} />
+                                <StatCard icon={config.icon} value={stats[config.key]} label={config.label} tone={config.tone} tooltip={config.tooltip} />
                             </div>
                         ))}
                     </div>

@@ -13,11 +13,11 @@
 
 /* ---- Bouton Réinitialiser (variables Bootstrap, état figé au survol) ---- */
 .page-historique-materiel .hm-btn-reset {
-    --bs-btn-bg: #f0f0f0;
+    --bs-btn-bg: var(--color-border-light);
     --bs-btn-color: var(--color-text-sub);
-    --bs-btn-hover-bg: #f0f0f0;
+    --bs-btn-hover-bg: var(--color-border-light);
     --bs-btn-hover-color: var(--color-text-sub);
-    --bs-btn-active-bg: #f0f0f0;
+    --bs-btn-active-bg: var(--color-border-light);
     --bs-btn-active-color: var(--color-text-sub);
 }
 
@@ -78,24 +78,24 @@
 }
 
 .page-historique-materiel .hm-cell-badge--local {
-    background-color: #f0fdf4;
-    color: #047857;
+    background-color: var(--color-success-subtle);
+    color: var(--color-success-darker);
 }
 
 .page-historique-materiel .hm-cell-badge--ancien {
-    background-color: #fef2f2;
+    background-color: var(--color-danger-subtle);
     color: var(--color-danger-dark);
     text-decoration: line-through;
 }
 
 .page-historique-materiel .hm-cell-badge--nouveau {
-    background-color: #ecfdf5;
+    background-color: var(--color-success-subtle);
     color: var(--color-success-dark);
 }
 
 .page-historique-materiel .hm-cell-badge--modifie {
-    background-color: #fdf4ff;
-    color: #a21caf;
+    background-color: var(--color-fuchsia-subtle);
+    color: var(--color-fuchsia-darker);
 }
 
 /* ---- État vide ---- */
@@ -124,9 +124,9 @@
     gap: 10px;
     margin-bottom: 20px;
     padding: 12px 16px;
-    border: 1px solid #fecaca;
+    border: 1px solid var(--color-danger-border);
     border-radius: var(--radius-md);
-    background: #fef2f2;
+    background: var(--color-danger-subtle);
     color: var(--color-danger-dark);
 }
 

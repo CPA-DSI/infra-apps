@@ -19,7 +19,7 @@
 :where(.login-container) a,
 :where(.login-container) p {
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.7;
   color: var(--color-text-sub);
 }
@@ -61,7 +61,7 @@
 
 .login-container .txt2 {
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.5;
   color: var(--color-text-sub);
 }

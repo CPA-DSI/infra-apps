@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Row, Col, Badge, Spinner, Alert, Accordion } from 'react-bootstrap';
+import { Row, Col, Badge, Spinner, Alert, Accordion } from 'react-bootstrap';
+import AppModal from '../../components/AppModal/AppModal';
 import { getMouvementById } from '../../services/api';
 import { FaCalendarAlt, FaExchangeAlt, FaBox, FaHashtag, FaUser, FaUsers, FaLaptop, FaMapMarkerAlt, FaArrowRight, FaTag, FaExclamationTriangle, FaClipboardList, FaHistory, FaCogs } from 'react-icons/fa';
-// Classes .profile-modal-modern / .modal-*-modern / .info-card partagées avec la modale de profil
-import '../../components/Navbar/ProfileModal.css';
 import './DetailsStockModal.css';
 
 const DetailsStockModal = ({ show, handleClose, selectedItemId }) => {
@@ -53,44 +52,41 @@ const DetailsStockModal = ({ show, handleClose, selectedItemId }) => {
     }
   };
 
-  // Variante de couleur de l'en-tête selon le type (cf. DetailsStockModal.css)
-  const getHeaderVariant = (type) => {
+  // Fond de l'en-tête selon le type de mouvement
+  const getHeaderBg = (type) => {
     switch (type) {
       case 'ENTREE':
-        return 'entree';
+        return 'var(--gradient-import-hover)';
       case 'ENTREE_QUANTITE':
-        return 'ajustement';
+        return 'var(--gradient-info)';
       case 'SORTIE':
-        return 'sortie';
+        return 'var(--gradient-danger-hover)';
       default:
-        return 'autre';
+        return 'var(--gradient-dark)';
     }
   };
 
+  const closeButton = (
+    <button type="button" className="add-modal-cancel-btn" onClick={handleClose}>Fermer</button>
+  );
+
   if (loading) {
     return (
-        <Modal show={show} onHide={handleClose} size="lg" centered className="profile-modal-modern dsm-modal">
-            <Modal.Body className="text-center p-5 modal-body-modern">
-                <Spinner animation="border" role="status" className="mb-3" />
-                <p>Chargement des détails...</p>
-            </Modal.Body>
-        </Modal>
+        <AppModal show={show} onClose={handleClose} title="Détails du Mouvement" icon={<FaBox />}
+            contentClassName="dsm-modal" bodyClassName="modal-body-modern text-center p-5">
+            <Spinner animation="border" role="status" className="mb-3" />
+            <p>Chargement des détails...</p>
+        </AppModal>
     );
   }
 
   if (error || !itemDetails) {
     return (
-        <Modal show={show} onHide={handleClose} size="lg" centered className="profile-modal-modern dsm-modal">
-            <Modal.Header closeButton className="modal-header-modern">
-                <Modal.Title>Erreur</Modal.Title>
-            </Modal.Header>
-            <Modal.Body className="modal-body-modern">
-                <Alert variant="danger" className="alert-modern">{error || "Aucune donnée disponible."}</Alert>
-            </Modal.Body>
-            <Modal.Footer className="modal-footer-modern">
-                <Button variant="secondary" onClick={handleClose} className="btn-secondary-modern">Fermer</Button>
-            </Modal.Footer>
-        </Modal>
+        <AppModal show={show} onClose={handleClose} title="Erreur" icon={<FaExclamationTriangle />}
+            headerBg="var(--gradient-danger-hover)" contentClassName="dsm-modal"
+            bodyClassName="modal-body-modern" footer={closeButton}>
+            <Alert variant="danger" className="mb-0">{error || "Aucune donnée disponible."}</Alert>
+        </AppModal>
     );
   }
   
@@ -103,23 +99,24 @@ const DetailsStockModal = ({ show, handleClose, selectedItemId }) => {
   const formattedDate = item.date_mouvement ? new Date(item.date_mouvement).toLocaleDateString('fr-FR') : 'N/A';
 
   return (
-    <Modal show={show} onHide={handleClose} size="lg" centered className="profile-modal-modern dsm-modal dsm-modal--loaded">
-      <Modal.Header closeButton className={`modal-header-modern dsm-header--${getHeaderVariant(item.type_mouvement)}`}>
-        <div className="modal-header-content">
-          <div className="modal-icon-wrapper" aria-hidden="true">
-            <FaBox />
-          </div>
-          <div>
-            <Modal.Title className="modal-title-modern">Détails du Mouvement</Modal.Title>
-            <p className="modal-subtitle">Mouvement #{item.id_mouvement} • {formattedDate}</p>
-          </div>
-        </div>
-        <Badge bg={getTypeVariant(item.type_mouvement)} className="type-badge-header">
-          {item.type_mouvement || 'N/A'}
-        </Badge>
-      </Modal.Header>
-
-      <Modal.Body className="modal-body-modern compact">
+    <AppModal
+      show={show}
+      onClose={handleClose}
+      icon={<FaBox />}
+      title={
+        <>
+          Détails du Mouvement
+          <Badge bg={getTypeVariant(item.type_mouvement)} className="type-badge-header">
+            {item.type_mouvement || 'N/A'}
+          </Badge>
+        </>
+      }
+      subtitle={`Mouvement #${item.id_mouvement} • ${formattedDate}`}
+      headerBg={getHeaderBg(item.type_mouvement)}
+      contentClassName="dsm-modal"
+      bodyClassName="modal-body-modern compact"
+      footer={closeButton}
+    >
         <Row>
           <Col md={6}>
             <div className="profile-info-cards">
@@ -298,12 +295,7 @@ const DetailsStockModal = ({ show, handleClose, selectedItemId }) => {
           )}
           {item.nom_utilisateur && <> • par {item.nom_utilisateur}</>}
         </div>
-      </Modal.Body>
-
-      <Modal.Footer className="modal-footer-modern compact">
-        <Button variant="secondary" onClick={handleClose} className="btn-secondary-modern">Fermer</Button>
-      </Modal.Footer>
-    </Modal>
+    </AppModal>
   );
 };
 

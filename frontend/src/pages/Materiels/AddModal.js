@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { fetchALocaux, fetchAMarques, addMateriel, fetchAllMateriels } from '../../services/api';
-import { MySwal } from '../../utils/swal';
+import { notify } from '../../utils/swal';
 import {
     FaVideo, FaNetworkWired, FaUsb,
     FaPlug, FaCheckCircle, FaTimesCircle, FaPlus,
@@ -58,19 +58,7 @@ const AddModal = ({ onClose, onMaterialAdded }) => {
     const [isLoadingMarques, setIsLoadingMarques] = useState(true);
     const [isLoadingLocaux, setIsLoadingLocaux] = useState(true);
     const showNotification = (message, type = 'success') => {
-        MySwal.fire({
-            icon: type,
-            title: type === 'success' ? 'Succès' : 'Erreur',
-            text: message,
-            timer: 3000,
-            timerProgressBar: true,
-            showConfirmButton: false,
-            toast: true,
-            position: 'top-end',
-            background: type === 'success' ? '#10b981' : '#ef4444',
-            color: 'white',
-            iconColor: 'white'
-        });
+        notify(message, type);
     }; 
     const [marqueOptions, setMarqueOptions] = useState([]);
     const [localOptions, setLocalOptions] = useState([]);

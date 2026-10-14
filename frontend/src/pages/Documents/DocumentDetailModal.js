@@ -5,19 +5,9 @@ import { FaFilePdf, FaFileWord, FaFileExcel, FaFileImage } from 'react-icons/fa'
 import { Button } from 'react-bootstrap';
 import AppModal from '../../components/AppModal/AppModal';
 import { getDocumentFileUrl, getPieceJointeFileUrl } from '../../services/api';
+import { CATEGORY_CONFIG } from './documentCategories';
+import { toneClass } from '../../utils/tones';
 import './Documents.css';
-
-const CATEGORY_CONFIG = {
-  FACTURE:             { label: 'Facture',              color: '#065f46', bg: '#d1fae5', border: '#a7f3d0' },
-  CONTRAT_MAINTENANCE: { label: 'Contrat de maintenance', color: '#7c2d12', bg: '#ffedd5', border: '#fed7aa' },
-  GARANTIE:            { label: 'Garantie',             color: '#3730a3', bg: '#e0e7ff', border: '#c7d2fe' },
-  MANUEL_TECHNIQUE:    { label: 'Manuel technique',     color: '#155e75', bg: '#cffafe', border: '#a5f3fc' },
-  SCHEMA_RESEAU:       { label: 'Schéma réseau',        color: '#4d7c0f', bg: '#ecfccb', border: '#bef264' },
-  LICENCE_LOGICIELLE:  { label: 'Licence logicielle',   color: '#831843', bg: '#fce7f3', border: '#fbcfe8' },
-  BON_LIVRAISON:       { label: 'Bon de livraison',     color: '#92400e', bg: '#fef3c7', border: '#fde68a' },
-  RAPPORT_AUDIT:       { label: "Rapport d'audit",     color: '#9f1239', bg: '#ffe4e6', border: '#fecaca' },
-  AUTRE:               { label: 'Autre',                color: '#4b5563', bg: '#f3f4f6', border: '#e5e7eb' },
-};
 
 // Sections de la modale : la couleur de chaque en-tête est portée par
 // la classe .doc-section-header--{id} (Documents.css)
@@ -114,7 +104,7 @@ const DocumentDetailModal = ({ show, onClose, doc, relationData, onEdit }) => {
     const cat = CATEGORY_CONFIG[doc.categorie];
     if (!cat) return doc.categorie || '—';
     return (
-      <span className="doc-chip doc-chip--lg" style={{ backgroundColor: cat.bg, color: cat.color, border: `1px solid ${cat.border}` }}>
+      <span className={`doc-chip doc-chip--lg tone-chip ${toneClass(cat.tone)}`}>
         {cat.label}
       </span>
     );

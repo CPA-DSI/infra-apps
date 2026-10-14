@@ -1,93 +1,12 @@
 /* ============================================
-   DetailsStockModal.css - Version avec en-tête dynamique
+   DetailsStockModal.css
+   Modale AppModal (.add-modal-*) : le fond de l'en-tête dépend du type
+   de mouvement (prop headerBg). Toutes les règles sont scopées sous .dsm-modal.
    ============================================ */
 
-/* Fond assombri supplémentaire de la modale chargée */
-.dsm-modal.dsm-modal--loaded {
-  background-color: rgba(0, 0, 0, 0.5);
-}
-
-.profile-modal-modern.dsm-modal .modal-content {
-  background-color: var(--color-bg);
-  border: none;
-  border-radius: 28px;
-  overflow: hidden;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
-}
-
-/* Taille du modal */
-@media (min-width: 992px) {
-  .profile-modal-modern.dsm-modal .modal-lg {
-    max-width: 900px;
-  }
-}
-
-/* Header : dégradé selon le type de mouvement (classe dsm-header--*) */
-.dsm-modal .modal-header-modern {
-  border-bottom: none;
-  padding: 1rem 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  transition: background 0.3s ease;
-}
-
-.dsm-modal .modal-header-modern.dsm-header--entree { background: var(--gradient-import-hover); }
-.dsm-modal .modal-header-modern.dsm-header--ajustement { background: var(--gradient-info); }
-.dsm-modal .modal-header-modern.dsm-header--sortie { background: var(--gradient-danger-hover); }
-.dsm-modal .modal-header-modern.dsm-header--autre {
-  background: linear-gradient(135deg, var(--color-text-main) 0%, var(--color-text-strong) 100%);
-}
-
-/* Bouton fermeture blanc */
-.dsm-modal .modal-header-modern .btn-close {
-  filter: brightness(0) invert(1);
-  opacity: 0.8;
-  transition: opacity 0.2s;
-}
-.dsm-modal .modal-header-modern .btn-close:hover {
-  opacity: 1;
-}
-
-/* Conteneur titre + icône */
-.dsm-modal .modal-header-content {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.dsm-modal .modal-icon-wrapper {
-  width: 52px;
-  height: 52px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.8rem;
-  color: var(--color-bg);
-}
-
-.dsm-modal .modal-title-modern {
-  color: var(--color-bg);
-  font-weight: 700;
-  font-size: 1.5rem;
-  margin-bottom: 0.2rem;
-}
-
-.dsm-modal .modal-subtitle {
-  color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 0;
-  font-size: 0.85rem;
-}
-
-/* Badge dans le header */
+/* Badge du type de mouvement, à côté du titre */
 .dsm-modal .type-badge-header {
-  position: relative;
-  top: auto;
-  right: auto;
+  vertical-align: middle;
   font-size: 0.75rem;
   padding: 0.4rem 0.9rem;
   border-radius: 40px;
@@ -296,45 +215,11 @@
   margin-bottom: 0.5rem;
 }
 
-.dsm-modal .modal-footer-modern {
-  border-top: 1px solid var(--color-border);
-  padding: 1rem 2rem;
-  background: var(--color-bg);
-}
-.dsm-modal .modal-footer-modern.compact {
-  padding: 0.75rem 1.25rem;
-}
-
-.dsm-modal .btn-secondary-modern {
-  border-radius: 40px;
-  padding: 0.5rem 1.5rem;
-  font-weight: 500;
-  border-color: var(--color-border-strong);
-  color: var(--color-text-secondary);
-  background: transparent;
-  transition: all 0.2s;
-}
-.dsm-modal .btn-secondary-modern:hover {
-  background: var(--color-border-light);
-  border-color: var(--color-text-muted);
-  color: var(--color-text-main);
-}
 
 /* Responsive */
 @media (max-width: 768px) {
-  .dsm-modal .modal-header-modern {
-    padding: 1rem;
-  }
   .dsm-modal .modal-body-modern {
     padding: 1rem;
-  }
-  .dsm-modal .modal-icon-wrapper {
-    width: 40px;
-    height: 40px;
-    font-size: 1.2rem;
-  }
-  .dsm-modal .modal-title-modern {
-    font-size: 1.2rem;
   }
   .dsm-modal .info-card {
     padding: 0.8rem;
@@ -347,15 +232,10 @@
 }
 
 @media (max-width: 576px) {
-  .dsm-modal .modal-header-modern {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+  /* Badge sous le titre */
   .dsm-modal .type-badge-header {
+    display: table;
     margin-left: 0;
     margin-top: 0.25rem;
-  }
-  .dsm-modal .modal-header-content {
-    flex-wrap: wrap;
   }
 }

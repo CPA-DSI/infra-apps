@@ -1,0 +1,159 @@
+/* ============================================================
+   SearchableSelect — select avec recherche intégrée
+   Variantes : .ss--compact (page Matériels), .ss--filter (page Utilisateurs)
+   ============================================================ */
+
+.ss {
+  position: relative;
+}
+
+.ss-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.ss--compact .ss-trigger {
+  padding-left: 14px;
+  padding-right: 14px;
+  user-select: none;
+}
+
+.ss-label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ss--filter .ss-label.is-placeholder {
+  color: var(--color-text-sub);
+}
+
+.ss-arrow {
+  margin-left: 8px;
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  opacity: 0.5;
+}
+
+.ss--filter .ss-arrow {
+  font-size: 0.7rem;
+  color: var(--color-text-sub);
+  opacity: 1;
+}
+
+/* ---- Liste déroulante ---- */
+.ss-dropdown {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: var(--z-dropdown);
+  background-color: var(--color-bg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.ss--compact .ss-dropdown {
+  top: calc(100% + 4px);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.ss--filter .ss-dropdown {
+  top: 100%;
+  margin-top: 4px;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.ss-list {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+/* ---- Recherche ---- */
+.ss-search {
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-bg);
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.ss-search-wrap {
+  padding: 8px;
+}
+
+.ss-search-pill {
+  display: flex;
+  align-items: center;
+}
+
+.ss-search-icon {
+  margin-right: 8px;
+  color: var(--color-text-sub);
+}
+
+.ss-search-pill input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background-color: transparent;
+  font-size: var(--text-sm);
+}
+
+.ss-search-clear {
+  border: none;
+  background: none;
+  color: var(--color-text-sub);
+  cursor: pointer;
+}
+
+/* ---- Options ---- */
+.ss-item {
+  padding: 9px 14px;
+  font-size: 0.85rem;
+  color: var(--color-text-body);
+  cursor: pointer;
+}
+
+.ss-item:hover {
+  background-color: var(--color-border-light);
+}
+
+.ss-item.is-selected {
+  background-color: var(--color-primary-soft-strong);
+  color: var(--color-primary-darker);
+}
+
+.ss-item--empty {
+  color: var(--color-text-sub);
+}
+
+.ss--filter .ss-item {
+  font-size: 0.9rem;
+  color: var(--color-primary-dark);
+}
+
+.ss--filter .ss-item--empty {
+  color: var(--color-text-sub);
+}
+
+.ss--filter .ss-item.is-selected {
+  background-color: var(--color-primary-soft);
+  font-weight: 600;
+}
+
+.ss--filter .ss-item--empty.is-selected {
+  font-weight: 400;
+}
+
+.ss-no-result {
+  padding: 9px 14px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}

@@ -4,13 +4,15 @@ import { Button, Alert, Spinner } from 'react-bootstrap';
 import {
   FaList, FaCheckCircle,
   FaDownload, FaSyncAlt, FaPlus, FaSearch, FaTimes,
-  FaClock, FaExclamationTriangle, FaPaperPlane,
-  FaFlag, FaArchive, FaUser, FaLaptop,
-  FaArrowRight, FaInfoCircle, FaStar, FaStarHalfAlt, FaTicketAlt, FaCommentDots
+  FaClock, FaPaperPlane,
+  FaArchive, FaUser, FaLaptop,
+  FaArrowRight, FaInfoCircle, FaTicketAlt, FaCommentDots
 } from 'react-icons/fa';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-import { MySwal } from '../../utils/swal';
+import { MySwal, swalButtons } from '../../utils/swal';
+import { toneClass } from '../../utils/tones';
+import { STATUS_CONFIG, PRIORITY_CONFIG, TICKET_STATUSES } from './ticketConfig';
 import TicketModal from './TicketModal';
 import TicketDetailsModal from './TicketDetailsModal';
 import CloseTicketModal from './CloseTicketModal';
@@ -21,20 +23,6 @@ import { tableStyles, paginationOptions } from '../../styles/dataTableTheme';
 import { getTickets, deleteTicket, fetchAllMaterielsIt, assignTicket, fetchCommentaires, fetchCommentairesByTicket, addCommentaire, deleteCommentaire } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { hasPermission, PERMISSIONS } from '../../config/api';
-
-const STATUS_CONFIG = {
-  NOUVEAU: { label: 'Nouveau', bg: '#dbeafe', text: '#1e40af', border: '#93c5fd', icon: FaInfoCircle },
-  EN_COURS: { label: 'En cours', bg: '#fed7aa', text: '#92400e', border: '#fbbf24', icon: FaClock },
-  RESOLU: { label: 'Résolu', bg: '#c6f6d5', text: '#2f855a', border: '#9ae6b4', icon: FaCheckCircle },
-  FERME: { label: 'Fermé', bg: '#edf2f7', text: '#4a5568', border: '#cbd5e0', icon: FaArchive },
-};
-
-const PRIORITY_CONFIG = {
-  HAUTE: { label: 'Haute', color: '#e53e3e', icon: FaFlag },
-  URGENTE: { label: 'Urgente', color: '#c53030', icon: FaExclamationTriangle },
-  MOYENNE: { label: 'Moyenne', color: '#d69e2e', icon: FaStarHalfAlt },
-  BASSE: { label: 'Basse', color: '#718096', icon: FaStar },
-};
 
 // Thème commun des tableaux + spécificités de la page
 const tableCustomStyles = tableStyles({
@@ -92,7 +80,7 @@ const ExpandableComments = ({ data }) => {
     const result = await MySwal.fire({
       icon: 'question', title: 'Supprimer', text: 'Voulez-vous supprimer ce commentaire ?',
       showCancelButton: true, confirmButtonText: 'Supprimer', cancelButtonText: 'Annuler',
-      confirmButtonColor: '#e53e3e',
+      ...swalButtons('danger'),
     });
     if (!result.isConfirmed) return;
     try {
@@ -374,7 +362,7 @@ const TicketList = () => {
       const cfg = STATUS_CONFIG[row.statut] || STATUS_CONFIG.NOUVEAU;
       const Icon = cfg.icon;
       return (
-        <span className="tck-status-badge" style={{ backgroundColor: cfg.bg, color: cfg.text, border: `1px solid ${cfg.border}` }}>
+        <span className={`tck-status-badge tone-chip ${toneClass(cfg.tone)}`}>
           <Icon size={11} className="tck-badge-icon" aria-hidden="true" /> {cfg.label}
         </span>
       );
@@ -384,7 +372,7 @@ const TicketList = () => {
       const cfg = PRIORITY_CONFIG[row.priorite] || PRIORITY_CONFIG.MOYENNE;
       const Icon = cfg.icon;
       return (
-        <span className="tck-priority-badge" style={{ backgroundColor: cfg.color + '20', color: cfg.color, border: `1px solid ${cfg.color}40` }}>
+        <span className={`tck-priority-badge tone-chip ${toneClass(cfg.tone)}`}>
           <Icon size={11} className="tck-badge-icon" aria-hidden="true" /> {cfg.label}
         </span>
       );
@@ -402,7 +390,7 @@ const TicketList = () => {
       );
     };
 
-    const renderUserChip = ({ nom, equipe, isInconnu, unassignedLabel, color, icon }) => {
+    const renderUserChip = ({ nom, equipe, isInconnu, unassignedLabel, icon }) => {
       if (isInconnu) {
         return (
           <span className="tck-unassigned" title={unassignedLabel}>
@@ -415,7 +403,6 @@ const TicketList = () => {
       return (
         <span
           className="tck-user"
-          style={color ? { borderColor: `${color}40`, backgroundColor: `${color}0d` } : undefined}
           title={equipe ? `${nom} — ${equipe}` : nom}
         >
           <span className="tck-user-info">
@@ -449,7 +436,7 @@ const TicketList = () => {
 
       const formattedNom = id_n ? `N° ${id_n} : ${nom}` : nom;
       const isInconnu = !nom || nom === 'Inconnu' || nom === 'N/A' || nom === '—';
-      return renderUserChip({ nom: formattedNom, equipe, isInconnu, unassignedLabel: 'Inconnu', color: '#4f46e5' });
+      return renderUserChip({ nom: formattedNom, equipe, isInconnu, unassignedLabel: 'Inconnu' });
     };
 
     const renderAssigne = (row) => {
@@ -466,7 +453,7 @@ const TicketList = () => {
 
       const formattedNom = id_n ? `N° ${id_n} : ${nom}` : nom;
       const isInconnu = !nom || nom === 'Inconnu' || nom === 'N/A' || nom === '—';
-      return renderUserChip({ nom: formattedNom, equipe, isInconnu, unassignedLabel: 'Non assigné', color: '#2563eb', icon: <FaUser size={12} /> });
+      return renderUserChip({ nom: formattedNom, equipe, isInconnu, unassignedLabel: 'Non assigné', icon: <FaUser size={12} /> });
     };
 
 
@@ -627,8 +614,8 @@ const TicketList = () => {
             <div className="tck-select-wrapper">
               <select className="form-select tck-select" value={filterStatut} onChange={(e) => setFilterStatut(e.target.value)}>
                 <option value="">Tous les statuts</option>
-                {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
-                  <option key={key} value={key}>{cfg.label}</option>
+                {TICKET_STATUSES.map(key => (
+                  <option key={key} value={key}>{STATUS_CONFIG[key].label}</option>
                 ))}
               </select>
             </div>

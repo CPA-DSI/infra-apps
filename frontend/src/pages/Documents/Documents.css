@@ -30,12 +30,12 @@
 }
 
 .doc-count-value.is-active {
-  color: #92400e;
+  color: var(--color-warning-fg);
 }
 
 .doc-page .btn.doc-reset-btn {
   background-color: var(--color-warning-soft);
-  color: #92400e;
+  color: var(--color-warning-fg);
   font-weight: 600;
   font-size: 0.8rem;
 }
@@ -49,8 +49,8 @@
 .doc-page .doc-category-tabs {
   --bs-nav-tabs-border-width: 0;
   --bs-nav-link-color: var(--color-text-main);
-  --bs-nav-link-hover-color: #1e3a8a;
-  --bs-nav-tabs-link-active-color: #1e3a8a;
+  --bs-nav-link-hover-color: var(--color-info-fg-strong);
+  --bs-nav-tabs-link-active-color: var(--color-info-fg-strong);
   --bs-nav-tabs-link-active-bg: var(--color-bg);
   background: var(--color-bg-alt);
   border-radius: var(--radius-md);
@@ -103,8 +103,8 @@
 
 .doc-chip--public {
   background-color: var(--color-success-soft);
-  color: #065f46;
-  border: 1px solid #a7f3d0;
+  color: var(--color-success-fg);
+  border: 1px solid var(--color-success-border);
 }
 
 .doc-chip--private {
@@ -137,13 +137,13 @@
 .doc-tag--materiel {
   background-color: var(--color-primary-soft-strong);
   color: var(--color-primary-darker);
-  border: 1px solid #c7d2fe;
+  border: 1px solid var(--color-primary-border);
 }
 
 .doc-tag--produit {
-  background-color: #ecfdf5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
+  background-color: var(--color-success-subtle);
+  color: var(--color-success-fg);
+  border: 1px solid var(--color-success-border);
 }
 
 .doc-tag--more {
@@ -158,21 +158,21 @@
 }
 
 .doc-tag--ticket {
-  background-color: #fff7ed;
-  color: #9a3412;
-  border: 1px solid #fed7aa;
+  background-color: var(--color-orange-subtle);
+  color: var(--color-orange-fg);
+  border: 1px solid var(--color-orange-border);
 }
 
 .doc-tag--files {
-  background-color: #fdf2f8;
-  color: #9d174d;
-  border: 1px solid #fbcfe8;
+  background-color: var(--color-pink-subtle);
+  color: var(--color-pink-fg);
+  border: 1px solid var(--color-pink-border);
 }
 
 .doc-tag-marque {
-  background-color: #ecfdf5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
+  background-color: var(--color-success-subtle);
+  color: var(--color-success-fg);
+  border: 1px solid var(--color-success-border);
   padding: 1px 6px;
   border-radius: var(--radius-sm);
   font-size: 0.7rem;
@@ -262,7 +262,7 @@
    --- Modale Détails (AppModal contentClassName="doc-details-modal") ---
    ========================================================== */
 .add-modal-overlay .add-modal-content.doc-details-modal {
-  --modal-header-bg: linear-gradient(135deg, var(--color-text-main), var(--color-text-strong));
+  --modal-header-bg: var(--gradient-dark);
   max-width: 800px;
   border-radius: 18px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
@@ -376,27 +376,27 @@
 }
 
 .doc-section-header--classification {
-  --doc-section-bg: linear-gradient(135deg, #0ea5e9, #38bdf8);
+  --doc-section-bg: linear-gradient(135deg, var(--color-sky), var(--color-sky-light));
   --doc-section-border: rgba(14, 165, 233, 0.2);
 }
 
 .doc-section-header--info {
-  --doc-section-bg: linear-gradient(135deg, var(--color-secondary), #a78bfa);
+  --doc-section-bg: linear-gradient(135deg, var(--color-secondary), var(--color-secondary-light));
   --doc-section-border: rgba(139, 92, 246, 0.2);
 }
 
 .doc-section-header--relations {
-  --doc-section-bg: linear-gradient(135deg, var(--color-warning), #fbbf24);
+  --doc-section-bg: linear-gradient(135deg, var(--color-warning), var(--color-warning-light));
   --doc-section-border: rgba(245, 158, 11, 0.2);
 }
 
 .doc-section-header--pieces_jointes {
-  --doc-section-bg: linear-gradient(135deg, #ec4899, #f472b6);
+  --doc-section-bg: linear-gradient(135deg, var(--color-pink), var(--color-pink-light));
   --doc-section-border: rgba(236, 72, 153, 0.2);
 }
 
 .doc-section-header--desc {
-  --doc-section-bg: linear-gradient(135deg, var(--color-success), #34d399);
+  --doc-section-bg: linear-gradient(135deg, var(--color-success), var(--color-success-light));
   --doc-section-border: rgba(16, 185, 129, 0.2);
 }
 
@@ -535,7 +535,7 @@
 }
 
 .doc-details-modal .btn.doc-open-btn--attachment {
-  background: linear-gradient(135deg, #ec4899, #f472b6);
+  background: linear-gradient(135deg, var(--color-pink), var(--color-pink-light));
   font-size: 0.75rem;
 }
 
@@ -543,13 +543,13 @@
 .doc-details-modal .doc-file-type { color: var(--color-text-sub); }
 .doc-details-modal .doc-file-type--pdf { color: var(--color-danger-dark); }
 .doc-details-modal .doc-file-type--word { color: var(--color-info-dark); }
-.doc-details-modal .doc-file-type--excel { color: #16a34a; }
-.doc-details-modal .doc-file-type--image { color: #ea580c; }
+.doc-details-modal .doc-file-type--excel { color: var(--color-success-dark); }
+.doc-details-modal .doc-file-type--image { color: var(--color-orange-dark); }
 
 .doc-detail-description {
   margin: 0;
   font-size: 0.85rem;
-  color: #4b5563;
+  color: var(--color-text-secondary);
   line-height: 1.5;
   background: var(--color-bg-alt);
   border-radius: 10px;

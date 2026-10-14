@@ -21,6 +21,7 @@ import { getMouvements, deleteMouvement, importMouvements } from '../../services
 import { escapeHtml } from '../../utils/escapeHtml';
 import PageHeader from '../../components/PageHeader/PageHeader';
 import { tableStyles, paginationOptions } from '../../styles/dataTableTheme';
+import { swalButtons } from '../../utils/swal';
 
 // Tableau : thème partagé, seules les hauteurs de ligne diffèrent
 const tableCustomStyles = tableStyles({
@@ -184,8 +185,7 @@ const Mouvements = () => {
                 <strong>Date :</strong> ${dateFormatee}`,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
+            ...swalButtons('danger'),
             confirmButtonText: 'Oui, supprimer !',
             cancelButtonText: 'Annuler'
         }).then(async (result) => {

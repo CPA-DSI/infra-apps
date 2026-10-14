@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaSearch, FaTimes } from 'react-icons/fa';
+import './SearchableSelect.css';
 
 // Select avec recherche intégrée, partagé par les pages Matériels et Utilisateurs.
 //
@@ -12,57 +13,11 @@ import { FaSearch, FaTimes } from 'react-icons/fa';
 //                        la page Matériels) ou 'filter' (visuel form-select de la
 //                        page Utilisateurs, avec loupe et bouton d'effacement).
 //   - styleClass       : classes CSS du déclencheur (par défaut selon la variante).
+// Styles : SearchableSelect.css (.ss--compact / .ss--filter).
 
-const VARIANTS = {
-    compact: {
-        triggerClass: 'rounded-pill border-0 shadow-sm',
-        triggerStyle: { paddingLeft: '14px', paddingRight: '14px', userSelect: 'none' },
-        labelStyle: () => ({}),
-        arrowStyle: { marginLeft: '8px', fontSize: '0.65rem', opacity: 0.5 },
-        dropdownStyle: {
-            position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
-            backgroundColor: '#fff', borderRadius: '12px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 1000, overflow: 'hidden',
-        },
-        listStyle: { maxHeight: '220px', overflowY: 'auto' },
-        emptyItemStyle: (selected) => ({
-            padding: '9px 14px', cursor: 'pointer', fontSize: '0.85rem',
-            color: '#6b7280', backgroundColor: selected ? '#e0e7ff' : '#fff',
-        }),
-        emptyItemHover: null,
-        itemStyle: (selected) => ({
-            padding: '9px 14px', cursor: 'pointer', fontSize: '0.85rem',
-            backgroundColor: selected ? '#e0e7ff' : '#fff',
-            color: selected ? '#4338ca' : '#374151',
-        }),
-        itemHoverBg: (selected) => (selected ? '#e0e7ff' : '#f3f4f6'),
-        itemBg: (selected) => (selected ? '#e0e7ff' : '#fff'),
-        noResultStyle: { padding: '9px 14px', fontSize: '0.85rem', color: '#9ca3af' },
-    },
-    filter: {
-        triggerClass: 'form-select rounded-pill border-0 shadow-sm',
-        triggerStyle: {},
-        labelStyle: (hasValue) => ({ color: hasValue ? 'inherit' : '#6c757d' }),
-        arrowStyle: { fontSize: '0.7rem', color: '#6c757d', marginLeft: '8px', flexShrink: 0 },
-        dropdownStyle: {
-            position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 1050,
-            marginTop: '4px', backgroundColor: '#fff', border: '1px solid #e2e8f0',
-            borderRadius: '16px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', maxHeight: '260px', overflowY: 'auto',
-        },
-        listStyle: null,
-        emptyItemStyle: (selected) => ({
-            padding: '9px 14px', cursor: 'pointer', fontSize: '0.9rem', color: '#6c757d',
-            backgroundColor: selected ? '#eef2ff' : 'transparent',
-        }),
-        emptyItemHover: { hover: '#f1f5f9', selected: '#eef2ff', idle: 'transparent' },
-        itemStyle: (selected) => ({
-            padding: '9px 14px', cursor: 'pointer', fontSize: '0.9rem',
-            backgroundColor: selected ? '#eef2ff' : 'transparent', color: '#4f46e5', fontWeight: selected ? 600 : 400,
-        }),
-        itemHoverBg: () => '#f1f5f9',
-        itemBg: (selected) => (selected ? '#eef2ff' : 'transparent'),
-        noResultStyle: { padding: '9px 14px', fontSize: '0.85rem', color: '#adb5bd' },
-    },
+const TRIGGER_CLASSES = {
+    compact: 'rounded-pill border-0 shadow-sm',
+    filter: 'form-select rounded-pill border-0 shadow-sm',
 };
 
 const SearchableSelect = ({
@@ -79,8 +34,8 @@ const SearchableSelect = ({
     const [query, setQuery] = useState('');
     const containerRef = useRef(null);
 
-    const theme = VARIANTS[variant] || VARIANTS.compact;
     const isFilter = variant === 'filter';
+    const variantKey = isFilter ? 'filter' : 'compact';
     const emptyLabel = placeholder ?? allLabel;
 
     useEffect(() => {
@@ -111,22 +66,21 @@ const SearchableSelect = ({
     const select = (newValue) => { onChange(newValue); setOpen(false); setQuery(''); };
 
     const searchInput = isFilter ? (
-        <div style={{ padding: '8px' }}>
-            <div className="bg-light rounded-pill px-3 py-2 border-0" style={{ display: 'flex', alignItems: 'center' }}>
-                <span style={{ color: '#6c757d', marginRight: '8px' }}><FaSearch /></span>
+        <div className="ss-search-wrap">
+            <div className="ss-search-pill bg-light rounded-pill px-3 py-2 border-0">
+                <span className="ss-search-icon"><FaSearch /></span>
                 <input
                     autoFocus
                     type="text"
                     placeholder="Rechercher..."
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    style={{ flex: 1, border: 'none', outline: 'none', backgroundColor: 'transparent', fontSize: '14px' }}
                 />
                 {query && (
                     <button
                         type="button"
+                        className="ss-search-clear"
                         onClick={(e) => { e.stopPropagation(); setQuery(''); }}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6c757d' }}
                     >
                         <FaTimes />
                     </button>
@@ -136,80 +90,57 @@ const SearchableSelect = ({
     ) : (
         <input
             autoFocus
+            className="ss-search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Rechercher..."
-            style={{
-                width: '100%',
-                border: 'none',
-                borderBottom: '1px solid #e5e7eb',
-                padding: '10px 14px',
-                fontSize: '0.85rem',
-                outline: 'none',
-                backgroundColor: '#fff',
-            }}
         />
     );
 
     const emptySelected = isFilter ? value === '' : !value;
-    const hover = theme.emptyItemHover;
 
     const items = (
         <>
             <div
+                className={`ss-item ss-item--empty ${emptySelected ? 'is-selected' : ''}`}
                 onClick={() => select('')}
-                style={theme.emptyItemStyle(emptySelected)}
-                onMouseEnter={hover ? (e) => { e.currentTarget.style.backgroundColor = hover.hover; } : undefined}
-                onMouseLeave={hover ? (e) => { e.currentTarget.style.backgroundColor = emptySelected ? hover.selected : hover.idle; } : undefined}
             >
                 {emptyLabel}
             </div>
-            {filteredOptions.map(o => {
-                const selected = value === o.value;
-                return (
-                    <div
-                        key={o.value}
-                        onClick={() => select(o.value)}
-                        style={theme.itemStyle(selected)}
-                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = theme.itemHoverBg(selected); }}
-                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = theme.itemBg(selected); }}
-                    >
-                        {o.label}
-                    </div>
-                );
-            })}
+            {filteredOptions.map(o => (
+                <div
+                    key={o.value}
+                    className={`ss-item ${value === o.value ? 'is-selected' : ''}`}
+                    onClick={() => select(o.value)}
+                >
+                    {o.label}
+                </div>
+            ))}
             {filteredOptions.length === 0 && (
-                <div style={theme.noResultStyle}>Aucun résultat</div>
+                <div className="ss-no-result">Aucun résultat</div>
             )}
         </>
     );
 
     return (
-        <div ref={containerRef} style={{ position: 'relative' }}>
+        <div ref={containerRef} className={`ss ss--${variantKey}`}>
             <div
-                className={styleClass || theme.triggerClass}
-                style={{
-                    ...style,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    cursor: 'pointer',
-                    ...theme.triggerStyle,
-                }}
+                className={`ss-trigger ${styleClass || TRIGGER_CLASSES[variantKey]}`}
+                style={style}
                 onClick={toggle}
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } }}
             >
-                <span style={{ ...theme.labelStyle(Boolean(value)), whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <span className={`ss-label ${value ? '' : 'is-placeholder'}`}>
                     {displayLabel}
                 </span>
-                <span style={theme.arrowStyle}>▼</span>
+                <span className="ss-arrow">▼</span>
             </div>
             {open && (
-                <div style={theme.dropdownStyle}>
+                <div className="ss-dropdown">
                     {searchInput}
-                    {theme.listStyle ? <div style={theme.listStyle}>{items}</div> : items}
+                    {isFilter ? items : <div className="ss-list">{items}</div>}
                 </div>
             )}
         </div>

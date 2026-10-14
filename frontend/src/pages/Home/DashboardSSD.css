@@ -66,8 +66,8 @@
 }
 
 .dashboard-ssd-icon {
-  font-size: 28px;
-  color: #fff;
+  font-size: 1.75rem;
+  color: var(--color-white);
 }
 
 .dashboard-ssd-title-block {
@@ -76,7 +76,7 @@
 
 .dashboard-ssd-title {
   margin: 0;
-  font-size: 22px;
+  font-size: 1.375rem;
   font-weight: 800;
   color: var(--dash-text);
   letter-spacing: -0.5px;
@@ -84,7 +84,7 @@
 
 .dashboard-ssd-subtitle {
   margin: 4px 0 0;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--dash-text-sub);
   font-weight: 500;
 }
@@ -106,7 +106,7 @@
 }
 
 .dashboard-ssd-chart-title {
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--dash-text);
   margin-bottom: 16px;
@@ -180,13 +180,13 @@
   align-items: center;
   justify-content: center;
   background: var(--dssd-accent);
-  color: #fff;
-  font-size: 16px;
+  color: var(--color-white);
+  font-size: 1rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .dashboard-ssd-stat-type {
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 700;
   color: var(--dash-text-sub);
   text-transform: uppercase;
@@ -200,7 +200,7 @@
 }
 
 .dashboard-ssd-stat-count {
-  font-size: 28px;
+  font-size: 1.75rem;
   font-weight: 800;
   color: var(--dash-text);
   line-height: 1;
@@ -231,7 +231,7 @@
 }
 
 .dashboard-ssd-stat-percent {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--dash-text-sub);
   text-align: right;
@@ -273,7 +273,7 @@
 }
 
 .dashboard-ssd-status-label {
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 600;
   color: var(--dash-text-sub);
   text-transform: uppercase;
@@ -281,7 +281,7 @@
 }
 
 .dashboard-ssd-status-value {
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
   color: var(--color-success);
 }
@@ -304,7 +304,7 @@
 }
 
 .dashboard-ssd-loading-text {
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 500;
 }
 
@@ -318,7 +318,7 @@
 }
 
 .dashboard-ssd-error-text {
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
 }
 
@@ -328,7 +328,7 @@
   background: var(--dssd-gradient);
   border: none;
   border-radius: var(--radius-sm);
-  color: #fff;
+  color: var(--color-white);
   font-weight: 600;
   cursor: pointer;
 }
@@ -340,13 +340,13 @@
 }
 
 .dashboard-ssd-empty-icon {
-  font-size: 48px;
+  font-size: 3rem;
   margin-bottom: 16px;
   opacity: 0.5;
 }
 
 .dashboard-ssd-empty-text {
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 /* --- Pastilles des titres --- */
@@ -370,7 +370,7 @@
   }
 
   .dashboard-ssd-stat-count {
-    font-size: 24px;
+    font-size: 1.5rem;
   }
 
   .dashboard-ssd-system-status {
@@ -379,7 +379,7 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 576px) {
   .dashboard-ssd-stats-modern {
     gap: 10px;
   }
@@ -394,7 +394,7 @@
   }
 
   .dashboard-ssd-stat-count {
-    font-size: 20px;
+    font-size: 1.25rem;
   }
 
   .dashboard-ssd-system-status {

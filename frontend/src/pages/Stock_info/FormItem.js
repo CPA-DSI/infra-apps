@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 import { fetchProduits, fetchLocaux, fetchMateriels, createMouvement } from '../../services/api';
 import { FaBox, FaMapMarkerAlt, FaUser, FaCalendarAlt, FaArrowRight, FaArrowLeft, FaPlus, FaFileAlt, FaCheck, FaExclamationTriangle } from 'react-icons/fa';
 import { escapeHtml } from '../../utils/escapeHtml';
-import { MySwal } from '../../utils/swal';
+import { MySwal, notify, swalButtons } from '../../utils/swal';
 import SharedFormItem from '../../components/FormItem/FormItem';
 import AppModal from '../../components/AppModal/AppModal';
 
@@ -55,19 +55,7 @@ const FormItem = ({ initialData = {}, onSave, onClose, isModal = true }) => {
     });
 
     const showNotification = useCallback((message, type = 'success') => {
-        MySwal.fire({
-            icon: type,
-            title: type === 'success' ? 'Succès' : 'Erreur',
-            text: message,
-            timer: 3000,
-            timerProgressBar: true,
-            showConfirmButton: false,
-            toast: true,
-            position: 'top-end',
-            background: type === 'success' ? '#10b981' : '#ef4444',
-            color: '#ffffff',
-            iconColor: '#ffffff'
-        });
+        notify(message, type);
     }, []);
 
     const handleChange = (e) => {
@@ -194,7 +182,7 @@ const FormItem = ({ initialData = {}, onSave, onClose, isModal = true }) => {
                 title: 'Aucun produit disponible',
                 text: 'Vous devez ajouter au moins un produit avant de créer ce type de mouvement. Veuillez ajouter un produit depuis l\'onglet "Produits".',
                 confirmButtonText: 'Compris',
-                confirmButtonColor: '#10b981'
+                ...swalButtons('success')
             });
             
             return false;
@@ -235,7 +223,7 @@ const FormItem = ({ initialData = {}, onSave, onClose, isModal = true }) => {
                         <p style="color: #3b82f6; font-weight: bold;">📦 Entrée Quantité Produit</p>
                     `,
                     confirmButtonText: 'Compris',
-                    confirmButtonColor: '#10b981'
+                    ...swalButtons('success')
                 });
                 
                 return false;
@@ -259,7 +247,7 @@ const FormItem = ({ initialData = {}, onSave, onClose, isModal = true }) => {
                     title: 'Produit introuvable',
                     text: 'Le produit que vous avez sélectionné n\'existe pas ou a été supprimé. Veuillez rafraîchir la page et réessayer.',
                     confirmButtonText: 'OK',
-                    confirmButtonColor: '#ef4444'
+                    ...swalButtons('danger')
                 });
                 
                 return false;

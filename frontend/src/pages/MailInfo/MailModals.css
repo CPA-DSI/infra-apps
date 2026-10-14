@@ -97,7 +97,7 @@
 
 .mail-modal-alert--success {
     background: rgba(34, 197, 94, 0.1);
-    color: #15803d;
+    color: var(--color-success-fg);
 }
 
 /* ---- Section (carte blanche + en-tête coloré) ---- */
@@ -217,12 +217,12 @@
 }
 
 .mail-modal-verified-text {
-    color: #b45309;
+    color: var(--color-warning-darker);
     font-weight: 600;
 }
 
 .mail-modal-verified-text.is-verified {
-    color: #15803d;
+    color: var(--color-success-fg);
 }
 
 .mail-modal-add-email {
@@ -319,12 +319,12 @@
 
 .badge.mail-modal-badge--info {
     background-color: rgba(59, 130, 246, 0.15);
-    color: #1e40af;
+    color: var(--color-info-fg);
 }
 
 .badge.mail-modal-badge--success {
     background-color: rgba(34, 197, 94, 0.15);
-    color: #15803d;
+    color: var(--color-success-fg);
 }
 
 .mail-modal-password {
@@ -406,7 +406,7 @@
 
 .mail-modal-pill--verified {
     background-color: rgba(34, 197, 94, 0.15);
-    color: #15803d;
+    color: var(--color-success-fg);
 }
 
 .mail-modal-pill--unverified {
@@ -474,7 +474,17 @@
 /* ============================================================
    CARTE DE STATISTIQUE (StatCard) — couleurs via variables inline
    ============================================================ */
+/* Couleurs dérivées de la tonalité (.tone--*), adaptées au fond sombre */
 .mail-stat-tile {
+    --stat-bg: var(--dash-surface);
+    --stat-accent: var(--tone-solid);
+    --stat-text: color-mix(in srgb, var(--tone-solid) 70%, var(--color-white));
+    --stat-muted: color-mix(in srgb, var(--tone-solid) 45%, var(--color-white));
+    --stat-border: color-mix(in srgb, var(--tone-solid) 35%, var(--dash-bg));
+    --stat-icon-bg: color-mix(in srgb, var(--tone-solid) 15%, transparent);
+    --stat-icon-ring: inset 0 0 0 1px color-mix(in srgb, var(--tone-solid) 19%, transparent);
+    --stat-shadow-hover: 0 10px 28px color-mix(in srgb, var(--tone-solid) 19%, transparent),
+        0 0 0 1px color-mix(in srgb, var(--tone-solid) 25%, transparent);
     position: relative;
     overflow: hidden;
     min-width: 120px;
@@ -550,7 +560,6 @@
 .mail-role-badge {
     position: relative;
     overflow: hidden;
-    border: 1px solid;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     cursor: default;
     letter-spacing: 0.3px;
@@ -659,7 +668,7 @@
     font-weight: 500;
 }
 
-.mail-role-select option[value="USER"] { color: #16a34a; }
+.mail-role-select option[value="USER"] { color: var(--color-success-dark); }
 .mail-role-select option[value="IT_ADMIN"] { color: var(--color-danger-dark); }
 .mail-role-select option[value="DIRECTION"] { color: var(--color-secondary-dark); }
 

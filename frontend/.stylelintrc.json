@@ -1,0 +1,24 @@
+{
+  "rules": {
+    "color-no-hex": [true, {
+      "message": "Couleur en dur interdite : utiliser un token de styles/theme.css (var(--color-…))."
+    }],
+    "color-no-invalid-hex": true,
+    "declaration-property-unit-allowed-list": [
+      { "font-size": ["rem", "em", "%"] },
+      { "message": "font-size en rem (échelle --text-* de styles/theme.css)." }
+    ],
+    "media-feature-name-value-allowed-list": [
+      { "max-width": ["576px", "768px", "991.98px", "992px", "1200px"], "min-width": ["576px", "768px", "992px", "1200px"] },
+      { "message": "Breakpoint hors échelle : 576 / 768 / 992 / 1200px." }
+    ],
+    "declaration-block-no-duplicate-properties": [true, { "ignore": ["consecutive-duplicates-with-different-values"] }],
+    "no-invalid-double-slash-comments": true
+  },
+  "overrides": [
+    {
+      "files": ["src/styles/theme.css"],
+      "rules": { "color-no-hex": null }
+    }
+  ]
+}

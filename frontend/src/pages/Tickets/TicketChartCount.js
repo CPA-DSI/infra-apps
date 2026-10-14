@@ -22,43 +22,18 @@ import DataTable from 'react-data-table-component';
 
 import { getTickets } from '../../services/api';
 import { tableStyles, paginationOptions } from '../../styles/dataTableTheme';
+import { toneClass } from '../../utils/tones';
+import { STATUS_CONFIG as TICKET_STATUS_CONFIG, TICKET_STATUSES } from './ticketConfig';
 import './Tickets.css';
 
 // ============================================================================
 // CONSTANTES & CONFIGURATION
 // ============================================================================
 
-/** Configuration des couleurs et styles pour chaque statut de ticket */
-const STATUS_CONFIG = Object.freeze({
-  NOUVEAU: { 
-    bg: 'rgba(255, 107, 107, 0.15)', 
-    border: '#FF6B6B', 
-    icon: '#FF6B6B',
-    label: 'Nouveau',
-    gradient: 'linear-gradient(135deg, #FF6B6B 0%, #ee5a5a 100%)'
-  },
-  EN_COURS: { 
-    bg: 'rgba(78, 205, 196, 0.15)', 
-    border: '#4ECDC4', 
-    icon: '#4ECDC4',
-    label: 'En cours',
-    gradient: 'linear-gradient(135deg, #4ECDC4 0%, #3dbdb5 100%)'
-  },
-  RESOLU: { 
-    bg: 'rgba(69, 183, 209, 0.15)', 
-    border: '#45B7D1', 
-    icon: '#45B7D1',
-    label: 'Résolu',
-    gradient: 'linear-gradient(135deg, #45B7D1 0%, #3aa8c0 100%)'
-  },
-  FERME: { 
-    bg: 'rgba(150, 206, 180, 0.15)', 
-    border: '#96CEB4', 
-    icon: '#96CEB4',
-    label: 'Fermé',
-    gradient: 'linear-gradient(135deg, #96CEB4 0%, #85c0a3 100%)'
-  },
-});
+/** Statuts suivis par le graphique (couleurs : tonalités de styles/tones.css) */
+const STATUS_CONFIG = Object.freeze(
+  Object.fromEntries(TICKET_STATUSES.map((key) => [key, TICKET_STATUS_CONFIG[key]]))
+);
 
 /** Thème commun des tableaux, en-têtes plus compacts */
 const TABLE_STYLES = tableStyles({
@@ -67,7 +42,7 @@ const TABLE_STYLES = tableStyles({
 });
 
 /** Liste des statuts pour l'itération */
-const STATUS_KEYS = Object.freeze(['NOUVEAU', 'EN_COURS', 'RESOLU', 'FERME']);
+const STATUS_KEYS = Object.freeze([...TICKET_STATUSES]);
 
 /** Valeurs initiales des statistiques */
 const INITIAL_STATS = Object.freeze({
@@ -393,17 +368,14 @@ const useTicketLoader = () => {
 const StatusCard = React.memo(({ statusKey, count, percentage, icon }) => {
   const config = STATUS_CONFIG[statusKey];
 
-  // Seules la couleur du statut et le pourcentage sont dynamiques
+  // Seul le pourcentage est dynamique ; la couleur vient de la tonalité
   const cardVars = {
-    '--tcc-color': config.border,
-    '--tcc-bg': config.bg,
-    '--tcc-gradient': config.gradient,
     '--tcc-pct': `${percentage}%`,
   };
 
   return (
     <div
-      className="tcc-stat-card"
+      className={`tcc-stat-card ${toneClass(config.tone)}`}
       style={cardVars}
       role="figure"
       aria-label={`${config.label}: ${count} tickets (${percentage}%)`}

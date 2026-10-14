@@ -4,16 +4,17 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import DataTable from 'react-data-table-component';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-import { MySwal } from '../../utils/swal';
+import { MySwal, swalButtons } from '../../utils/swal';
 // --- Importations Bootstrap et Icônes ---
 import { Button, Form, InputGroup, Spinner, Card, Alert, Tabs, Tab } from 'react-bootstrap';
 import {
   FaEye, FaEdit, FaTrash, FaSearch, FaSync, FaTimes,
   FaPlus, FaFileAlt, FaGlobe, FaLock, FaInbox,
-  FaTag, FaUser, FaCalendarAlt, FaReceipt, FaFileContract,
-  FaShieldAlt, FaBook, FaProjectDiagram, FaCertificate, FaTruck, FaClipboardCheck, FaFile,
+  FaTag, FaUser, FaCalendarAlt,
   FaFileExcel, FaFileImport
 } from 'react-icons/fa';
+import { CATEGORY_CONFIG, CATEGORY_OPTIONS } from './documentCategories';
+import { toneClass } from '../../utils/tones';
 import AddDocModal from './AddDocModal';
 import DocumentDetailModal from './DocumentDetailModal';
 import QuickPreviewModal from './QuickPreviewModal';
@@ -26,25 +27,6 @@ import './Documents.css';
 // Pas de fixedHeader sur ce DataTable : il défile avec la page, l'en-tête
 // colle donc juste sous la navbar fixe (stickyHeadRow, via --navbar-height).
 const tableCustomStyles = tableStyles(stickyHeadRow);
-
-// --- Catégories de documents (alignées sur le schéma Prisma) ---
-const CATEGORY_CONFIG = {
-  FACTURE:             { label: 'Facture',              color: '#065f46', bg: '#d1fae5', border: '#a7f3d0', icon: FaReceipt },
-  CONTRAT_MAINTENANCE: { label: 'Contrat de maintenance', color: '#7c2d12', bg: '#ffedd5', border: '#fed7aa', icon: FaFileContract },
-  GARANTIE:            { label: 'Garantie',             color: '#3730a3', bg: '#e0e7ff', border: '#c7d2fe', icon: FaShieldAlt },
-  MANUEL_TECHNIQUE:    { label: 'Manuel technique',     color: '#155e75', bg: '#cffafe', border: '#a5f3fc', icon: FaBook },
-  SCHEMA_RESEAU:       { label: 'Schéma réseau',        color: '#4d7c0f', bg: '#ecfccb', border: '#bef264', icon: FaProjectDiagram },
-  LICENCE_LOGICIELLE:  { label: 'Licence logicielle',   color: '#831843', bg: '#fce7f3', border: '#fbcfe8', icon: FaCertificate },
-  BON_LIVRAISON:       { label: 'Bon de livraison',     color: '#92400e', bg: '#fef3c7', border: '#fde68a', icon: FaTruck },
-  RAPPORT_AUDIT:       { label: "Rapport d'audit",      color: '#9f1239', bg: '#ffe4e6', border: '#fecaca', icon: FaClipboardCheck },
-  AUTRE:               { label: 'Autre',                color: '#4b5563', bg: '#f3f4f6', border: '#e5e7eb', icon: FaFile },
-};
-
-const DOCUMENT_CATEGORIES = Object.keys(CATEGORY_CONFIG).map(value => ({
-  value,
-  label: CATEGORY_CONFIG[value].label,
-  icon: CATEGORY_CONFIG[value].icon,
-}));
 
 // ==========================================================
 // --- Composant principal Documents ---
@@ -205,8 +187,7 @@ function Documents() {
       text: `Supprimer définitivement « ${row.nom_fichier} » ? Cette action est irréversible.`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
+      ...swalButtons('danger'),
       confirmButtonText: 'Oui, supprimer',
       cancelButtonText: 'Annuler',
     }).then((result) => {
@@ -298,7 +279,7 @@ function Documents() {
     const renderCategorie = (row) => {
       const cfg = CATEGORY_CONFIG[row.categorie] || CATEGORY_CONFIG.AUTRE;
       return (
-        <span className="doc-chip" style={{ backgroundColor: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}>
+        <span className={`doc-chip tone-chip ${toneClass(cfg.tone)}`}>
           <FaTag size={10} aria-hidden="true" />
           {cfg.label}
         </span>
@@ -506,7 +487,7 @@ function Documents() {
                 fill
               >
                 <Tab eventKey="all" title={<span className="d-inline-flex align-items-center gap-2"><FaFileAlt size={12} />Toutes</span>} />
-                {DOCUMENT_CATEGORIES.map(c => (
+                {CATEGORY_OPTIONS.map(c => (
                   <Tab key={c.value} eventKey={c.value} title={<span className="d-inline-flex align-items-center gap-2">{<c.icon size={12} />}{c.label}</span>} />
                 ))}
               </Tabs>

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { fetchALocaux, fetchAMarques, updateMateriel } from '../../services/api';
-import { MySwal } from '../../utils/swal';
+import { MySwal, notify } from '../../utils/swal';
 import { escapeHtml } from '../../utils/escapeHtml';
 import { FaVideo, FaNetworkWired, FaUsb, FaPlug, FaCheckCircle, FaTimesCircle, FaTimes, FaEdit, FaSave, FaInfoCircle, FaKeyboard as FaKeyboardIcon } from 'react-icons/fa';
 import FormItem from '../../components/FormItem/FormItem';
@@ -107,9 +107,7 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
     );
 
     const showNotification = (message, type = 'success') => {
-        MySwal.fire({
-            icon: type, title: type === 'success' ? 'Succès' : 'Erreur', text: message, timer: 3000, timerProgressBar: true, showConfirmButton: false, toast: true, position: 'top-end', background: type === 'success' ? '#10b981' : '#ef4444', color: 'white', iconColor: 'white'
-        });
+        notify(message, type);
     };
 
     useEffect(() => {

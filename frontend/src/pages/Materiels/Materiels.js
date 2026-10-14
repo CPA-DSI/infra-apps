@@ -2,7 +2,7 @@
 // --- Importations React et Bibliothèques ---
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import DataTable from 'react-data-table-component';
-import { MySwal } from '../../utils/swal';
+import { MySwal, swalButtons } from '../../utils/swal';
 import { useAuth } from '../../contexts/AuthContext';
 import { apiClient, updateMaterielStatut } from '../../services/api';
 import { Button, Form, InputGroup, Spinner, Card, Alert, Tabs, Tab } from 'react-bootstrap';
@@ -20,11 +20,12 @@ import PageHeader from '../../components/PageHeader/PageHeader';
 import ExcelImportPanel from '../../components/ExcelImportPanel/ExcelImportPanel';
 import { paginationOptions } from '../../styles/dataTableTheme';
 import { materielsTableStyles, statusConfig } from './materielsTableConfig';
+import { toneClass } from '../../utils/tones';
 import { useMaterielImportExport } from './useMaterielImportExport';
 
 import './Materiels.css';
 
-const DEFAULT_STATUS = { emoji: '❓', color: '#4b5563', bg: 'var(--color-border-light)', border: 'var(--color-border)' };
+const DEFAULT_STATUS = { emoji: '❓', tone: 'neutral' };
 
 // Onglets de filtre par état (ordre d'affichage)
 const ETATS = ['Très Bon', 'Bon', 'Moyen', 'Mauvais', 'HS', 'Disponible', 'Stock', 'Sans poste'];
@@ -170,7 +171,7 @@ const confirmDelete = useCallback((row) => {
             ? `Supprimer la fiche « Sans poste » de ${row.utilisateur} ? L'utilisateur disparaîtra de la liste et son matricule sera libéré.${ecranEnStock} L'historique est conservé.`
             : `Sortir de l'inventaire le PC en stock ${row.code_pc || ''} ? Il disparaîtra de la liste.${ecranEnStock} L'historique est conservé.`,
         icon: 'warning',
-        showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: 'Oui, supprimer', cancelButtonText: 'Annuler'
+        showCancelButton: true, ...swalButtons('danger'), confirmButtonText: 'Oui, supprimer', cancelButtonText: 'Annuler'
     }).then((result) => {
         if (result.isConfirmed) {
             handleDeleteConfirm(row);
@@ -274,10 +275,7 @@ const formatDate = useCallback((dateString) => {
 const renderStatus = useCallback((row) => {
         const currentConfig = statusConfig[row.etat_pc] || DEFAULT_STATUS;
         return (
-            <span
-                className="mat-status-badge"
-                style={{ backgroundColor: currentConfig.bg, color: currentConfig.color, borderColor: currentConfig.border }}
-            >
+            <span className={`mat-status-badge ${toneClass(currentConfig.tone)}`}>
                 <span className="mat-status-emoji" aria-hidden="true">{currentConfig.emoji}</span>
                 {row.etat_pc}
             </span>

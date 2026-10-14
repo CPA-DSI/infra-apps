@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Row, Col, Tab, ButtonGroup, Button } from 'react-bootstrap';
-import { FaCalendarDay, FaCalendarWeek, FaCalendarAlt } from 'react-icons/fa';
+import { FaCalendarDay, FaCalendarWeek, FaCalendarAlt, FaEnvelopeOpenText } from 'react-icons/fa';
+import PageHeader from '../../components/PageHeader/PageHeader';
 import EmailConfigPage from './EmailConfigPage.js';
 import EmailConfigWeeklyPage from './EmailConfigWeeklyPage.js';
 import EmailConfigMonthlyPage from './EmailConfigMonthlyPage.js';
@@ -18,6 +19,12 @@ const EmailHome = () => {
 
     return (
         <Container fluid className="py-1">
+            <PageHeader
+                icon={<FaEnvelopeOpenText />}
+                title="Envois automatiques"
+                subtitle="Rapports Excel envoyés par email : quotidien, hebdomadaire et mensuel"
+            />
+
             <Tab.Container activeKey={activeTab} onSelect={(k) => setActiveTab(k)}>
                 <Row className="mb-2">
                     <Col>

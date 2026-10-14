@@ -1,35 +1,7 @@
 /* ============================================ */
-/* MODALE D'ÉDITION D'UN MOUVEMENT (EditStockModal) */
+/* FORMULAIRE D'ÉDITION D'UN MOUVEMENT (FormItemUpdate,
+   affiché dans EditStockModal via AppModal) */
 /* ============================================ */
-
-.custom-edit-modal .modal-content {
-    background-color: var(--color-bg);
-    border-radius: var(--radius-2xl);
-    box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.15);
-    border: none;
-    overflow: hidden;
-}
-
-.custom-edit-modal .modal-header {
-    background: var(--color-secondary);
-    border-bottom: none;
-    padding: 1.25rem 1.5rem;
-    display: flex;
-}
-
-.custom-edit-modal .modal-header .modal-title,
-.custom-edit-modal .modal-header p {
-    color: var(--color-bg);
-}
-
-.custom-edit-modal .btn-close {
-    filter: brightness(0) invert(1);
-}
-
-.custom-edit-modal .modal-body {
-    background-color: var(--color-bg);
-    padding: 1.5rem;
-}
 
 /* Formulaires */
 .stock-form-modern .form-label {

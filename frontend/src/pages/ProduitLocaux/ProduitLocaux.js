@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import './ProduitLocaux.css';
 import DataTable from 'react-data-table-component';
 import { Button, Form, Badge } from 'react-bootstrap';
-import { MySwal } from '../../utils/swal';
+import { MySwal, swalButtons } from '../../utils/swal';
 import { FaEdit, FaSync, FaFileExcel, FaWarehouse, FaTrash, FaSearch, FaBox, FaMapMarkerAlt, FaPlus } from 'react-icons/fa';
 import { fetchProduits, fetchLocaux, addProduct, updateProduct, deleteProduct, addLocation, updateLocation, deleteLocation } from '../../services/api';
 import ProductModal from './ProductModal';
@@ -118,7 +118,7 @@ const ProduitLocaux = () => {
         title: 'Confirmer la suppression',
         text: `Êtes-vous sûr de vouloir supprimer le produit ${row.nom_produit} ?`,
         icon: 'warning',
-        showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: 'Oui, supprimer', cancelButtonText: 'Annuler'
+        showCancelButton: true, ...swalButtons('danger'), confirmButtonText: 'Oui, supprimer', cancelButtonText: 'Annuler'
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
@@ -190,7 +190,7 @@ const ProduitLocaux = () => {
         title: 'Confirmer la suppression',
         text: `Êtes-vous sûr de vouloir supprimer le local ${row.nom_local} ?`,
         icon: 'warning',
-        showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: 'Oui, supprimer', cancelButtonText: 'Annuler'
+        showCancelButton: true, ...swalButtons('danger'), confirmButtonText: 'Oui, supprimer', cancelButtonText: 'Annuler'
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {

@@ -1,7 +1,7 @@
 // src/pages/ProduitLocaux/ProductModal.js
 
 import React, { useState, useEffect, useCallback } from "react";
-import { MySwal } from "../../utils/swal";
+import { notify } from "../../utils/swal";
 import { FaBox, FaExclamationTriangle, FaCalendarAlt, FaPlus, FaSave } from "react-icons/fa";
 import FormItem from "../../components/FormItem/FormItem";
 import AppModal from "../../components/AppModal/AppModal";
@@ -13,19 +13,7 @@ const ProductModal = ({ show, handleClose, handleSave, initialData, errorMessage
   const [isLoading, setIsLoading] = useState(false);
 
   const showNotification = (message, type = "success") => {
-    MySwal.fire({
-      icon: type,
-      title: type === "success" ? "Succès" : "Erreur",
-      text: message,
-      timer: 3000,
-      timerProgressBar: true,
-      showConfirmButton: false,
-      toast: true,
-      position: "top-end",
-      background: type === "success" ? "#10b981" : "#ef4444",
-      color: "#ffffff",
-      iconColor: "#ffffff",
-    });
+    notify(message, type);
   };
 
   useEffect(() => {

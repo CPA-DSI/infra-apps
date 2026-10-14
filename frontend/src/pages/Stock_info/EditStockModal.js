@@ -1,39 +1,35 @@
 // EditStockModal.js
 import React from 'react';
-import { Modal } from 'react-bootstrap';
+import { FaEdit } from 'react-icons/fa';
+import AppModal from '../../components/AppModal/AppModal';
 import FormItemUpdate from './FormItemUpdate';
 import './HomeStockUpdate.css';
 
 const EditStockModal = ({ show, onClose, item, onSuccess }) => {
-    const handleSave = (updatedMovementData) => {
+    const handleSave = () => {
         if (onSuccess) onSuccess();
         onClose();
     };
 
     return (
-        <Modal show={show} onHide={onClose} centered size="lg" className="custom-edit-modal" >
-            <Modal.Header closeButton className="border-0 pb-0">
-                <div>
-                    <Modal.Title className="h4 fw-bold">
-                        ✏️ Modifier le mouvement
-                    </Modal.Title>
-                    <p className="mb-0 small">
-                        Modifiez les informations du mouvement sélectionné
-                    </p>
-                </div>
-            </Modal.Header>
-            <Modal.Body>
-                {item ? (
-                    <FormItemUpdate
-                        initialData={item}
-                        onSave={handleSave}
-                        onClose={onClose}
-                    />
-                ) : (
-                    <p>Chargement des données...</p>
-                )}
-            </Modal.Body>
-        </Modal>
+        <AppModal
+            show={show}
+            onClose={onClose}
+            title="Modifier le mouvement"
+            subtitle="Modifiez les informations du mouvement sélectionné"
+            icon={<FaEdit />}
+            headerBg="var(--color-secondary)"
+        >
+            {item ? (
+                <FormItemUpdate
+                    initialData={item}
+                    onSave={handleSave}
+                    onClose={onClose}
+                />
+            ) : (
+                <p>Chargement des données...</p>
+            )}
+        </AppModal>
     );
 };
 

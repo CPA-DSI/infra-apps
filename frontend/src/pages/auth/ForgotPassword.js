@@ -11,6 +11,7 @@ import AuthLogo from '../../components/AuthLogo/AuthLogo';
 // --- IMPORTS CSS ---
 import './auth-base.css';
 import './login.css';
+import { swalButtons } from '../../utils/swal';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -29,7 +30,7 @@ const ForgotPassword = () => {
         title: 'Erreur',
         text: "L'email est requis",
         confirmButtonText: 'OK',
-        confirmButtonColor: '#667eea'
+        ...swalButtons('brand')
       });
       return;
     }
@@ -40,7 +41,7 @@ const ForgotPassword = () => {
         title: 'Erreur',
         text: 'Veuillez entrer un email valide',
         confirmButtonText: 'OK',
-        confirmButtonColor: '#667eea'
+        ...swalButtons('brand')
       });
       return;
     }
@@ -65,7 +66,7 @@ const ForgotPassword = () => {
           title: 'Email envoyé',
           text: data.message,
           confirmButtonText: 'OK',
-          confirmButtonColor: '#667eea'
+          ...swalButtons('brand')
         });
         setEmail('');
       } else if (response.ok) {
@@ -74,7 +75,7 @@ const ForgotPassword = () => {
           title: 'Email envoyé !',
           text: 'Un email de réinitialisation a été envoyé à votre adresse. Veuillez vérifier votre boîte de réception.',
           confirmButtonText: 'OK',
-          confirmButtonColor: '#667eea'
+          ...swalButtons('brand')
         });
         setEmail('');
       } else {
@@ -83,7 +84,7 @@ const ForgotPassword = () => {
           title: 'Erreur',
           text: data.error || data.message || 'Une erreur est survenue. Veuillez réessayer.',
           confirmButtonText: 'OK',
-          confirmButtonColor: '#667eea'
+          ...swalButtons('brand')
         });
       }
     } catch (err) {
@@ -92,7 +93,7 @@ const ForgotPassword = () => {
         title: 'Erreur',
           text: 'Impossible de se connecter au serveur. Veuillez réessayer plus tard.',
         confirmButtonText: 'OK',
-        confirmButtonColor: '#667eea'
+        ...swalButtons('brand')
       });
     } finally {
       setIsLoading(false);

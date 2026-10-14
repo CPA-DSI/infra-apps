@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Chart from 'react-apexcharts';
 import { fetchAllMouvements, fetchAnneesDisponibles } from '../../services/api';
+import { cssVar } from '../../styles/cssVar';
 import './DashboardHistoriqueChart.css';
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
@@ -23,19 +24,15 @@ const CURRENT_YEAR = new Date().getFullYear();
 const DEFAULT_YEAR_BOUNDS = { minYear: CURRENT_YEAR - 3, maxYear: CURRENT_YEAR + 1 };
 
 // ApexCharts a besoin de vraies couleurs : on lit les tokens de styles/theme.css
-const cssVar = (name, fallback) =>
-  getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
-
-// Rose des sorties : pas d'équivalent dans theme.css
 const THEME = {
-  in:      cssVar('--color-primary', '#6366f1'),
-  out:     '#f43f5e',
-  net:     cssVar('--color-success', '#10b981'),
-  ratio:   cssVar('--color-warning', '#f59e0b'),
-  sub:     cssVar('--color-text-sub', '#64748b'),
-  inGrad:  cssVar('--color-primary-light', '#818cf8'),
-  outGrad: '#fda4af',
-  white:   cssVar('--color-bg', '#ffffff'),
+  in:      cssVar('--color-primary'),
+  out:     cssVar('--color-rose'),
+  net:     cssVar('--color-success'),
+  ratio:   cssVar('--color-warning'),
+  sub:     cssVar('--color-text-sub'),
+  inGrad:  cssVar('--color-primary-light'),
+  outGrad: cssVar('--color-rose-border'),
+  white:   cssVar('--color-bg'),
 };
 
 // ─── Icônes SVG inline ────────────────────────────────────────────────────────

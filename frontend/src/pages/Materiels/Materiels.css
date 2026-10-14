@@ -42,7 +42,7 @@
 }
 
 .page-materiels .mat-results-pill.is-filtered strong {
-    color: #92400e;
+    color: var(--color-warning-fg);
 }
 
 .page-materiels .mat-reset-btn {
@@ -52,14 +52,14 @@
     border: none;
     border-radius: var(--radius-pill);
     background-color: var(--color-warning-soft);
-    color: #92400e;
+    color: var(--color-warning-fg);
     font-size: 0.8rem;
     font-weight: 600;
     transition: var(--transition-base);
 }
 
 .page-materiels .mat-reset-btn:hover {
-    background-color: #fde68a;
+    background-color: var(--color-warning-border);
 }
 
 /* ---- Cellules du tableau ---- */
@@ -76,6 +76,9 @@
 }
 
 .page-materiels .mat-status-badge {
+    color: var(--tone-fg);
+    background-color: var(--tone-bg);
+    border-color: var(--tone-border);
     text-transform: capitalize;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     transition: var(--transition-base);
@@ -87,13 +90,13 @@
 
 /* Couleurs actif / inactif (badge et interrupteur) */
 .page-materiels .is-active {
-    --mat-actif-color: #065f46;
+    --mat-actif-color: var(--color-success-fg);
     --mat-actif-bg: var(--color-success-soft);
     --mat-actif-border: var(--color-success);
 }
 
 .page-materiels .is-inactive {
-    --mat-actif-color: #991b1b;
+    --mat-actif-color: var(--color-danger-fg);
     --mat-actif-bg: var(--color-danger-soft);
     --mat-actif-border: var(--color-danger);
 }
@@ -160,7 +163,7 @@
 }
 
 .page-materiels .mat-doc-count.has-docs {
-    border-color: #c7d2fe;
+    border-color: var(--color-primary-border);
     background-color: var(--color-primary-soft);
     color: var(--color-primary-darker);
 }
@@ -258,15 +261,15 @@
 }
 
 .page-materiels .alert-success {
-    --bs-alert-color: #065f46;
+    --bs-alert-color: var(--color-success-fg);
     --bs-alert-border-color: transparent;
-    background: linear-gradient(135deg, var(--color-success-soft) 0%, #a7f3d0 100%);
+    background: linear-gradient(135deg, var(--color-success-soft) 0%, var(--color-success-border) 100%);
 }
 
 .page-materiels .alert-danger {
-    --bs-alert-color: #991b1b;
+    --bs-alert-color: var(--color-danger-fg);
     --bs-alert-border-color: transparent;
-    background: linear-gradient(135deg, var(--color-danger-soft) 0%, #fecaca 100%);
+    background: linear-gradient(135deg, var(--color-danger-soft) 0%, var(--color-danger-border) 100%);
 }
 
 .page-materiels .spinner-border {
@@ -329,7 +332,7 @@
 .page-materiels .materiel-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 10px 24px rgba(124, 58, 237, 0.14);
-    border-color: #ddd6fe;
+    border-color: var(--color-secondary-border);
 }
 
 .page-materiels .materiel-card-top {
@@ -417,12 +420,12 @@
 
 .page-materiels .materiel-etat-tabs .nav-link:hover {
     background: var(--color-primary-soft);
-    color: #1e3a8a;
+    color: var(--color-info-fg-strong);
 }
 
 .page-materiels .materiel-etat-tabs .nav-link.active {
     background: var(--color-bg);
-    color: #1e3a8a;
+    color: var(--color-info-fg-strong);
     font-weight: 600;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     border: 1px solid var(--color-border);

@@ -3,13 +3,13 @@
   align-items: center;
   gap: 6px;
   padding: 4px 12px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.3px;
   white-space: nowrap;
-  color: var(--ud-tone-fg);
-  background-color: var(--ud-tone-bg);
-  border: 1px solid var(--ud-tone-border);
+  color: var(--tone-fg);
+  background-color: var(--tone-bg);
+  border: 1px solid var(--tone-border);
   border-radius: 20px;
   transition: all 0.2s ease;
 }
@@ -21,18 +21,18 @@
 
 .statusBadge--sm {
   padding: 2px 8px;
-  font-size: 11px;
+  font-size: 0.6875rem;
 }
 
 .statusBadge--lg {
   padding: 6px 16px;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 .statusBadgeIcon {
-  font-size: 8px;
+  font-size: 0.5rem;
 }
 
 .statusBadge--lg .statusBadgeIcon {
-  font-size: 10px;
+  font-size: 0.625rem;
 }

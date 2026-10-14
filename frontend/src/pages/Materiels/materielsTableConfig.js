@@ -6,15 +6,16 @@ import { tableStyles, stickyHeadRow } from '../../styles/dataTableTheme';
 // juste sous la navbar fixe (cf. stickyHeadRow et --navbar-height).
 export const materielsTableStyles = tableStyles(stickyHeadRow);
 
-// Couleurs des badges d'état (aussi utilisées par Home/UserMaterielCard).
+// Badges d'état (aussi utilisés par Home/UserMaterielCard) : la couleur
+// est portée par la tonalité (styles/tones.css).
 export const statusConfig = {
-    'Très Bon':   { emoji: '✅', color: '#065f46', bg: 'var(--color-success-soft)', border: '#a7f3d0' },
-    'Bon':        { emoji: '👍', color: '#1e40af', bg: 'var(--color-info-soft)', border: '#bfdbfe' },
-    'Moyen':      { emoji: '⚠️', color: '#92400e', bg: 'var(--color-warning-soft)', border: '#fde68a' },
-    'Mauvais':    { emoji: '❗', color: '#9f1239', bg: 'var(--color-danger-soft)', border: '#fecaca' },
-    'Disponible': { emoji: '📦', color: '#4d7c0f', bg: '#ecfdf5', border: '#a7f3d0' },
-    'HS':         { emoji: '❌', color: '#991b1b', bg: 'var(--color-danger-soft)', border: '#fecaca' },
+    'Très Bon':   { emoji: '✅', tone: 'success' },
+    'Bon':        { emoji: '👍', tone: 'info' },
+    'Moyen':      { emoji: '⚠️', tone: 'warning' },
+    'Mauvais':    { emoji: '❗', tone: 'rose' },
+    'Disponible': { emoji: '📦', tone: 'lime' },
+    'HS':         { emoji: '❌', tone: 'danger' },
     // Posés par la mise en stock d'un PC (cf. affecterPC côté backend)
-    'Stock':      { emoji: '📥', color: 'var(--color-text-body)', bg: 'var(--color-border)', border: 'var(--color-border-strong)' },
-    'Sans poste': { emoji: '🚫', color: '#92400e', bg: 'var(--color-warning-soft)', border: '#fde68a' }
+    'Stock':      { emoji: '📥', tone: 'neutral' },
+    'Sans poste': { emoji: '🚫', tone: 'warning' }
 };

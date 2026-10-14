@@ -10,6 +10,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Select, { components } from 'react-select';
 import { useDropzone } from 'react-dropzone';
 import { MySwal } from '../../utils/swal';
+import { CATEGORY_OPTIONS } from './documentCategories';
 import {
   FaFileUpload, FaTimes, FaCheck, FaCloudUploadAlt, FaPaperclip,
   FaTag, FaFileAlt, FaGlobe, FaLock, FaCodeBranch, FaLink,
@@ -46,24 +47,6 @@ const describeRejections = (rejections = []) => rejections.map(({ file, errors }
   const tooLarge = errors.some(err => err.code === 'file-too-large');
   return `${file.name} : ${tooLarge ? 'fichier trop volumineux (20 Mo max)' : 'format non autorisé'}`;
 }).join(' — ');
-
-// --- Catégories alignées sur l'enum Prisma DocumentCategory ---
-const CATEGORY_CONFIG = {
-  FACTURE:             { label: 'Facture',              color: '#065f46', bg: '#d1fae5', border: '#a7f3d0' },
-  CONTRAT_MAINTENANCE: { label: 'Contrat de maintenance', color: '#7c2d12', bg: '#ffedd5', border: '#fed7aa' },
-  GARANTIE:            { label: 'Garantie',             color: '#3730a3', bg: '#e0e7ff', border: '#c7d2fe' },
-  MANUEL_TECHNIQUE:    { label: 'Manuel technique',     color: '#155e75', bg: '#cffafe', border: '#a5f3fc' },
-  SCHEMA_RESEAU:       { label: 'Schéma réseau',        color: '#4d7c0f', bg: '#ecfccb', border: '#bef264' },
-  LICENCE_LOGICIELLE:  { label: 'Licence logicielle',   color: '#831843', bg: '#fce7f3', border: '#fbcfe8' },
-  BON_LIVRAISON:       { label: 'Bon de livraison',     color: '#92400e', bg: '#fef3c7', border: '#fde68a' },
-  RAPPORT_AUDIT:       { label: 'Rapport d\'audit',     color: '#9f1239', bg: '#ffe4e6', border: '#fecaca' },
-  AUTRE:               { label: 'Autre',                color: '#4b5563', bg: '#f3f4f6', border: '#e5e7eb' },
-};
-
-const CATEGORY_OPTIONS = Object.keys(CATEGORY_CONFIG).map(value => ({
-  value,
-  label: CATEGORY_CONFIG[value].label,
-}));
 
 const formatSize = (bytes) => {
   if (bytes === null || bytes === undefined) return '—';

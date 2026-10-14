@@ -27,7 +27,7 @@
 }
 
 .prod-page .card-header.prod-card-header--success {
-  background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+  background: linear-gradient(135deg, var(--color-lime-dark) 0%, var(--color-lime-light) 100%);
 }
 
 /* Reflet au survol */

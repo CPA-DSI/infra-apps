@@ -2,54 +2,7 @@
    QuickPreviewModal.css
    ============================================ */
 
-/* Modal react-bootstrap (portée dans <body>) : réglages via ses variables */
-.doc-preview-modal {
-  --bs-modal-border-color: var(--color-border);
-  --bs-modal-border-radius: var(--radius-md);
-  --bs-modal-box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
-  --bs-modal-header-padding: 1rem 1.5rem;
-  --bs-modal-header-border-color: var(--color-border);
-  --bs-modal-padding: 1.5rem;
-  --bs-modal-footer-border-color: var(--color-border);
-}
-
-.doc-preview-modal .modal-content {
-  overflow: hidden;
-  animation: docPreviewIn 0.25s ease-out;
-}
-
-/* Fond assombri (backdropClassName="doc-preview-backdrop") */
-.modal-backdrop.doc-preview-backdrop {
-  --bs-backdrop-bg: var(--dash-bg);
-  --bs-backdrop-opacity: 0.6;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-
-@keyframes docPreviewIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.doc-preview-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.doc-preview-title__icon {
-  color: var(--color-primary);
-}
-
-.doc-preview-title__file {
-  font-weight: 400;
-}
+/* Modale AppModal (.add-modal-*), contenu scopé sous .doc-preview-modal */
 
 /* --- Onglets de fichiers (fichier principal + pièces jointes) --- */
 .doc-preview-tabs {
@@ -94,9 +47,9 @@
 
 /* --- Icônes de type de fichier --- */
 .doc-preview-modal .doc-file-type--pdf { color: var(--color-danger-dark); }
-.doc-preview-modal .doc-file-type--image { color: #ea580c; }
+.doc-preview-modal .doc-file-type--image { color: var(--color-orange-dark); }
 .doc-preview-modal .doc-file-type--word { color: var(--color-info-dark); }
-.doc-preview-modal .doc-file-type--excel { color: #16a34a; }
+.doc-preview-modal .doc-file-type--excel { color: var(--color-success-dark); }
 .doc-preview-modal .doc-file-type--text { color: var(--color-primary); }
 
 /* --- États vides --- */

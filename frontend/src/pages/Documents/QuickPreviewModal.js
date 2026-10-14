@@ -1,6 +1,7 @@
 import './QuickPreviewModal.css';
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Spinner } from 'react-bootstrap';
+import { Button, Spinner } from 'react-bootstrap';
+import AppModal from '../../components/AppModal/AppModal';
 import { FaTimes, FaDownload, FaFileAlt, FaFilePdf, FaFileWord, FaFileExcel, FaFileImage } from 'react-icons/fa';
 import mammoth from 'mammoth';
 import * as XLSX from 'xlsx';
@@ -253,7 +254,8 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
   const handleImgLoad = () => setIsLoading(false);
   const handleImgError = () => { setIsLoading(false); setLoadError(true); };
 
-  const handleExited = () => {
+  // Réinitialise l'aperçu à la fermeture
+  const resetPreview = () => {
     setLoadError(false);
     setIsLoading(true);
     setDocxHtml('');
@@ -262,6 +264,11 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
     setXlsxRows([]);
     setXlsxError(false);
     setXlsxPage(0);
+  };
+
+  const handleClose = () => {
+    resetPreview();
+    onHide();
   };
 
   const handleTabClick = (idx) => {
@@ -614,29 +621,23 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
   };
 
   return (
-    <Modal
+    <AppModal
       show={show}
-      onHide={onHide}
-      onExited={handleExited}
+      onClose={handleClose}
       size="xl"
-      centered
-      className="doc-preview-modal"
-      backdropClassName="doc-preview-backdrop"
-      keyboard={true}
+      nested
+      closeOnBackdrop
+      title="Prévisualisation rapide"
+      subtitle={currentFile.filename}
+      icon={<FaFileAlt />}
+      headerBg="var(--gradient-dark)"
+      contentClassName="doc-preview-modal"
+      footer={
+        <button type="button" className="add-modal-cancel-btn" onClick={handleClose}>
+          <FaTimes className="me-1" aria-hidden="true" /> Fermer
+        </button>
+      }
     >
-      <Modal.Header closeButton closeLabel="Fermer">
-        <Modal.Title className="doc-preview-title">
-          <FaFileAlt className="doc-preview-title__icon" aria-hidden="true" />
-          Prévisualisation rapide
-          {currentFile.filename && (
-            <small className="doc-preview-title__file text-muted ms-2">
-              — {currentFile.filename}
-            </small>
-          )}
-        </Modal.Title>
-      </Modal.Header>
-
-      <Modal.Body>
         {files.length > 1 && (
           <div className="doc-preview-tabs">
             {files.map((file, idx) => (
@@ -654,14 +655,7 @@ const QuickPreviewModal = ({ show, onHide, files = [], selectedIndex: externalIn
           </div>
         )}
         {renderPreview()}
-      </Modal.Body>
-
-      <Modal.Footer>
-        <Button variant="outline-secondary" onClick={onHide}>
-          <FaTimes className="me-1" aria-hidden="true" /> Fermer
-        </Button>
-      </Modal.Footer>
-    </Modal>
+    </AppModal>
   );
 };
 

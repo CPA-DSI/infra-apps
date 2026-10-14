@@ -2,7 +2,7 @@
 
 .home-container {
   padding: 40px 24px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+  background: linear-gradient(135deg, var(--color-bg-alt) 0%, var(--color-border) 100%);
   min-height: 100vh;
 }
 
@@ -28,8 +28,8 @@
 }
 
 .home-title {
-  color: #fff;
-  font-size: 32px;
+  color: var(--color-white);
+  font-size: 2rem;
   font-weight: 700;
   margin-bottom: 8px;
   letter-spacing: -0.5px;
@@ -38,7 +38,7 @@
 
 .home-subtitle {
   color: rgba(255, 255, 255, 0.85);
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 400;
   margin: 0;
 }
@@ -115,7 +115,7 @@
   }
 
   .home-title {
-    font-size: 24px;
+    font-size: 1.5rem;
   }
 
   .home-card {

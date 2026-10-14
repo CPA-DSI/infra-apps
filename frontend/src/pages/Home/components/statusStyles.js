@@ -1,19 +1,18 @@
-import './statusStyles.css';
 
-// Statut -> libellé + classe de ton (couleurs définies dans statusStyles.css).
+// Statut -> libellé + classe de ton (couleurs définies dans styles/tones.css).
 export const STATUS_STYLES = {
-  NOUVEAU: { label: 'Nouveau', className: 'ud-tone--info' },
-  EN_COURS: { label: 'En cours', className: 'ud-tone--warning' },
-  RESOLU: { label: 'Résolu', className: 'ud-tone--success' },
-  FERME: { label: 'Fermé', className: 'ud-tone--neutral' },
-  Actif: { label: 'Actif', className: 'ud-tone--success' },
-  'En maintenance': { label: 'En maintenance', className: 'ud-tone--warning' },
-  Inactif: { label: 'Inactif', className: 'ud-tone--neutral' },
+  NOUVEAU: { label: 'Nouveau', className: 'tone--info' },
+  EN_COURS: { label: 'En cours', className: 'tone--warning' },
+  RESOLU: { label: 'Résolu', className: 'tone--success' },
+  FERME: { label: 'Fermé', className: 'tone--neutral' },
+  Actif: { label: 'Actif', className: 'tone--success' },
+  'En maintenance': { label: 'En maintenance', className: 'tone--warning' },
+  Inactif: { label: 'Inactif', className: 'tone--neutral' },
 };
 
 export const TICKET_STATUSES = ['NOUVEAU', 'EN_COURS', 'RESOLU', 'FERME'];
 
-const DEFAULT_TONE = 'ud-tone--neutral';
+const DEFAULT_TONE = 'tone--neutral';
 
 export const getStatusToneClass = (status) => {
   if (!status) return DEFAULT_TONE;

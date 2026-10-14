@@ -1,0 +1,109 @@
+/* ============================================================
+   TONALITÉS — couleurs de statut / catégorie partagées
+   Une classe .tone--* définit quatre variables :
+     --tone-fg     texte / pastille
+     --tone-bg     fond
+     --tone-border bordure
+     --tone-solid  couleur pleine (barres, anneaux, icônes)
+   Les composants les consomment (ex. .tone-chip) ; le JS ne
+   connaît que le nom de la tonalité (cf. utils/tones.js).
+   ============================================================ */
+
+.tone--primary {
+  --tone-fg: var(--color-primary-fg);
+  --tone-bg: var(--color-primary-soft-strong);
+  --tone-border: var(--color-primary-border);
+  --tone-solid: var(--color-primary);
+}
+
+.tone--secondary {
+  --tone-fg: var(--color-secondary-fg);
+  --tone-bg: var(--color-secondary-soft);
+  --tone-border: var(--color-secondary-border);
+  --tone-solid: var(--color-secondary);
+}
+
+.tone--success {
+  --tone-fg: var(--color-success-fg);
+  --tone-bg: var(--color-success-soft);
+  --tone-border: var(--color-success-border);
+  --tone-solid: var(--color-success);
+}
+
+.tone--warning {
+  --tone-fg: var(--color-warning-fg);
+  --tone-bg: var(--color-warning-soft);
+  --tone-border: var(--color-warning-border);
+  --tone-solid: var(--color-warning);
+}
+
+.tone--danger {
+  --tone-fg: var(--color-danger-fg);
+  --tone-bg: var(--color-danger-soft);
+  --tone-border: var(--color-danger-border);
+  --tone-solid: var(--color-danger);
+}
+
+.tone--info {
+  --tone-fg: var(--color-info-fg);
+  --tone-bg: var(--color-info-soft);
+  --tone-border: var(--color-info-border);
+  --tone-solid: var(--color-info);
+}
+
+.tone--neutral {
+  --tone-fg: var(--color-text-secondary);
+  --tone-bg: var(--color-border-light);
+  --tone-border: var(--color-border);
+  --tone-solid: var(--color-text-sub);
+}
+
+/* ---- Teintes catégorielles ---- */
+.tone--sky {
+  --tone-fg: var(--color-sky-fg);
+  --tone-bg: var(--color-sky-soft);
+  --tone-border: var(--color-sky-border);
+  --tone-solid: var(--color-sky);
+}
+
+.tone--cyan {
+  --tone-fg: var(--color-cyan-fg);
+  --tone-bg: var(--color-cyan-soft);
+  --tone-border: var(--color-cyan-border);
+  --tone-solid: var(--color-cyan);
+}
+
+.tone--orange {
+  --tone-fg: var(--color-orange-fg);
+  --tone-bg: var(--color-orange-soft);
+  --tone-border: var(--color-orange-border);
+  --tone-solid: var(--color-orange);
+}
+
+.tone--lime {
+  --tone-fg: var(--color-lime-fg);
+  --tone-bg: var(--color-lime-soft);
+  --tone-border: var(--color-lime-border);
+  --tone-solid: var(--color-lime);
+}
+
+.tone--pink {
+  --tone-fg: var(--color-pink-fg);
+  --tone-bg: var(--color-pink-soft);
+  --tone-border: var(--color-pink-border);
+  --tone-solid: var(--color-pink);
+}
+
+.tone--rose {
+  --tone-fg: var(--color-rose-fg);
+  --tone-bg: var(--color-rose-soft);
+  --tone-border: var(--color-rose-border);
+  --tone-solid: var(--color-rose);
+}
+
+/* ---- Pastille générique ---- */
+.tone-chip {
+  color: var(--tone-fg);
+  background-color: var(--tone-bg);
+  border: 1px solid var(--tone-border);
+}

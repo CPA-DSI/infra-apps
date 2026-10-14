@@ -11,6 +11,7 @@ import AuthLogo from '../../components/AuthLogo/AuthLogo';
 // --- IMPORTS CSS ---
 import './auth-base.css';
 import './login.css';
+import { swalButtons } from '../../utils/swal';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -70,7 +71,7 @@ const Login = () => {
         icon: 'error',
         title: 'Erreur de validation',
         text: 'Veuillez remplir correctement tous les champs',
-        confirmButtonColor: '#3085d6',
+        ...swalButtons('primary'),
       });
       return;
     }
@@ -107,7 +108,7 @@ const Login = () => {
         icon: 'error',
         title: 'Erreur de connexion',
         text: errorMessage,
-        confirmButtonColor: '#3085d6',
+        ...swalButtons('primary'),
       });
       setEmail('');
       setPassword('');

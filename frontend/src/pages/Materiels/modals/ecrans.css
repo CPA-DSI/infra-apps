@@ -1,0 +1,68 @@
+/* Modales Matériels — EcransModal */
+
+/* ---- EcransModal ---- */
+.mat-modal .add-modal-body.mat-ecrans-body {
+    padding: 0;
+    background: var(--color-bg);
+    display: flex;
+    flex-wrap: wrap;
+    min-height: 0;
+}
+
+.mat-ecrans-main {
+    flex: 1 1 600px;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.mat-ecrans-aside {
+    flex: 0 1 320px;
+    min-width: 260px;
+    border-left: 1px solid var(--color-border);
+    background: var(--color-bg-alt);
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.mat-statut-badge {
+    background-color: var(--color-border-light);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+    padding: 3px 10px;
+    border-radius: var(--radius-xl);
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.mat-statut-badge--AFFECTE { background-color: var(--color-success-soft); color: var(--color-success-fg); border-color: var(--color-success); }
+.mat-statut-badge--EN_STOCK { background-color: var(--color-info-soft); color: var(--color-info-fg); border-color: var(--color-info); }
+.mat-statut-badge--EN_REPARATION { background-color: var(--color-warning-soft); color: var(--color-warning-fg); border-color: var(--color-warning); }
+.mat-statut-badge--REFORME { background-color: var(--color-danger-soft); color: var(--color-danger-fg); border-color: var(--color-danger); }
+
+.mat-ecran-form {
+    display: grid;
+    gap: 14px;
+}
+
+.mat-ecran-form-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    color: var(--color-text-strong);
+    font-size: 0.95rem;
+}
+
+.mat-ecran-form-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, var(--color-sky), var(--color-sky-light));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}

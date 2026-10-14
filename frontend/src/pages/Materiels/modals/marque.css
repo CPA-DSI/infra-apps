@@ -1,0 +1,126 @@
+/* Modales Matériels — AddMarque, notifications et ajustements responsive */
+
+/* ---- AddMarque ---- */
+.mat-marque-logo {
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-border-light);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    font-size: 1.5rem;
+}
+
+.mat-marque-logo.is-error {
+    background-color: var(--color-danger-soft);
+    border-color: var(--color-danger-border);
+    color: var(--color-danger);
+}
+
+img.mat-marque-logo {
+    object-fit: contain;
+    padding: 6px;
+    background-color: var(--color-bg);
+}
+
+.mat-marque-name {
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.mat-marque-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.mat-marque-preview {
+    padding: 15px;
+    background-color: var(--color-bg-alt);
+    border-radius: 10px;
+    text-align: center;
+}
+
+.mat-marque-list {
+    max-height: 450px;
+    overflow-y: auto;
+}
+
+.mat-marque-empty-icon {
+    opacity: 0.3;
+}
+
+@keyframes matSlideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.mat-local-notif {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: var(--z-toast);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    margin-bottom: 10px;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    animation: matSlideInRight 0.3s ease-out;
+    font-size: 0.875rem;
+    font-weight: 500;
+    --mat-notif-color: var(--color-danger-fg);
+    background-color: var(--color-danger-soft);
+    border-left: 4px solid var(--color-danger);
+    color: var(--mat-notif-color);
+}
+
+.mat-local-notif.is-success {
+    --mat-notif-color: var(--color-success-fg);
+    background-color: var(--color-success-soft);
+    border-left-color: var(--color-success);
+}
+
+.mat-local-notif-icon {
+    font-size: 1.125rem;
+}
+
+.mat-local-notif-undo {
+    background: var(--mat-notif-color);
+    border: none;
+    color: white;
+    cursor: pointer;
+    margin-left: 10px;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.mat-local-notif-close {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    margin-left: 10px;
+    font-size: 1rem;
+    opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+    .mat-modal .add-modal-body,
+    .mat-modal--histo .add-modal-body {
+        padding: 16px;
+    }
+}
+
+.mat-id-error-icon {
+    font-size: 1.2rem;
+}
+
+.mat-danger-text {
+    color: var(--color-danger);
+}

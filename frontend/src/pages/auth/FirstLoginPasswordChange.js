@@ -10,6 +10,7 @@ import AuthLogo from '../../components/AuthLogo/AuthLogo';
 
 import './auth-base.css';
 import './login.css';
+import { swalButtons } from '../../utils/swal';
 
 const FirstLoginPasswordChange = () => {
   const navigate = useNavigate();
@@ -146,7 +147,7 @@ const FirstLoginPasswordChange = () => {
         icon: 'error',
         title: 'Erreur de validation',
         text: 'Veuillez remplir correctement tous les champs',
-        confirmButtonColor: '#3085d6',
+        ...swalButtons('primary'),
       });
       return;
     }
@@ -176,7 +177,7 @@ const FirstLoginPasswordChange = () => {
         icon: 'error',
         title: 'Erreur',
         text: errorMessage,
-        confirmButtonColor: '#3085d6',
+        ...swalButtons('primary'),
       });
     } finally {
       setIsSubmitting(false);

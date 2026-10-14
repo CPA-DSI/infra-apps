@@ -19,6 +19,7 @@ const ProduitLocaux = lazy(() => import('./pages/ProduitLocaux/ProduitLocaux'));
 const TicketList = lazy(() => import('./pages/Tickets/TicketList'));
 const EmailHome = lazy(() => import('./pages/email/EmailHome'));
 const Documents = lazy(() => import('./pages/Documents/Documents'));
+const NotFound = lazy(() => import('./pages/NotFound/NotFound'));
 
 const AppLayout = () => {
   const { isAuthenticated, isLoading, mustChangePassword } = useAuth();
@@ -117,7 +118,7 @@ function AppInner() {
               />
             </Route>
 
-            <Route path="*" element={<div>Page non trouvée (Erreur 404)</div>} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </div>

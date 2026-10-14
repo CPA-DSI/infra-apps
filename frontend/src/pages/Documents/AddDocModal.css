@@ -53,9 +53,9 @@
 .add-doc-alert {
   display: flex;
   align-items: center;
-  background: #fef2f2;
+  background: var(--color-danger-subtle);
   color: var(--color-danger-darker);
-  border: 1px solid #fecaca;
+  border: 1px solid var(--color-danger-border);
   border-radius: 12px;
   padding: 0.7rem 1rem;
   font-size: 0.85rem;
@@ -95,9 +95,9 @@
 }
 
 .add-doc-section-badge--file { background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)); }
-.add-doc-section-badge--classification { background: linear-gradient(135deg, #0ea5e9, #38bdf8); }
-.add-doc-section-badge--relations { background: linear-gradient(135deg, var(--color-warning), #fbbf24); }
-.add-doc-section-badge--attachments { background: linear-gradient(135deg, #ec4899, #f472b6); }
+.add-doc-section-badge--classification { background: linear-gradient(135deg, var(--color-sky), var(--color-sky-light)); }
+.add-doc-section-badge--relations { background: linear-gradient(135deg, var(--color-warning), var(--color-warning-light)); }
+.add-doc-section-badge--attachments { background: linear-gradient(135deg, var(--color-pink), var(--color-pink-light)); }
 
 .add-doc-label-check { color: var(--color-primary); }
 
@@ -229,7 +229,7 @@
 
 /* --- Zone de drag & drop --- */
 .add-doc-dropzone {
-  border: 2px dashed #c7d2fe;
+  border: 2px dashed var(--color-primary-border);
   border-radius: 16px;
   background: linear-gradient(135deg, var(--color-secondary-soft) 0%, var(--color-primary-soft) 100%);
   padding: 2rem 1rem;
@@ -242,7 +242,7 @@
 
 .add-doc-dropzone.is-drag {
   border-color: var(--color-primary-dark);
-  background: linear-gradient(135deg, var(--color-primary-soft-strong) 0%, #c7d2fe 100%);
+  background: linear-gradient(135deg, var(--color-primary-soft-strong) 0%, var(--color-primary-border) 100%);
   transform: scale(1.01);
 }
 
@@ -332,7 +332,7 @@
   flex-shrink: 0;
 }
 
-.add-doc-file-remove:hover { background: #fecaca; transform: scale(1.05); }
+.add-doc-file-remove:hover { background: var(--color-danger-border); transform: scale(1.05); }
 
 /* --- react-select : option avec case à cocher --- */
 .add-doc-check-option {
@@ -409,7 +409,7 @@
 .add-doc-body::-webkit-scrollbar-track { background: transparent; }
 
 /* --- Responsive --- */
-@media (max-width: 600px) {
+@media (max-width: 576px) {
   .add-modal-overlay .add-modal-content.add-doc-modal { border-radius: var(--radius-md); }
   .add-doc-row { grid-template-columns: 1fr; }
   .add-doc-modal .add-doc-body { padding: 1.2rem 1rem 0; }

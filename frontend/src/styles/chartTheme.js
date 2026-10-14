@@ -1,31 +1,11 @@
 // Thème partagé des graphiques ApexCharts.
 // ApexCharts a besoin de couleurs résolues (il calcule des dégradés et des
 // opacités) : on lit donc les variables CSS de styles/theme.css au moment
-// du rendu, avec des valeurs de repli identiques pour les tests (jsdom).
+// du rendu (cf. cssVar).
 
-const FALLBACKS = {
-  '--color-primary': '#6366f1',
-  '--color-primary-dark': '#4f46e5',
-  '--color-primary-lighter': '#a5b4fc',
-  '--color-secondary': '#8b5cf6',
-  '--color-success': '#10b981',
-  '--color-warning': '#f59e0b',
-  '--color-danger': '#ef4444',
-  '--color-info': '#3b82f6',
-  '--color-cyan': '#06b6d4',
-  '--dash-bg': '#0f172a',
-  '--dash-surface': '#1e293b',
-  '--dash-border': '#334155',
-  '--dash-text': '#f1f5f9',
-  '--dash-text-sub': '#94a3b8',
-};
+import { cssVar } from './cssVar';
 
-/** Valeur résolue d'une variable CSS de :root (repli si indisponible). */
-export const cssVar = (name, fallback = FALLBACKS[name] || '') => {
-  if (typeof window === 'undefined' || !window.getComputedStyle) return fallback;
-  const value = window.getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  return value || fallback;
-};
+export { cssVar };
 
 /** Couleurs des graphiques, lues dans les tokens du thème. */
 export const getChartTheme = () => {
@@ -50,8 +30,8 @@ export const getChartTheme = () => {
   // Palette catégorielle : couleurs du thème d'abord, puis teintes complémentaires.
   t.palette = [
     t.primary, t.success, t.warning, t.danger, t.secondary,
-    '#ec4899', t.cyan, '#84cc16', '#f97316', '#14b8a6',
-    '#d946ef', '#f43f5e', '#0ea5e9', '#eab308', '#a855f7',
+    cssVar('--color-pink'), t.cyan, cssVar('--color-lime'), cssVar('--color-orange'), cssVar('--color-teal'),
+    cssVar('--color-fuchsia'), cssVar('--color-rose'), cssVar('--color-sky'), cssVar('--color-warning-light'), cssVar('--color-secondary-light'),
   ];
   return t;
 };

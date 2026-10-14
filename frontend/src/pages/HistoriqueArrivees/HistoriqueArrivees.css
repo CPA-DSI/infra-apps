@@ -44,7 +44,7 @@
   border: none;
   outline: none;
   background-color: transparent;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .ha-page .ha-search-clear-btn {
@@ -76,19 +76,19 @@
 }
 
 .ha-page .ha-no-data-icon {
-  font-size: 48px;
+  font-size: 3rem;
   margin-bottom: 16px;
 }
 
 .ha-page .ha-no-data-title {
   margin: 0;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 500;
 }
 
 .ha-page .ha-no-data-subtitle {
   margin: 8px 0 0 0;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 /* ---- Cellule Produit ---- */
@@ -101,7 +101,7 @@
 .ha-page .ha-cell-produit-name {
   font-weight: 600;
   color: var(--color-text-main);
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 /* ---- Badges ---- */
@@ -109,7 +109,7 @@
   display: inline-block;
   padding: 4px 12px;
   border-radius: var(--radius-pill);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
 }
 
@@ -142,13 +142,13 @@
 }
 
 .ha-page .ha-cell-date-main {
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: var(--color-text-main);
 }
 
 .ha-page .ha-cell-date-age {
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: var(--color-text-sub);
   font-style: italic;
 }
@@ -156,7 +156,7 @@
 /* ---- Texte N/A ---- */
 .ha-page .ha-text-na {
   color: var(--color-text-muted);
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 /* ---- Spinner de chargement ---- */

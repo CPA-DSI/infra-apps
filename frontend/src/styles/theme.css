@@ -30,6 +30,79 @@
   --color-cyan: #06b6d4;
   --color-brand-start: #667eea;
   --color-brand-end: #764ba2;
+  --color-white: #ffffff;
+
+  /* ---- Tonalités : -fg texte foncé, -border bordure claire, -subtle fond très clair ----
+     Consommées via les classes .tone--* (styles/tones.css). */
+  --color-primary-fg: #3730a3;
+  --color-primary-border: #c7d2fe;
+  --color-secondary-light: #a78bfa;
+  --color-secondary-lighter: #c4b5fd;
+  --color-secondary-darker: #9333ea;
+  --color-secondary-fg: #5b21b6;
+  --color-secondary-border: #ddd6fe;
+  --color-success-light: #34d399;
+  --color-success-darker: #047857;
+  --color-success-fg: #065f46;
+  --color-success-border: #a7f3d0;
+  --color-success-subtle: #ecfdf5;
+  --color-warning-light: #fbbf24;
+  --color-warning-lighter: #fcd34d;
+  --color-warning-darker: #b45309;
+  --color-warning-fg: #92400e;
+  --color-warning-border: #fde68a;
+  --color-warning-subtle: #fffbeb;
+  --color-danger-fg: #991b1b;
+  --color-danger-border: #fecaca;
+  --color-danger-subtle: #fef2f2;
+  --color-info-darker: #1d4ed8;
+  --color-info-fg: #1e40af;
+  --color-info-fg-strong: #1e3a8a;
+  --color-info-border: #bfdbfe;
+  --color-info-subtle: #eff6ff;
+
+  /* ---- Teintes catégorielles (types de documents, accents de sections) ---- */
+  --color-sky: #0ea5e9;
+  --color-sky-light: #38bdf8;
+  --color-sky-dark: #0284c7;
+  --color-sky-darker: #0369a1;
+  --color-sky-fg: #075985;
+  --color-sky-soft: #e0f2fe;
+  --color-sky-border: #bae6fd;
+  --color-sky-subtle: #f0f9ff;
+  --color-cyan-fg: #155e75;
+  --color-cyan-soft: #cffafe;
+  --color-cyan-border: #a5f3fc;
+  --color-teal: #14b8a6;
+  --color-teal-dark: #0f766e;
+  --color-orange: #f97316;
+  --color-orange-dark: #ea580c;
+  --color-orange-darker: #c2410c;
+  --color-orange-fg: #7c2d12;
+  --color-orange-soft: #ffedd5;
+  --color-orange-border: #fed7aa;
+  --color-orange-subtle: #fff7ed;
+  --color-lime: #84cc16;
+  --color-lime-light: #a8e063;
+  --color-lime-dark: #56ab2f;
+  --color-lime-fg: #4d7c0f;
+  --color-lime-soft: #ecfccb;
+  --color-lime-border: #bef264;
+  --color-pink: #ec4899;
+  --color-pink-light: #f472b6;
+  --color-pink-fg: #9d174d;
+  --color-pink-soft: #fce7f3;
+  --color-pink-border: #fbcfe8;
+  --color-pink-subtle: #fdf2f8;
+  --color-fuchsia: #d946ef;
+  --color-fuchsia-dark: #c026d3;
+  --color-fuchsia-darker: #a21caf;
+  --color-fuchsia-subtle: #fdf4ff;
+  --color-rose: #f43f5e;
+  --color-rose-fg: #9f1239;
+  --color-rose-soft: #ffe4e6;
+  --color-rose-border: #fda4af;
+  --color-excel: #217346;
 
   /* ---- Dégradés ---- */
   --gradient-brand: linear-gradient(135deg, var(--color-brand-start) 0%, var(--color-brand-end) 100%);
@@ -37,17 +110,18 @@
   --gradient-primary-dark: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
   --gradient-header: linear-gradient(135deg, var(--color-secondary-dark) 0%, var(--color-primary) 100%);
   --gradient-add: linear-gradient(135deg, var(--color-info-dark) 0%, var(--color-info) 100%);
-  --gradient-add-hover: linear-gradient(135deg, #1d4ed8 0%, var(--color-info-dark) 100%);
-  --gradient-export: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
-  --gradient-export-hover: linear-gradient(135deg, #c2410c 0%, #ea580c 100%);
+  --gradient-add-hover: linear-gradient(135deg, var(--color-info-darker) 0%, var(--color-info-dark) 100%);
+  --gradient-export: linear-gradient(135deg, var(--color-orange-dark) 0%, var(--color-orange) 100%);
+  --gradient-export-hover: linear-gradient(135deg, var(--color-orange-darker) 0%, var(--color-orange-dark) 100%);
   --gradient-import: linear-gradient(135deg, var(--color-success-dark) 0%, var(--color-success) 100%);
-  --gradient-import-hover: linear-gradient(135deg, #047857 0%, var(--color-success-dark) 100%);
-  --gradient-marque: linear-gradient(135deg, var(--color-secondary) 0%, #d946ef 100%);
-  --gradient-marque-hover: linear-gradient(135deg, var(--color-secondary-dark) 0%, #c026d3 100%);
-  --gradient-info: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-  --gradient-info-hover: linear-gradient(135deg, #38bdf8 0%, #0369a1 100%);
+  --gradient-import-hover: linear-gradient(135deg, var(--color-success-darker) 0%, var(--color-success-dark) 100%);
+  --gradient-marque: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-fuchsia) 100%);
+  --gradient-marque-hover: linear-gradient(135deg, var(--color-secondary-dark) 0%, var(--color-fuchsia-dark) 100%);
+  --gradient-info: linear-gradient(135deg, var(--color-sky) 0%, var(--color-sky-dark) 100%);
+  --gradient-info-hover: linear-gradient(135deg, var(--color-sky-light) 0%, var(--color-sky-darker) 100%);
   --gradient-danger: linear-gradient(135deg, var(--color-danger) 0%, var(--color-danger-dark) 100%);
   --gradient-danger-hover: linear-gradient(135deg, var(--color-danger-dark) 0%, var(--color-danger-darker) 100%);
+  --gradient-dark: linear-gradient(135deg, var(--color-text-main) 0%, var(--color-text-strong) 100%);
   --gradient-refresh: linear-gradient(120deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
   --gradient-refresh-hover: linear-gradient(120deg, var(--color-primary-darker) 0%, var(--color-primary-dark) 100%);
 
@@ -71,6 +145,33 @@
   --dash-border: #334155;
   --dash-text: #f1f5f9;
   --dash-text-sub: #94a3b8;
+  --dash-bg-deep: #0a0f1c;
+  --dash-bg-end: #1e1b4b;
+  --dash-accent: #312e81;
+  --dash-warm: #422006;
+
+  /* ---- Typographie (rem, base 16px) ---- */
+  --text-2xs: 0.6875rem; /* 11px */
+  --text-xs: 0.75rem;    /* 12px */
+  --text-sm: 0.875rem;   /* 14px */
+  --text-base: 1rem;     /* 16px */
+  --text-lg: 1.125rem;   /* 18px */
+  --text-xl: 1.25rem;    /* 20px */
+  --text-2xl: 1.5rem;    /* 24px */
+  --text-3xl: 1.875rem;  /* 30px */
+
+  /* ---- Espacements (multiples de 4px) ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
 
   /* ---- Ombres ---- */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);

@@ -1,0 +1,280 @@
+/* Modales Matériels — HistoriqueModal */
+
+/* ---- HistoriqueModal ---- */
+.mat-modal--histo .add-modal-header {
+    padding: 24px 28px;
+}
+
+.mat-modal--histo .add-modal-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    font-size: 1.4rem;
+}
+
+.mat-modal--histo .add-modal-title {
+    font-size: 1.4rem;
+}
+
+.mat-modal--histo .add-modal-subtitle {
+    margin-top: 4px;
+    font-size: 0.9rem;
+}
+
+.mat-modal--histo .add-modal-close-btn {
+    padding: 10px;
+    border-radius: var(--radius-md);
+}
+
+.mat-modal--histo .add-modal-body {
+    padding: 24px 28px;
+}
+
+.mat-modal--histo .add-modal-footer {
+    padding: 16px 28px;
+}
+
+.mat-histo-add-btn {
+    background: var(--color-bg);
+    color: var(--color-primary);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 10px 18px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition-base);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.mat-histo-add-btn:hover {
+    background: var(--color-danger-subtle);
+    color: var(--color-primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
+}
+
+.mat-histo-add-btn:active {
+    transform: scale(0.97);
+}
+
+.mat-info-band.mat-histo-info {
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.mat-histo-info-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.mat-histo-info-sep {
+    width: 1px;
+    height: 20px;
+    background: var(--color-info-border);
+}
+
+.mat-histo-form-card {
+    background: var(--color-bg);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    border: 2px solid var(--color-primary);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+}
+
+.mat-histo-form-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.mat-histo-form-title {
+    color: var(--color-text-main);
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mat-histo-form-title > svg {
+    color: var(--color-primary);
+    font-size: 1.1rem;
+}
+
+.mat-histo-form-grid {
+    display: grid;
+    gap: 16px;
+}
+
+.mat-histo-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.mat-histo-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    min-width: 180px;
+}
+
+.mat-histo-optional {
+    color: var(--color-text-muted);
+    font-weight: 400;
+}
+
+.mat-histo-field {
+    flex: 1;
+}
+
+.mat-histo-select {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--color-border-strong);
+    font-size: 0.9rem;
+    background-color: var(--color-bg);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.mat-histo-input {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--color-border-strong);
+    font-size: 0.95rem;
+    transition: var(--transition-base);
+    outline: none;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.mat-histo-input.is-invalid {
+    border-color: var(--color-danger);
+}
+
+.mat-histo-input[readonly] {
+    background-color: var(--color-surface-alt);
+    cursor: default;
+}
+
+textarea.mat-histo-input {
+    resize: vertical;
+}
+
+.mat-histo-field-error {
+    color: var(--color-danger);
+    font-size: 0.8rem;
+    margin-top: 4px;
+    display: block;
+}
+
+.mat-histo-submit-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+.mat-modal .mat-histo-submit-row .add-modal-submit-btn {
+    padding: 10px 24px;
+}
+
+.mat-histo-error {
+    background: var(--color-danger-subtle);
+    border: 1px solid var(--color-danger-border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--color-danger-dark);
+}
+
+.mat-histo-error > svg {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.mat-histo-spinner {
+    width: 3rem;
+    height: 3rem;
+}
+
+.mat-histo-empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.mat-histo-empty-title {
+    color: var(--color-text-body);
+    font-weight: 600;
+}
+
+.mat-histo-empty-text {
+    color: var(--color-text-sub);
+    font-size: 0.95rem;
+}
+
+.mat-histo-table-card {
+    background: var(--color-bg);
+    border-radius: var(--radius-lg);
+    padding: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    border: 1px solid var(--color-border);
+}
+
+.mat-histo-count {
+    padding: 12px 16px;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    border-top: 1px solid var(--color-border-light);
+    text-align: right;
+}
+
+.mat-histo-old,
+.mat-histo-new {
+    padding: 4px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+}
+
+.mat-histo-old {
+    color: var(--color-danger-dark);
+    background-color: var(--color-danger-subtle);
+    text-decoration: line-through;
+    opacity: 0.8;
+}
+
+.mat-histo-new {
+    color: var(--color-success-dark);
+    background-color: var(--color-success-subtle);
+    font-weight: 500;
+}
+
+.mat-histo-author {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+}
+
+.mat-histo-author > svg {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}

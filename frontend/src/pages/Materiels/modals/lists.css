@@ -1,0 +1,145 @@
+/* Modales Matériels — Tableaux et listes filtrées (Corbeille, Écrans) */
+
+/* ---- Tableaux simples (Corbeille, Écrans, historique des affectations) ---- */
+.mat-table-scroll {
+    overflow-x: auto;
+}
+
+.mat-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.mat-table th {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    padding: 10px 12px;
+    border-bottom: 2px solid var(--color-border);
+    text-align: left;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    background: var(--color-bg-alt);
+}
+
+.mat-table td {
+    font-size: 0.82rem;
+    color: var(--color-text-main);
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--color-border-light);
+}
+
+.mat-table .mat-cell-strong { font-weight: 600; }
+.mat-table .mat-cell-nowrap { white-space: nowrap; }
+.mat-table .mat-cell-end { text-align: right; }
+
+.mat-table--compact th {
+    padding: 8px 10px;
+    position: static;
+    background: none;
+}
+
+.mat-table--compact td {
+    font-size: 0.8rem;
+    padding: 8px 10px;
+    vertical-align: top;
+}
+
+/* ---- Listes avec barre de filtres (Corbeille, Écrans) ---- */
+.mat-modal .add-modal-body.mat-list-body {
+    padding: 0;
+    background: var(--color-bg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.mat-list-toolbar {
+    padding: 16px 24px;
+    background: var(--color-bg-alt);
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.mat-filter-chip {
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+    color: var(--color-text-body);
+    border-radius: var(--radius-xl);
+    padding: 5px 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.mat-filter-chip.is-active {
+    border-color: var(--color-primary);
+    background: var(--color-primary-soft-strong);
+    color: var(--color-primary-darker);
+}
+
+.mat-filter-chip-count {
+    opacity: 0.7;
+}
+
+.mat-search-box {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: 5px 14px;
+}
+
+.mat-search-box > svg {
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+}
+
+.mat-search-box input {
+    border: none;
+    outline: none;
+    font-size: 0.82rem;
+    width: 200px;
+    background: transparent;
+}
+
+.mat-list-scroll {
+    flex: 1;
+    overflow: auto;
+    background: var(--color-bg);
+}
+
+.mat-list-state {
+    text-align: center;
+    color: var(--color-text-sub);
+    padding: 40px;
+}
+
+.mat-list-scroll > .mat-alert-error {
+    margin: 20px 24px;
+}
+
+.mat-footer-count {
+    margin-right: auto;
+    font-size: 0.8rem;
+    color: var(--color-text-sub);
+}
+
+.mat-not-restorable {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+.btn-pill.mat-btn-sm {
+    padding: 6px 14px;
+    font-size: 0.78rem;
+    gap: 6px;
+}

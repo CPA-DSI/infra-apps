@@ -2,17 +2,17 @@ import { FaUser, FaShieldAlt, FaCrown, FaCheckCircle, FaTimesCircle } from 'reac
 
 export const ROLE_CONFIG = {
     USER: {
-        label : 'Utilisateur', bg : '#dcfce7', text : '#16a34a', border: '#86efac',
+        label: 'Utilisateur', tone: 'success',
         Icon: FaUser,
         description: 'Utilisateur standard avec accès de base'
     },
     IT_ADMIN: {
-        label : 'Admin IT', bg : '#fee2e2', text : '#dc2626', border: '#fca5a5',
+        label: 'Admin IT', tone: 'danger',
         Icon  : FaShieldAlt,
         description: 'Administrateur du Service Informatique'
     },
     DIRECTION: {
-        label: 'Direction', bg: '#f3e8ff', text: '#7c3aed', border: '#c4b5fd',
+        label: 'Direction', tone: 'secondary',
         Icon: FaCrown,
         description: 'Membre de la direction'
     }
@@ -21,17 +21,13 @@ export const ROLE_CONFIG = {
 export const STATUS_CONFIG = {
     active: {
         label: 'Actif',
-        bg: '#dcfce7',
-        text: '#16a34a',
-        border: '#86efac',
+        tone: 'success',
         Icon: FaCheckCircle,
         description: 'Compte utilisateur actif'
     },
     inactive: {
         label: 'Désactivé',
-        bg: '#fee2e2',
-        text: '#dc2626',
-        border: '#fca5a5',
+        tone: 'danger',
         Icon: FaTimesCircle,
         description: 'Compte utilisateur désactivé'
     }
@@ -71,7 +67,7 @@ export const formatUserStatus = (isActive) => {
 
 export const formatUserRole = (role) => {
     const defaultRole = {
-        label: 'Utilisateur', bg: '#f3f4f6', text: '#6b7280', border: '#d1d5db',
+        label: 'Utilisateur', tone: 'neutral',
         Icon: FaUser,
         description: 'Rôle non défini, accès standard',
         isUnknown: true

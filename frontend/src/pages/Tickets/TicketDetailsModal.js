@@ -2,28 +2,14 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Spinner, Alert } from 'react-bootstrap';
 import { getTicketById, fetchAllMaterielsIt } from '../../services/api';
 import AppModal from '../../components/AppModal/AppModal';
+import { toneClass } from '../../utils/tones';
+import { STATUS_CONFIG, PRIORITY_CONFIG } from './ticketConfig';
 import './Tickets.css';
 import {
     FaTicketAlt, FaCalendarAlt, FaUser, FaLaptop,
-    FaArrowRight, FaTimes, FaInfoCircle, FaClock, FaCheckCircle,
-    FaArchive, FaLock, FaExclamationTriangle, FaStar, FaStarHalfAlt, FaSyncAlt, FaFlag
+    FaArrowRight, FaTimes, FaInfoCircle, FaCheckCircle,
+    FaLock, FaSyncAlt
 } from 'react-icons/fa';
-
-const STATUS_CONFIG = {
-    NOUVEAU: { label: 'Nouveau', bg: '#dbeafe', text: '#1e40af', border: '#93c5fd', icon: FaInfoCircle },
-    EN_COURS: { label: 'En cours', bg: '#fed7aa', text: '#92400e', border: '#fbbf24', icon: FaClock },
-    CLOS: { label: 'Clos', bg: '#d1fae5', text: '#065f46', border: '#6ee7b7', icon: FaCheckCircle },
-    EN_ATTENTE: { label: 'En attente', bg: '#e5e7eb', text: '#374151', border: '#9ca3af', icon: FaArchive },
-    RESOLU: { label: 'Résolu', bg: '#c6f6d5', text: '#2f855a', border: '#9ae6b4', icon: FaCheckCircle },
-    FERME: { label: 'Fermé', bg: '#edf2f7', text: '#4a5568', border: '#cbd5e0', icon: FaArchive },
-};
-
-const PRIORITY_CONFIG = {
-    HAUTE: { label: 'Haute', color: '#e53e3e', icon: FaFlag },
-    URGENTE: { label: 'Urgente', color: '#c53030', icon: FaExclamationTriangle },
-    MOYENNE: { label: 'Moyenne', color: '#d69e2e', icon: FaStarHalfAlt },
-    BASSE: { label: 'Basse', color: '#718096', icon: FaStar },
-};
 
 const TicketDetailsModal = ({ show, handleClose, ticketId }) => {
     const [materiels, setMateriels] = useState([]);
@@ -114,10 +100,10 @@ const TicketDetailsModal = ({ show, handleClose, ticketId }) => {
             {!loading && !error && ticket && (
                 <>
                     <div className="tck-details-badges">
-                        <span className="tck-status-badge" style={{ backgroundColor: statutConfig.bg, color: statutConfig.text, border: `1px solid ${statutConfig.border}` }}>
+                        <span className={`tck-status-badge tone-chip ${toneClass(statutConfig.tone)}`}>
                             <StatusIcon size={12} className="tck-badge-icon" aria-hidden="true" /> {statutConfig.label}
                         </span>
-                        <span className="tck-priority-badge" style={{ backgroundColor: prioriteConfig.color + '20', color: prioriteConfig.color, border: `1px solid ${prioriteConfig.color}40` }}>
+                        <span className={`tck-priority-badge tone-chip ${toneClass(prioriteConfig.tone)}`}>
                             <PriorityIcon size={12} className="tck-badge-icon" aria-hidden="true" /> {prioriteConfig.label}
                         </span>
                     </div>

@@ -116,7 +116,7 @@
     border: none;
     outline: none;
     background-color: transparent;
-    font-size: 14px;
+    font-size: 0.875rem;
     color: var(--color-text-main);
 }
 
@@ -193,19 +193,19 @@
 }
 
 .mvt-page .mvt-no-data__icon {
-    font-size: 48px;
+    font-size: 3rem;
     margin-bottom: 16px;
 }
 
 .mvt-page .mvt-no-data__title {
     margin: 0;
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 500;
 }
 
 .mvt-page .mvt-no-data__hint {
     margin: 8px 0 0;
-    font-size: 14px;
+    font-size: 0.875rem;
 }
 
 /* ---- Cellules du tableau ---- */
@@ -219,13 +219,13 @@
 }
 
 .mvt-page .mvt-cell-date {
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 500;
     color: var(--color-text-main);
 }
 
 .mvt-page .mvt-cell-age {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--color-text-sub);
     font-style: italic;
 }
@@ -236,23 +236,23 @@
 }
 
 .mvt-page .mvt-cell-sub {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--color-text-sub);
 }
 
 .mvt-page .mvt-cell-qty {
     font-weight: 700;
     color: var(--color-text-main);
-    font-size: 14px;
+    font-size: 0.875rem;
 }
 
 .mvt-page .mvt-cell-small {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--color-text-sub);
 }
 
 .mvt-page .mvt-cell-local {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--color-text-secondary);
 }
 
@@ -270,7 +270,7 @@
     gap: 4px;
     padding: 4px 12px;
     border-radius: var(--radius-pill);
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
     background-color: var(--mvt-autre-bg);
     color: var(--mvt-autre-fg);

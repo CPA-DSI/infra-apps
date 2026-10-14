@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { FaTrashRestore, FaSearch, FaUndo } from 'react-icons/fa';
 import { fetchCorbeille, restaurerMateriel } from '../../services/api';
-import { MySwal } from '../../utils/swal';
+import { MySwal, swalButtons } from '../../utils/swal';
 import AppModal from '../../components/AppModal/AppModal';
 import './MaterielsModals.css';
 
@@ -53,7 +53,7 @@ const CorbeilleModal = ({ onClose, onRestored }) => {
             title: 'Restaurer ce PC ?',
             text: `Le PC ${m.code_pc || `#${m.id_materiels}`} reviendra dans la liste, en stock, sans bénéficiaire ni écran.`,
             icon: 'question',
-            showCancelButton: true, confirmButtonColor: '#0EA5E9', cancelButtonColor: '#64748b', confirmButtonText: 'Oui, restaurer', cancelButtonText: 'Annuler'
+            showCancelButton: true, ...swalButtons('info'), confirmButtonText: 'Oui, restaurer', cancelButtonText: 'Annuler'
         });
         if (!result.isConfirmed) return;
 

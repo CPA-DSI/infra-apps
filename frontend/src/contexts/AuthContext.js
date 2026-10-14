@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import Swal from 'sweetalert2';
-import { MySwal } from '../utils/swal';
+import { MySwal, swalButtons } from '../utils/swal';
 import { apiClient, getCurrentUserProfile } from '../services/api';
 import { onSessionExpired } from '../services/sessionEvents';
 import { createTabSync } from '../utils/tabSync';
@@ -135,7 +135,7 @@ export const AuthProvider = ({ children }) => {
       icon: 'info',
       title: 'Session expirée',
       text: 'Votre session a expiré. Veuillez vous reconnecter.',
-      confirmButtonColor: '#6366f1',
+      ...swalButtons('primary'),
     });
   }), [clearAuthState, broadcast]);
 
@@ -206,8 +206,7 @@ export const AuthProvider = ({ children }) => {
         showDenyButton: true,
         confirmButtonText: 'Rester connecté',
         denyButtonText: 'Se déconnecter',
-        confirmButtonColor: '#6366f1',
-        denyButtonColor: '#64748b',
+        ...swalButtons('primary'),
         allowOutsideClick: false,
         allowEscapeKey: false,
         timer: IDLE_WARNING_MS,

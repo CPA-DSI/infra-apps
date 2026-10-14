@@ -18,7 +18,7 @@
 }
 
 .count-equipe-header-icon {
-  font-size: 32px;
+  font-size: 2rem;
   color: var(--color-secondary);
   background: rgba(139, 92, 246, 0.2);
   padding: 12px;
@@ -27,9 +27,9 @@
 
 .count-equipe-header-title h2 {
   margin: 0;
-  font-size: 24px;
+  font-size: 1.5rem;
   font-weight: 700;
-  background: linear-gradient(135deg, white 0%, #c4b5fd 100%);
+  background: linear-gradient(135deg, white 0%, var(--color-secondary-lighter) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -37,7 +37,7 @@
 
 .count-equipe-header-subtitle {
   margin: 4px 0 0 0;
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--dash-text-sub);
 }
 
@@ -102,11 +102,11 @@
 
 .count-equipe-stat-card.highlight {
   border-color: var(--color-warning);
-  background: linear-gradient(135deg, var(--dash-surface) 0%, #422006 100%);
+  background: linear-gradient(135deg, var(--dash-surface) 0%, var(--dash-warm) 100%);
 }
 
 .count-equipe-stat-value {
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 700;
   color: var(--dash-text);
   line-height: 1.2;
@@ -115,12 +115,12 @@
 }
 
 .count-equipe-stat-label {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: var(--dash-text-sub);
 }
 
 .count-equipe-stat-percentage {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: var(--color-success);
 }
 
@@ -138,7 +138,7 @@
   color: var(--dash-text);
   padding: 10px 36px 10px 14px;
   border-radius: var(--radius-md);
-  font-size: 13px;
+  font-size: 0.8125rem;
   transition: border-color 0.2s ease;
 }
 
@@ -164,7 +164,7 @@
   border: none;
   color: var(--dash-text-sub);
   cursor: pointer;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 .count-equipe .filter-clear-btn:hover {
@@ -179,7 +179,7 @@
   align-items: start;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 992px) {
   .count-equipe-content {
     grid-template-columns: 1fr;
   }
@@ -219,25 +219,25 @@
   justify-content: center;
   min-height: 200px;
   color: var(--dash-text-sub);
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 /* Loading / Error states (.dash-card--state) */
 .count-equipe-spinner-icon {
-  font-size: 40px;
+  font-size: 2.5rem;
   color: var(--color-secondary);
   animation: spin 1s linear infinite;
   margin-bottom: 12px;
 }
 
 .count-equipe-error-icon {
-  font-size: 56px;
+  font-size: 3.5rem;
   color: var(--color-danger);
   margin-bottom: 16px;
 }
 
 .count-equipe-error h3 {
-  font-size: 20px;
+  font-size: 1.25rem;
   margin-bottom: 8px;
 }
 
@@ -252,7 +252,7 @@
   color: white;
   padding: 10px 20px;
   border-radius: var(--radius-md);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;

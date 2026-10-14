@@ -14,7 +14,7 @@
 .userMaterielCard:hover {
   transform: translateY(-3px);
   box-shadow: 0 10px 24px rgba(124, 58, 237, 0.14);
-  border-color: #ddd6fe; /* violet-200, sans token */
+  border-color: var(--color-secondary-border); /* violet-200, sans token */
 }
 
 .userMaterielTop {
@@ -76,9 +76,6 @@
   gap: 6px;
   white-space: nowrap;
   text-transform: capitalize;
-  color: var(--color-text-secondary);
-  background-color: var(--color-border-light);
-  border: 1px solid var(--color-border);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
@@ -122,13 +119,13 @@
 }
 
 .userMaterielActifBadge--on {
-  color: #065f46;
+  color: var(--color-success-fg);
   background-color: var(--color-success-soft);
   border-color: var(--color-success);
 }
 
 .userMaterielActifBadge--off {
-  color: #991b1b;
+  color: var(--color-danger-fg);
   background-color: var(--color-danger-soft);
   border-color: var(--color-danger);
 }

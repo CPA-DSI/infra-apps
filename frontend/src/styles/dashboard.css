@@ -9,7 +9,7 @@
   position: relative;
   width: 100%;
   padding: 28px;
-  background: linear-gradient(135deg, var(--dash-bg) 0%, #1e1b4b 100%);
+  background: linear-gradient(135deg, var(--dash-bg) 0%, var(--dash-bg-end) 100%);
   color: var(--dash-text);
   border: 1px solid var(--dash-border);
   border-radius: var(--radius-2xl);
@@ -40,7 +40,7 @@
 .dash-title {
   margin: 0;
   color: var(--dash-text);
-  font-size: 22px;
+  font-size: 1.375rem;
   font-weight: 700;
   letter-spacing: -0.3px;
 }
@@ -48,7 +48,7 @@
 .dash-subtitle {
   margin: 4px 0 0;
   color: var(--dash-text-sub);
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 .dash-badge {
@@ -60,7 +60,7 @@
   background: rgba(99, 102, 241, 0.15);
   border: 1px solid rgba(99, 102, 241, 0.3);
   color: var(--color-primary-lighter);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
 }
 
@@ -70,6 +70,6 @@
   }
 
   .dash-title {
-    font-size: 18px;
+    font-size: 1.125rem;
   }
 }

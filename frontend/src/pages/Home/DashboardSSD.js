@@ -72,12 +72,12 @@ const createCapacityChartOptions = (categories, t) => ({
       ]
     }
   },
-  colors: [t.primary, cssVar('--color-secondary-dark'), t.secondary, '#a78bfa', '#c4b5fd', '#e9d5ff'],
+  colors: [t.primary, cssVar('--color-secondary-dark'), t.secondary, cssVar('--color-secondary-light'), cssVar('--color-secondary-lighter'), cssVar('--color-secondary-border')],
   dataLabels: {
     enabled: true,
     textAnchor: 'middle',
     style: {
-      colors: ['#ffffff'],
+      colors: [cssVar('--color-white')],
       fontWeight: 700,
       fontSize: '12px'
     },
@@ -135,7 +135,7 @@ const createDiskTypeChartOptions = (t) => ({
     style: {
       fontSize: '14px',
       fontWeight: 700,
-      colors: ['#fff', '#fff', '#000']
+      colors: [cssVar('--color-white'), cssVar('--color-white'), cssVar('--color-text-strong')]
     },
     formatter: (val, opts) => {
       const total = opts.w.globals.series.reduce((a, b) => a + b, 0);

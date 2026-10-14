@@ -1,17 +1,15 @@
 import React from 'react';
 import { FaUsers, FaMapMarkerAlt, FaUserCircle, FaDesktop } from 'react-icons/fa';
 import { statusConfig } from '../../Materiels/materielsTableConfig';
+import { toneClass } from '../../../utils/tones';
 import './UserMaterielCard.css';
 
-// Couleurs issues de statusConfig (partagé avec la page Matériels) : seules
-// valeurs restées inline. Statut inconnu -> couleurs neutres du CSS.
+// Tonalité issue de statusConfig (partagé avec la page Matériels) ;
+// statut inconnu -> tonalité neutre.
 const StatutBadge = ({ etatPc }) => {
   const config = statusConfig[etatPc];
   return (
-    <span
-      className="userMaterielStatusBadge"
-      style={config && { backgroundColor: config.bg, color: config.color, borderColor: config.border }}
-    >
+    <span className={`userMaterielStatusBadge tone-chip ${toneClass(config?.tone)}`}>
       <span>{config?.emoji || '❓'}</span>
       {etatPc || 'Inconnu'}
     </span>
