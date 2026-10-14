@@ -1,5 +1,7 @@
 body {
   margin: 0;
+  /* Fond gris de l'app : visible autour de la navbar flottante */
+  background-color: var(--color-bg-alt);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
