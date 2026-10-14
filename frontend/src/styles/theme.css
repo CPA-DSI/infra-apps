@@ -14,6 +14,9 @@
   --color-secondary: #8b5cf6;
   --color-secondary-dark: #7c3aed;
   --color-secondary-soft: #f5f3ff;
+  /* Composantes RGB pour les transparences : rgba(var(--color-primary-rgb), .1) */
+  --color-primary-rgb: 99, 102, 241;
+  --color-secondary-rgb: 139, 92, 246;
   --color-success: #10b981;
   --color-success-dark: #059669;
   --color-success-soft: #d1fae5;

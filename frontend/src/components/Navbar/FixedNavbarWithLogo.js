@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Container, Navbar, Nav, NavDropdown, Modal, Button, Alert, Form } from 'react-bootstrap';
-import { FaHome, FaLaptopCode, FaEnvelopeOpenText, FaBoxes, FaUserCircle, FaSignOutAlt, FaProductHunt, FaExchangeAlt, FaArrowCircleRight, FaBars, FaTimes, FaTicketAlt, FaEye, FaEyeSlash, FaCheck, FaList, FaHistory, FaUsers, FaFileAlt } from 'react-icons/fa';
+import { FaHome, FaLaptopCode, FaEnvelopeOpenText, FaBoxes, FaUserCircle, FaSignOutAlt, FaProductHunt, FaExchangeAlt, FaArrowCircleRight, FaBars, FaTimes, FaTicketAlt, FaEye, FaEyeSlash, FaCheck, FaList, FaHistory, FaUsers, FaFileAlt, FaChevronDown } from 'react-icons/fa';
 import { MySwal, swalButtons } from '../../utils/swal';
 import logo from '../../assets/logo.png';
 import { PAGE_TITLES, ROLES, validatePassword, hasPermission, PERMISSIONS } from '../../config/api';
@@ -153,7 +153,8 @@ const FixedNavbarWithLogo = () => {
     });
   };
 
-  const isActive = (path) => location.pathname.startsWith(path);
+  const isActive = (...paths) => paths.some((path) => location.pathname.startsWith(path));
+  const ariaCurrent = (active) => (active ? 'page' : undefined);
 
   const handleUpdatePassword = async () => {
     if (!newPasswords.oldPassword) {
@@ -231,7 +232,7 @@ const FixedNavbarWithLogo = () => {
 
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="ms-auto align-items-center nav-items-wrapper">
-              <Nav.Link as={Link} to="/Home" className={location.pathname === '/Home' ? 'nav-active' : ''}>
+              <Nav.Link as={Link} to="/Home" title="Accueil" className={location.pathname === '/Home' ? 'nav-active' : ''} aria-current={ariaCurrent(location.pathname === '/Home')}>
                 <div className="nav-item-wrapper">
                   <div className="nav-item-icon">
                     <FaHome />
@@ -245,18 +246,16 @@ const FixedNavbarWithLogo = () => {
                 <div className="nav-dropdown-wrapper" onMouseEnter={() => setIsMaterielsDropdownOpen(true)} onMouseLeave={() => setIsMaterielsDropdownOpen(false)}>
                   <NavDropdown
                     title={
-                      <div className="dropdown-title-wrapper">
+                      <div className="dropdown-title-wrapper" title="Matériels">
                         <div className="nav-item-icon">
                           <FaLaptopCode />
                         </div>
-                        <span className="nav-item-label">
-                          Matériels
-                          <span className="dropdown-arrow">▼</span>
-                        </span>
+                        <span className="nav-item-label">Matériels</span>
+                        <FaChevronDown className="dropdown-arrow" aria-hidden="true" />
                       </div>
                     }
                     id="materiels-nav-dropdown"
-                    className={isActive('/Materiels') ? 'nav-active' : ''}
+                    className={isActive('/Materiels', '/HistoriqueMateriel') ? 'nav-active' : ''}
                     show={isMaterielsDropdownOpen}
                     onToggle={() => setIsMaterielsDropdownOpen(!isMaterielsDropdownOpen)}
                   >
@@ -306,10 +305,10 @@ const FixedNavbarWithLogo = () => {
               )}
 
               {hasPermission(userRole, PERMISSIONS.USERS_READ) && (
-                <Nav.Link as={Link} to="/MailInfo" className={isActive('/MailInfo') ? 'nav-active' : ''}>
+                <Nav.Link as={Link} to="/MailInfo" title="Utilisateurs" className={isActive('/MailInfo') ? 'nav-active' : ''} aria-current={ariaCurrent(isActive('/MailInfo'))}>
                   <div className="nav-item-wrapper">
                     <div className="nav-item-icon">
-                      <FaEnvelopeOpenText />
+                      <FaUsers />
                     </div>
                     <span className="nav-item-label">Utilisateurs</span>
                   </div>
@@ -321,18 +320,16 @@ const FixedNavbarWithLogo = () => {
                 <div className="nav-dropdown-wrapper" onMouseEnter={() => setIsMouvementsDropdownOpen(true)} onMouseLeave={() => setIsMouvementsDropdownOpen(false)} >
                   <NavDropdown
                     title={
-                      <div className="dropdown-title-wrapper">
+                      <div className="dropdown-title-wrapper" title="Stocks">
                         <div className="nav-item-icon">
                           <FaBoxes />
                         </div>
-                        <span className="nav-item-label">
-                          Stocks
-                         <span className="dropdown-arrow">▼</span>
-                        </span>
+                        <span className="nav-item-label">Stocks</span>
+                        <FaChevronDown className="dropdown-arrow" aria-hidden="true" />
                       </div>
                     }
                     id="stock-nav-dropdown"
-                    className={isActive('/Mouvements') || isActive('/Historique') ? 'nav-active' : ''}
+                    className={isActive('/Mouvements', '/HistoriqueArrivees', '/ProduitLocaux') ? 'nav-active' : ''}
                     show={isMouvementsDropdownOpen}
                     onToggle={() => setIsMouvementsDropdownOpen(!isMouvementsDropdownOpen)}
                   >
@@ -368,7 +365,7 @@ const FixedNavbarWithLogo = () => {
               )}
 
               {hasPermission(userRole, PERMISSIONS.TICKETS_READ) && (
-                <Nav.Link as={Link} to="/Tickets" className={isActive('/Tickets') ? 'nav-active' : ''}>
+                <Nav.Link as={Link} to="/Tickets" title="Support" className={isActive('/Tickets') ? 'nav-active' : ''} aria-current={ariaCurrent(isActive('/Tickets'))}>
                   <div className="nav-item-wrapper">
                     <div className="nav-item-icon">
                       <FaTicketAlt />
@@ -380,7 +377,7 @@ const FixedNavbarWithLogo = () => {
 
               {/* Menu Documents */}
               {hasPermission(userRole, PERMISSIONS.DOCUMENTS_READ) && (
-                <Nav.Link as={Link} to="/Documents" className={isActive('/Documents') ? 'nav-active' : ''}>
+                <Nav.Link as={Link} to="/Documents" title="Documents" className={isActive('/Documents') ? 'nav-active' : ''} aria-current={ariaCurrent(isActive('/Documents'))}>
                   <div className="nav-item-wrapper">
                     <div className="nav-item-icon">
                       <FaFileAlt />
@@ -391,7 +388,7 @@ const FixedNavbarWithLogo = () => {
               )}
               
               {hasPermission(userRole, PERMISSIONS.CONFIG_READ) && (
-                <Nav.Link as={Link} to="/EmailHome" className={isActive('/EmailHome') ? 'nav-active' : ''}>
+                <Nav.Link as={Link} to="/EmailHome" title="Emails" className={isActive('/EmailHome') ? 'nav-active' : ''} aria-current={ariaCurrent(isActive('/EmailHome'))}>
                   <div className="nav-item-wrapper">
                     <div className="nav-item-icon">
                       <FaEnvelopeOpenText />
