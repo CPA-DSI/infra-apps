@@ -12,6 +12,7 @@
 // est responsable de l'ouverture du prisma.$transaction().
 
 import { creerNouveauProduit } from './produitsService.js';
+import { estSousSeuil } from '../constants/seuilsAlerte.js';
 
 /**
  * Erreur métier liée au stock, avec le code HTTP à renvoyer.
@@ -144,7 +145,7 @@ export async function appliquerVariationStock(tx, { idProduit, delta, dateStock 
         remarque
     });
 
-    if (produit.seuil_alerte && nouvelleQuantite <= produit.seuil_alerte) {
+    if (estSousSeuil(nouvelleQuantite, produit.seuil_alerte)) {
         console.log(`⚠️ Stock bas pour "${produit.nom_produit}" : ${nouvelleQuantite} <= seuil ${produit.seuil_alerte}`);
     }
 

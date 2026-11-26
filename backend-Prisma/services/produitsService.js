@@ -31,9 +31,12 @@ async function trouverProduitParNom(client, nomTrim) {
  * (P2002) est convertie en ProduitDejaExistantError plutôt que de remonter
  * une erreur Prisma brute à l'appelant.
  */
-export async function creerNouveauProduit(client, { nomProduit, quantiteInitiale, dateMouvement = null }) {
+export async function creerNouveauProduit(client, { nomProduit, quantiteInitiale, dateMouvement = null, quantiteReferenceSeuil = quantiteInitiale }) {
     const nomTrim = nomProduit.trim();
-    const seuilAlerte = generateSeuilAlerte(nomTrim, quantiteInitiale);
+    // quantiteReferenceSeuil permet de calculer le seuil sur la quantité réelle
+    // du premier mouvement même quand le produit est créé avec un stock de 0
+    // (cas de l'import, où la quantité est appliquée ensuite par creerMouvement()).
+    const seuilAlerte = generateSeuilAlerte(nomTrim, quantiteReferenceSeuil);
 
     try {
         return await client.produits.create({

@@ -600,9 +600,9 @@ async function traiterMouvement(row, caches, errorDetails, contexteDoublons) {
         } else {
             // Produit inconnu : créé DANS la transaction de la ligne (annulé si la ligne échoue).
             // Stock initial à 0 : la quantité réelle est appliquée par creerMouvement().
-            // Le seuil d'alerte est calculé dès la création.
+            // Le seuil d'alerte est calculé dès la création, sur la quantité de la ligne.
             try {
-                const produit = await creerNouveauProduit(tx, { nomProduit, quantiteInitiale: 0 });
+                const produit = await creerNouveauProduit(tx, { nomProduit, quantiteInitiale: 0, quantiteReferenceSeuil: row.quantite });
                 produitId = produit.id_produit;
                 console.log(`🆕 Produit créé: "${nomProduit}" (ID: ${produitId}, seuil: ${produit.seuil_alerte})`);
             } catch (error) {

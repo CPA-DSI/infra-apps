@@ -92,7 +92,7 @@ const ProduitLocaux = () => {
     const csvContent = [
       ['Nom Produit', 'Quantité en Stock', 'Seuil Alerte', 'Date d\'arrivée'].join(','),
       ...filteredProducts.map(p => [
-        `"${p.nom_produit || ''}"`, p.quantite_en_stock || 0, p.seuil_alerte || '', p.last_date || ''
+        `"${p.nom_produit || ''}"`, p.quantite_en_stock || 0, p.seuil_alerte ?? '', p.last_date || ''
       ].join(','))
     ].join('\n');
 
@@ -231,7 +231,7 @@ const ProduitLocaux = () => {
   const columnsProducts = useMemo(() => [
       { name: 'Nom Produit', selector: row => row.nom_produit, sortable: true, grow: 3, width: '600px' },
       { name: 'Qté', selector: row => row.quantite_en_stock, sortable: true, grow: 1, width: '70px' },
-      { name: 'Seuil', selector: row => row.seuil_alerte || '-', sortable: true, grow: 1, width: '100px'  },
+      { name: 'Seuil', selector: row => row.seuil_alerte ?? '-', sortable: true, grow: 1, width: '100px'  },
       { name: 'Date arrivée', selector: row => row.last_date, sortable: true, cell: row => { if (!row.last_date) return '-'; const dateObj = new Date(row.last_date); return dateObj.toLocaleDateString('fr-FR'); }, grow: 2  },
       {
           name: 'Actions',

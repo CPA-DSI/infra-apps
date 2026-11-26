@@ -7,6 +7,7 @@ import { validateIdParam } from '../middleware/validateIdParam.js';
 import { ajusterStockVers, enregistrerHistorique, StockError } from '../services/stockService.js';
 import { toDateOnly } from '../services/dateOnly.js';
 import { sendError } from '../middleware/errorHandler.js';
+import { generateSeuilAlerte } from '../constants/seuilsAlerte.js';
 
 
 const router = express.Router();
@@ -107,7 +108,8 @@ router.post('/', requirePermission(PERMISSIONS.STOCKS_WRITE), async (req, res) =
           nom_produit: nom_produit.trim(),
           // Stock absent / vide => 0 (un stock NULL ne pourrait plus être incrémenté en SQL)
           quantite_en_stock: stockInitial,
-          seuil_alerte: seuil_alerte ?? null,
+          // Seuil non saisi => calculé comme pour les imports et les mouvements
+          seuil_alerte: seuil_alerte ?? generateSeuilAlerte(nom_produit, stockInitial),
           last_date: last_date ?? null,
         },
       });

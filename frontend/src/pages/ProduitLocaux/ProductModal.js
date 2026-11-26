@@ -21,8 +21,8 @@ const ProductModal = ({ show, handleClose, handleSave, initialData, errorMessage
       const formattedDate = initialData.last_date ? new Date(initialData.last_date).toISOString().split("T")[0] : "";
       setFormData({
         nom_produit: initialData.nom_produit || "",
-        quantite_en_stock: initialData.quantite_en_stock || "",
-        seuil_alerte: initialData.seuil_alerte || "",
+        quantite_en_stock: initialData.quantite_en_stock ?? "",
+        seuil_alerte: initialData.seuil_alerte ?? "",
         last_date: formattedDate,
       });
     } else {

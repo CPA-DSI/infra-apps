@@ -3,6 +3,7 @@
 import nodemailer from 'nodemailer';
 import ExcelJS from 'exceljs';
 import { CRON_TIMEZONE } from '../constants/cron.js';
+import { estSousSeuil } from '../constants/seuilsAlerte.js';
 
 // Toutes les dates du rapport (noms de fichiers, "Généré le", colonnes) sont exprimées
 // dans le fuseau CRON_TIMEZONE et non dans celui du serveur.
@@ -137,7 +138,7 @@ export const generateExcelReport = async (prisma, { depuis = null, includeProdui
     sheet0.addRow([]);
 
     const totalProduits = tousLesProduits.length;
-    const produitsEnAlerte = tousLesProduits.filter(p => (p.quantite_en_stock || 0) <= (p.seuil_alerte || 0)).length;
+    const produitsEnAlerte = tousLesProduits.filter(p => estSousSeuil(p.quantite_en_stock, p.seuil_alerte)).length;
     const mouvementsEntrees = tousLesMouvements.filter(m => m.type_mouvement === 'ENTREE' || m.type_mouvement === 'ENTREE_QUANTITE');
     const volumeEntrees = mouvementsEntrees.reduce((sum, m) => sum + (m.quantite || 0), 0);
     const mouvementsSorties = tousLesMouvements.filter(m => m.type_mouvement === 'SORTIE');
@@ -200,8 +201,8 @@ export const generateExcelReport = async (prisma, { depuis = null, includeProdui
         sheet3.columns = [{ header: 'Nom Produit', key: 'nom' }, { header: 'Stock Actuel', key: 'stock' }, { header: 'Seuil Alerte', key: 'seuil' }, { header: 'Dernière Mise à jour', key: 'last' }];
         sheet3.getRow(1).eachCell(cell => cell.style = headerStyle);
         tousLesProduits.forEach(p => {
-            const row = sheet3.addRow({ nom: p.nom_produit, stock: p.quantite_en_stock || 0, seuil: p.seuil_alerte || 0, last: p.last_date ? formatDate(p.last_date) : 'N/A' });
-            if ((p.quantite_en_stock || 0) <= (p.seuil_alerte || 0)) {
+            const row = sheet3.addRow({ nom: p.nom_produit, stock: p.quantite_en_stock || 0, seuil: p.seuil_alerte ?? '-', last: p.last_date ? formatDate(p.last_date) : 'N/A' });
+            if (estSousSeuil(p.quantite_en_stock, p.seuil_alerte)) {
                 row.getCell('stock').font = { color: { argb: 'FF0000' }, bold: true };
                 row.getCell('nom').font = { color: { argb: 'FF0000' } };
             }
