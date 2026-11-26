@@ -164,4 +164,114 @@ describe('AuthContext', () => {
       expect(Swal.fire).toHaveBeenCalledTimes(2);
     });
   });
+
+  describe('maintien de session pendant une opération longue (holdSession)', () => {
+    let holdSession;
+    const HoldProbe = () => {
+      const auth = useAuth();
+      holdSession = auth.holdSession;
+      if (auth.isLoading) return <div>chargement</div>;
+      return <div data-testid="auth-state">{auth.isAuthenticated ? 'authentifié' : 'non-authentifié'}</div>;
+    };
+
+    beforeEach(() => {
+      apiClient.post.mockResolvedValue({});
+      getCurrentUserProfile.mockResolvedValue({ role: 'USER' });
+      Swal.fire.mockImplementation(() => new Promise(() => {}));
+    });
+
+    const renderHold = async () => {
+      vi.useFakeTimers();
+      render(
+        <AuthProvider>
+          <HoldProbe />
+        </AuthProvider>
+      );
+      await waitFor(() => expect(screen.getByTestId('auth-state')).toHaveTextContent('authentifié'));
+      getCurrentUserProfile.mockClear();
+    };
+
+    test("aucun avertissement ni déconnexion tant que la session est maintenue, avec prolongation côté serveur", async () => {
+      await renderHold();
+      let release;
+      act(() => {
+        release = holdSession();
+      });
+
+      act(() => {
+        vi.advanceTimersByTime(30 * 60 * 1000);
+      });
+      expect(Swal.fire).not.toHaveBeenCalled();
+      expect(apiClient.post).not.toHaveBeenCalledWith('/auth/logout');
+      // Un appel /auth/me toutes les 4 min pour réémettre le cookie.
+      expect(getCurrentUserProfile).toHaveBeenCalledTimes(7);
+
+      // Après libération, le compte à rebours normal reprend.
+      act(() => {
+        release();
+      });
+      act(() => {
+        vi.advanceTimersByTime(9 * 60 * 1000);
+      });
+      expect(Swal.fire).toHaveBeenCalledTimes(1);
+      expect(getCurrentUserProfile).toHaveBeenCalledTimes(7);
+    });
+
+    test("la session reste maintenue tant qu'au moins une opération est en cours", async () => {
+      await renderHold();
+      let releaseA;
+      let releaseB;
+      act(() => {
+        releaseA = holdSession();
+        releaseB = holdSession();
+      });
+      act(() => {
+        releaseA();
+        releaseA(); // appel multiple sans effet
+        vi.advanceTimersByTime(20 * 60 * 1000);
+      });
+      expect(Swal.fire).not.toHaveBeenCalled();
+
+      act(() => {
+        releaseB();
+        vi.advanceTimersByTime(9 * 60 * 1000);
+      });
+      expect(Swal.fire).toHaveBeenCalledTimes(1);
+    });
+
+    test("le maintien expire de lui-même après 60 min", async () => {
+      await renderHold();
+      act(() => {
+        holdSession();
+      });
+      act(() => {
+        vi.advanceTimersByTime(60 * 60 * 1000);
+      });
+      expect(Swal.fire).not.toHaveBeenCalled();
+
+      act(() => {
+        vi.advanceTimersByTime(9 * 60 * 1000);
+      });
+      expect(Swal.fire).toHaveBeenCalledTimes(1);
+    });
+
+    test("un maintien démarré pendant l'avertissement le referme et annule la déconnexion", async () => {
+      let resolveWarning;
+      Swal.fire.mockImplementation(() => new Promise((resolve) => { resolveWarning = resolve; }));
+      Swal.close.mockImplementation(() => resolveWarning({ isConfirmed: false, isDismissed: true }));
+      await renderHold();
+
+      act(() => {
+        vi.advanceTimersByTime(9 * 60 * 1000);
+      });
+      expect(Swal.fire).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        holdSession();
+      });
+      expect(Swal.close).toHaveBeenCalled();
+      expect(apiClient.post).not.toHaveBeenCalledWith('/auth/logout');
+      expect(screen.getByTestId('auth-state')).toHaveTextContent('authentifié');
+    });
+  });
 });

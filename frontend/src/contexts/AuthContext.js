@@ -12,6 +12,11 @@ const IDLE_WARNING_MS = 60 * 1000;
 // Limite la diffusion de l'activité aux autres onglets (mousemove/scroll
 // déclenchent des dizaines d'évènements par seconde).
 const ACTIVITY_BROADCAST_INTERVAL_MS = 5 * 1000;
+// Pendant une opération longue (import...), la session est maintenue active :
+// un appel léger à /auth/me réémet le cookie bien avant ses 10 min d'expiration.
+const SESSION_KEEPALIVE_INTERVAL_MS = 4 * 60 * 1000;
+// Garde-fou : un maintien de session non libéré expire de lui-même.
+const SESSION_HOLD_MAX_MS = 60 * 60 * 1000;
 
 const AuthContext = createContext(null);
 
@@ -30,6 +35,10 @@ export const AuthProvider = ({ children }) => {
   const remoteActivityRef = useRef(null);
   // Vrai tant que la modale d'avertissement d'inactivité est affichée.
   const idleWarningOpenRef = useRef(false);
+  // Opérations longues en cours qui empêchent la déconnexion (voir holdSession).
+  const sessionHoldsRef = useRef(new Set());
+  // Réaction au début/à la fin d'un maintien de session (définie par l'effet d'inactivité).
+  const holdChangedRef = useRef(null);
 
   const clearAuthState = useCallback(() => {
     isAuthenticatedRef.current = false;
@@ -156,20 +165,58 @@ export const AuthProvider = ({ children }) => {
     }
   }, [clearAuthState, broadcast]);
 
+  /**
+   * Empêche la déconnexion pour inactivité pendant une opération longue
+   * (ex. import de mouvements) : le minuteur d'inactivité est suspendu et la
+   * session est prolongée régulièrement côté serveur, dans tous les onglets.
+   * Le maintien expire de lui-même après SESSION_HOLD_MAX_MS.
+   * @returns {() => void} Fonction de libération, à appeler dans un `finally`
+   * (appels multiples sans effet).
+   */
+  const holdSession = useCallback(() => {
+    const holdToken = {};
+    let released = false;
+    let maxHoldTimer = null;
+
+    const release = () => {
+      if (released) return;
+      released = true;
+      clearTimeout(maxHoldTimer);
+      sessionHoldsRef.current.delete(holdToken);
+      if (sessionHoldsRef.current.size === 0 && holdChangedRef.current) {
+        holdChangedRef.current(false);
+      }
+    };
+
+    const wasIdle = sessionHoldsRef.current.size === 0;
+    sessionHoldsRef.current.add(holdToken);
+    maxHoldTimer = setTimeout(release, SESSION_HOLD_MAX_MS);
+    if (wasIdle && holdChangedRef.current) {
+      holdChangedRef.current(true);
+    }
+    return release;
+  }, []);
+
   // Déconnexion automatique après 10 min d'inactivité, avec un avertissement
   // 1 min avant la coupure. Le compte à rebours est ignoré si l'utilisateur
   // est inactif : seule une action explicite sur la modale (ou une activité
   // avant son ouverture) prolonge la session. L'activité d'un autre onglet
   // compte aussi : elle relance le compteur (et referme l'avertissement).
+  // Tant qu'un maintien de session est actif (holdSession), le compteur est
+  // suspendu et la session est prolongée périodiquement.
   useEffect(() => {
     if (!isAuthenticated) {
       return undefined;
     }
 
     let idleTimer = null;
+    let keepAliveInterval = null;
     let disposed = false;
-    let resumedByOtherTab = false;
+    // Avertissement refermé par un évènement extérieur (autre onglet, maintien de session).
+    let resumedElsewhere = false;
     let lastBroadcastAt = 0;
+
+    const isSessionHeld = () => sessionHoldsRef.current.size > 0;
 
     const clearIdleTimer = () => {
       if (idleTimer) {
@@ -180,6 +227,7 @@ export const AuthProvider = ({ children }) => {
 
     const scheduleWarning = () => {
       clearIdleTimer();
+      if (isSessionHeld()) return;
       idleTimer = setTimeout(showWarning, IDLE_TIMEOUT_MS - IDLE_WARNING_MS);
     };
 
@@ -191,10 +239,43 @@ export const AuthProvider = ({ children }) => {
       }
     };
 
+    const stopKeepAlive = () => {
+      if (keepAliveInterval) {
+        clearInterval(keepAliveInterval);
+        keepAliveInterval = null;
+      }
+    };
+
+    const startKeepAlive = () => {
+      if (keepAliveInterval) return;
+      keepAliveInterval = setInterval(() => {
+        // Réémet le cookie de session. Une session réellement expirée est
+        // signalée par l'intercepteur Axios (onSessionExpired ci-dessus).
+        getCurrentUserProfile().catch(() => {});
+        // Empêche aussi les autres onglets d'afficher l'avertissement.
+        broadcastActivity(true);
+      }, SESSION_KEEPALIVE_INTERVAL_MS);
+    };
+
+    const applySessionHold = (held) => {
+      if (held) {
+        clearIdleTimer();
+        if (idleWarningOpenRef.current) {
+          resumedElsewhere = true;
+          Swal.close();
+        }
+        startKeepAlive();
+        broadcastActivity(true);
+      } else {
+        stopKeepAlive();
+        scheduleWarning();
+      }
+    };
+
     function showWarning() {
-      if (idleWarningOpenRef.current) return;
+      if (idleWarningOpenRef.current || isSessionHeld()) return;
       idleWarningOpenRef.current = true;
-      resumedByOtherTab = false;
+      resumedElsewhere = false;
 
       let remainingSeconds = IDLE_WARNING_MS / 1000;
       let countdownInterval;
@@ -226,8 +307,8 @@ export const AuthProvider = ({ children }) => {
         // Session déjà terminée entre-temps (autre onglet, session expirée...).
         if (disposed || !isAuthenticatedRef.current) return;
 
-        if (resumedByOtherTab) {
-          resumedByOtherTab = false;
+        if (resumedElsewhere) {
+          resumedElsewhere = false;
           scheduleWarning();
         } else if (result.isConfirmed) {
           checkAuth();
@@ -248,20 +329,27 @@ export const AuthProvider = ({ children }) => {
     // Activité dans un autre onglet : on repart de zéro, sans rediffuser.
     remoteActivityRef.current = () => {
       if (idleWarningOpenRef.current) {
-        resumedByOtherTab = true;
+        resumedElsewhere = true;
         Swal.close();
         return;
       }
       scheduleWarning();
     };
+    holdChangedRef.current = applySessionHold;
 
     const activityEvents = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart'];
     activityEvents.forEach((evt) => window.addEventListener(evt, handleActivity, { passive: true }));
-    scheduleWarning();
+    if (isSessionHeld()) {
+      applySessionHold(true);
+    } else {
+      scheduleWarning();
+    }
 
     return () => {
       disposed = true;
       remoteActivityRef.current = null;
+      holdChangedRef.current = null;
+      stopKeepAlive();
       activityEvents.forEach((evt) => window.removeEventListener(evt, handleActivity));
       clearIdleTimer();
       if (idleWarningOpenRef.current) {
@@ -280,6 +368,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     checkAuth,
     setMustChangePassword,
+    holdSession,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

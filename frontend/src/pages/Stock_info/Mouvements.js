@@ -22,6 +22,7 @@ import { escapeHtml } from '../../utils/escapeHtml';
 import PageHeader from '../../components/PageHeader/PageHeader';
 import { tableStyles, paginationOptions } from '../../styles/dataTableTheme';
 import { swalButtons } from '../../utils/swal';
+import { useAuth } from '../../contexts/AuthContext';
 
 // Tableau : thème partagé, seules les hauteurs de ligne diffèrent
 const tableCustomStyles = tableStyles({
@@ -110,6 +111,19 @@ const Mouvements = () => {
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef(null);
     const abortControllerRef = useRef(null);
+    // Empêche la déconnexion pour inactivité pendant l'import (voir AuthContext).
+    const { holdSession } = useAuth();
+
+    // Prévient l'utilisateur s'il ferme ou recharge l'onglet pendant un import.
+    useEffect(() => {
+        if (!isImporting) return undefined;
+        const handleBeforeUnload = (event) => {
+            event.preventDefault();
+            event.returnValue = '';
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [isImporting]);
 
     // --- Fonctions ---
     const handleAddClick = () => setShowAddModal(true);
@@ -480,6 +494,9 @@ const handleImportSubmit = useCallback(async () => {
     setImportError(null);
     setImportSuccess(false);
 
+    // Session maintenue jusqu'à la fin de l'import (succès, erreur ou annulation).
+    const releaseSession = holdSession();
+
     const formData = new FormData();
     formData.append('file', importFile);
 
@@ -616,6 +633,8 @@ const handleImportSubmit = useCallback(async () => {
         setTimeout(() => setError(null), 5000);
         
     } finally {
+        releaseSession();
+
         // Nettoyer l'intervalle si encore présent
         if (progressInterval) {
             clearInterval(progressInterval);
@@ -630,7 +649,7 @@ const handleImportSubmit = useCallback(async () => {
             abortControllerRef.current = null;
         }
     }
-}, [importFile, importData, fetchAllMouvements, resetImportState, importError, importSuccess]);
+}, [importFile, importData, fetchAllMouvements, resetImportState, importError, importSuccess, holdSession]);
 
     // --- DÉFINITION DES COLONNES ---
     const columns = useMemo(() => [
