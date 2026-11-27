@@ -30,7 +30,7 @@ const DEFAULT_STATUS = { emoji: '❓', tone: 'neutral' };
 
 // Deux filtres indépendants :
 // - le statut (onglets) se déduit de l'affectation, pas de etat_pc ;
-// - l'état physique (menu « État ») est la valeur de etat_pc.
+// - l'état physique (pastilles « État ») est la valeur de etat_pc.
 const isSansPoste = (materiel) => Boolean(materiel.est_vide);
 
 const STATUTS = ['Affecté', 'Stock', 'Sans poste'];
@@ -270,20 +270,32 @@ const statutCounts = useMemo(() => {
     return counts;
 }, [materielsHorsEtat, filterEtat]);
 
-// Options du menu « État » : états connus, puis valeurs libres (import), puis « Non défini ».
-const etatOptions = useMemo(() => {
+// Pastilles « État » : états connus, puis valeurs libres (import), puis « Non défini ».
+// Les compteurs suivent l'onglet de statut sélectionné.
+const etatPastilles = useMemo(() => {
     const counts = {};
+    let total = 0;
     materielsHorsEtat.forEach(m => {
+        if (!matchesStatut(m, filterStatut)) return;
+        total += 1;
         const etat = getEtatPhysique(m);
-        if (etat && matchesStatut(m, filterStatut)) counts[etat] = (counts[etat] || 0) + 1;
+        if (etat) counts[etat] = (counts[etat] || 0) + 1;
     });
     const autres = Object.keys(counts)
         .filter(e => !ETATS_PHYSIQUES.includes(e) && e !== ETAT_NON_DEFINI)
         .sort((a, b) => a.localeCompare(b));
-    return [...ETATS_PHYSIQUES, ...autres, ETAT_NON_DEFINI]
+    const items = [...ETATS_PHYSIQUES, ...autres, ETAT_NON_DEFINI]
         .filter(e => ETATS_PHYSIQUES.includes(e) || counts[e])
-        .map(e => ({ value: e, label: `${statusConfig[e]?.emoji || DEFAULT_STATUS.emoji} ${e} (${counts[e] || 0})` }));
+        .map(e => ({ value: e, count: counts[e] || 0, ...(statusConfig[e] || DEFAULT_STATUS) }));
+    return { total, items };
 }, [materielsHorsEtat, filterStatut]);
+
+// Une fiche « Sans poste » n'a pas d'état : on efface le filtre d'état.
+const selectStatut = (key) => {
+    const statut = key === 'all' ? '' : key;
+    setFilterStatut(statut);
+    if (statut === 'Sans poste') setFilterEtat('');
+};
 
 // --- Fonctions de rendu partagées (tableau + vue cartes) ---
 const formatDate = useCallback((dateString) => {
@@ -577,7 +589,7 @@ return (
                     <div className="col-12">
                         <Tabs
                             activeKey={filterStatut || 'all'}
-                            onSelect={(key) => setFilterStatut(key === 'all' ? '' : key)}
+                            onSelect={selectStatut}
                             className="materiel-etat-tabs mb-0"
                             fill
                         >
@@ -586,6 +598,31 @@ return (
                                 <Tab key={statut} eventKey={statut} title={<span className="d-inline-flex align-items-center gap-2"><span aria-hidden="true">{statutConfig[statut].emoji}</span>{statut} ({statutCounts[statut]})</span>} />
                             ))}
                         </Tabs>
+                        {filterStatut !== 'Sans poste' && (
+                        <div className="mat-etat-pastilles" role="group" aria-label="Filtrer par état physique">
+                            <button
+                                type="button"
+                                className={`mat-etat-pastille ${!filterEtat ? 'is-active' : ''}`}
+                                aria-pressed={!filterEtat}
+                                onClick={() => setFilterEtat('')}
+                            >
+                                Tous états <span className="mat-etat-pastille-count">{etatPastilles.total}</span>
+                            </button>
+                            {etatPastilles.items.map(e => (
+                                <button
+                                    key={e.value}
+                                    type="button"
+                                    className={`mat-etat-pastille ${toneClass(e.tone)} ${filterEtat === e.value ? 'is-active' : ''}`}
+                                    aria-pressed={filterEtat === e.value}
+                                    onClick={() => setFilterEtat(filterEtat === e.value ? '' : e.value)}
+                                    disabled={!e.count && filterEtat !== e.value}
+                                >
+                                    <span aria-hidden="true">{e.emoji}</span>
+                                    {e.value} <span className="mat-etat-pastille-count">{e.count}</span>
+                                </button>
+                            ))}
+                        </div>
+                        )}
                     </div>
                     )}
                     <div className="col-12 col-lg-3">
@@ -610,20 +647,6 @@ return (
 
                     {userRole !== 'USER' && (
                     <>
-                    <div className="col-6 col-md-4 col-lg">
-                        <Form.Select
-                            value={filterEtat}
-                            onChange={(e) => setFilterEtat(e.target.value)}
-                            className={filterClass(filterEtat)}
-                            aria-label="Filtrer par état physique"
-                        >
-                            <option value="">État</option>
-                            {etatOptions.map(o => (
-                                <option key={o.value} value={o.value}>{o.label}</option>
-                            ))}
-                        </Form.Select>
-                    </div>
-
                     <div className="col-6 col-md-4 col-lg">
                         <SearchableSelect
                             value={filterEquipe}

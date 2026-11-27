@@ -434,3 +434,54 @@
 .page-materiels .materiel-etat-tabs + .tab-content {
     display: none;
 }
+
+/* Pastilles de filtre par état physique, sous les onglets de statut.
+   La couleur vient de la tonalité de l'état (.tone--*, cf. styles/tones.css). */
+.page-materiels .mat-etat-pastilles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.page-materiels .mat-etat-pastille {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+    color: var(--color-text-main);
+    font-size: 0.8rem;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: var(--transition-base);
+}
+
+.page-materiels .mat-etat-pastille:hover:not(:disabled) {
+    border-color: var(--tone-border, var(--color-primary-border));
+    background: var(--tone-bg, var(--color-primary-soft));
+}
+
+.page-materiels .mat-etat-pastille.is-active {
+    border-color: var(--tone-fg, var(--color-primary));
+    background: var(--tone-bg, var(--color-primary-soft));
+    color: var(--tone-fg, var(--color-info-fg-strong));
+    font-weight: 600;
+}
+
+.page-materiels .mat-etat-pastille:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.page-materiels .mat-etat-pastille-count {
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.page-materiels .mat-etat-pastille.is-active .mat-etat-pastille-count {
+    color: inherit;
+}
