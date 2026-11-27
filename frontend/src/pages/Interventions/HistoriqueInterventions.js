@@ -19,7 +19,7 @@ import { tableStyles, paginationOptions } from '../../styles/dataTableTheme';
 import InterventionModal from './InterventionModal';
 import {
   TYPE_CONFIG, INTERVENTION_TYPES, PERIODES, dateParam, decaler, libellePeriode, estPeriodeCourante,
-  libelleSerie, formatDuree,
+  libelleSerie, formatDuree, libelleSousType, SOUS_TYPE_NON_PRECISE,
 } from './interventionConfig';
 import './HistoriqueInterventions.css';
 
@@ -32,9 +32,16 @@ const lireRef = (valeur) => {
   return valeur && d.isValid() ? d : dayjs();
 };
 
-const TypeChip = ({ type }) => (
-  <span className={`itv-type ${toneClass(TYPE_CONFIG[type]?.tone)} tone-chip`}>{TYPE_CONFIG[type]?.label || type}</span>
-);
+const TypeChip = ({ type, sousType }) => {
+  const chip = <span className={`itv-type ${toneClass(TYPE_CONFIG[type]?.tone)} tone-chip`}>{TYPE_CONFIG[type]?.label || type}</span>;
+  const libelle = libelleSousType(type, sousType);
+  return libelle ? <span className="itv-type-cell">{chip}<small>{libelle}</small></span> : chip;
+};
+
+// Libellé du filtre sous-type venu de l'URL (« Sous-type non précisé » pour NON_PRECISE)
+const libelleFiltreSousType = (types, sousType) => (sousType === SOUS_TYPE_NON_PRECISE
+  ? 'Sous-type non précisé'
+  : types.map(t => libelleSousType(t, sousType)).find(Boolean) || sousType);
 
 const HistoriqueInterventions = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -54,6 +61,8 @@ const HistoriqueInterventions = () => {
   // Filtres matériel / bénéficiaire initiaux depuis l'URL (panneau « Récurrences » du tableau de bord)
   const [materiel, setMateriel] = useState(() => searchParams.get('materiel') || '');
   const [beneficiaire, setBeneficiaire] = useState(() => searchParams.get('beneficiaire') || '');
+  // Filtre sous-type initial depuis l'URL (panneau « par sous-type » du tableau de bord)
+  const [sousType, setSousType] = useState(() => searchParams.get('sous_type') || '');
   const [recherche, setRecherche] = useState('');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -69,13 +78,13 @@ const HistoriqueInterventions = () => {
     setLoading(true);
     setError('');
     try {
-      setData(await getInterventions({ periode, date: dateParam(periode, dayjs(refKey)), types, technicien, source, bloque, materiel, beneficiaire }));
+      setData(await getInterventions({ periode, date: dateParam(periode, dayjs(refKey)), types, sousType, technicien, source, bloque, materiel, beneficiaire }));
     } catch (err) {
       setError(err.message || 'Impossible de charger les interventions.');
     } finally {
       setLoading(false);
     }
-  }, [periode, refKey, types, technicien, source, bloque, materiel, beneficiaire]);
+  }, [periode, refKey, types, sousType, technicien, source, bloque, materiel, beneficiaire]);
 
   useEffect(() => { charger(); }, [charger]);
 
@@ -96,6 +105,7 @@ const HistoriqueInterventions = () => {
     return liste.filter(it => [
       it.description, it.solution, it.nom_technicien, it.ticket?.numeroTicket, it.materiel?.code_pc,
       it.materiel?.utilisateur, it.local?.nom_local, TYPE_CONFIG[it.type]?.label,
+      libelleSousType(it.type, it.sous_type),
     ].some(v => String(v || '').toLowerCase().includes(q)));
   }, [data, recherche]);
 
@@ -141,6 +151,7 @@ const HistoriqueInterventions = () => {
     const rows = lignes.map(it => ({
       Date: dayjs(it.date_intervention).format('DD/MM/YYYY HH:mm'),
       Type: TYPE_CONFIG[it.type]?.label || it.type,
+      'Sous-type': libelleSousType(it.type, it.sous_type) || '',
       Description: it.description,
       Solution: it.solution || '',
       'Durée (hh:mm)': it.duree_minutes == null ? '' : formatDuree(it.duree_minutes),
@@ -209,7 +220,11 @@ const HistoriqueInterventions = () => {
         </span>
       ),
     },
-    { name: 'Type', sortable: true, width: '140px', selector: r => r.type, cell: r => <TypeChip type={r.type} /> },
+    {
+      name: 'Type', sortable: true, width: '190px',
+      selector: r => `${TYPE_CONFIG[r.type]?.label || r.type} ${libelleSousType(r.type, r.sous_type) || ''}`,
+      cell: r => <TypeChip type={r.type} sousType={r.sous_type} />,
+    },
     {
       name: 'Description', grow: 3, wrap: true,
       selector: r => r.description,
@@ -309,6 +324,11 @@ const HistoriqueInterventions = () => {
         <button type="button" aria-pressed={bloque} className={`itv-chip ${bloque ? 'is-active tone--danger' : ''}`} onClick={() => setBloque(b => !b)}>
           <FaUserSlash aria-hidden="true" /> Utilisateur bloqué
         </button>
+        {sousType && (
+          <button type="button" className="itv-chip is-active" aria-label={`Retirer le filtre ${libelleFiltreSousType(types, sousType)}`} onClick={() => setSousType('')}>
+            {libelleFiltreSousType(types, sousType)} <FaTimes aria-hidden="true" />
+          </button>
+        )}
         {materiel && (
           <button type="button" className="itv-chip is-active" aria-label={`Retirer le filtre ${libelleMateriel}`} onClick={() => setMateriel('')}>
             {libelleMateriel} <FaTimes aria-hidden="true" />
@@ -319,8 +339,8 @@ const HistoriqueInterventions = () => {
             {libelleBeneficiaire} <FaTimes aria-hidden="true" />
           </button>
         )}
-        {(types.length > 0 || technicien || source || bloque || materiel || beneficiaire) && (
-          <button type="button" className="itv-link" onClick={() => { setTypes([]); setTechnicien(''); setSource(''); setBloque(false); setMateriel(''); setBeneficiaire(''); }}>Réinitialiser</button>
+        {(types.length > 0 || sousType || technicien || source || bloque || materiel || beneficiaire) && (
+          <button type="button" className="itv-link" onClick={() => { setTypes([]); setSousType(''); setTechnicien(''); setSource(''); setBloque(false); setMateriel(''); setBeneficiaire(''); }}>Réinitialiser</button>
         )}
       </div>
 

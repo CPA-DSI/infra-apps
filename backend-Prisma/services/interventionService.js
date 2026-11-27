@@ -6,6 +6,21 @@
 export const INTERVENTION_TYPES = ['DEPANNAGE', 'INSTALLATION', 'PREVENTIF', 'DEMENAGEMENT', 'PRESTATAIRE', 'AUTRE'];
 export const PERIODES = ['jour', 'mois', 'annee'];
 
+// Sous-types par type (liste validée par la DSI, identique à SOUS_TYPE_CONFIG
+// côté frontend). Les autres types n'ont pas de sous-type.
+export const SOUS_TYPES = {
+    DEPANNAGE: [
+        'MATERIEL_POSTE', 'IMPRIMANTE_SCANNER', 'RESEAU_CONNEXION', 'SYSTEME',
+        'BUREAUTIQUE', 'MESSAGERIE', 'COMPTE_ACCES', 'SERVEUR_PARTAGE',
+    ],
+    INSTALLATION: [
+        'NOUVEAU_POSTE', 'LOGICIEL', 'MISE_A_JOUR', 'PERIPHERIQUE',
+        'RESEAU', 'SERVEUR_INFRA', 'SECURITE', 'SALLE_REUNION',
+    ],
+};
+// Clé des interventions de ces types sans sous-type (anciennes, clôtures de ticket)
+export const SOUS_TYPE_NON_PRECISE = 'NON_PRECISE';
+
 export class InterventionError extends Error {
     constructor(message, status = 400) {
         super(message);
@@ -56,6 +71,18 @@ export const creerInterventionDepuisFermeture = async (tx, { ticket, fermeture, 
             id_local: materiel?.id_local ?? null,
         },
     });
+};
+
+// Sous-type d'une intervention : facultatif (null), et seulement parmi ceux de
+// son type ; ignoré (null) pour un type sans sous-types.
+export const lireSousType = (type, valeur) => {
+    const autorises = SOUS_TYPES[type];
+    if (valeur === undefined || valeur === null || valeur === '') return null;
+    if (!autorises) return null;
+    if (!autorises.includes(valeur)) {
+        throw new InterventionError(`Sous-type invalide pour ${type} (attendu : ${autorises.join(', ')}).`);
+    }
+    return valeur;
 };
 
 // Clôture du ticket lié depuis une intervention (case « Clôturer le ticket ») :
@@ -256,6 +283,9 @@ export const nommerRecurrences = async (tx, stats) => {
 export const statistiques = (interventions, periode, debut) => {
     const serie = serieVide(periode, debut);
     const parType = Object.fromEntries(INTERVENTION_TYPES.map(t => [t, 0]));
+    // Types à sous-types : nombre par sous-type, NON_PRECISE pour ceux sans sous-type
+    const parSousType = Object.fromEntries(Object.entries(SOUS_TYPES)
+        .map(([t, liste]) => [t, Object.fromEntries([...liste, SOUS_TYPE_NON_PRECISE].map(s => [s, 0]))]));
     // Moyenne calculée sur les seules interventions dont la durée est renseignée
     const dureesType = Object.fromEntries(INTERVENTION_TYPES.map(t => [t, { duree: 0, n: 0 }]));
     // Lundi = 0 … dimanche = 6, puis heure 0-23
@@ -276,6 +306,10 @@ export const statistiques = (interventions, periode, debut) => {
             dureesType[it.type].n += 1;
         }
         parType[it.type] += 1;
+        if (parSousType[it.type]) {
+            const cleSousType = it.sous_type in parSousType[it.type] ? it.sous_type : SOUS_TYPE_NON_PRECISE;
+            parSousType[it.type][cleSousType] += 1;
+        }
         dureeTotale += duree;
         if (it.id_materiels) materiels.add(it.id_materiels);
         const cle = it.id_technicien ?? 'aucun';
@@ -294,6 +328,7 @@ export const statistiques = (interventions, periode, debut) => {
         depuis_tickets: interventions.filter(it => it.source === 'TICKET').length,
         ...resumeBlocages(interventions),
         par_type: parType,
+        par_sous_type: parSousType,
         duree_moyenne_par_type: Object.fromEntries(Object.entries(dureesType)
             .map(([t, { duree, n }]) => [t, n ? Math.round(duree / n) : null])),
         par_jour_heure: parJourHeure,

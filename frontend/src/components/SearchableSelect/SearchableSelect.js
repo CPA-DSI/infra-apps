@@ -6,14 +6,25 @@ import './SearchableSelect.css';
 //
 // Props :
 //   - value / onChange : valeur sélectionnée ('' = aucune) et callback de sélection.
-//   - options          : tableau de chaînes ou d'objets { value, label }.
+//   - options          : tableau de chaînes ou d'objets { value, label }, avec en option :
+//                          description (texte secondaire, affiché et pris en compte par la
+//                          recherche), group / groupClassName (titre de groupe, affiché au
+//                          changement de groupe ; options d'un même groupe à la suite) et
+//                          display (contenu affiché dans le déclencheur une fois choisie).
 //   - placeholder      : libellé de l'entrée « aucune sélection » (alias : allLabel).
 //   - style            : styles additionnels du déclencheur.
 //   - variant          : 'compact' (défaut, visuel des Form.Select rounded-pill de
 //                        la page Matériels) ou 'filter' (visuel form-select de la
 //                        page Utilisateurs, avec loupe et bouton d'effacement).
 //   - styleClass       : classes CSS du déclencheur (par défaut selon la variante).
+//   - allowEmpty       : false retire l'entrée « aucune sélection » de la liste (champ obligatoire).
+//   - ariaLabelledBy   : id du libellé du champ (accessibilité).
+//   - searchPlaceholder: texte de la recherche (défaut « Rechercher... »).
+// Recherche insensible à la casse et aux accents.
 // Styles : SearchableSelect.css (.ss--compact / .ss--filter).
+
+// Minuscules sans accents ni tirets : « reseau » trouve « Réseau », « wifi » trouve « Wi-Fi ».
+const normaliser = (texte) => String(texte).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/-/g, '').toLowerCase();
 
 const TRIGGER_CLASSES = {
     compact: 'rounded-pill border-0 shadow-sm',
@@ -29,6 +40,9 @@ const SearchableSelect = ({
     style,
     styleClass,
     variant = 'compact',
+    allowEmpty = true,
+    ariaLabelledBy,
+    searchPlaceholder = 'Rechercher...',
 }) => {
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState('');
@@ -52,14 +66,15 @@ const SearchableSelect = ({
         typeof o === 'string' ? { value: o, label: o } : o
     );
 
+    const q = normaliser(query.trim());
     const filteredOptions = normalizedOptions.filter(o =>
-        String(o.label).toLowerCase().includes(query.toLowerCase())
+        normaliser(`${o.label} ${o.description || ''} ${o.group || ''}`).includes(q)
     );
 
     const selectedOption = normalizedOptions.find(o => o.value === value);
     // Variante « filter » : une valeur absente des options reste affichée telle quelle.
     const displayLabel = selectedOption
-        ? selectedOption.label
+        ? (selectedOption.display ?? selectedOption.label)
         : (isFilter && value) ? value : emptyLabel;
 
     const toggle = () => { setOpen(!open); setQuery(''); };
@@ -72,7 +87,7 @@ const SearchableSelect = ({
                 <input
                     autoFocus
                     type="text"
-                    placeholder="Rechercher..."
+                    placeholder={searchPlaceholder}
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                 />
@@ -93,7 +108,7 @@ const SearchableSelect = ({
             className="ss-search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Rechercher..."
+            placeholder={searchPlaceholder}
         />
     );
 
@@ -101,20 +116,31 @@ const SearchableSelect = ({
 
     const items = (
         <>
-            <div
-                className={`ss-item ss-item--empty ${emptySelected ? 'is-selected' : ''}`}
-                onClick={() => select('')}
-            >
-                {emptyLabel}
-            </div>
-            {filteredOptions.map(o => (
+            {allowEmpty && (
                 <div
-                    key={o.value}
-                    className={`ss-item ${value === o.value ? 'is-selected' : ''}`}
-                    onClick={() => select(o.value)}
+                    className={`ss-item ss-item--empty ${emptySelected ? 'is-selected' : ''}`}
+                    onClick={() => select('')}
                 >
-                    {o.label}
+                    {emptyLabel}
                 </div>
+            )}
+            {filteredOptions.map((o, i) => (
+                <React.Fragment key={o.value}>
+                    {o.group && o.group !== filteredOptions[i - 1]?.group && (
+                        <div className="ss-group" role="presentation">
+                            <span className={o.groupClassName || ''}>{o.group}</span>
+                        </div>
+                    )}
+                    <div
+                        role="option"
+                        aria-selected={value === o.value}
+                        className={`ss-item ${o.group ? 'ss-item--grouped' : ''} ${value === o.value ? 'is-selected' : ''}`}
+                        onClick={() => select(o.value)}
+                    >
+                        {o.label}
+                        {o.description && <small className="ss-item-desc">{o.description}</small>}
+                    </div>
+                </React.Fragment>
             ))}
             {filteredOptions.length === 0 && (
                 <div className="ss-no-result">Aucun résultat</div>
@@ -130,9 +156,12 @@ const SearchableSelect = ({
                 onClick={toggle}
                 role="button"
                 tabIndex={0}
+                aria-haspopup="listbox"
+                aria-expanded={open}
+                aria-labelledby={ariaLabelledBy}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } }}
             >
-                <span className={`ss-label ${value ? '' : 'is-placeholder'}`}>
+                <span className={`ss-label ${selectedOption || (isFilter && value) ? '' : 'is-placeholder'}`}>
                     {displayLabel}
                 </span>
                 <span className="ss-arrow">▼</span>

@@ -6,7 +6,9 @@ import { hasPermission, PERMISSIONS } from '../../config/api';
 import AppModal from '../../components/AppModal/AppModal';
 import SearchableSelect from '../../components/SearchableSelect/SearchableSelect';
 import { fetchMateriels, fetchLocaux, getTickets, createIntervention, updateIntervention } from '../../services/api';
-import { TYPE_CONFIG, INTERVENTION_TYPES } from './interventionConfig';
+import {
+  TYPE_CONFIG, SOUS_TYPE_CONFIG, OPTIONS_TYPE_SOUS_TYPE, valeurTypeSousType, lireTypeSousType,
+} from './interventionConfig';
 import DureePicker from '../../components/DureePicker/DureePicker';
 import { formatDuree, parseDuree, dureeVersSaisie, MESSAGE_DUREE_INVALIDE } from '../../utils/duree';
 
@@ -17,7 +19,9 @@ const STATUTS_FERMES = ['RESOLU', 'FERME'];
 // duree_minutes contient la saisie hh:mm ; convertie en minutes à l'envoi.
 const formulaireVide = (prefill) => ({
   date_intervention: dayjs().format('YYYY-MM-DDTHH:mm'),
-  type: 'DEPANNAGE',
+  // Type à choisir (liste unique Type + Sous-type)
+  type: '',
+  sous_type: '',
   description: '',
   solution: '',
   id_materiels: '',
@@ -33,6 +37,7 @@ const depuisIntervention = (it) => ({
   date_intervention: dayjs(it.date_intervention).format('YYYY-MM-DDTHH:mm'),
   duree_minutes: dureeVersSaisie(it.duree_minutes),
   type: it.type,
+  sous_type: it.sous_type || '',
   description: it.description,
   solution: it.solution || '',
   id_materiels: it.id_materiels ? String(it.id_materiels) : '',
@@ -46,6 +51,7 @@ const versApi = (form, intervention, cloturer) => ({
   date_intervention: dayjs(form.date_intervention).toISOString(),
   duree_minutes: parseDuree(form.duree_minutes),
   type: form.type,
+  sous_type: form.sous_type || null,
   description: form.description,
   solution: form.solution,
   utilisateur_bloque: form.utilisateur_bloque,
@@ -99,6 +105,16 @@ const InterventionModal = ({ show, onClose, onSaved, intervention, prefill }) =>
   }, [show]);
 
   const set = (champ, valeur) => setForm(f => ({ ...f, [champ]: valeur }));
+  // Liste unique : un seul choix renseigne le type et le sous-type
+  const choisirType = (valeur) => setForm(f => ({ ...f, ...lireTypeSousType(valeur) }));
+
+  // Dépannage / Installation : sous-type obligatoire dans le formulaire
+  const sousTypes = SOUS_TYPE_CONFIG[form.type];
+  const sousTypeChoisi = sousTypes?.[form.sous_type];
+  // Intervention enregistrée sans sous-type (ancienne, ou issue d'un ticket) : à préciser
+  const placeholderType = sousTypes && !sousTypeChoisi
+    ? `${TYPE_CONFIG[form.type].label} · précisez le sous-type...`
+    : 'Choisir un type...';
 
   // Intervention qui a déjà clôturé son ticket : ticket figé, solution obligatoire
   const estCloture = Boolean(intervention?.cloture_ticket && intervention.id_ticket);
@@ -119,6 +135,10 @@ const InterventionModal = ({ show, onClose, onSaved, intervention, prefill }) =>
       setError(estCloture
         ? 'La solution est obligatoire : elle est partagée avec le ticket clôturé.'
         : 'La solution est obligatoire pour clôturer le ticket.');
+      return;
+    }
+    if (!form.type || (sousTypes && !sousTypeChoisi)) {
+      setError(form.type ? 'Précisez le sous-type.' : 'Le type est obligatoire.');
       return;
     }
     const duree = parseDuree(form.duree_minutes);
@@ -174,10 +194,11 @@ const InterventionModal = ({ show, onClose, onSaved, intervention, prefill }) =>
         </div>
 
         <div className="add-modal-form-group">
-          <label className="add-modal-label" htmlFor="itv-type">Type <span className="itv-required">*</span></label>
-          <select id="itv-type" className="add-modal-select" value={form.type} onChange={(e) => set('type', e.target.value)}>
-            {INTERVENTION_TYPES.map(t => <option key={t} value={t}>{TYPE_CONFIG[t].label}</option>)}
-          </select>
+          <label className="add-modal-label" id="itv-type-label">Type <span className="itv-required">*</span></label>
+          <SearchableSelect value={valeurTypeSousType(form.type, form.sous_type)} onChange={choisirType}
+            options={OPTIONS_TYPE_SOUS_TYPE} placeholder={placeholderType} variant="filter" allowEmpty={false}
+            ariaLabelledBy="itv-type-label" searchPlaceholder="Rechercher : wifi, imprimante, Office..." />
+          {sousTypeChoisi && <small className="itv-hint itv-sous-type-hint">{sousTypeChoisi.exemples}</small>}
         </div>
 
         <div className="add-modal-form-group">

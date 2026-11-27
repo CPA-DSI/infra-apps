@@ -1,6 +1,6 @@
 // routes/interventionRoutes.js
 // Historique des interventions (réservé IT_ADMIN / DIRECTION).
-//   GET    /api/interventions?periode=jour|mois|annee&date=AAAA-MM-JJ[&types=&technicien=&source=&bloque=1&materiel=&beneficiaire=]
+//   GET    /api/interventions?periode=jour|mois|annee&date=AAAA-MM-JJ[&types=&sous_type=&technicien=&source=&bloque=1&materiel=&beneficiaire=]
 //   GET    /api/interventions/stats?periode=&date= : statistiques seules (tableau de
 //          bord d'accueil) + totaux de la période précédente (« à date » si en cours)
 //          et sa série complète (courbe cumulée comparée)
@@ -21,7 +21,7 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import {
     INTERVENTION_TYPES, InterventionError, bornesPeriode, statistiques, nomTechnicien, lireBooleen,
     fermerTicketDepuisIntervention, synchroniserFermeture, periodePrecedente, serieInterventions,
-    resumeBlocages, nommerRecurrences,
+    resumeBlocages, nommerRecurrences, lireSousType, SOUS_TYPES, SOUS_TYPE_NON_PRECISE,
 } from '../services/interventionService.js';
 
 const router = express.Router();
@@ -80,6 +80,7 @@ const lireCorps = async (body) => {
     const data = {
         date_intervention: date,
         type: body.type,
+        sous_type: lireSousType(body.type, body.sous_type),
         description,
         solution: solution || null,
         duree_minutes: duree,
@@ -137,6 +138,12 @@ router.get('/', requirePermission(PERMISSIONS.INTERVENTIONS_READ), asyncHandler(
         if (req.query.technicien) {
             where.id_technicien = req.query.technicien === 'moi' ? req.user.id_n : entierOptionnel(req.query.technicien, 'technicien');
         }
+        // Sous-type (panneau « par sous-type » du tableau de bord) ; NON_PRECISE = sans sous-type
+        if (req.query.sous_type === SOUS_TYPE_NON_PRECISE) where.sous_type = null;
+        else if (req.query.sous_type) {
+            if (!Object.values(SOUS_TYPES).flat().includes(req.query.sous_type)) throw new InterventionError('sous_type invalide.');
+            where.sous_type = req.query.sous_type;
+        }
         if (req.query.source === 'TICKET' || req.query.source === 'MANUELLE') where.source = req.query.source;
         if (req.query.bloque === '1') where.utilisateur_bloque = true;
         // Liens « Récurrences » du tableau de bord
@@ -163,7 +170,7 @@ router.get('/', requirePermission(PERMISSIONS.INTERVENTIONS_READ), asyncHandler(
 
 // Colonnes utiles au calcul des statistiques (pas de description ni de relations)
 const SELECT_STATS = {
-    date_intervention: true, duree_minutes: true, type: true, source: true,
+    date_intervention: true, duree_minutes: true, type: true, sous_type: true, source: true,
     utilisateur_bloque: true, id_technicien: true, nom_technicien: true, id_materiels: true,
     id_n_beneficiaire: true,
 };

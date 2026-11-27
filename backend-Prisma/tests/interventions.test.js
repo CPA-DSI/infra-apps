@@ -249,6 +249,26 @@ describe('Saisie manuelle', () => {
         expect((await as(admin).post('/api/interventions').send(intervention({ utilisateur_bloque: 'oui' }))).status).toBe(400);
     });
 
+    it('enregistre le sous-type de Dépannage / Installation, contrôlé selon le type', async () => {
+        const dep = await as(admin).post('/api/interventions').send(intervention({ type: 'DEPANNAGE', sous_type: 'RESEAU_CONNEXION' }));
+        expect(dep.status).toBe(201);
+        expect(dep.body.sous_type).toBe('RESEAU_CONNEXION');
+
+        const maj = await as(admin).put(`/api/interventions/${dep.body.id_intervention}`)
+            .send(intervention({ type: 'INSTALLATION', sous_type: 'SALLE_REUNION' }));
+        expect(maj.body).toMatchObject({ type: 'INSTALLATION', sous_type: 'SALLE_REUNION' });
+
+        // Facultatif : sans sous-type = non précisé
+        expect((await as(admin).post('/api/interventions').send(intervention({ sous_type: '' }))).body.sous_type).toBeNull();
+        // Ignoré pour un type sans sous-types
+        expect((await as(admin).post('/api/interventions').send(intervention({ type: 'PREVENTIF', sous_type: 'RESEAU' }))).body.sous_type).toBeNull();
+
+        // Sous-type d'un autre type ou inconnu : refusé
+        expect((await as(admin).post('/api/interventions').send(intervention({ type: 'DEPANNAGE', sous_type: 'NOUVEAU_POSTE' }))).status).toBe(400);
+        expect((await as(admin).post('/api/interventions').send(intervention({ sous_type: 'INCONNU' }))).status).toBe(400);
+        expect(await prisma.intervention.count()).toBe(3);
+    });
+
     it('un USER n\'a pas accès aux interventions (403)', async () => {
         expect((await as(alice).get('/api/interventions?periode=mois&date=2026-11')).status).toBe(403);
         expect((await as(alice).post('/api/interventions').send(intervention())).status).toBe(403);
@@ -384,6 +404,25 @@ describe('GET /api/interventions/stats', () => {
         expect(res.body.stats).toMatchObject({ total: 3, duree_totale: 120, utilisateurs_bloques: 1 });
         expect(res.body.stats.serie).toHaveLength(30);
         expect(res.body.precedent).toMatchObject({ total: 2, duree_totale: 60, utilisateurs_bloques: 1, a_date: false, a_venir: false });
+    });
+
+    it('répartit Dépannage et Installation par sous-type, non précisé à part', async () => {
+        await as(admin).post('/api/interventions').send(intervention({ date_intervention: '2025-11-06T10:00:00', type: 'DEPANNAGE', sous_type: 'MESSAGERIE' }));
+        await as(admin).post('/api/interventions').send(intervention({ date_intervention: '2025-11-07T10:00:00', type: 'DEPANNAGE', sous_type: 'MESSAGERIE' }));
+        await as(admin).post('/api/interventions').send(intervention({ date_intervention: '2025-11-08T10:00:00', type: 'DEPANNAGE' }));
+        await as(admin).post('/api/interventions').send(intervention({ date_intervention: '2025-11-09T10:00:00', sous_type: 'LOGICIEL' }));
+        const { stats } = (await as(admin).get('/api/interventions/stats?periode=mois&date=2025-11')).body;
+
+        expect(stats.par_sous_type.DEPANNAGE).toMatchObject({ MESSAGERIE: 2, NON_PRECISE: 1, RESEAU_CONNEXION: 0 });
+        // 3 installations du beforeEach sans sous-type + 1 Logiciel
+        expect(stats.par_sous_type.INSTALLATION).toMatchObject({ LOGICIEL: 1, NON_PRECISE: 3 });
+        expect(stats.par_sous_type.PREVENTIF).toBeUndefined();
+
+        // Filtre de l'historique (clic sur une ligne du tableau de bord)
+        const url = '/api/interventions?periode=mois&date=2025-11&types=DEPANNAGE&sous_type=';
+        expect((await as(admin).get(`${url}MESSAGERIE`)).body.interventions).toHaveLength(2);
+        expect((await as(admin).get(`${url}NON_PRECISE`)).body.interventions).toHaveLength(1);
+        expect((await as(admin).get(`${url}INCONNU`)).status).toBe(400);
     });
 
     it('détaille bloquées par point, jour × heure, durée moyenne par type et série précédente', async () => {

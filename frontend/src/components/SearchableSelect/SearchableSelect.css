@@ -157,3 +157,33 @@
   font-size: 0.85rem;
   color: var(--color-text-muted);
 }
+
+/* ---- Groupes et descriptions (options { group, description }) ---- */
+.ss-group {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 8px 14px 4px;
+  background-color: var(--color-bg);
+}
+
+.ss-group > span {
+  display: inline-block;
+  padding: 1px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.ss-item--grouped {
+  padding-left: 24px;
+}
+
+.ss-item-desc {
+  display: block;
+  margin-top: 1px;
+  font-size: 0.78rem;
+  line-height: 1.3;
+  color: var(--color-text-sub);
+  font-weight: 400;
+}

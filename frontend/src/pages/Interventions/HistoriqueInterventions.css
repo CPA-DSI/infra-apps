@@ -282,6 +282,20 @@
     color: var(--color-text-sub);
 }
 
+.page-interventions .itv-type-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    padding: 6px 0;
+}
+
+.page-interventions .itv-type-cell small {
+    font-size: 0.78rem;
+    line-height: 1.25;
+    color: var(--color-text-sub);
+}
+
 .page-interventions .itv-desc {
     display: flex;
     flex-direction: column;
@@ -432,6 +446,22 @@
 
 .page-interventions .itv-duree-rapide .itv-chip {
     padding: 3px 10px;
+}
+
+.page-interventions .itv-type-choisi-tag {
+    display: inline-block;
+    margin-right: 8px;
+    padding: 1px 9px;
+    border-radius: var(--radius-pill);
+    font-size: 0.75rem;
+    font-weight: 700;
+    vertical-align: 1px;
+}
+
+.page-interventions .itv-sous-type-hint {
+    display: block;
+    margin-top: 6px;
+    font-size: 0.8rem;
 }
 
 @media (max-width: 992px) {

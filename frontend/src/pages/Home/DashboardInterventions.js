@@ -12,7 +12,7 @@ import { getInterventionStats } from '../../services/api';
 import { cssVar } from '../../styles/cssVar';
 import {
   PERIODES, TYPE_CONFIG, INTERVENTION_TYPES, dateParam, decaler, libellePeriode, estPeriodeCourante, estPeriodeFuture,
-  libelleSerie, formatDuree,
+  libelleSerie, formatDuree, SOUS_TYPE_CONFIG, SOUS_TYPE_NON_PRECISE,
 } from '../Interventions/interventionConfig';
 import './DashboardInterventions.css';
 
@@ -383,6 +383,46 @@ const HeuresPointe = ({ matrice }) => {
   );
 };
 
+// Répartition d'un type (Dépannage / Installation) par sous-type, les plus
+// fréquents d'abord, « Non précisé » en dernier ; clic → historique filtré.
+const SousTypes = ({ type, compteurs, onSelect }) => {
+  const config = TYPE_CONFIG[type];
+  const lignes = Object.entries(SOUS_TYPE_CONFIG[type])
+    .map(([code, { label }]) => ({ code, label, total: compteurs?.[code] || 0 }))
+    .filter(l => l.total > 0)
+    .sort((a, b) => b.total - a.total);
+  const nonPrecise = compteurs?.[SOUS_TYPE_NON_PRECISE] || 0;
+  if (nonPrecise) lignes.push({ code: SOUS_TYPE_NON_PRECISE, label: 'Non précisé', total: nonPrecise });
+  const total = lignes.reduce((s, l) => s + l.total, 0);
+  const max = Math.max(1, ...lignes.map(l => l.total));
+  return (
+    <div className="dit-panel">
+      <div className="dit-chart-head">
+        <h3>{config.label} par sous-type</h3>
+        {total > 0 && <span className="dit-hint">{fmt(total)} au total</span>}
+      </div>
+      {lignes.length ? (
+        <ul className="dit-recurrences">
+          {lignes.map(l => (
+            <li key={l.code}>
+              <button type="button" onClick={() => onSelect(type, l.code)}
+                title={`Voir les interventions ${config.label} · ${l.label}`}>
+                <span className="dit-rec-nom"><strong>{l.label}</strong></span>
+                <span className="dit-tech-barre" aria-hidden="true">
+                  <span style={{ width: `${Math.max(2, (l.total / max) * 100)}%`, background: couleurTone(config.tone) }} />
+                </span>
+                <span className="dit-tech-val">{l.total} <small>· {pct(l.total, total)} %</small></span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="dit-empty dit-empty--small"><FaTools aria-hidden="true" /><span>Aucune intervention {config.label.toLowerCase()}</span></div>
+      )}
+    </div>
+  );
+};
+
 // Durée moyenne par type (interventions dont la durée est renseignée).
 const MoyenneTypes = ({ moyennes }) => {
   const lignes = INTERVENTION_TYPES
@@ -450,6 +490,9 @@ const DashboardInterventions = () => {
   }, [navigate]);
   const voirType = useCallback((type) => {
     if (type) ouvrirHistorique(vuePeriode, vueRefKey, `&type=${type}`);
+  }, [ouvrirHistorique, vuePeriode, vueRefKey]);
+  const voirSousType = useCallback((type, sousType) => {
+    ouvrirHistorique(vuePeriode, vueRefKey, `&type=${type}&sous_type=${sousType}`);
   }, [ouvrirHistorique, vuePeriode, vueRefKey]);
   const voirRecurrence = useCallback((param, id) => {
     ouvrirHistorique(vuePeriode, vueRefKey, `&${param}=${id}`);
@@ -582,6 +625,14 @@ const DashboardInterventions = () => {
             <RepartitionTypes parType={stats.par_type} total={stats.total} onSelect={voirType} />
             <TempsTechniciens techniciens={stats.par_technicien || []} />
             <Recurrences recurrences={stats.recurrences} materielsConcernes={stats.materiels_concernes || 0} onSelect={voirRecurrence} />
+          </div>
+        )}
+
+        {stats.par_sous_type && Object.keys(SOUS_TYPE_CONFIG).some(t => stats.par_type?.[t]) && (
+          <div className="dit-panels dit-panels--2">
+            {Object.keys(SOUS_TYPE_CONFIG).map(t => (
+              <SousTypes key={t} type={t} compteurs={stats.par_sous_type[t]} onSelect={voirSousType} />
+            ))}
           </div>
         )}
 

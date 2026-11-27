@@ -4,10 +4,11 @@ import { apiClient, getErrorMessage } from './client';
 // periode : 'jour' | 'mois' | 'annee' ; date : 'AAAA-MM-JJ', 'AAAA-MM' ou 'AAAA'.
 // Réponse : { periode, debut, fin, stats, interventions }.
 // materiel / beneficiaire : liens « Récurrences » du tableau de bord.
-export const getInterventions = async ({ periode, date, types, technicien, source, bloque, materiel, beneficiaire } = {}) => {
+export const getInterventions = async ({ periode, date, types, sousType, technicien, source, bloque, materiel, beneficiaire } = {}) => {
   try {
     const params = { periode, date };
     if (types?.length) params.types = types.join(',');
+    if (sousType) params.sous_type = sousType;
     if (technicien) params.technicien = technicien;
     if (source) params.source = source;
     if (bloque) params.bloque = '1';

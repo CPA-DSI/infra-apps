@@ -124,6 +124,30 @@ describe('DashboardInterventions', () => {
       .toBe(`?periode=mois&date=${dayjs().format('YYYY-MM-DD')}&materiel=42`);
   });
 
+  test('sous-types de Dépannage et Installation, clic vers l\'historique filtré', async () => {
+    getInterventionStats.mockResolvedValue(reponse({
+      total: 6, duree_totale: 120,
+      par_type: { DEPANNAGE: 5, INSTALLATION: 0, PREVENTIF: 1 },
+      par_sous_type: {
+        DEPANNAGE: { MESSAGERIE: 1, RESEAU_CONNEXION: 3, NON_PRECISE: 1 },
+        INSTALLATION: { NON_PRECISE: 0 },
+      },
+    }));
+    const { container } = afficherAvecHistorique();
+
+    expect(await screen.findByText('Dépannage par sous-type')).toBeTruthy();
+    expect(screen.getByText('Aucune intervention installation')).toBeTruthy();
+    // Plus fréquents d'abord, « Non précisé » en dernier
+    const panneau = screen.getByText('Dépannage par sous-type').closest('.dit-panel');
+    expect([...panneau.querySelectorAll('.dit-rec-nom')].map(n => n.textContent))
+      .toEqual(['Réseau / Connexion', 'Messagerie', 'Non précisé']);
+    expect(container.textContent).toMatch(/60 %/);
+
+    fireEvent.click(screen.getByTitle('Voir les interventions Dépannage · Réseau / Connexion'));
+    expect(screen.getByTestId('destination').textContent)
+      .toBe(`?periode=mois&date=${dayjs().format('YYYY-MM-DD')}&type=DEPANNAGE&sous_type=RESEAU_CONNEXION`);
+  });
+
   test('affiche cumul, bloqués, heures de pointe et durée moyenne par type', async () => {
     getInterventionStats.mockResolvedValue(reponse({
       total: 3, duree_totale: 90, utilisateurs_bloques: 0,

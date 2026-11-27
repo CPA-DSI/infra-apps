@@ -516,30 +516,33 @@ model PieceJointe {
 // non représentable ici). Sa solution, sa durée et sa date sont recopiées dans
 // tickets_fermeture. À la réouverture du ticket, elle est gardée (cloture_ticket = false).
 model Intervention {
-  id_intervention   Int              @id @default(autoincrement())
-  date_intervention DateTime         @db.Timestamp(6)
-  duree_minutes     Int?
-  type              InterventionType
-  description       String
-  solution          String?
-  cloture_ticket    Boolean          @default(false)
+  id_intervention    Int              @id @default(autoincrement())
+  date_intervention  DateTime         @db.Timestamp(6)
+  duree_minutes      Int?
+  type               InterventionType
+  // Sous-type (Dépannage / Installation uniquement) : code de SOUS_TYPES dans
+  // services/interventionService.js ; null = non précisé
+  sous_type          String?          @db.VarChar(40)
+  description        String
+  solution           String?
+  cloture_ticket     Boolean          @default(false)
   // L'utilisateur n'a pas pu travailler pendant le problème / l'intervention
-  utilisateur_bloque Boolean         @default(false)
-  source            String           @default("MANUELLE") @db.VarChar(10)
-  id_technicien     Int?
-  nom_technicien    String?          @db.VarChar(255)
-  id_materiels      Int?
-  id_n_beneficiaire Int?
-  id_ticket         Int?
-  id_local          Int?
-  date_suppression  DateTime?        @db.Timestamp(6)
-  created_at        DateTime         @default(now()) @db.Timestamp(6)
-  updated_at        DateTime         @updatedAt @db.Timestamp(6)
-  technicien        Users?           @relation("InterventionTechnicien", fields: [id_technicien], references: [id_n], onDelete: SetNull, onUpdate: Cascade)
-  beneficiaire      Users?           @relation("InterventionBeneficiaire", fields: [id_n_beneficiaire], references: [id_n], onDelete: SetNull, onUpdate: Cascade)
-  materiel          Materiels?       @relation(fields: [id_materiels], references: [id_materiels], onDelete: SetNull)
-  ticket            Ticket?          @relation(fields: [id_ticket], references: [idTicket], onDelete: SetNull)
-  local             Locaux?          @relation(fields: [id_local], references: [id_local], onDelete: SetNull)
+  utilisateur_bloque Boolean          @default(false)
+  source             String           @default("MANUELLE") @db.VarChar(10)
+  id_technicien      Int?
+  nom_technicien     String?          @db.VarChar(255)
+  id_materiels       Int?
+  id_n_beneficiaire  Int?
+  id_ticket          Int?
+  id_local           Int?
+  date_suppression   DateTime?        @db.Timestamp(6)
+  created_at         DateTime         @default(now()) @db.Timestamp(6)
+  updated_at         DateTime         @updatedAt @db.Timestamp(6)
+  technicien         Users?           @relation("InterventionTechnicien", fields: [id_technicien], references: [id_n], onDelete: SetNull, onUpdate: Cascade)
+  beneficiaire       Users?           @relation("InterventionBeneficiaire", fields: [id_n_beneficiaire], references: [id_n], onDelete: SetNull, onUpdate: Cascade)
+  materiel           Materiels?       @relation(fields: [id_materiels], references: [id_materiels], onDelete: SetNull)
+  ticket             Ticket?          @relation(fields: [id_ticket], references: [idTicket], onDelete: SetNull)
+  local              Locaux?          @relation(fields: [id_local], references: [id_local], onDelete: SetNull)
 
   @@index([date_intervention(sort: Desc)])
   @@index([id_technicien])
