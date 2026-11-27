@@ -61,9 +61,11 @@ const HistoriqueInterventions = () => {
 
   // Filtre type initial depuis l'URL (lien « Répartition par type » du tableau de bord)
   const [types, setTypes] = useState(() => (INTERVENTION_TYPES.includes(searchParams.get('type')) ? [searchParams.get('type')] : []));
-  const [technicien, setTechnicien] = useState('');
+  // Filtres technicien / bloquantes initiaux depuis l'URL (liens « Temps passé par
+  // technicien » et « Utilisateurs bloqués » du tableau de bord)
+  const [technicien, setTechnicien] = useState(() => searchParams.get('technicien') || '');
   const [source, setSource] = useState('');
-  const [bloque, setBloque] = useState(false);
+  const [bloque, setBloque] = useState(() => searchParams.get('bloque') === '1');
   // Filtres matériel / bénéficiaire initiaux depuis l'URL (panneau « Récurrences » du tableau de bord)
   const [materiel, setMateriel] = useState(() => searchParams.get('materiel') || '');
   const [beneficiaire, setBeneficiaire] = useState(() => searchParams.get('beneficiaire') || '');
@@ -319,6 +321,12 @@ const HistoriqueInterventions = () => {
         <select className="itv-select" value={technicien} onChange={(e) => setTechnicien(e.target.value)} aria-label="Technicien">
           <option value="">Tous les techniciens</option>
           <option value="moi">Mes interventions</option>
+          {/* Technicien choisi depuis le tableau de bord : option ajoutée pour l'afficher */}
+          {technicien && technicien !== 'moi' && (
+            <option value={technicien}>
+              {stats?.par_technicien?.find(t => String(t.id_technicien) === technicien)?.nom || `Technicien n° ${technicien}`}
+            </option>
+          )}
         </select>
         <select className="itv-select" value={source} onChange={(e) => setSource(e.target.value)} aria-label="Origine">
           <option value="">Toutes origines</option>

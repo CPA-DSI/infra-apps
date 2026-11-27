@@ -1,18 +1,18 @@
 // Tableau de bord des interventions (page d'accueil) : nombre d'interventions,
 // temps passé, utilisateurs bloqués et récurrences sur un jour, un mois ou une année,
 // comparés à la période précédente (« à date » quand la période est en cours).
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Chart from 'react-apexcharts';
 import dayjs from 'dayjs';
 import {
-  FaTools, FaClock, FaUserSlash, FaChevronLeft, FaChevronRight, FaArrowRight, FaArrowUp, FaArrowDown, FaRedo,
+  FaTools, FaClock, FaUserSlash, FaChevronLeft, FaChevronRight, FaArrowRight, FaArrowUp, FaArrowDown, FaRedo, FaSync,
 } from 'react-icons/fa';
 import { getInterventionStats } from '../../services/api';
 import { cssVar } from '../../styles/cssVar';
 import {
   PERIODES, TYPE_CONFIG, INTERVENTION_TYPES, dateParam, decaler, libellePeriode, estPeriodeCourante, estPeriodeFuture,
-  libelleSerie, formatDuree, SOUS_TYPE_CONFIG, SOUS_TYPE_NON_PRECISE,
+  libelleSerie, formatDuree, SOUS_TYPE_CONFIG, SOUS_TYPE_NON_PRECISE, plagePeriode,
 } from '../Interventions/interventionConfig';
 import './DashboardInterventions.css';
 
@@ -22,7 +22,11 @@ const UNITE_SERIE = { annee: 'mois', mois: 'jour', jour: 'heure' };
 const LIBELLE_PRECEDENT = { jour: 'Veille', mois: 'Mois préc.', annee: 'Année préc.' };
 // « comparée au mois précédent », « Cumul comparé à la veille »…
 const COMPARE_A = { jour: 'à la veille', mois: 'au mois précédent', annee: "à l'année précédente" };
-const FONT ="'Inter Variable', system-ui, sans-serif";
+const FONT = "'Inter Variable', system-ui, sans-serif";
+// Période en cours : rechargement automatique (onglet visible) et au retour sur
+// l'onglet si les données ont plus d'une minute.
+export const ACTUALISATION_MS = 5 * 60 * 1000;
+export const DELAI_RETOUR_MS = 60 * 1000;
 
 const fmt = (n) => Number(n || 0).toLocaleString('fr-FR');
 
@@ -55,7 +59,8 @@ const Tendance = ({ valeur, sens, indisponible }) => {
   );
 };
 
-const CarteStat = ({ type, icon, label, valeur, unite, detail, precedentLabel, precedent, tendance, sens, indisponible }) => (
+// action : { label, onClick } facultatif, lien vers l'historique filtré
+const CarteStat = ({ type, icon, label, valeur, unite, detail, action, precedentLabel, precedent, tendance, sens, indisponible }) => (
   <div className={`dit-stat-card ${type}`}>
     <div className="dit-stat-header">
       <div className="dit-stat-icon" aria-hidden="true">{icon}</div>
@@ -66,6 +71,11 @@ const CarteStat = ({ type, icon, label, valeur, unite, detail, precedentLabel, p
       {unite && <span className="dit-stat-unit">{unite}</span>}
     </div>
     {detail && <div className="dit-stat-detail">{detail}</div>}
+    {action && (
+      <button type="button" className="dit-stat-action" onClick={action.onClick}>
+        {action.label} <FaArrowRight aria-hidden="true" />
+      </button>
+    )}
     <div className="dit-stat-footer">
       <span className="dit-stat-prev">
         {precedentLabel} : <strong>{precedent}</strong>
@@ -122,21 +132,28 @@ const RepartitionTypes = ({ parType, total, onSelect }) => {
 };
 
 // Temps passé par technicien : barres horizontales (liste déjà triée par durée côté API).
-const TempsTechniciens = ({ techniciens }) => {
+// Clic → historique filtré sur ce technicien (sauf « Non renseigné », sans identifiant).
+const TempsTechniciens = ({ techniciens, onSelect }) => {
   const max = techniciens[0]?.duree || 1;
   return (
     <div className="dit-panel">
-      <div className="dit-chart-head"><h3>Temps passé par technicien</h3></div>
-      <ul className="dit-techs">
+      <div className="dit-chart-head">
+        <h3>Temps passé par technicien</h3>
+        <span className="dit-hint">Clic : voir ses interventions</span>
+      </div>
+      <ul className="dit-recurrences">
         {techniciens.map(t => (
           <li key={t.id_technicien ?? 'aucun'}>
-            <span className="dit-tech-nom" title={t.nom}>{t.nom}</span>
-            <span className="dit-tech-barre" aria-hidden="true">
-              <span style={{ width: `${Math.max(2, (t.duree / max) * 100)}%` }} />
-            </span>
-            <span className="dit-tech-val">
-              {formatDuree(t.duree)} <small>· {t.total}</small>
-            </span>
+            <button type="button" disabled={t.id_technicien === null || t.id_technicien === undefined}
+              onClick={() => onSelect(t.id_technicien)} title={`Voir les interventions de ${t.nom}`}>
+              <span className="dit-rec-nom"><strong>{t.nom}</strong></span>
+              <span className="dit-tech-barre" aria-hidden="true">
+                <span style={{ width: `${Math.max(2, (t.duree / max) * 100)}%` }} />
+              </span>
+              <span className="dit-tech-val">
+                {formatDuree(t.duree)} <small>· {t.total}</small>
+              </span>
+            </button>
           </li>
         ))}
       </ul>
@@ -463,19 +480,53 @@ const DashboardInterventions = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Rechargement demandé (Réessayer, actualisation automatique) ; silencieux = sans
+  // griser le tableau (actualisation de fond)
+  const [actualisation, setActualisation] = useState(0);
+  const silencieuxRef = useRef(false);
+  const dernierChargement = useRef(0);
+
   const refKey = ref.format('YYYY-MM-DD');
 
   useEffect(() => {
     let annule = false;
-    setLoading(true);
-    setError(null);
+    const silencieux = silencieuxRef.current;
+    silencieuxRef.current = false;
+    if (!silencieux) setLoading(true);
     getInterventionStats({ periode, date: dateParam(periode, dayjs(refKey)) })
       // La réponse garde la période qui l'a produite (voir vuePeriode ci-dessous)
-      .then(d => { if (!annule) setData({ ...d, periode, refKey }); })
+      .then(d => {
+        if (annule) return;
+        setData({ ...d, periode, refKey });
+        setError(null);
+        dernierChargement.current = Date.now();
+      })
       .catch(err => { if (!annule) setError(err.message || 'Chargement impossible.'); })
       .finally(() => { if (!annule) setLoading(false); });
     return () => { annule = true; };
-  }, [periode, refKey]);
+  }, [periode, refKey, actualisation]);
+
+  const actualiser = useCallback((silencieux = false) => {
+    silencieuxRef.current = silencieux;
+    setActualisation(n => n + 1);
+  }, []);
+
+  // Période en cours : actualisation toutes les 5 minutes tant que l'onglet est
+  // visible, et au retour sur l'onglet si les données datent de plus d'une minute.
+  const enCours = estPeriodeCourante(periode, ref);
+  useEffect(() => {
+    if (!enCours) return undefined;
+    const visible = () => document.visibilityState === 'visible';
+    const id = setInterval(() => { if (visible()) actualiser(true); }, ACTUALISATION_MS);
+    const auRetour = () => {
+      if (visible() && Date.now() - dernierChargement.current > DELAI_RETOUR_MS) actualiser(true);
+    };
+    document.addEventListener('visibilitychange', auRetour);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', auRetour);
+    };
+  }, [enCours, actualiser]);
 
   // Période des données affichées : celle de la dernière réponse reçue. Pendant le
   // chargement d'une autre période, cartes et graphiques restent ainsi cohérents
@@ -485,17 +536,26 @@ const DashboardInterventions = () => {
   const vueRef = useMemo(() => dayjs(vueRefKey), [vueRefKey]);
 
   const allerA = useCallback((p, d) => { setPeriode(p); setRef(d); }, []);
-  const ouvrirHistorique = useCallback((p, date, filtre = '') => {
-    navigate(`/HistoriqueInterventions?periode=${p}&date=${date}${filtre}`);
+  // Historique sur la plage du jour / mois / année affiché (format ?debut=&fin=
+  // de la page Historique), avec un filtre éventuel.
+  const ouvrirHistorique = useCallback((p, date, filtres = {}) => {
+    const params = new URLSearchParams({ ...plagePeriode(p, dayjs(date)), ...filtres });
+    navigate(`/HistoriqueInterventions?${params}`);
   }, [navigate]);
   const voirType = useCallback((type) => {
-    if (type) ouvrirHistorique(vuePeriode, vueRefKey, `&type=${type}`);
+    if (type) ouvrirHistorique(vuePeriode, vueRefKey, { type });
   }, [ouvrirHistorique, vuePeriode, vueRefKey]);
   const voirSousType = useCallback((type, sousType) => {
-    ouvrirHistorique(vuePeriode, vueRefKey, `&type=${type}&sous_type=${sousType}`);
+    ouvrirHistorique(vuePeriode, vueRefKey, { type, sous_type: sousType });
   }, [ouvrirHistorique, vuePeriode, vueRefKey]);
   const voirRecurrence = useCallback((param, id) => {
-    ouvrirHistorique(vuePeriode, vueRefKey, `&${param}=${id}`);
+    ouvrirHistorique(vuePeriode, vueRefKey, { [param]: id });
+  }, [ouvrirHistorique, vuePeriode, vueRefKey]);
+  const voirTechnicien = useCallback((id) => {
+    ouvrirHistorique(vuePeriode, vueRefKey, { technicien: id });
+  }, [ouvrirHistorique, vuePeriode, vueRefKey]);
+  const voirBloquantes = useCallback(() => {
+    ouvrirHistorique(vuePeriode, vueRefKey, { bloque: '1' });
   }, [ouvrirHistorique, vuePeriode, vueRefKey]);
 
   const stats = data?.stats;
@@ -563,10 +623,26 @@ const DashboardInterventions = () => {
     };
   }, [stats, vuePeriode, vueRef, allerA]);
 
+  // Données affichées d'une autre période que celle choisie (échec du chargement)
+  const autrePeriode = Boolean(data) && (data.periode !== periode || data.refKey !== refKey);
+
   const renderCorps = () => {
     const periode = vuePeriode;
     const ref = vueRef;
-    if (error) return <div className="dit-state dit-state--error" role="alert">Erreur : {error}</div>;
+    const reessayer = (
+      <button type="button" className="dit-retry" onClick={() => actualiser()} disabled={loading}>
+        <FaSync aria-hidden="true" className={loading ? 'dit-spin' : ''} /> Réessayer
+      </button>
+    );
+    // Erreur sans données à garder : message plein cadre
+    if (error && !data) {
+      return (
+        <div className="dit-state dit-state--error" role="alert">
+          <span>Erreur : {error}</span>
+          {reessayer}
+        </div>
+      );
+    }
     if (!data) {
       return (
         <div className="dit-state">
@@ -577,6 +653,18 @@ const DashboardInterventions = () => {
     }
     return (
       <div className={`dit-body ${loading ? 'is-refreshing' : ''}`} aria-busy={loading}>
+        {/* Erreur avec des données déjà affichées : elles restent visibles, signalées comme non à jour */}
+        {error && (
+          <div className="dit-banner" role="alert">
+            <span>
+              Erreur : {error}
+              {autrePeriode
+                ? ` · données affichées : ${libellePeriode(periode, ref)}`
+                : ' · données affichées non actualisées'}
+            </span>
+            {reessayer}
+          </div>
+        )}
         <div className="dit-stats-grid">
           <CarteStat
             type="count" icon={<FaTools />} label="Interventions"
@@ -598,6 +686,7 @@ const DashboardInterventions = () => {
             detail={stats.interventions_bloquantes > 0 && (
               <>{fmt(stats.interventions_bloquantes)} intervention{stats.interventions_bloquantes > 1 ? 's' : ''} · <strong>{formatDuree(stats.temps_bloque)}</strong> de blocage</>
             )}
+            action={stats.interventions_bloquantes > 0 && { label: 'Voir les interventions bloquantes', onClick: voirBloquantes }}
             precedentLabel={precedentLabel} precedent={fmt(prec.utilisateurs_bloques)}
             tendance={variation(stats.utilisateurs_bloques, prec.utilisateurs_bloques)} sens="baisse" indisponible={indisponible}
           />
@@ -623,7 +712,7 @@ const DashboardInterventions = () => {
         {stats.total > 0 && (
           <div className="dit-panels">
             <RepartitionTypes parType={stats.par_type} total={stats.total} onSelect={voirType} />
-            <TempsTechniciens techniciens={stats.par_technicien || []} />
+            <TempsTechniciens techniciens={stats.par_technicien || []} onSelect={voirTechnicien} />
             <Recurrences recurrences={stats.recurrences} materielsConcernes={stats.materiels_concernes || 0} onSelect={voirRecurrence} />
           </div>
         )}

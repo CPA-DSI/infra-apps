@@ -194,10 +194,17 @@ export const plageDepuisUrl = (params) => {
     return d <= f ? plage(d, f) : plage(f, d);
   }
   const ref = dayjs(params.get('date') || undefined);
-  const r = ref.isValid() ? ref : dayjs();
-  const unite = { jour: 'day', annee: 'year' }[params.get('periode')] || 'month';
-  return plage(iso(r.startOf(unite)), iso(r.endOf(unite)));
+  const periode = UNITE[params.get('periode')] ? params.get('periode') : 'mois';
+  const { debut: d, fin: f } = plagePeriode(periode, ref.isValid() ? ref : dayjs());
+  return plage(d, f);
 };
+
+// Plage { debut, fin } ('YYYY-MM-DD', incluses) couvrant le jour, le mois ou
+// l'année de ref : liens du tableau de bord vers l'historique.
+export const plagePeriode = (periode, ref) => ({
+  debut: iso(ref.startOf(UNITE[periode])),
+  fin: iso(ref.endOf(UNITE[periode])),
+});
 
 // Plage couvrant des mois entiers : nombre de mois, sinon null.
 const moisEntiers = (debut, fin) => {

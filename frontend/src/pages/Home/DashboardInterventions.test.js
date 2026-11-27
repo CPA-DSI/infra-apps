@@ -1,8 +1,8 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 import dayjs from 'dayjs';
-import DashboardInterventions, { variation, formatVariation } from './DashboardInterventions';
+import DashboardInterventions, { variation, formatVariation, ACTUALISATION_MS } from './DashboardInterventions';
 import { getInterventionStats } from '../../services/api';
 
 vi.mock('react-apexcharts', () => ({ default: () => null }));
@@ -121,7 +121,7 @@ describe('DashboardInterventions', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Matériels' }));
     fireEvent.click(screen.getByTitle('Voir les interventions de PC-COMPTA-07'));
     expect(screen.getByTestId('destination').textContent)
-      .toBe(`?periode=mois&date=${dayjs().format('YYYY-MM-DD')}&materiel=42`);
+      .toBe(`?debut=${dayjs().startOf('month').format('YYYY-MM-DD')}&fin=${dayjs().endOf('month').format('YYYY-MM-DD')}&materiel=42`);
   });
 
   test('sous-types de Dépannage et Installation, clic vers l\'historique filtré', async () => {
@@ -145,7 +145,7 @@ describe('DashboardInterventions', () => {
 
     fireEvent.click(screen.getByTitle('Voir les interventions Dépannage · Réseau / Connexion'));
     expect(screen.getByTestId('destination').textContent)
-      .toBe(`?periode=mois&date=${dayjs().format('YYYY-MM-DD')}&type=DEPANNAGE&sous_type=RESEAU_CONNEXION`);
+      .toBe(`?debut=${dayjs().startOf('month').format('YYYY-MM-DD')}&fin=${dayjs().endOf('month').format('YYYY-MM-DD')}&type=DEPANNAGE&sous_type=RESEAU_CONNEXION`);
   });
 
   test('affiche cumul, bloqués, heures de pointe et durée moyenne par type', async () => {
@@ -196,6 +196,99 @@ describe('DashboardInterventions', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Période précédente' }));
     expect(suivante.disabled).toBe(false);
+  });
+
+  test('« Voir le détail » ouvre l\'historique sur la plage de la période affichée', async () => {
+    getInterventionStats.mockResolvedValue(reponse({}));
+    afficherAvecHistorique();
+    await screen.findByText(/Aucune intervention/);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Année' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Période précédente' }));
+    fireEvent.click(screen.getByRole('button', { name: /Voir le détail/ }));
+    const an = dayjs().year() - 1;
+    expect(screen.getByTestId('destination').textContent).toBe(`?debut=${an}-01-01&fin=${an}-12-31`);
+  });
+
+  test('technicien et interventions bloquantes : clic vers l\'historique filtré', async () => {
+    getInterventionStats.mockResolvedValue(reponse({
+      total: 4, duree_totale: 240, utilisateurs_bloques: 1, interventions_bloquantes: 2, temps_bloque: 30,
+      par_technicien: [
+        { id_technicien: 7, nom: 'Alice Martin', total: 3, duree: 180 },
+        { id_technicien: null, nom: 'Non renseigné', total: 1, duree: 60 },
+      ],
+    }));
+    afficherAvecHistorique();
+    const mois = `debut=${dayjs().startOf('month').format('YYYY-MM-DD')}&fin=${dayjs().endOf('month').format('YYYY-MM-DD')}`;
+
+    expect((await screen.findByTitle('Voir les interventions de Non renseigné')).disabled).toBe(true);
+    fireEvent.click(screen.getByTitle('Voir les interventions de Alice Martin'));
+    expect(screen.getByTestId('destination').textContent).toBe(`?${mois}&technicien=7`);
+  });
+
+  test('carte « Utilisateurs bloqués » : lien vers les interventions bloquantes', async () => {
+    getInterventionStats.mockResolvedValue(reponse({ total: 2, utilisateurs_bloques: 1, interventions_bloquantes: 1, temps_bloque: 30 }));
+    afficherAvecHistorique();
+    fireEvent.click(await screen.findByRole('button', { name: /Voir les interventions bloquantes/ }));
+    expect(screen.getByTestId('destination').textContent).toMatch(/&bloque=1$/);
+  });
+
+  test('erreur au premier chargement : « Réessayer » relance la requête', async () => {
+    getInterventionStats.mockRejectedValueOnce(new Error('Serveur indisponible'));
+    getInterventionStats.mockResolvedValueOnce(reponse({ total: 3 }));
+    afficher();
+
+    expect(await screen.findByText('Erreur : Serveur indisponible')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Réessayer/ }));
+    expect(await screen.findByText('3')).toBeTruthy();
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(getInterventionStats).toHaveBeenCalledTimes(2);
+  });
+
+  test('erreur sur une autre période : les données précédentes restent affichées avec un bandeau', async () => {
+    getInterventionStats.mockResolvedValueOnce(reponse({ total: 9 }));
+    getInterventionStats.mockRejectedValueOnce(new Error('Délai dépassé'));
+    afficher();
+    expect(await screen.findByText('9')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Année' }));
+    const bandeau = await screen.findByRole('alert');
+    expect(bandeau.textContent).toMatch(/Délai dépassé · données affichées : .+ \d{4}/);
+    expect(screen.getByText('9')).toBeTruthy();
+  });
+
+  test('période en cours : actualisation automatique, sans griser le tableau', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+    try {
+      getInterventionStats.mockResolvedValue(reponse({ total: 1 }));
+      const { container } = afficher();
+      await screen.findByText('1');
+      expect(getInterventionStats).toHaveBeenCalledTimes(1);
+
+      getInterventionStats.mockResolvedValue(reponse({ total: 5 }));
+      act(() => { vi.advanceTimersByTime(ACTUALISATION_MS); });
+      expect(container.querySelector('.dit-body.is-refreshing')).toBeNull();
+      expect(await screen.findByText('5')).toBeTruthy();
+      expect(getInterventionStats).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('période passée : pas d\'actualisation automatique', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+    try {
+      getInterventionStats.mockResolvedValue(reponse({}));
+      afficher();
+      await screen.findByText(/Aucune intervention/);
+      fireEvent.click(screen.getByRole('button', { name: 'Période précédente' }));
+      await waitFor(() => expect(getInterventionStats).toHaveBeenCalledTimes(2));
+
+      act(() => { vi.advanceTimersByTime(ACTUALISATION_MS * 2); });
+      expect(getInterventionStats).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   test('sans intervention, les panneaux secondaires ne sont pas affichés', async () => {

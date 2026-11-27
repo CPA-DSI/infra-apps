@@ -519,6 +519,76 @@
     animation: spin 0.9s linear infinite;
 }
 
+/* ── Liens vers l'historique, erreurs ─────────────────────────────────────── */
+.dit-recurrences button:disabled {
+    cursor: default;
+}
+
+.dit-recurrences button:disabled:hover {
+    background: transparent;
+    border-color: transparent;
+}
+
+.dit-stat-action {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: -4px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--dit-accent);
+    font: inherit;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.dit-stat-action:hover,
+.dit-stat-action:focus-visible {
+    text-decoration: underline;
+}
+
+.dit-banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+    margin-bottom: 16px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(244, 63, 94, 0.35);
+    background: rgba(244, 63, 94, 0.1);
+    color: var(--color-rose);
+    font-size: 0.85rem;
+}
+
+.dit-retry {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid currentColor;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.dit-retry:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.dit-spin {
+    animation: spin 0.9s linear infinite;
+}
+
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 1200px) {
     .dit-stats-grid {

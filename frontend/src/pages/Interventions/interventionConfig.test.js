@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import dayjs from 'dayjs';
-import { plageDepuisUrl, decalerPlage, libellePlage, cleRaccourci, libellePoint } from './interventionConfig';
+import { plageDepuisUrl, plagePeriode, decalerPlage, libellePlage, cleRaccourci, libellePoint } from './interventionConfig';
 
 const params = (o) => new URLSearchParams(o);
 
@@ -72,5 +72,13 @@ describe('libellePoint', () => {
     expect(libellePoint('jour', { date: '2026-11-05' }, { debut: '2026-11-01', fin: '2026-11-30' })).toBe('5');
     expect(libellePoint('jour', { date: '2026-11-05' }, { debut: '2026-10-20', fin: '2026-11-10' })).toBe('05/11');
     expect(libellePoint('mois', { date: '2026-02-01' }, { debut: '2025-12-01', fin: '2026-11-30' })).toBe('févr. 26');
+  });
+});
+
+describe('plagePeriode', () => {
+  it('jour, mois (février), année', () => {
+    expect(plagePeriode('jour', dayjs('2026-11-05'))).toEqual({ debut: '2026-11-05', fin: '2026-11-05' });
+    expect(plagePeriode('mois', dayjs('2028-02-10'))).toEqual({ debut: '2028-02-01', fin: '2028-02-29' });
+    expect(plagePeriode('annee', dayjs('2026-06-15'))).toEqual({ debut: '2026-01-01', fin: '2026-12-31' });
   });
 });

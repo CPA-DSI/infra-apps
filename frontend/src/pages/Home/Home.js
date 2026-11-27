@@ -43,6 +43,14 @@ const Home = () => {
       <div className="home-grid">
         <div className="home-card">
           <div className="home-card-content">
+            <TicketChartCount />
+          </div>
+        </div>
+      </div>
+
+      <div className="home-grid">
+        <div className="home-card">
+          <div className="home-card-content">
             <DashboardHistoriqueChart />
           </div>
         </div>
@@ -64,13 +72,7 @@ const Home = () => {
         </div>
       </div>
       
-      <div className="home-grid">
-        <div className="home-card">
-          <div className="home-card-content">
-            <TicketChartCount />
-          </div>
-        </div>
-      </div>
+      
       <div className="home-grid">
         <div className="home-card">
           <div className="home-card-content">
