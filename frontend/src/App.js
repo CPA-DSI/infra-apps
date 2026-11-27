@@ -12,6 +12,7 @@ const ResetPassword = lazy(() => import('./pages/auth/ResetPassword'));
 const Home = lazy(() => import('./pages/Home/Home'));
 const Materiels = lazy(() => import('./pages/Materiels/Materiels'));
 const HistoriqueMateriel = lazy(() => import('./pages/HistoriqueMateriel/HistoriqueMateriel'));
+const HistoriqueInterventions = lazy(() => import('./pages/Interventions/HistoriqueInterventions'));
 const MailInfo = lazy(() => import('./pages/MailInfo/MailInfo'));
 const Mouvements = lazy(() => import('./pages/Stock_info/Mouvements'));
 const HistoriqueArrivees = lazy(() => import('./pages/HistoriqueArrivees/HistoriqueArrivees'));
@@ -87,6 +88,10 @@ function AppInner() {
               <Route
                 path="/HistoriqueMateriel"
                 element={<RequirePermission permission={PERMISSIONS.MATERIELS_READ}><HistoriqueMateriel /></RequirePermission>}
+              />
+              <Route
+                path="/HistoriqueInterventions"
+                element={<RequirePermission permission={PERMISSIONS.INTERVENTIONS_READ}><HistoriqueInterventions /></RequirePermission>}
               />
               <Route
                 path="/MailInfo"

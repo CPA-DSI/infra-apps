@@ -13,5 +13,6 @@ export * from './api/historique';
 export * from './api/mouvements';
 export * from './api/tickets';
 export * from './api/documents';
+export * from './api/interventions';
 
 export { apiClient as default } from './api/client';

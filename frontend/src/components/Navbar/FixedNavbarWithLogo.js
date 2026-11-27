@@ -258,7 +258,7 @@ const FixedNavbarWithLogo = () => {
                       </div>
                     }
                     id="materiels-nav-dropdown"
-                    className={isActive('/Materiels', '/HistoriqueMateriel') ? 'nav-active' : ''}
+                    className={isActive('/Materiels', '/HistoriqueMateriel', '/HistoriqueInterventions') ? 'nav-active' : ''}
                     show={isMaterielsDropdownOpen}
                     onToggle={() => setIsMaterielsDropdownOpen(!isMaterielsDropdownOpen)}
                   >
@@ -301,6 +301,11 @@ const FixedNavbarWithLogo = () => {
                         <NavDropdown.Item as={Link} to="/HistoriqueMateriel" className="dropdown-menu-item">
                           <span className="menu-item-text">Historique Matériel</span>
                         </NavDropdown.Item>
+                        {hasPermission(userRole, PERMISSIONS.INTERVENTIONS_READ) && (
+                          <NavDropdown.Item as={Link} to="/HistoriqueInterventions" className="dropdown-menu-item">
+                            <span className="menu-item-text">Historique Interventions</span>
+                          </NavDropdown.Item>
+                        )}
                       </>
                     )}
                   </NavDropdown>

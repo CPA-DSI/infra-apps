@@ -1,11 +1,14 @@
 // src/pages/Materiels/DetailsModal.js
 
 import React, { useState, useEffect } from 'react';
-import { FaExchangeAlt, FaHistory, FaLaptopCode, FaBarcode, FaDesktop, FaCheckCircle, FaTimesCircle, FaVideo, FaNetworkWired, FaUsb, FaKeyboard as FaKeyboardIcon, FaBatteryFull, FaMicrochip, FaCommentAlt, FaQrcode, FaBuilding, FaHeart, FaUserCircle, FaTerminal, FaPlug, FaShieldAlt, FaHdd, FaTimes, FaCalendarAlt, FaUserFriends, FaKey, FaLocationArrow, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { FaExchangeAlt, FaHistory, FaLaptopCode, FaBarcode, FaDesktop, FaCheckCircle, FaTimesCircle, FaVideo, FaNetworkWired, FaUsb, FaKeyboard as FaKeyboardIcon, FaBatteryFull, FaMicrochip, FaCommentAlt, FaQrcode, FaBuilding, FaHeart, FaUserCircle, FaTerminal, FaPlug, FaShieldAlt, FaHdd, FaTimes, FaCalendarAlt, FaUserFriends, FaKey, FaLocationArrow, FaEye, FaEyeSlash, FaTools } from 'react-icons/fa';
 import { MdMonitor, MdComputer, MdSecurity, MdComment } from 'react-icons/md';
 import { fetchAffectationsMateriel } from '../../services/api';
 import AffectationModal from './AffectationModal';
 import AppModal from '../../components/AppModal/AppModal';
+import { useAuth } from '../../contexts/AuthContext';
+import { hasPermission, PERMISSIONS } from '../../config/api';
 import '../../styles/DetailsSection.css';
 import './MaterielsModals.css';
 
@@ -103,6 +106,16 @@ function PasswordField({ label, value, name, visible, onToggle, toggleKey }) {
 const DetailsModal = ({ isOpen, onClose, data, canManage = false }) => {
     const [visiblePasswords, setVisiblePasswords] = useState({});
     const [affectationMode, setAffectationMode] = useState(null); // 'pc' | 'ecran' | null
+    const navigate = useNavigate();
+    const { user } = useAuth();
+    const peutSaisirIntervention = hasPermission(user?.role, PERMISSIONS.INTERVENTIONS_WRITE);
+
+    const ajouterIntervention = () => {
+        onClose();
+        navigate('/HistoriqueInterventions', {
+            state: { nouvelleIntervention: { id_materiels: String(data.id_materiels) } },
+        });
+    };
 
     const togglePassword = (key) => {
         setVisiblePasswords(prev => ({
@@ -280,6 +293,11 @@ const DetailsModal = ({ isOpen, onClose, data, canManage = false }) => {
                                     <FaDesktop aria-hidden="true" /> {data.id_ecran ? "Réaffecter l'écran" : 'Installer un écran'}
                                 </button>
                             </>
+                        )}
+                        {peutSaisirIntervention && !data.est_vide && (
+                            <button type="button" onClick={ajouterIntervention} className="add-modal-submit-btn">
+                                <FaTools aria-hidden="true" /> Ajouter une intervention
+                            </button>
                         )}
                         <button type="button" onClick={onClose} className="add-modal-cancel-btn">
                             Fermer

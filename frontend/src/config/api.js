@@ -9,6 +9,7 @@ export const API_ENDPOINTS = {
 export const PAGE_TITLES = {
   '/Home': 'Tableau de Bord',
   '/Materiels': 'Gestion des Matériels',
+  '/HistoriqueInterventions': 'Historique des Interventions',
   '/MailInfo': 'Gestion des Utilisateurs',
   '/Mouvements': 'Mouvements de Stock',
   '/HistoriqueArrivees': 'Historique des Arrivées',
@@ -46,6 +47,8 @@ export const PERMISSIONS = {
   STOCKS_WRITE: 'stocks:write',
   CONFIG_READ: 'config:read',
   CONFIG_WRITE: 'config:write',
+  INTERVENTIONS_READ: 'interventions:read',
+  INTERVENTIONS_WRITE: 'interventions:write',
 };
 
 // DIRECTION a exactement les mêmes droits qu'IT_ADMIN : les deux rôles
@@ -69,6 +72,8 @@ const IT_ADMIN_PERMISSIONS = [
   PERMISSIONS.CONFIG_WRITE,
   PERMISSIONS.REPORTS_READ,
   PERMISSIONS.REPORTS_EXPORT,
+  PERMISSIONS.INTERVENTIONS_READ,
+  PERMISSIONS.INTERVENTIONS_WRITE,
 ];
 
 export const ROLE_PERMISSIONS = {

@@ -7,6 +7,7 @@ import { PERMISSIONS } from '../constants/roles.js';
 import { validateIdParam } from '../middleware/validateIdParam.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { formatTicket } from '../services/ticketService.js';
+import { creerInterventionDepuisFermeture } from '../services/interventionService.js';
 
 const router = express.Router();
 router.param('id', validateIdParam);
@@ -206,11 +207,11 @@ router.put('/:id/close', requirePermission(PERMISSIONS.TICKETS_CLOSE), asyncHand
   const dureeMinutes = dureeResolution ? parseInt(dureeResolution, 10) : null;
 
   try {
-    // Fermeture + changement de statut dans une même transaction : pas de
-    // TicketFermeture orphelin si la mise à jour du ticket échoue.
+    // Fermeture, intervention et changement de statut dans une même
+    // transaction : pas de TicketFermeture orphelin si la suite échoue.
     const updatedTicket = await prisma.$transaction(async (tx) => {
       // Créer l'enregistrement de fermeture (contrainte unique sur ticketId)
-      await tx.ticketFermeture.create({
+      const fermeture = await tx.ticketFermeture.create({
         data: {
           ticketId: ticketId,
           solution: solution.trim(),
@@ -219,6 +220,9 @@ router.put('/:id/close', requirePermission(PERMISSIONS.TICKETS_CLOSE), asyncHand
           fermePar: user.id_n,
         }
       });
+
+      // Trace la fermeture dans l'historique des interventions
+      await creerInterventionDepuisFermeture(tx, { ticket: existingTicket, fermeture });
 
       return tx.ticket.update({
         where: { idTicket: ticketId },
@@ -313,6 +317,12 @@ router.put('/:id', requirePermission(PERMISSIONS.TICKETS_WRITE), requireTicketOw
     const updatedTicket = await prisma.$transaction(async (tx) => {
       if (rouverture) {
         await tx.ticketFermeture.deleteMany({ where: { ticketId: existingTicket.idTicket } });
+        // L'intervention créée par cette fermeture disparaît avec elle ; une
+        // nouvelle fermeture en recréera une.
+        await tx.intervention.updateMany({
+          where: { id_ticket: existingTicket.idTicket, source: 'TICKET', date_suppression: null },
+          data: { date_suppression: new Date() },
+        });
       }
       return tx.ticket.update({
         where: { idTicket: parseInt(id, 10) },

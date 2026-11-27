@@ -30,6 +30,7 @@ import importRouter from './routes/import.js';
 import documentRoutes from './routes/documentRoutes.js';
 import userDashboardRoutes from './routes/userDashboardRoutes.js';
 import ecransRoutes from './routes/ecransRoutes.js';
+import interventionRoutes from './routes/interventionRoutes.js';
 
 const app = express();
 
@@ -85,6 +86,7 @@ app.use('/api/email', emailSendRoutes);
 app.use('/api/import', importRouter);
 app.use('/api/documents', documentRoutes);
 app.use('/api/ecrans', ecransRoutes);
+app.use('/api/interventions', interventionRoutes);
 
 app.get('/', (req, res) => {
     res.status(200).json({ service: 'API Gestion Matériel', status: 'Online' });

@@ -1,14 +1,17 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Spinner, Alert } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import { getTicketById, fetchAllMaterielsIt } from '../../services/api';
 import AppModal from '../../components/AppModal/AppModal';
+import { useAuth } from '../../contexts/AuthContext';
+import { hasPermission, PERMISSIONS } from '../../config/api';
 import { toneClass } from '../../utils/tones';
 import { STATUS_CONFIG, PRIORITY_CONFIG } from './ticketConfig';
 import './Tickets.css';
 import {
     FaTicketAlt, FaCalendarAlt, FaUser, FaLaptop,
     FaArrowRight, FaTimes, FaInfoCircle, FaCheckCircle,
-    FaLock, FaSyncAlt
+    FaLock, FaSyncAlt, FaTools
 } from 'react-icons/fa';
 
 const TicketDetailsModal = ({ show, handleClose, ticketId }) => {
@@ -16,6 +19,16 @@ const TicketDetailsModal = ({ show, handleClose, ticketId }) => {
     const [ticket, setTicket] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const navigate = useNavigate();
+    const { user } = useAuth();
+    const peutSaisirIntervention = hasPermission(user?.role, PERMISSIONS.INTERVENTIONS_WRITE);
+
+    const ajouterIntervention = () => {
+        handleClose();
+        navigate('/HistoriqueInterventions', {
+            state: { nouvelleIntervention: { id_ticket: String(ticket.idTicket), id_materiels: ticket.idMateriels ? String(ticket.idMateriels) : '' } },
+        });
+    };
 
     // Fonction pour récupérer la liste des matériels
     const getMateriels = async () => {
@@ -79,9 +92,16 @@ const TicketDetailsModal = ({ show, handleClose, ticketId }) => {
             subtitle={ticket?.titre}
             contentClassName="tck-modal tck-modal--dark"
             footer={
-                <button type="button" onClick={handleClose} className="add-modal-cancel-btn">
-                    <FaTimes className="tck-btn-icon" aria-hidden="true" /> Fermer
-                </button>
+                <>
+                    {peutSaisirIntervention && ticket && (
+                        <button type="button" onClick={ajouterIntervention} className="add-modal-submit-btn">
+                            <FaTools className="tck-btn-icon" aria-hidden="true" /> Ajouter une intervention
+                        </button>
+                    )}
+                    <button type="button" onClick={handleClose} className="add-modal-cancel-btn">
+                        <FaTimes className="tck-btn-icon" aria-hidden="true" /> Fermer
+                    </button>
+                </>
             }
         >
             {loading && (
@@ -181,7 +201,7 @@ const TicketDetailsModal = ({ show, handleClose, ticketId }) => {
                             )}
                             {ticket.fermeture.dureeResolution && (
                                 <p className="tck-info-note tck-info-note--tight">
-                                    <strong>Durée de résolution:</strong> {ticket.fermeture.dureeResolution} jours
+                                    <strong>Durée de résolution:</strong> {ticket.fermeture.dureeResolution} min
                                 </p>
                             )}
                         </div>

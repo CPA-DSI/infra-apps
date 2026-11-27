@@ -1,0 +1,384 @@
+/* HistoriqueInterventions.css — page Historique des interventions (racine : .page-interventions) */
+
+.page-interventions {
+    background-color: var(--color-surface-alt);
+    min-height: 100vh;
+}
+
+/* ---- Barre de période et filtres ---- */
+.page-interventions .itv-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.page-interventions .itv-toolbar--filters {
+    margin-bottom: 18px;
+}
+
+.page-interventions .itv-seg,
+.page-interventions .itv-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.page-interventions .itv-seg button,
+.page-interventions .itv-nav button {
+    min-height: 38px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text-sub);
+    font-weight: 600;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.page-interventions .itv-nav button {
+    width: 38px;
+    padding: 0;
+    color: var(--color-text-main);
+}
+
+.page-interventions .itv-seg button:hover,
+.page-interventions .itv-nav button:hover {
+    background: var(--color-primary-soft);
+}
+
+.page-interventions .itv-seg button.is-active {
+    background: var(--color-primary);
+    color: var(--color-white);
+}
+
+.page-interventions .itv-nav strong {
+    min-width: 190px;
+    text-align: center;
+    color: var(--color-text-main);
+}
+
+.page-interventions .itv-nav strong::first-letter {
+    text-transform: uppercase;
+}
+
+.page-interventions .itv-chip {
+    padding: 6px 14px;
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-pill);
+    background: var(--color-bg);
+    color: var(--color-text-body);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.page-interventions .itv-chip:hover:not(:disabled) {
+    border-color: var(--color-primary-border);
+}
+
+.page-interventions .itv-chip:disabled {
+    opacity: 0.5;
+}
+
+.page-interventions .itv-chip.is-active {
+    border-color: var(--tone-border, var(--color-primary-border));
+    background: var(--tone-bg, var(--color-primary-soft));
+    color: var(--tone-fg, var(--color-primary-fg));
+}
+
+.page-interventions .itv-date-input,
+.page-interventions .itv-select {
+    min-height: 36px;
+    padding: 4px 12px;
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-bg);
+    color: var(--color-text-body);
+    font-size: 0.85rem;
+}
+
+.page-interventions .itv-sep {
+    width: 1px;
+    height: 24px;
+    background: var(--color-border);
+}
+
+.page-interventions .itv-link {
+    border: 0;
+    background: none;
+    color: var(--color-primary-dark);
+    font-size: 0.85rem;
+    text-decoration: underline;
+}
+
+.page-interventions .itv-error {
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    border: 1px solid var(--color-danger-border);
+    border-radius: var(--radius-md);
+    background: var(--color-danger-subtle);
+    color: var(--color-danger-dark);
+}
+
+/* ---- Indicateurs ---- */
+.page-interventions .itv-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.page-interventions .itv-kpi {
+    padding: 14px 18px;
+    background: var(--color-bg);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+}
+
+.page-interventions .itv-kpi span {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--color-text-sub);
+}
+
+.page-interventions .itv-kpi strong {
+    font-size: 1.7rem;
+    letter-spacing: -0.02em;
+    color: var(--color-text-main);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---- Cartes ---- */
+.page-interventions .itv-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.page-interventions .itv-card {
+    padding: 18px 20px;
+    background: var(--color-bg);
+    border-radius: var(--radius-2xl);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+}
+
+.page-interventions .itv-card-title {
+    margin: 0 0 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-main);
+}
+
+.page-interventions .itv-card-title::first-letter {
+    text-transform: uppercase;
+}
+
+.page-interventions .itv-card-title--sub {
+    margin-top: 18px;
+}
+
+.page-interventions .itv-hint,
+.page-interventions .itv-muted {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-text-sub);
+}
+
+.page-interventions .itv-bars {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.page-interventions .itv-bars li {
+    margin-bottom: 10px;
+}
+
+.page-interventions .itv-bars-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 0.85rem;
+    color: var(--color-text-body);
+}
+
+.page-interventions .itv-num {
+    white-space: nowrap;
+    color: var(--color-text-sub);
+    font-variant-numeric: tabular-nums;
+}
+
+.page-interventions .itv-bars-track {
+    height: 8px;
+    margin-top: 4px;
+    border-radius: var(--radius-pill);
+    background: var(--color-primary-soft);
+}
+
+.page-interventions .itv-bars-track div {
+    height: 100%;
+    border-radius: inherit;
+    background: var(--color-primary);
+}
+
+.page-interventions .itv-types {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.page-interventions .itv-type {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: var(--radius-pill);
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* ---- Journal ---- */
+.page-interventions .itv-journal-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.page-interventions .itv-search {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    background: var(--color-bg-alt);
+    color: var(--color-text-sub);
+}
+
+.page-interventions .itv-search input {
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--color-text-body);
+}
+
+.page-interventions .itv-date,
+.page-interventions .itv-mat {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+}
+
+.page-interventions .itv-date small,
+.page-interventions .itv-mat small {
+    color: var(--color-text-sub);
+}
+
+.page-interventions .itv-desc {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 0;
+}
+
+.page-interventions .itv-desc-text {
+    white-space: pre-line;
+}
+
+.page-interventions .itv-ticket {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-primary-dark);
+}
+
+.page-interventions .itv-actions {
+    display: inline-flex;
+    gap: 6px;
+}
+
+.page-interventions .itv-icon-btn {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: var(--color-primary-soft);
+    color: var(--color-primary-dark);
+}
+
+.page-interventions .itv-icon-btn--danger {
+    background: var(--color-danger-subtle);
+    color: var(--color-danger-dark);
+}
+
+/* ---- Modale ---- */
+.page-interventions .itv-modal-body {
+    padding: 24px;
+}
+
+.page-interventions .itv-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 18px;
+}
+
+.page-interventions .itv-form-full {
+    grid-column: 1 / -1;
+}
+
+.page-interventions .itv-required {
+    color: var(--color-danger-dark);
+}
+
+.page-interventions .itv-form-error {
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    border: 1px solid var(--color-danger-border);
+    border-radius: var(--radius-md);
+    background: var(--color-danger-subtle);
+    color: var(--color-danger-dark);
+}
+
+.page-interventions .itv-duree-rapide {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.page-interventions .itv-duree-rapide .itv-chip {
+    padding: 3px 10px;
+}
+
+@media (max-width: 992px) {
+    .page-interventions .itv-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 576px) {
+    .page-interventions .itv-form-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .page-interventions .itv-nav strong {
+        min-width: 140px;
+        font-size: 0.9rem;
+    }
+
+    .page-interventions .itv-sep {
+        display: none;
+    }
+}
