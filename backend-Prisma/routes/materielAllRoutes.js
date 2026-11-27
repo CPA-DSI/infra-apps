@@ -9,6 +9,7 @@ import { UserRole, PERMISSIONS, canViewAllMateriels } from '../constants/roles.j
 import { encryptPassMail } from '../services/passMailCrypto.js';
 import {
     affecterPC,
+    ETAT_DISPONIBLE_RETIRE,
     ETAT_REMIS_EN_SERVICE,
     ETAT_SANS_POSTE,
     ETAT_STOCK,
@@ -233,6 +234,12 @@ router.post('/', requirePermission(PERMISSIONS.MATERIELS_WRITE), asyncHandler(as
         }
     });
 
+    if (dataToCreate.etat_pc === ETAT_DISPONIBLE_RETIRE) {
+        return res.status(400).json({
+            error: "L'état « Disponible » n'existe plus : choisissez l'état physique du PC, ou « Stock » pour un PC sans utilisateur.",
+        });
+    }
+
     // Valeur par défaut pour utilisateur obligatoire
     if (!dataToCreate.utilisateur || dataToCreate.utilisateur === null) {
         dataToCreate.utilisateur = 'Non défini';
@@ -399,6 +406,12 @@ router.put('/:id', requirePermission(PERMISSIONS.MATERIELS_WRITE), asyncHandler(
     // « Stock » et « Sans poste » sont posés par l'affectation (mise en stock :
     // fiche vide, écran en stock, historique). Les saisir ici ne changeait que
     // le libellé. Une valeur inchangée reste acceptée (anciennes saisies).
+    // « Disponible » n'est plus un état : un PC à attribuer est en stock.
+    if (req.body.etat_pc === ETAT_DISPONIBLE_RETIRE && req.body.etat_pc !== actuel.etat_pc) {
+        return res.status(400).json({
+            error: "L'état « Disponible » n'existe plus : pour libérer le PC, utilisez « Réaffecter le PC » → « Mettre en stock ».",
+        });
+    }
     if ([ETAT_STOCK, ETAT_SANS_POSTE].includes(req.body.etat_pc) && req.body.etat_pc !== actuel.etat_pc) {
         return res.status(400).json({
             error: `L'état « ${req.body.etat_pc} » ne se saisit pas : utilisez « Réaffecter le PC » → « Mettre en stock ».`,
@@ -506,7 +519,9 @@ router.patch('/:id/statut', requirePermission(PERMISSIONS.MATERIELS_WRITE), asyn
     try {
         const materiel = await prisma.materiels.update({
             where: { id_materiels: materielId, date_suppression: null },
-            data: { est_actif, etat_pc: est_actif ? ETAT_REMIS_EN_SERVICE : 'Disponible', date_modification: new Date() },
+            // L'état physique (etat_pc) n'est pas touché : Actif / Inactif
+            // n'indique pas si le PC est en bon ou mauvais état.
+            data: { est_actif, date_modification: new Date() },
         });
         res.json({ message: 'Statut mis à jour', materiel });
     } catch (error) {

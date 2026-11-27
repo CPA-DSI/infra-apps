@@ -13,7 +13,6 @@ export const statusConfig = {
     'Bon':        { emoji: '👍', tone: 'info' },
     'Moyen':      { emoji: '⚠️', tone: 'warning' },
     'Mauvais':    { emoji: '❗', tone: 'rose' },
-    'Disponible': { emoji: '📦', tone: 'lime' },
     'HS':         { emoji: '❌', tone: 'danger' },
     // Posés par la mise en stock d'un PC (cf. affecterPC côté backend)
     'Stock':      { emoji: '📥', tone: 'neutral' },

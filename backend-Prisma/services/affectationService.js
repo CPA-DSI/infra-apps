@@ -26,6 +26,8 @@ export const ETAT_STOCK = 'Stock';
 export const ETAT_SANS_POSTE = 'Sans poste';
 // État repris par un PC qui sort du stock (même valeur que le bouton Status).
 export const ETAT_REMIS_EN_SERVICE = 'Bon';
+// Ancien état, retiré : il mélangeait statut et état physique. Refusé en saisie.
+export const ETAT_DISPONIBLE_RETIRE = 'Disponible';
 
 export class AffectationError extends Error {
     constructor(message, status = 400, details = undefined) {

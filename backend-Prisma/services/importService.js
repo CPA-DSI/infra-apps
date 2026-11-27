@@ -4,7 +4,7 @@
 // puis ouverture des affectations et rattachement des écrans.
 import prisma from '../prismaClient.js';
 import bcrypt from 'bcryptjs';
-import { ouvrirAffectationInitiale, rattacherEcranParCode } from './affectationService.js';
+import { ETAT_DISPONIBLE_RETIRE, ETAT_REMIS_EN_SERVICE, ouvrirAffectationInitiale, rattacherEcranParCode } from './affectationService.js';
 import {
     validateDate,
     convertBoolean,
@@ -29,6 +29,8 @@ const BCRYPT_ROUNDS = 10;
 // qui applique la même convention pour la création manuelle). L'utilisateur doit le changer à la
 // première connexion (users.must_change_password vaut true par défaut).
 const DEFAULT_PASSWORD = 'User123456';
+// État d'un PC créé par l'import sans colonne « État PC ».
+const ETAT_PAR_DEFAUT_IMPORT = ETAT_REMIS_EN_SERVICE;
 
 // Génère un id_n via la séquence PostgreSQL dédiée (users_id_n_auto_seq),
 // ce qui garantit l'atomicité entre imports concurrents contrairement à un
@@ -459,7 +461,11 @@ export async function importMateriels(items, idNAuteur) {
             const clavier = convertBoolean(findFieldValue(item, allKeys, ['Clavier', 'clavier', 'Keyboard']));
             const lan = convertBoolean(findFieldValue(item, allKeys, ['LAN', 'lan', 'Ethernet']));
             const usb = convertBoolean(findFieldValue(item, allKeys, ['USB', 'usb']));
-            const etat_pc = cleanString(findFieldValue(item, allKeys, ['État PC', 'Etat PC', 'etat_pc', 'EtatPc', 'Statut'])) || 'Disponible';
+            // Colonne absente ou vide => undefined : une mise à jour garde l'état
+            // en base, une création prend ETAT_PAR_DEFAUT_IMPORT (cf. createMany).
+            // « Disponible » (ancien état retiré) est traité comme vide.
+            const etatLu = cleanString(findFieldValue(item, allKeys, ['État PC', 'Etat PC', 'etat_pc', 'EtatPc', 'Statut']));
+            const etat_pc = etatLu && etatLu !== ETAT_DISPONIBLE_RETIRE ? etatLu : undefined;
             const salle = cleanString(findFieldValue(item, allKeys, ['salle', 'Salle', 'SALL', 'Room']));
             const mdp_pc = cleanString(findFieldValue(item, allKeys, ['Password_Local', 'Password Local', 'password_local', 'mdp_pc', 'MdpLocal']));
             const mdp_admin = cleanString(findFieldValue(item, allKeys, ['Password_Admin', 'Password Admin', 'password_admin', 'mdp_admin', 'MdpAdmin']));
@@ -484,7 +490,7 @@ export async function importMateriels(items, idNAuteur) {
                 clavier,
                 lan,
                 usb,
-                etat_pc: truncate(etat_pc, 200),
+                etat_pc: etat_pc === undefined ? undefined : truncate(etat_pc, 200),
                 salle: truncate(salle, 200),
                 mdp_pc: truncate(mdp_pc, 200),
                 mdp_admin: truncate(mdp_admin, 200),
@@ -549,6 +555,11 @@ export async function importMateriels(items, idNAuteur) {
         } else {
             rowsACreer.push(row);
         }
+    }
+
+    // Une fiche créée sans état reçoit l'état par défaut.
+    for (const row of rowsACreer) {
+        if (row.data.etat_pc === undefined) row.data.etat_pc = ETAT_PAR_DEFAUT_IMPORT;
     }
 
     if (rowsACreer.length > 0) {

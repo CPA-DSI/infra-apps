@@ -293,7 +293,6 @@ const AddModal = ({ onClose, onMaterialAdded }) => {
                             { value: 'Bon', label: '👍 Bon' },
                             { value: 'Moyen', label: '⚠️ Moyen' },
                             { value: 'Mauvais', label: '❗ Mauvais' },
-                            { value: 'Disponible', label: '📦 Disponible' },
                             { value: ETAT_STOCK, label: '🗄️ Stock' },
                             { value: 'HS', label: '❌ HS' }
                         ]}

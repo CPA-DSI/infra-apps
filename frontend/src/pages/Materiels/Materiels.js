@@ -29,7 +29,7 @@ import './Materiels.css';
 const DEFAULT_STATUS = { emoji: '❓', tone: 'neutral' };
 
 // Onglets de filtre par état (ordre d'affichage)
-const ETATS = ['Très Bon', 'Bon', 'Moyen', 'Mauvais', 'HS', 'Disponible', 'Stock', 'Sans poste'];
+const ETATS = ['Très Bon', 'Bon', 'Moyen', 'Mauvais', 'HS', 'Stock', 'Sans poste'];
 
 // 'Stock' : poste sans bénéficiaire (id_n null), y compris ceux mis en stock
 // avant que la mise en stock ne pose etat_pc = 'Stock'.
@@ -186,16 +186,12 @@ const closeModal = useCallback(() => {
 
 const handleToggleEstActif = useCallback(async (row) => {
     const currentEstActif = row.est_actif;
-    const currentEtatPc = row.etat_pc;
     const isCurrentlyActive = currentEstActif === true || currentEstActif === 'true' || currentEstActif === 'Oui' || currentEstActif === 'oui';
     const newVal = !isCurrentlyActive;
 
+    // Seul est_actif change : l'état physique (etat_pc) est conservé.
     setMateriels(prev => prev.map(m =>
-        m.id_materiels === row.id_materiels ? {
-            ...m,
-            est_actif: newVal,
-            etat_pc: newVal ? 'Bon' : 'Disponible'
-        } : m
+        m.id_materiels === row.id_materiels ? { ...m, est_actif: newVal } : m
     ));
 
     try {
@@ -205,7 +201,7 @@ const handleToggleEstActif = useCallback(async (row) => {
     } catch (error) {
         console.error("Erreur lors de la mise à jour de est_actif:", error);
         setMateriels(prev => prev.map(m =>
-            m.id_materiels === row.id_materiels ? { ...m, est_actif: currentEstActif, etat_pc: currentEtatPc } : m
+            m.id_materiels === row.id_materiels ? { ...m, est_actif: currentEstActif } : m
         ));
         MySwal.fire({
             icon: 'error',

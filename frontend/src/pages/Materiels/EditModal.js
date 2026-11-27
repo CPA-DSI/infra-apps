@@ -20,7 +20,6 @@ const ETAT_OPTIONS = [
     { value: 'Bon', label: '👍 Bon' },
     { value: 'Moyen', label: '⚠️ Moyen' },
     { value: 'Mauvais', label: '❗ Mauvais' },
-    { value: 'Disponible', label: '📦 Disponible' },
     { value: 'HS', label: '❌ HS' },
     { value: 'Stock', label: '📥 Stock' },
     { value: 'Sans poste', label: '🚫 Sans poste' }
