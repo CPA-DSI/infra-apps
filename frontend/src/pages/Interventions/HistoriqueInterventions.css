@@ -289,6 +289,78 @@
     padding: 6px 0;
 }
 
+.page-interventions .itv-desc-tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+}
+
+.page-interventions .itv-bloque {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 1px 8px;
+    border: 1px solid var(--color-danger-border);
+    border-radius: var(--radius-pill);
+    background: var(--color-danger-subtle);
+    color: var(--color-danger-fg);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.page-interventions .itv-cloture {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 1px 8px;
+    border: 1px solid var(--color-success-border);
+    border-radius: var(--radius-pill);
+    background: var(--color-success-subtle);
+    color: var(--color-success-fg);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.page-interventions .itv-solution {
+    margin-top: 2px;
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+    white-space: pre-line;
+}
+
+.page-interventions .itv-ticket-fige {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--color-bg-alt);
+    color: var(--color-text-secondary);
+    cursor: not-allowed;
+}
+
+.page-interventions .itv-cloture-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 0 0 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--color-success-border);
+    border-radius: var(--radius-md);
+    background: var(--color-success-subtle);
+    color: var(--color-success-fg);
+    font-size: 0.85rem;
+}
+
+.page-interventions .itv-cloture-info svg {
+    flex-shrink: 0;
+    margin-top: 3px;
+}
+
+.page-interventions .itv-chip svg {
+    margin-right: 4px;
+    vertical-align: -1px;
+}
+
 .page-interventions .itv-desc-text {
     white-space: pre-line;
 }

@@ -3,12 +3,15 @@ import Swal from 'sweetalert2';
 import { FaLock, FaInfoCircle, FaTag, FaCheckCircle, FaClock } from 'react-icons/fa';
 import { closeTicket, addCommentaire } from '../../services/api';
 import AppModal from '../../components/AppModal/AppModal';
+import DureePicker from '../../components/DureePicker/DureePicker';
+import { parseDuree, MESSAGE_DUREE_INVALIDE } from '../../utils/duree';
 import './Tickets.css';
 
 const CloseTicketModal = ({ show, ticketId, onClose, onSuccess }) => {
   const [solution, setSolution] = useState('');
   const [motif, setMotif] = useState('');
   const [dureeResolution, setDureeResolution] = useState('');
+  const [utilisateurBloque, setUtilisateurBloque] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = useCallback(async (e) => {
@@ -17,12 +20,17 @@ const CloseTicketModal = ({ show, ticketId, onClose, onSuccess }) => {
       Swal.showValidationMessage('La solution est obligatoire pour fermer un ticket.');
       return;
     }
+    const dureeMinutes = parseDuree(dureeResolution);
+    if (Number.isNaN(dureeMinutes)) {
+      Swal.fire({ icon: 'warning', title: 'Durée invalide', text: MESSAGE_DUREE_INVALIDE });
+      return;
+    }
 
     setSubmitting(true);
     try {
       // La fermeture passe le ticket en RESOLU et enregistre la solution
       // (TicketFermeture) côté serveur : pas de mise à jour séparée du ticket.
-      await closeTicket(ticketId, solution, motif, dureeResolution ? Number(dureeResolution) : undefined);
+      await closeTicket(ticketId, solution, motif, dureeMinutes ?? undefined, utilisateurBloque);
 
       // L'auteur du commentaire est l'utilisateur connecté, déduit côté serveur
       const contenu = motif
@@ -54,12 +62,13 @@ const CloseTicketModal = ({ show, ticketId, onClose, onSuccess }) => {
     } finally {
       setSubmitting(false);
     }
-  }, [ticketId, solution, motif, dureeResolution, onSuccess, onClose]);
+  }, [ticketId, solution, motif, dureeResolution, utilisateurBloque, onSuccess, onClose]);
 
   const handleClose = useCallback(() => {
     setSolution('');
     setMotif('');
     setDureeResolution('');
+    setUtilisateurBloque(false);
     onClose();
   }, [onClose]);
 
@@ -126,20 +135,26 @@ const CloseTicketModal = ({ show, ticketId, onClose, onSuccess }) => {
       </div>
       <div className="add-modal-form-group">
         <label className="add-modal-label" htmlFor="tck-close-duree">
-          <FaClock aria-hidden="true" /> Durée de résolution (en minutes, optionnel)
+          <FaClock aria-hidden="true" /> Durée de résolution (hh:mm, optionnel)
         </label>
-        <input
+        <DureePicker
           id="tck-close-duree"
-          type="number"
-          name="dureeResolution"
-          min="0"
           value={dureeResolution}
-          onChange={(e) => setDureeResolution(e.target.value)}
-          className="add-modal-input"
-          placeholder="Durée en minutes..."
+          onChange={setDureeResolution}
           disabled={submitting}
         />
       </div>
+      <label className="add-modal-checkbox-wrapper" htmlFor="tck-close-bloque">
+        <input
+          id="tck-close-bloque"
+          type="checkbox"
+          className="add-modal-checkbox"
+          checked={utilisateurBloque}
+          onChange={(e) => setUtilisateurBloque(e.target.checked)}
+          disabled={submitting}
+        />
+        <span className="add-modal-checkbox-label">L'utilisateur n'a pas pu travailler</span>
+      </label>
     </AppModal>
   );
 };

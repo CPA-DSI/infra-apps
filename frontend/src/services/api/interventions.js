@@ -3,13 +3,25 @@ import { apiClient, getErrorMessage } from './client';
 // --- HISTORIQUE DES INTERVENTIONS ---
 // periode : 'jour' | 'mois' | 'annee' ; date : 'AAAA-MM-JJ', 'AAAA-MM' ou 'AAAA'.
 // Réponse : { periode, debut, fin, stats, interventions }.
-export const getInterventions = async ({ periode, date, types, technicien, source } = {}) => {
+export const getInterventions = async ({ periode, date, types, technicien, source, bloque } = {}) => {
   try {
     const params = { periode, date };
     if (types?.length) params.types = types.join(',');
     if (technicien) params.technicien = technicien;
     if (source) params.source = source;
+    if (bloque) params.bloque = '1';
     const response = await apiClient.get('/interventions', { params });
+    return response.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+};
+
+// Tableau de bord : statistiques de la période sans la liste, et totaux de la
+// période précédente ({ total, duree_totale, utilisateurs_bloques, a_date, a_venir }).
+export const getInterventionStats = async ({ periode, date }) => {
+  try {
+    const response = await apiClient.get('/interventions/stats', { params: { periode, date } });
     return response.data;
   } catch (error) {
     throw new Error(getErrorMessage(error));

@@ -8,7 +8,7 @@ import DataTable from 'react-data-table-component';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import {
-  FaTools, FaPlus, FaSync, FaFileExcel, FaChevronLeft, FaChevronRight, FaEdit, FaTrash, FaSearch, FaTicketAlt,
+  FaTools, FaPlus, FaSync, FaFileExcel, FaChevronLeft, FaChevronRight, FaEdit, FaTrash, FaSearch, FaTicketAlt, FaUserSlash, FaLock,
 } from 'react-icons/fa';
 import PageHeader from '../../components/PageHeader/PageHeader';
 import { getInterventions, deleteIntervention } from '../../services/api';
@@ -49,6 +49,7 @@ const HistoriqueInterventions = () => {
   const [types, setTypes] = useState([]);
   const [technicien, setTechnicien] = useState('');
   const [source, setSource] = useState('');
+  const [bloque, setBloque] = useState(false);
   const [recherche, setRecherche] = useState('');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -64,13 +65,13 @@ const HistoriqueInterventions = () => {
     setLoading(true);
     setError('');
     try {
-      setData(await getInterventions({ periode, date: dateParam(periode, dayjs(refKey)), types, technicien, source }));
+      setData(await getInterventions({ periode, date: dateParam(periode, dayjs(refKey)), types, technicien, source, bloque }));
     } catch (err) {
       setError(err.message || 'Impossible de charger les interventions.');
     } finally {
       setLoading(false);
     }
-  }, [periode, refKey, types, technicien, source]);
+  }, [periode, refKey, types, technicien, source, bloque]);
 
   useEffect(() => { charger(); }, [charger]);
 
@@ -89,16 +90,16 @@ const HistoriqueInterventions = () => {
     const liste = data?.interventions || [];
     if (!q) return liste;
     return liste.filter(it => [
-      it.description, it.nom_technicien, it.ticket?.numeroTicket, it.materiel?.code_pc,
+      it.description, it.solution, it.nom_technicien, it.ticket?.numeroTicket, it.materiel?.code_pc,
       it.materiel?.utilisateur, it.local?.nom_local, TYPE_CONFIG[it.type]?.label,
     ].some(v => String(v || '').toLowerCase().includes(q)));
   }, [data, recherche]);
 
   const stats = data?.stats;
 
-  const handleSaved = () => {
+  const handleSaved = (_saved, { ticketCloture } = {}) => {
     setModal({ show: false, intervention: null, prefill: null });
-    notify('Intervention enregistrée.');
+    notify(ticketCloture ? 'Intervention enregistrée, ticket clôturé.' : 'Intervention enregistrée.');
     charger();
   };
 
@@ -127,16 +128,19 @@ const HistoriqueInterventions = () => {
       Date: dayjs(it.date_intervention).format('DD/MM/YYYY HH:mm'),
       Type: TYPE_CONFIG[it.type]?.label || it.type,
       Description: it.description,
-      'Durée (min)': it.duree_minutes ?? '',
+      Solution: it.solution || '',
+      'Durée (hh:mm)': it.duree_minutes == null ? '' : formatDuree(it.duree_minutes),
       Technicien: it.nom_technicien || '',
       Matériel: it.materiel?.code_pc || '',
       Utilisateur: it.materiel?.utilisateur || '',
       Local: it.local?.nom_local || '',
       Ticket: it.ticket?.numeroTicket || '',
+      'Clôture du ticket': it.cloture_ticket ? 'Oui' : '',
       Origine: it.source === 'TICKET' ? 'Ticket' : 'Saisie',
+      'Utilisateur bloqué': it.utilisateur_bloque ? 'Oui' : 'Non',
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
-    ws['!cols'] = [{ wch: 17 }, { wch: 14 }, { wch: 60 }, { wch: 11 }, { wch: 24 }, { wch: 14 }, { wch: 22 }, { wch: 16 }, { wch: 18 }, { wch: 9 }];
+    ws['!cols'] = [{ wch: 17 }, { wch: 14 }, { wch: 60 }, { wch: 50 }, { wch: 11 }, { wch: 24 }, { wch: 14 }, { wch: 22 }, { wch: 16 }, { wch: 18 }, { wch: 16 }, { wch: 9 }, { wch: 18 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Interventions');
     const buffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
@@ -197,10 +201,15 @@ const HistoriqueInterventions = () => {
       selector: r => r.description,
       cell: r => (
         <span className="itv-desc">
-          {r.ticket && (
-            <span className="itv-ticket"><FaTicketAlt aria-hidden="true" /> {r.ticket.numeroTicket}</span>
+          {(r.ticket || r.utilisateur_bloque) && (
+            <span className="itv-desc-tags">
+              {r.ticket && <span className="itv-ticket"><FaTicketAlt aria-hidden="true" /> {r.ticket.numeroTicket}</span>}
+              {r.cloture_ticket && r.ticket && <span className="itv-cloture"><FaLock aria-hidden="true" /> Clôture</span>}
+              {r.utilisateur_bloque && <span className="itv-bloque"><FaUserSlash aria-hidden="true" /> Utilisateur bloqué</span>}
+            </span>
           )}
           <span className="itv-desc-text">{r.description}</span>
+          {r.solution && <span className="itv-solution"><strong>Solution :</strong> {r.solution}</span>}
         </span>
       ),
     },
@@ -218,7 +227,9 @@ const HistoriqueInterventions = () => {
       cell: r => (r.modifiable ? (
         <span className="itv-actions">
           <button type="button" className="itv-icon-btn" title="Modifier" aria-label="Modifier" onClick={() => setModal({ show: true, intervention: r, prefill: null })}><FaEdit /></button>
-          <button type="button" className="itv-icon-btn itv-icon-btn--danger" title="Supprimer" aria-label="Supprimer" onClick={() => handleDelete(r)}><FaTrash /></button>
+          {!(r.cloture_ticket && r.ticket) && (
+            <button type="button" className="itv-icon-btn itv-icon-btn--danger" title="Supprimer" aria-label="Supprimer" onClick={() => handleDelete(r)}><FaTrash /></button>
+          )}
         </span>
       ) : null),
     },
@@ -281,8 +292,11 @@ const HistoriqueInterventions = () => {
           <option value="TICKET">Depuis un ticket</option>
           <option value="MANUELLE">Saisies</option>
         </select>
-        {(types.length > 0 || technicien || source) && (
-          <button type="button" className="itv-link" onClick={() => { setTypes([]); setTechnicien(''); setSource(''); }}>Réinitialiser</button>
+        <button type="button" aria-pressed={bloque} className={`itv-chip ${bloque ? 'is-active tone--danger' : ''}`} onClick={() => setBloque(b => !b)}>
+          <FaUserSlash aria-hidden="true" /> Utilisateur bloqué
+        </button>
+        {(types.length > 0 || technicien || source || bloque) && (
+          <button type="button" className="itv-link" onClick={() => { setTypes([]); setTechnicien(''); setSource(''); setBloque(false); }}>Réinitialiser</button>
         )}
       </div>
 
@@ -293,6 +307,7 @@ const HistoriqueInterventions = () => {
         <div className="itv-kpi"><span>Temps passé</span><strong>{stats ? formatDuree(stats.duree_totale) : '—'}</strong></div>
         <div className="itv-kpi"><span>Matériels concernés</span><strong>{stats?.materiels_concernes ?? '—'}</strong></div>
         <div className="itv-kpi"><span>Issues de tickets</span><strong>{stats?.depuis_tickets ?? '—'}</strong></div>
+        <div className="itv-kpi"><span>Utilisateur bloqué</span><strong>{stats?.utilisateurs_bloques ?? '—'}</strong></div>
       </div>
 
       <div className="itv-grid">

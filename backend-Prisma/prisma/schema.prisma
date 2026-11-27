@@ -511,12 +511,20 @@ model PieceJointe {
 // fermeture d'un ticket (PUT /api/tickets/:id/close, et reprise des tickets
 // déjà fermés par la migration add_interventions) ; 'MANUELLE' : saisie dans
 // la page Historique des interventions. Un technicien ne modifie que les siennes.
+// cloture_ticket : intervention qui a clôturé le ticket lié (une seule active par
+// ticket, index unique partiel créé par la migration intervention_solution_cloture,
+// non représentable ici). Sa solution, sa durée et sa date sont recopiées dans
+// tickets_fermeture. À la réouverture du ticket, elle est gardée (cloture_ticket = false).
 model Intervention {
   id_intervention   Int              @id @default(autoincrement())
   date_intervention DateTime         @db.Timestamp(6)
   duree_minutes     Int?
   type              InterventionType
   description       String
+  solution          String?
+  cloture_ticket    Boolean          @default(false)
+  // L'utilisateur n'a pas pu travailler pendant le problème / l'intervention
+  utilisateur_bloque Boolean         @default(false)
   source            String           @default("MANUELLE") @db.VarChar(10)
   id_technicien     Int?
   nom_technicien    String?          @db.VarChar(255)

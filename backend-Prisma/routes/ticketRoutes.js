@@ -7,7 +7,7 @@ import { PERMISSIONS } from '../constants/roles.js';
 import { validateIdParam } from '../middleware/validateIdParam.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { formatTicket } from '../services/ticketService.js';
-import { creerInterventionDepuisFermeture } from '../services/interventionService.js';
+import { creerInterventionDepuisFermeture, STATUTS_FERMES } from '../services/interventionService.js';
 
 const router = express.Router();
 router.param('id', validateIdParam);
@@ -182,10 +182,13 @@ router.put('/:id/assign', requirePermission(PERMISSIONS.TICKETS_CLOSE), asyncHan
 // Réservé aux rôles ayant la permission tickets:close (IT_ADMIN/DIRECTION)
 router.put('/:id/close', requirePermission(PERMISSIONS.TICKETS_CLOSE), asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { solution, motif, dureeResolution } = req.body;
+  const { solution, motif, dureeResolution, utilisateurBloque } = req.body;
 
   if (!solution || !solution.trim()) {
     return res.status(400).json({ error: "La solution est obligatoire pour fermer un ticket." });
+  }
+  if (utilisateurBloque !== undefined && utilisateurBloque !== null && typeof utilisateurBloque !== 'boolean') {
+    return res.status(400).json({ error: "utilisateurBloque doit valoir true ou false." });
   }
 
   const ticketId = parseInt(id, 10);
@@ -222,7 +225,8 @@ router.put('/:id/close', requirePermission(PERMISSIONS.TICKETS_CLOSE), asyncHand
       });
 
       // Trace la fermeture dans l'historique des interventions
-      await creerInterventionDepuisFermeture(tx, { ticket: existingTicket, fermeture });
+      // (la case « l'utilisateur n'a pas pu travailler » n'est stockée que sur l'intervention)
+      await creerInterventionDepuisFermeture(tx, { ticket: existingTicket, fermeture, utilisateurBloque: utilisateurBloque === true });
 
       return tx.ticket.update({
         where: { idTicket: ticketId },
@@ -309,7 +313,6 @@ router.put('/:id', requirePermission(PERMISSIONS.TICKETS_WRITE), requireTicketOw
   // Rouvrir un ticket (RESOLU/FERME -> NOUVEAU/EN_COURS) supprime sa fiche de
   // fermeture : sinon la contrainte unique sur ticketId fait échouer (409)
   // toute fermeture ultérieure.
-  const STATUTS_FERMES = ['RESOLU', 'FERME'];
   const rouverture = STATUTS_FERMES.includes(existingTicket.statut)
     && updateData.statut && !STATUTS_FERMES.includes(updateData.statut);
 
@@ -317,11 +320,12 @@ router.put('/:id', requirePermission(PERMISSIONS.TICKETS_WRITE), requireTicketOw
     const updatedTicket = await prisma.$transaction(async (tx) => {
       if (rouverture) {
         await tx.ticketFermeture.deleteMany({ where: { ticketId: existingTicket.idTicket } });
-        // L'intervention créée par cette fermeture disparaît avec elle ; une
-        // nouvelle fermeture en recréera une.
+        // L'intervention de clôture est gardée (le travail et le temps passé
+        // restent dans l'historique) mais ne clôture plus le ticket ; la
+        // prochaine fermeture aura sa propre intervention de clôture.
         await tx.intervention.updateMany({
-          where: { id_ticket: existingTicket.idTicket, source: 'TICKET', date_suppression: null },
-          data: { date_suppression: new Date() },
+          where: { id_ticket: existingTicket.idTicket, cloture_ticket: true },
+          data: { cloture_ticket: false },
         });
       }
       return tx.ticket.update({

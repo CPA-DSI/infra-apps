@@ -80,9 +80,10 @@ export const fetchCommentairesByTicket = async (ticketId) => {
 };
 
 // Réservé IT_ADMIN/DIRECTION (permission tickets:close) ; 'fermé par' est déduit côté serveur.
-export const closeTicket = async (ticketId, solution = '', motif = '', dureeResolution) => {
+// utilisateurBloque : case « l'utilisateur n'a pas pu travailler », reportée sur l'intervention créée.
+export const closeTicket = async (ticketId, solution = '', motif = '', dureeResolution, utilisateurBloque = false) => {
   try {
-    const response = await apiClient.put(`/tickets/${ticketId}/close`, { solution, motif, dureeResolution });
+    const response = await apiClient.put(`/tickets/${ticketId}/close`, { solution, motif, dureeResolution, utilisateurBloque });
     return response.data;
   } catch (error) {
     throw new Error(getErrorMessage(error));
