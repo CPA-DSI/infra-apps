@@ -121,5 +121,128 @@ export const libelleSerie = (periode, index) => {
   return `${index}h`;
 };
 
+// ──────────────────────────────────────────────
+// Plage libre « du … au … » (page Historique des interventions)
+// debut / fin : 'YYYY-MM-DD', bornes incluses.
+// ──────────────────────────────────────────────
+const FMT = 'YYYY-MM-DD';
+const iso = d => d.format(FMT);
+const lundi = d => d.subtract((d.day() + 6) % 7, 'day').startOf('day');
+const debutTrimestre = d => d.month(Math.floor(d.month() / 3) * 3).startOf('month');
+
+// Raccourcis du sélecteur de période (format de DateRangeFilter)
+export const PRESETS_INTERVENTIONS = [
+  {
+    group: 'Jour',
+    items: [
+      { key: 'today', label: "Aujourd'hui", range: t => [t, t] },
+      { key: 'yesterday', label: 'Hier', range: t => [t.subtract(1, 'day'), t.subtract(1, 'day')] },
+    ],
+  },
+  {
+    group: 'Semaine',
+    items: [
+      { key: 'this-week', label: 'Cette semaine', range: t => [lundi(t), lundi(t).add(6, 'day')] },
+      { key: 'last-week', label: 'Semaine dernière', range: t => [lundi(t).subtract(7, 'day'), lundi(t).subtract(1, 'day')] },
+    ],
+  },
+  {
+    group: 'Mois',
+    items: [
+      { key: 'this-month', label: 'Ce mois', range: t => [t.startOf('month'), t.endOf('month')] },
+      { key: 'last-month', label: 'Mois dernier', range: t => [t.subtract(1, 'month').startOf('month'), t.subtract(1, 'month').endOf('month')] },
+      { key: 'last-12-months', label: '12 derniers mois', range: t => [t.subtract(12, 'month').add(1, 'day'), t] },
+    ],
+  },
+  {
+    group: 'Trimestre',
+    items: [
+      { key: 'this-quarter', label: 'Ce trimestre', range: t => [debutTrimestre(t), debutTrimestre(t).add(2, 'month').endOf('month')] },
+      { key: 'last-quarter', label: 'Trimestre dernier', range: t => { const s = debutTrimestre(t).subtract(3, 'month'); return [s, s.add(2, 'month').endOf('month')]; } },
+    ],
+  },
+  {
+    group: 'Année',
+    items: [
+      { key: 'this-year', label: 'Cette année', range: t => [t.startOf('year'), t.endOf('year')] },
+      { key: 'last-year', label: 'Année dernière', range: t => [t.subtract(1, 'year').startOf('year'), t.subtract(1, 'year').endOf('year')] },
+    ],
+  },
+];
+
+// Raccourci correspondant exactement à la plage (sélection dans le menu), sinon 'custom'.
+export const cleRaccourci = (debut, fin, today = dayjs()) => {
+  for (const p of PRESETS_INTERVENTIONS.flatMap(g => g.items)) {
+    const [d, f] = p.range(today);
+    if (iso(d) === debut && iso(f) === fin) return p.key;
+  }
+  return 'custom';
+};
+
+const plage = (debut, fin) => ({ key: cleRaccourci(debut, fin), debut, fin });
+
+const lireJour = v => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) && dayjs(v).format(FMT) === v ? v : null);
+
+// Plage lue dans l'URL : ?debut=&fin=, ou l'ancien format ?periode=jour|mois|annee&date=
+// (liens du tableau de bord de l'accueil). Par défaut : le mois en cours.
+export const plageDepuisUrl = (params) => {
+  const debut = lireJour(params.get('debut'));
+  const fin = lireJour(params.get('fin'));
+  if (debut || fin) {
+    const d = debut || fin;
+    const f = fin || debut;
+    return d <= f ? plage(d, f) : plage(f, d);
+  }
+  const ref = dayjs(params.get('date') || undefined);
+  const r = ref.isValid() ? ref : dayjs();
+  const unite = { jour: 'day', annee: 'year' }[params.get('periode')] || 'month';
+  return plage(iso(r.startOf(unite)), iso(r.endOf(unite)));
+};
+
+// Plage couvrant des mois entiers : nombre de mois, sinon null.
+const moisEntiers = (debut, fin) => {
+  const d = dayjs(debut);
+  const f = dayjs(fin);
+  if (d.date() !== 1 || f.date() !== f.daysInMonth()) return null;
+  return (f.year() - d.year()) * 12 + f.month() - d.month() + 1;
+};
+
+// Plage précédente (sens = -1) ou suivante (sens = 1), de même durée :
+// des mois entiers se décalent d'autant de mois (février a 28 jours, mars 31),
+// sinon la plage se décale de son nombre de jours.
+export const decalerPlage = ({ debut, fin }, sens) => {
+  const nbMois = moisEntiers(debut, fin);
+  if (nbMois) {
+    const d = dayjs(debut).add(sens * nbMois, 'month');
+    return plage(iso(d), iso(d.add(nbMois - 1, 'month').endOf('month')));
+  }
+  const n = dayjs(fin).diff(dayjs(debut), 'day') + 1;
+  return plage(iso(dayjs(debut).add(sens * n, 'day')), iso(dayjs(fin).add(sens * n, 'day')));
+};
+
+// Libellé lisible : « jeudi 26 novembre 2026 », « novembre 2026 », « 2026 »,
+// « 4e trimestre 2026 », sinon « 03/11/2026 – 26/11/2026 ».
+export const libellePlage = ({ debut, fin }) => {
+  const d = dayjs(debut).locale('fr');
+  const f = dayjs(fin).locale('fr');
+  if (debut === fin) return d.format('dddd D MMMM YYYY');
+  const nbMois = moisEntiers(debut, fin);
+  if (nbMois === 1) return d.format('MMMM YYYY');
+  if (nbMois === 12 && d.month() === 0) return d.format('YYYY');
+  if (nbMois === 3 && d.month() % 3 === 0) return `${d.month() / 3 + 1}${d.month() === 0 ? 'er' : 'e'} trimestre ${d.year()}`;
+  return `${d.format('DD/MM/YYYY')} – ${f.format('DD/MM/YYYY')}`;
+};
+
+export const estPlageFuture = ({ debut }) => dayjs(debut).isAfter(dayjs(), 'day');
+
+// Libellé d'un point du graphique selon le découpage renvoyé par l'API
+// (point.date : début du point pour les plages libres).
+export const libellePoint = (decoupage, point, { debut, fin }) => {
+  if (decoupage === 'heure') return `${point.index}h`;
+  const d = dayjs(point.date).locale('fr');
+  if (decoupage === 'mois') return dayjs(debut).year() === dayjs(fin).year() ? d.format('MMM') : d.format('MMM YY');
+  return dayjs(debut).month() === dayjs(fin).month() && dayjs(debut).year() === dayjs(fin).year() ? d.format('D') : d.format('DD/MM');
+};
+
 // Durées au format hh:mm (utilitaire partagé avec les tickets).
 export { formatDuree } from '../../utils/duree';

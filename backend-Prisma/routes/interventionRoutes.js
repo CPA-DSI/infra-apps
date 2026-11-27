@@ -1,6 +1,8 @@
 // routes/interventionRoutes.js
 // Historique des interventions (réservé IT_ADMIN / DIRECTION).
 //   GET    /api/interventions?periode=jour|mois|annee&date=AAAA-MM-JJ[&types=&sous_type=&technicien=&source=&bloque=1&materiel=&beneficiaire=]
+//          ou ?debut=AAAA-MM-JJ&fin=AAAA-MM-JJ (plage libre, bornes incluses) : graphique
+//          par heure (1 jour), par jour (jusqu'à 92 jours) ou par mois (au-delà), cf. decoupage
 //   GET    /api/interventions/stats?periode=&date= : statistiques seules (tableau de
 //          bord d'accueil) + totaux de la période précédente (« à date » si en cours)
 //          et sa série complète (courbe cumulée comparée)
@@ -22,6 +24,7 @@ import {
     INTERVENTION_TYPES, InterventionError, bornesPeriode, statistiques, nomTechnicien, lireBooleen,
     fermerTicketDepuisIntervention, synchroniserFermeture, periodePrecedente, serieInterventions,
     resumeBlocages, nommerRecurrences, lireSousType, SOUS_TYPES, SOUS_TYPE_NON_PRECISE,
+    bornesPlage, grillePlage, grillePeriode,
 } from '../services/interventionService.js';
 
 const router = express.Router();
@@ -127,8 +130,10 @@ const chargerIntervention = async (id, user) => {
 
 router.get('/', requirePermission(PERMISSIONS.INTERVENTIONS_READ), asyncHandler(async (req, res) => {
     try {
-        const periode = req.query.periode || 'mois';
-        const { debut, fin } = bornesPeriode(periode, req.query.date);
+        const plage = req.query.debut !== undefined || req.query.fin !== undefined;
+        const periode = plage ? 'plage' : (req.query.periode || 'mois');
+        const { debut, fin } = plage ? bornesPlage(req.query.debut, req.query.fin) : bornesPeriode(periode, req.query.date);
+        const grille = plage ? grillePlage(debut, fin) : grillePeriode(periode, debut);
 
         const where = { date_suppression: null, date_intervention: { gte: debut, lt: fin } };
         if (req.query.types) {
@@ -160,7 +165,8 @@ router.get('/', requirePermission(PERMISSIONS.INTERVENTIONS_READ), asyncHandler(
             periode,
             debut,
             fin,
-            stats: await nommerRecurrences(prisma, statistiques(interventions, periode, debut)),
+            decoupage: grille.decoupage,
+            stats: await nommerRecurrences(prisma, statistiques(interventions, periode, debut, grille)),
             interventions: interventions.map(it => formatIntervention(it, req.user.id_n)),
         });
     } catch (err) {

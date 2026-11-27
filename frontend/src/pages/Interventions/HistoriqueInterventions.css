@@ -30,8 +30,9 @@
     box-shadow: var(--shadow-sm);
 }
 
+/* Flèches ‹ › uniquement (enfants directs) : pas les boutons du sélecteur de période */
 .page-interventions .itv-seg button,
-.page-interventions .itv-nav button {
+.page-interventions .itv-nav > button {
     min-height: 38px;
     padding: 0 16px;
     border: 0;
@@ -42,14 +43,14 @@
     transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
-.page-interventions .itv-nav button {
+.page-interventions .itv-nav > button {
     width: 38px;
     padding: 0;
     color: var(--color-text-main);
 }
 
 .page-interventions .itv-seg button:hover,
-.page-interventions .itv-nav button:hover {
+.page-interventions .itv-nav > button:hover {
     background: var(--color-primary-soft);
 }
 
@@ -58,14 +59,34 @@
     color: var(--color-white);
 }
 
-.page-interventions .itv-nav strong {
-    min-width: 190px;
-    text-align: center;
+/* Sélecteur de période (DateRangeFilter) entre les flèches */
+.page-interventions .itv-periode {
+    min-width: 230px;
+    min-height: 38px;
+    border-radius: var(--radius-md);
     color: var(--color-text-main);
+    font-weight: 700;
+    transition: background-color var(--transition-fast);
 }
 
-.page-interventions .itv-nav strong::first-letter {
+.page-interventions .itv-periode:hover,
+.page-interventions .itv-periode[aria-expanded="true"] {
+    background: var(--color-primary-soft);
+}
+
+.page-interventions .itv-periode .drf-label {
+    text-align: center;
+}
+
+.page-interventions .itv-periode .drf-label::first-letter,
+.page-interventions .itv-card-title--periode::first-letter {
     text-transform: uppercase;
+}
+
+/* Menu aligné sur le bord gauche du bouton (la barre est collée à gauche de la page) */
+.page-interventions .itv-nav .drf-popover {
+    left: 0;
+    font-weight: 400;
 }
 
 .page-interventions .itv-chip {
@@ -92,7 +113,6 @@
     color: var(--tone-fg, var(--color-primary-fg));
 }
 
-.page-interventions .itv-date-input,
 .page-interventions .itv-select {
     min-height: 36px;
     padding: 4px 12px;
@@ -475,9 +495,14 @@
         grid-template-columns: minmax(0, 1fr);
     }
 
-    .page-interventions .itv-nav strong {
-        min-width: 140px;
+    .page-interventions .itv-periode {
+        min-width: 170px;
         font-size: 0.9rem;
+    }
+
+    /* Mobile : le menu part du bord gauche de la barre (sous la flèche ‹) */
+    .page-interventions .itv-nav .drf-popover {
+        left: -44px;
     }
 
     .page-interventions .itv-sep {

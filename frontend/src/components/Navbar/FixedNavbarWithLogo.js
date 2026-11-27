@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Container, Navbar, Nav, NavDropdown, Modal, Button, Alert, Form } from 'react-bootstrap';
-import { FaHome, FaLaptopCode, FaEnvelopeOpenText, FaBoxes, FaUserCircle, FaSignOutAlt, FaProductHunt, FaExchangeAlt, FaArrowCircleRight, FaBars, FaTimes, FaTicketAlt, FaEye, FaEyeSlash, FaCheck, FaList, FaHistory, FaUsers, FaFileAlt, FaChevronDown } from 'react-icons/fa';
+import { FaHome, FaLaptopCode, FaEnvelopeOpenText, FaBoxes, FaUserCircle, FaSignOutAlt, FaProductHunt, FaExchangeAlt, FaArrowCircleRight, FaBars, FaTimes, FaTicketAlt, FaEye, FaEyeSlash, FaCheck, FaList, FaHistory, FaUsers, FaFileAlt, FaChevronDown, FaTools } from 'react-icons/fa';
 import { MySwal, swalButtons } from '../../utils/swal';
 import logo from '../../assets/logo.png';
 import { PAGE_TITLES, ROLES, validatePassword, hasPermission, PERMISSIONS } from '../../config/api';
@@ -45,6 +45,7 @@ const FixedNavbarWithLogo = () => {
 
   const [isMouvementsDropdownOpen, setIsMouvementsDropdownOpen] = useState(false);
   const [isMaterielsDropdownOpen, setIsMaterielsDropdownOpen] = useState(false);
+  const [isSupportDropdownOpen, setIsSupportDropdownOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
 
   const userEmails = Array.isArray(user?.emails) && user.emails.length
@@ -84,6 +85,7 @@ const FixedNavbarWithLogo = () => {
         setIsUserDropdownOpen(false);
         setIsMouvementsDropdownOpen(false);
         setIsMaterielsDropdownOpen(false);
+        setIsSupportDropdownOpen(false);
       }
     };
 
@@ -258,7 +260,7 @@ const FixedNavbarWithLogo = () => {
                       </div>
                     }
                     id="materiels-nav-dropdown"
-                    className={isActive('/Materiels', '/HistoriqueMateriel', '/HistoriqueInterventions') ? 'nav-active' : ''}
+                    className={isActive('/Materiels', '/HistoriqueMateriel') ? 'nav-active' : ''}
                     show={isMaterielsDropdownOpen}
                     onToggle={() => setIsMaterielsDropdownOpen(!isMaterielsDropdownOpen)}
                   >
@@ -301,11 +303,6 @@ const FixedNavbarWithLogo = () => {
                         <NavDropdown.Item as={Link} to="/HistoriqueMateriel" className="dropdown-menu-item">
                           <span className="menu-item-text">Historique Matériel</span>
                         </NavDropdown.Item>
-                        {hasPermission(userRole, PERMISSIONS.INTERVENTIONS_READ) && (
-                          <NavDropdown.Item as={Link} to="/HistoriqueInterventions" className="dropdown-menu-item">
-                            <span className="menu-item-text">Historique Interventions</span>
-                          </NavDropdown.Item>
-                        )}
                       </>
                     )}
                   </NavDropdown>
@@ -372,7 +369,47 @@ const FixedNavbarWithLogo = () => {
                 </div>
               )}
 
-              {hasPermission(userRole, PERMISSIONS.TICKETS_READ) && (
+              {/* Menu Support : déroulant (Tickets + Interventions) pour les rôles
+                  qui voient les interventions, simple lien sinon (rôle USER). */}
+              {hasPermission(userRole, PERMISSIONS.TICKETS_READ) && hasPermission(userRole, PERMISSIONS.INTERVENTIONS_READ) && (
+                <div className="nav-dropdown-wrapper" onMouseEnter={() => setIsSupportDropdownOpen(true)} onMouseLeave={() => setIsSupportDropdownOpen(false)}>
+                  <NavDropdown
+                    title={
+                      <div className="dropdown-title-wrapper" title="Support">
+                        <div className="nav-item-icon">
+                          <FaTicketAlt />
+                        </div>
+                        <span className="nav-item-label">Support</span>
+                        <FaChevronDown className="dropdown-arrow" aria-hidden="true" />
+                      </div>
+                    }
+                    id="support-nav-dropdown"
+                    className={isActive('/Tickets', '/HistoriqueInterventions') ? 'nav-active' : ''}
+                    show={isSupportDropdownOpen}
+                    onToggle={() => setIsSupportDropdownOpen(!isSupportDropdownOpen)}
+                  >
+                    <div className="dropdown-header-section">
+                      <FaTicketAlt className="dropdown-header-icon" />
+                      <span>Tickets</span>
+                    </div>
+                    <NavDropdown.Item as={Link} to="/Tickets" className="dropdown-menu-item">
+                      <span className="menu-item-text">Liste des tickets</span>
+                    </NavDropdown.Item>
+
+                    <NavDropdown.Divider className="dropdown-divider" />
+
+                    <div className="dropdown-header-section">
+                      <FaTools className="dropdown-header-icon" />
+                      <span>Interventions</span>
+                    </div>
+                    <NavDropdown.Item as={Link} to="/HistoriqueInterventions" className="dropdown-menu-item">
+                      <span className="menu-item-text">Historique des interventions</span>
+                    </NavDropdown.Item>
+                  </NavDropdown>
+                </div>
+              )}
+
+              {hasPermission(userRole, PERMISSIONS.TICKETS_READ) && !hasPermission(userRole, PERMISSIONS.INTERVENTIONS_READ) && (
                 <Nav.Link as={Link} to="/Tickets" title="Support" className={isActive('/Tickets') ? 'nav-active' : ''} aria-current={ariaCurrent(isActive('/Tickets'))}>
                   <div className="nav-item-wrapper">
                     <div className="nav-item-icon">

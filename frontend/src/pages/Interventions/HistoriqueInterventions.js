@@ -1,5 +1,6 @@
-// Historique des interventions : navigation Jour / Mois / Année, indicateurs,
-// graphique (clic = zoom sur la période), journal et saisie des interventions.
+// Historique des interventions : sélecteur de période (raccourcis ou plage libre,
+// flèches = période précédente / suivante de même durée), indicateurs,
+// graphique (clic = zoom sur le jour ou le mois), journal et saisie des interventions.
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import dayjs from 'dayjs';
@@ -11,6 +12,7 @@ import {
   FaTools, FaPlus, FaSync, FaFileExcel, FaChevronLeft, FaChevronRight, FaEdit, FaTrash, FaSearch, FaTicketAlt, FaUserSlash, FaLock, FaTimes,
 } from 'react-icons/fa';
 import PageHeader from '../../components/PageHeader/PageHeader';
+import DateRangeFilter from '../../components/DateRangeFilter/DateRangeFilter';
 import { getInterventions, deleteIntervention } from '../../services/api';
 import { MySwal, swalButtons, notify } from '../../utils/swal';
 import { toneClass } from '../../utils/tones';
@@ -18,19 +20,16 @@ import { cssVar } from '../../styles/cssVar';
 import { tableStyles, paginationOptions } from '../../styles/dataTableTheme';
 import InterventionModal from './InterventionModal';
 import {
-  TYPE_CONFIG, INTERVENTION_TYPES, PERIODES, dateParam, decaler, libellePeriode, estPeriodeCourante,
-  libelleSerie, formatDuree, libelleSousType, SOUS_TYPE_NON_PRECISE,
+  TYPE_CONFIG, INTERVENTION_TYPES, formatDuree, libelleSousType, SOUS_TYPE_NON_PRECISE,
+  PRESETS_INTERVENTIONS, plageDepuisUrl, decalerPlage, libellePlage, libellePoint,
 } from './interventionConfig';
 import './HistoriqueInterventions.css';
 
-const ZOOM = { annee: 'mois', mois: 'jour' };
+// Clic sur une barre : un point « jour » ouvre ce jour, un point « mois » ce mois
+const ZOOM = { mois: 'month', jour: 'day' };
+const TITRE_GRAPHIQUE = { heure: 'heure', jour: 'jour', mois: 'mois' };
 
 const TABLE_STYLES = tableStyles({ rows: { style: { minHeight: '56px' } } });
-
-const lireRef = (valeur) => {
-  const d = dayjs(valeur);
-  return valeur && d.isValid() ? d : dayjs();
-};
 
 const TypeChip = ({ type, sousType }) => {
   const chip = <span className={`itv-type ${toneClass(TYPE_CONFIG[type]?.tone)} tone-chip`}>{TYPE_CONFIG[type]?.label || type}</span>;
@@ -48,10 +47,17 @@ const HistoriqueInterventions = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Période dans l'URL : le lien partagé ouvre la même vue
-  const periode = PERIODES.some(p => p.key === searchParams.get('periode')) ? searchParams.get('periode') : 'mois';
+  // Période dans l'URL (?debut=&fin=, ou ?periode=&date= des liens du tableau de
+  // bord) : le lien partagé ouvre la même vue
+  const debutUrl = searchParams.get('debut');
+  const finUrl = searchParams.get('fin');
+  const periodeUrl = searchParams.get('periode');
   const dateUrl = searchParams.get('date');
-  const ref = useMemo(() => lireRef(dateUrl), [dateUrl]);
+  const range = useMemo(
+    () => plageDepuisUrl(new URLSearchParams({ debut: debutUrl || '', fin: finUrl || '', periode: periodeUrl || '', date: dateUrl || '' })),
+    [debutUrl, finUrl, periodeUrl, dateUrl],
+  );
+  const { debut, fin } = range;
 
   // Filtre type initial depuis l'URL (lien « Répartition par type » du tableau de bord)
   const [types, setTypes] = useState(() => (INTERVENTION_TYPES.includes(searchParams.get('type')) ? [searchParams.get('type')] : []));
@@ -69,22 +75,21 @@ const HistoriqueInterventions = () => {
   const [error, setError] = useState('');
   const [modal, setModal] = useState({ show: false, intervention: null, prefill: null });
 
-  const refKey = ref.format('YYYY-MM-DD');
-  const allerA = useCallback((p, d) => {
-    setSearchParams({ periode: p, date: d.format('YYYY-MM-DD') }, { replace: true });
+  const allerA = useCallback((r) => {
+    setSearchParams({ debut: r.debut, fin: r.fin }, { replace: true });
   }, [setSearchParams]);
 
   const charger = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      setData(await getInterventions({ periode, date: dateParam(periode, dayjs(refKey)), types, sousType, technicien, source, bloque, materiel, beneficiaire }));
+      setData(await getInterventions({ debut, fin, types, sousType, technicien, source, bloque, materiel, beneficiaire }));
     } catch (err) {
       setError(err.message || 'Impossible de charger les interventions.');
     } finally {
       setLoading(false);
     }
-  }, [periode, refKey, types, sousType, technicien, source, bloque, materiel, beneficiaire]);
+  }, [debut, fin, types, sousType, technicien, source, bloque, materiel, beneficiaire]);
 
   useEffect(() => { charger(); }, [charger]);
 
@@ -169,12 +174,16 @@ const HistoriqueInterventions = () => {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Interventions');
     const buffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    saveAs(new Blob([buffer], { type: 'application/octet-stream' }), `interventions_${periode}_${dateParam(periode, ref)}.xlsx`);
+    saveAs(new Blob([buffer], { type: 'application/octet-stream' }), `interventions_${debut === fin ? debut : `${debut}_${fin}`}.xlsx`);
   };
+
+  // Découpage du graphique renvoyé par l'API (heure, jour ou mois)
+  const decoupage = data?.decoupage || 'jour';
 
   const chart = useMemo(() => {
     const serie = stats?.serie || [];
     const primary = cssVar('--color-primary');
+    const bornes = { debut, fin };
     return {
       series: [{ name: 'Interventions', data: serie.map(p => p.total) }],
       options: {
@@ -183,18 +192,18 @@ const HistoriqueInterventions = () => {
           events: {
             dataPointSelection: (_e, _ctx, { dataPointIndex }) => {
               const point = serie[dataPointIndex];
-              if (!point || !ZOOM[periode]) return;
-              const d = periode === 'annee' ? ref.month(point.index).date(1) : ref.date(point.index);
-              allerA(ZOOM[periode], d);
+              if (!point?.date || !ZOOM[decoupage]) return;
+              const d = dayjs(point.date);
+              allerA({ debut: d.startOf(ZOOM[decoupage]).format('YYYY-MM-DD'), fin: d.endOf(ZOOM[decoupage]).format('YYYY-MM-DD') });
             },
           },
         },
         colors: [primary],
-        plotOptions: { bar: { borderRadius: 4, columnWidth: periode === 'annee' ? '50%' : '70%' } },
+        plotOptions: { bar: { borderRadius: 4, columnWidth: decoupage === 'mois' && serie.length <= 12 ? '50%' : '70%' } },
         dataLabels: { enabled: false },
         xaxis: {
-          categories: serie.map(p => libelleSerie(periode, p.index)),
-          tickAmount: periode === 'mois' ? 10 : undefined,
+          categories: serie.map(p => libellePoint(decoupage, p, bornes)),
+          tickAmount: decoupage === 'jour' && serie.length > 12 ? 10 : undefined,
           labels: { rotate: 0, hideOverlappingLabels: true },
         },
         yaxis: { labels: { formatter: v => Math.round(v) }, forceNiceScale: true, min: 0 },
@@ -205,7 +214,7 @@ const HistoriqueInterventions = () => {
         states: { hover: { filter: { type: 'darken', value: 0.85 } } },
       },
     };
-  }, [stats, periode, ref, allerA]);
+  }, [stats, decoupage, debut, fin, allerA]);
 
   const maxTech = Math.max(1, ...(stats?.par_technicien || []).map(t => t.duree));
 
@@ -284,23 +293,18 @@ const HistoriqueInterventions = () => {
       />
 
       <div className="itv-toolbar">
-        <div className="itv-seg" role="group" aria-label="Période">
-          {PERIODES.map(p => (
-            <button key={p.key} type="button" className={periode === p.key ? 'is-active' : ''} aria-pressed={periode === p.key} onClick={() => allerA(p.key, ref)}>
-              {p.label}
-            </button>
-          ))}
-        </div>
         <div className="itv-nav">
-          <button type="button" onClick={() => allerA(periode, decaler(periode, ref, -1))} aria-label="Période précédente"><FaChevronLeft /></button>
-          <strong>{libellePeriode(periode, ref)}</strong>
-          <button type="button" onClick={() => allerA(periode, decaler(periode, ref, 1))} aria-label="Période suivante"><FaChevronRight /></button>
+          <button type="button" onClick={() => allerA(decalerPlage(range, -1))} aria-label="Période précédente"><FaChevronLeft /></button>
+          <DateRangeFilter
+            value={range}
+            onChange={allerA}
+            presets={PRESETS_INTERVENTIONS}
+            allowEmpty={false}
+            formatLabel={libellePlage}
+            styleClass="itv-periode"
+          />
+          <button type="button" onClick={() => allerA(decalerPlage(range, 1))} aria-label="Période suivante"><FaChevronRight /></button>
         </div>
-        <button type="button" className="itv-chip" disabled={estPeriodeCourante(periode, ref)} onClick={() => allerA(periode, dayjs())}>Aujourd'hui</button>
-        <input
-          type="date" className="itv-date-input" aria-label="Aller à la date"
-          value={refKey} onChange={(e) => e.target.value && allerA(periode, dayjs(e.target.value))}
-        />
       </div>
 
       <div className="itv-toolbar itv-toolbar--filters">
@@ -357,10 +361,10 @@ const HistoriqueInterventions = () => {
       <div className="itv-grid">
         <section className="itv-card">
           <h2 className="itv-card-title">
-            Interventions par {periode === 'annee' ? 'mois' : periode === 'mois' ? 'jour' : 'heure'}
+            Interventions par {TITRE_GRAPHIQUE[decoupage]}
           </h2>
           <Chart type="bar" height={260} series={chart.series} options={chart.options} />
-          {ZOOM[periode] && <p className="itv-hint">Cliquez sur une barre pour voir le {ZOOM[periode] === 'mois' ? 'mois' : 'jour'} en détail.</p>}
+          {ZOOM[decoupage] && <p className="itv-hint">Cliquez sur une barre pour voir le {decoupage === 'mois' ? 'mois' : 'jour'} en détail.</p>}
         </section>
 
         <section className="itv-card">
@@ -386,7 +390,7 @@ const HistoriqueInterventions = () => {
 
       <section className="itv-card">
         <div className="itv-journal-head">
-          <h2 className="itv-card-title">Journal · {libellePeriode(periode, ref)}</h2>
+          <h2 className="itv-card-title itv-card-title--periode">Journal · {libellePlage(range)}</h2>
           <label className="itv-search">
             <FaSearch aria-hidden="true" />
             <input type="search" placeholder="Rechercher..." value={recherche} onChange={(e) => setRecherche(e.target.value)} aria-label="Rechercher dans le journal" />

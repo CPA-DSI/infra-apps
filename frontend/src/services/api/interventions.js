@@ -4,9 +4,10 @@ import { apiClient, getErrorMessage } from './client';
 // periode : 'jour' | 'mois' | 'annee' ; date : 'AAAA-MM-JJ', 'AAAA-MM' ou 'AAAA'.
 // Réponse : { periode, debut, fin, stats, interventions }.
 // materiel / beneficiaire : liens « Récurrences » du tableau de bord.
-export const getInterventions = async ({ periode, date, types, sousType, technicien, source, bloque, materiel, beneficiaire } = {}) => {
+// Période : { periode, date } (jour / mois / année) ou plage libre { debut, fin } ('YYYY-MM-DD', incluses)
+export const getInterventions = async ({ periode, date, debut, fin, types, sousType, technicien, source, bloque, materiel, beneficiaire } = {}) => {
   try {
-    const params = { periode, date };
+    const params = debut || fin ? { debut, fin } : { periode, date };
     if (types?.length) params.types = types.join(',');
     if (sousType) params.sous_type = sousType;
     if (technicien) params.technicien = technicien;

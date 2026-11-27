@@ -170,10 +170,38 @@ export const periodePrecedente = (periode, { debut, fin }, maintenant = new Date
     };
 };
 
+// Plage libre « du … au … » (page Historique des interventions) : dates
+// 'AAAA-MM-JJ' incluses, bornes [debut, fin[ en heure locale du serveur.
+export const PLAGE_MAX_JOURS = 3660;
+const lireJour = (valeur, champ) => {
+    const m = String(valeur || '').trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) throw new InterventionError(`${champ} doit être au format AAAA-MM-JJ.`);
+    const [annee, mois, jour] = [parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10)];
+    const d = new Date(annee, mois, jour);
+    if (d.getFullYear() !== annee || d.getMonth() !== mois || d.getDate() !== jour) {
+        throw new InterventionError(`${champ} invalide.`);
+    }
+    return d;
+};
+
+// Nombre de jours calendaires de a à b (heures ignorées)
+const joursEntre = (a, b) => Math.round(
+    (new Date(b.getFullYear(), b.getMonth(), b.getDate()) - new Date(a.getFullYear(), a.getMonth(), a.getDate())) / 86400000,
+);
+
+export const bornesPlage = (debutTexte, finTexte) => {
+    const debut = lireJour(debutTexte, 'debut');
+    const dernierJour = lireJour(finTexte, 'fin');
+    if (dernierJour < debut) throw new InterventionError('La date de fin doit suivre la date de début.');
+    if (joursEntre(debut, dernierJour) >= PLAGE_MAX_JOURS) throw new InterventionError('Période trop longue (10 ans maximum).');
+    return { debut, fin: new Date(dernierJour.getFullYear(), dernierJour.getMonth(), dernierJour.getDate() + 1) };
+};
+
 // Série du graphique : par heure (jour), par jour (mois) ou par mois (année).
 // bloquees : interventions où l'utilisateur ne pouvait pas travailler.
+const point = (index, date) => ({ index, ...(date && { date }), total: 0, duree: 0, bloquees: 0 });
+
 const serieVide = (periode, debut) => {
-    const point = index => ({ index, total: 0, duree: 0, bloquees: 0 });
     if (periode === 'annee') return Array.from({ length: 12 }, (_, i) => point(i));
     if (periode === 'mois') {
         const n = new Date(debut.getFullYear(), debut.getMonth() + 1, 0).getDate();
@@ -188,19 +216,52 @@ const indexSerie = (periode, date) => {
     return date.getHours();
 };
 
-const ajouterAuPoint = (serie, periode, it) => {
-    const point = serie[indexSerie(periode, it.date_intervention)];
-    if (!point) return;
-    point.total += 1;
-    point.duree += it.duree_minutes || 0;
-    if (it.utilisateur_bloque) point.bloquees += 1;
+// Grille du graphique : ses points vides, l'index d'une date et le découpage
+// (heure, jour ou mois) qu'elle représente.
+const DECOUPAGE_PERIODE = { jour: 'heure', mois: 'jour', annee: 'mois' };
+export const grillePeriode = (periode, debut) => ({
+    decoupage: DECOUPAGE_PERIODE[periode],
+    points: serieVide(periode, debut),
+    index: d => indexSerie(periode, d),
+});
+
+const pad = n => String(n).padStart(2, '0');
+const jourIso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+// Plage libre : par heure sur un seul jour, par jour jusqu'à 92 jours
+// (un trimestre), par mois au-delà. Chaque point porte la date où il commence.
+export const grillePlage = (debut, fin) => {
+    const nbJours = joursEntre(debut, fin);
+    if (nbJours <= 1) return grillePeriode('jour', debut);
+    if (nbJours <= 92) {
+        return {
+            decoupage: 'jour',
+            points: Array.from({ length: nbJours }, (_, i) => point(i, jourIso(new Date(debut.getFullYear(), debut.getMonth(), debut.getDate() + i)))),
+            index: d => joursEntre(debut, d),
+        };
+    }
+    const dernier = new Date(fin.getTime() - 1);
+    const nbMois = (dernier.getFullYear() - debut.getFullYear()) * 12 + dernier.getMonth() - debut.getMonth() + 1;
+    return {
+        decoupage: 'mois',
+        points: Array.from({ length: nbMois }, (_, i) => point(i, jourIso(new Date(debut.getFullYear(), debut.getMonth() + i, 1)))),
+        index: d => (d.getFullYear() - debut.getFullYear()) * 12 + d.getMonth() - debut.getMonth(),
+    };
+};
+
+const ajouterAuPoint = (grille, it) => {
+    const p = grille.points[grille.index(it.date_intervention)];
+    if (!p) return;
+    p.total += 1;
+    p.duree += it.duree_minutes || 0;
+    if (it.utilisateur_bloque) p.bloquees += 1;
 };
 
 // Série seule (courbe de la période précédente du tableau de bord).
 export const serieInterventions = (interventions, periode, debut) => {
-    const serie = serieVide(periode, debut);
-    for (const it of interventions) ajouterAuPoint(serie, periode, it);
-    return serie;
+    const grille = grillePeriode(periode, debut);
+    for (const it of interventions) ajouterAuPoint(grille, it);
+    return grille.points;
 };
 
 // Interventions où l'utilisateur n'a pas pu travailler :
@@ -280,8 +341,8 @@ export const nommerRecurrences = async (tx, stats) => {
     return stats;
 };
 
-export const statistiques = (interventions, periode, debut) => {
-    const serie = serieVide(periode, debut);
+// grille : découpage du graphique (par défaut celui de la période jour / mois / année)
+export const statistiques = (interventions, periode, debut, grille = grillePeriode(periode, debut)) => {
     const parType = Object.fromEntries(INTERVENTION_TYPES.map(t => [t, 0]));
     // Types à sous-types : nombre par sous-type, NON_PRECISE pour ceux sans sous-type
     const parSousType = Object.fromEntries(Object.entries(SOUS_TYPES)
@@ -297,7 +358,7 @@ export const statistiques = (interventions, periode, debut) => {
 
     for (const it of interventions) {
         const duree = it.duree_minutes || 0;
-        ajouterAuPoint(serie, periode, it);
+        ajouterAuPoint(grille, it);
         const d = it.date_intervention;
         parJourHeure[(d.getDay() + 6) % 7][d.getHours()] += 1;
         if (it.duree_minutes !== null && it.duree_minutes !== undefined) {
@@ -337,6 +398,6 @@ export const statistiques = (interventions, periode, debut) => {
             materiels: recurrences(interventions, 'id_materiels'),
             utilisateurs: recurrences(interventions, 'id_n_beneficiaire'),
         },
-        serie,
+        serie: grille.points,
     };
 };

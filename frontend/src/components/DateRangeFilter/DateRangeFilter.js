@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import dayjs from 'dayjs';
 import { FaCalendarAlt } from 'react-icons/fa';
 import { DayPicker } from 'react-day-picker';
@@ -15,6 +15,11 @@ import './DateRangeFilter.css';
 //   - years            : années proposées en raccourci (ex. années présentes dans les données).
 //   - placeholder      : libellé quand aucune période n'est choisie.
 //   - styleClass       : classes CSS du déclencheur (ex. filter-pill).
+//   - presets          : raccourcis proposés (par défaut PRESETS : année, trimestre, mois).
+//   - allowEmpty       : propose « Toutes les dates » et « Sans date » (true par défaut).
+//                        À false, une période a toujours deux bornes : une seule date
+//                        saisie vaut pour un jour.
+//   - formatLabel      : libellé du déclencheur (range => texte), à la place du libellé par défaut.
 //
 // key : '' (toutes), 'none' (sans date), 'custom' (période fixe),
 //       un raccourci (PRESETS) ou 'year:AAAA'. debut / fin : 'YYYY-MM-DD' ou ''.
@@ -26,7 +31,7 @@ const iso = (d) => d.format(FMT);
 
 const startOfQuarter = (d) => d.month(Math.floor(d.month() / 3) * 3).startOf('month');
 
-const PRESETS = [
+export const PRESETS = [
     {
         group: 'Année',
         items: [
@@ -51,15 +56,16 @@ const PRESETS = [
     },
 ];
 
-const PRESET_BY_KEY = Object.fromEntries(PRESETS.flatMap(g => g.items).map(p => [p.key, p]));
+const indexPresets = (presets) => Object.fromEntries(presets.flatMap(g => g.items).map(p => [p.key, p]));
+const PRESET_BY_KEY = indexPresets(PRESETS);
 
-const buildRange = (key) => {
+export const buildRange = (key, presetByKey = PRESET_BY_KEY) => {
     const today = dayjs();
     if (key.startsWith('year:')) {
         const y = dayjs(`${key.slice(5)}-01-01`);
         return { key, debut: iso(y.startOf('year')), fin: iso(y.endOf('year')) };
     }
-    const [debut, fin] = PRESET_BY_KEY[key].range(today);
+    const [debut, fin] = presetByKey[key].range(today);
     return { key, debut: iso(debut), fin: iso(fin) };
 };
 
@@ -79,11 +85,11 @@ export const matchesDateRange = (dateValue, range) => {
     return true;
 };
 
-const rangeLabel = (range, placeholder) => {
+const rangeLabel = (range, placeholder, presetByKey = PRESET_BY_KEY) => {
     if (!isRangeActive(range)) return placeholder;
     if (range.key === 'none') return 'Sans date';
     if (range.key.startsWith('year:')) return range.key.slice(5);
-    if (PRESET_BY_KEY[range.key]) return PRESET_BY_KEY[range.key].label;
+    if (presetByKey[range.key]) return presetByKey[range.key].label;
     if (range.debut && range.fin) return `${formatFr(range.debut)} – ${formatFr(range.fin)}`;
     if (range.debut) return `Depuis le ${formatFr(range.debut)}`;
     if (range.fin) return `Jusqu'au ${formatFr(range.fin)}`;
@@ -95,7 +101,11 @@ const toDate = (s) => (s ? dayjs(s).toDate() : undefined);
 // Mois affiché à l'ouverture : début de la période, sinon fin, sinon aujourd'hui.
 const monthOf = (range) => dayjs(range.debut || range.fin || undefined).startOf('month').toDate();
 
-const DateRangeFilter = ({ value = EMPTY_RANGE, onChange, years = [], placeholder = 'Période', styleClass }) => {
+const DateRangeFilter = ({
+    value = EMPTY_RANGE, onChange, years = [], placeholder = 'Période', styleClass,
+    presets = PRESETS, allowEmpty = true, formatLabel,
+}) => {
+    const presetByKey = useMemo(() => indexPresets(presets), [presets]);
     const [open, setOpen] = useState(false);
     const [draft, setDraft] = useState(value);
     const [month, setMonth] = useState(() => monthOf(value));
@@ -126,7 +136,7 @@ const DateRangeFilter = ({ value = EMPTY_RANGE, onChange, years = [], placeholde
     };
 
     const pickPreset = (key) => {
-        const next = key === '' || key === 'none' ? { ...EMPTY_RANGE, key } : buildRange(key);
+        const next = key === '' || key === 'none' ? { ...EMPTY_RANGE, key } : buildRange(key, presetByKey);
         setDraft(next);
         if (next.debut) setMonth(monthOf(next));
     };
@@ -150,9 +160,17 @@ const DateRangeFilter = ({ value = EMPTY_RANGE, onChange, years = [], placeholde
 
     const invalid = Boolean(draft.debut && draft.fin && draft.debut > draft.fin);
 
+    // Sans période vide possible, il faut au moins une date pour appliquer
+    const incomplete = !allowEmpty && !(draft.debut || draft.fin);
+
     const apply = () => {
-        if (invalid) return;
-        onChange(draft.key ? draft : EMPTY_RANGE);
+        if (invalid || incomplete) return;
+        if (!allowEmpty) {
+            // Une seule date saisie : la période couvre ce jour-là
+            onChange({ ...draft, debut: draft.debut || draft.fin, fin: draft.fin || draft.debut });
+        } else {
+            onChange(draft.key ? draft : EMPTY_RANGE);
+        }
         setOpen(false);
     };
 
@@ -189,7 +207,7 @@ const DateRangeFilter = ({ value = EMPTY_RANGE, onChange, years = [], placeholde
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } }}
             >
                 <FaCalendarAlt className="drf-icon" aria-hidden="true" />
-                <span className="drf-label">{rangeLabel(value, placeholder)}</span>
+                <span className="drf-label">{formatLabel ? formatLabel(value) : rangeLabel(value, placeholder, presetByKey)}</span>
                 <span className="drf-arrow">▼</span>
             </div>
 
@@ -197,13 +215,16 @@ const DateRangeFilter = ({ value = EMPTY_RANGE, onChange, years = [], placeholde
                 <div className="drf-popover" role="dialog" aria-label="Choisir une période">
                     <div className="drf-body">
                         <div className="drf-presets">
-                            <div className="drf-group">
-                                {item('', 'Toutes les dates')}
-                                {item('none', 'Sans date')}
-                            </div>
-
-                            <div className="drf-group-title drf-group-title--section">Relative</div>
-                            {PRESETS.map(g => (
+                            {allowEmpty && (
+                                <>
+                                    <div className="drf-group">
+                                        {item('', 'Toutes les dates')}
+                                        {item('none', 'Sans date')}
+                                    </div>
+                                    <div className="drf-group-title drf-group-title--section">Relative</div>
+                                </>
+                            )}
+                            {presets.map(g => (
                                 <div key={g.group} className="drf-group">
                                     <div className="drf-group-title">{g.group}</div>
                                     {g.items.map(p => item(p.key, p.label))}
@@ -253,7 +274,7 @@ const DateRangeFilter = ({ value = EMPTY_RANGE, onChange, years = [], placeholde
 
                     <div className="drf-footer">
                         <button type="button" className="btn btn-sm btn-light" onClick={() => setOpen(false)}>Annuler</button>
-                        <button type="button" className="btn btn-sm btn-primary" onClick={apply} disabled={invalid}>Appliquer</button>
+                        <button type="button" className="btn btn-sm btn-primary" onClick={apply} disabled={invalid || incomplete}>Appliquer</button>
                     </div>
                 </div>
             )}

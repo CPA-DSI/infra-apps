@@ -334,6 +334,40 @@ describe('GET /api/interventions : filtre Jour / Mois / Année', () => {
         expect((await as(admin).get('/api/interventions?periode=jour&date=2026-02-30')).status).toBe(400);
         expect((await as(admin).get('/api/interventions?periode=mois')).status).toBe(400);
     });
+
+    it('plage libre courte : série par jour, bornes incluses', async () => {
+        const res = await as(admin).get('/api/interventions?debut=2026-11-03&fin=2026-11-26');
+        expect(res.status).toBe(200);
+        expect(res.body.decoupage).toBe('jour');
+        expect(res.body.stats.total).toBe(3);
+        expect(res.body.stats.serie).toHaveLength(24);
+        expect(res.body.stats.serie[0]).toMatchObject({ index: 0, date: '2026-11-03', total: 1 });
+        expect(res.body.stats.serie[23]).toMatchObject({ date: '2026-11-26', total: 2 });
+    });
+
+    it('plage d\'un seul jour : série par heure', async () => {
+        const res = await as(admin).get('/api/interventions?debut=2026-11-26&fin=2026-11-26');
+        expect(res.body.decoupage).toBe('heure');
+        expect(res.body.stats.serie).toHaveLength(24);
+        expect(res.body.stats.serie[9].total).toBe(1);
+    });
+
+    it('plage longue : série par mois, à cheval sur deux années', async () => {
+        const res = await as(admin).get('/api/interventions?debut=2025-12-15&fin=2026-11-30');
+        expect(res.body.decoupage).toBe('mois');
+        expect(res.body.stats.total).toBe(5);
+        expect(res.body.stats.serie).toHaveLength(12);
+        expect(res.body.stats.serie[0]).toMatchObject({ date: '2025-12-01', total: 1 });
+        expect(res.body.stats.serie[2]).toMatchObject({ date: '2026-02-01', total: 1 });
+        expect(res.body.stats.serie[11]).toMatchObject({ date: '2026-11-01', total: 3 });
+    });
+
+    it('refuse une plage invalide (400)', async () => {
+        expect((await as(admin).get('/api/interventions?debut=2026-11-10&fin=2026-11-01')).status).toBe(400);
+        expect((await as(admin).get('/api/interventions?debut=2026-11-01')).status).toBe(400);
+        expect((await as(admin).get('/api/interventions?debut=2026-02-30&fin=2026-03-01')).status).toBe(400);
+        expect((await as(admin).get('/api/interventions?debut=2000-01-01&fin=2026-01-01')).status).toBe(400);
+    });
 });
 
 describe('Tableau de bord : période précédente', () => {
