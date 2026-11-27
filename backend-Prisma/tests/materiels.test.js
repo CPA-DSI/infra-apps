@@ -15,8 +15,8 @@ afterAll(async () => {
     await prisma.$disconnect();
 });
 
-describe('PUT /api/materiels_all/:id — états posés par la mise en stock', () => {
-    it.each(['Stock', 'Sans poste'])('refuse de passer l\'état à « %s » sans mise en stock', async (etat) => {
+describe('PUT /api/materiels_all/:id — etat_pc ne porte que l\'état physique', () => {
+    it.each(['Stock', 'Sans poste', 'Disponible'])('refuse l\'ancien statut « %s » comme état', async (etat) => {
         const res = await as(admin).put(`/api/materiels_all/${alice.materiel.id_materiels}`)
             .send({ etat_pc: etat, salle: 'B12' });
 
@@ -27,25 +27,30 @@ describe('PUT /api/materiels_all/:id — états posés par la mise en stock', ()
         expect(materiel.etat_pc).not.toBe(etat);
     });
 
-    it('accepte un état « Sans poste » déjà en place (ancienne saisie) pour modifier les autres champs', async () => {
-        await prisma.materiels.update({ where: { id_materiels: alice.materiel.id_materiels }, data: { etat_pc: 'Sans poste' } });
+    it('la mise en stock garde l\'état physique du PC ; la fiche « Sans poste » n\'en a pas', async () => {
+        await prisma.materiels.update({ where: { id_materiels: alice.materiel.id_materiels }, data: { etat_pc: 'Mauvais' } });
 
-        const res = await as(admin).put(`/api/materiels_all/${alice.materiel.id_materiels}`)
-            .send({ etat_pc: 'Sans poste', salle: 'B12' });
-
-        expect(res.status).toBe(200);
-        expect(res.body.materiel).toMatchObject({ etat_pc: 'Sans poste', salle: 'B12' });
-    });
-
-    it('la mise en stock passe par POST /:id/affecter : PC en « Stock », fiche « Sans poste » pour l\'utilisateur', async () => {
         const res = await as(admin).post(`/api/materiels_all/${alice.materiel.id_materiels}/affecter`)
             .send({ id_n: null, motif: 'Départ' });
 
         expect(res.status).toBe(200);
         const pc = await prisma.materiels.findUnique({ where: { id_materiels: alice.materiel.id_materiels } });
-        expect(pc).toMatchObject({ id_n: null, etat_pc: 'Stock', est_actif: false });
+        expect(pc).toMatchObject({ id_n: null, etat_pc: 'Mauvais', est_actif: false });
         const ficheVide = await prisma.materiels.findUnique({ where: { id_n: 10 } });
-        expect(ficheVide).toMatchObject({ est_vide: true, etat_pc: 'Sans poste' });
+        expect(ficheVide).toMatchObject({ est_vide: true, etat_pc: null });
+    });
+
+    it('la réaffectation d\'un PC en stock garde son état physique', async () => {
+        await prisma.materiels.update({ where: { id_materiels: alice.materiel.id_materiels }, data: { etat_pc: 'Moyen' } });
+        await as(admin).post(`/api/materiels_all/${alice.materiel.id_materiels}/affecter`).send({ id_n: null });
+        await createUser({ idN: 20 });
+
+        const res = await as(admin).post(`/api/materiels_all/${alice.materiel.id_materiels}/affecter`)
+            .send({ id_n: 20, utilisateur: 'Utilisateur 20' });
+
+        expect(res.status).toBe(200);
+        const pc = await prisma.materiels.findUnique({ where: { id_materiels: alice.materiel.id_materiels } });
+        expect(pc).toMatchObject({ id_n: 20, etat_pc: 'Moyen', est_actif: true });
     });
 });
 
@@ -62,10 +67,7 @@ describe('État « Disponible » retiré', () => {
         expect(on.body.materiel).toMatchObject({ est_actif: true, etat_pc: 'Mauvais' });
     });
 
-    it('refuse « Disponible » en modification et en création', async () => {
-        const put = await as(admin).put(`/api/materiels_all/${alice.materiel.id_materiels}`).send({ etat_pc: 'Disponible' });
-        expect(put.status).toBe(400);
-
+    it('refuse « Disponible » en création', async () => {
         const post = await as(admin).post('/api/materiels_all/')
             .send({ etat_pc: 'Disponible', id_n: 99, utilisateur: 'Bob', equipe: 'Compta', caracteristiques: 'i5' });
         expect(post.status).toBe(400);
@@ -74,16 +76,16 @@ describe('État « Disponible » retiré', () => {
 });
 
 describe('POST /api/materiels_all/ — ajout d\'un PC directement en stock', () => {
-    it('ignore matricule, utilisateur et écran, et crée le PC inactif en « Stock »', async () => {
+    it('ignore matricule, utilisateur et écran, et crée le PC inactif en stock avec son état physique', async () => {
         const res = await as(admin).post('/api/materiels_all/')
             .send({
-                etat_pc: 'Stock', id_n: 99, utilisateur: 'Bob', equipe: 'Compta',
+                en_stock: true, etat_pc: 'Très Bon', id_n: 99, utilisateur: 'Bob', equipe: 'Compta',
                 ecran: 'Dell', code_ecran: 'ECR-STOCK', est_actif: true, code_pc: 'PC-STOCK', caracteristiques: 'i5',
             });
 
         expect(res.status).toBe(201);
         expect(res.body.materiel).toMatchObject({
-            id_n: null, utilisateur: 'Stock', equipe: 'Stock', etat_pc: 'Stock', est_actif: false, code_pc: 'PC-STOCK',
+            id_n: null, utilisateur: 'Stock', equipe: 'Stock', etat_pc: 'Très Bon', est_actif: false, code_pc: 'PC-STOCK',
         });
         expect(await prisma.users.findUnique({ where: { id_n: 99 } })).toBeNull();
         expect(await prisma.ecran.findUnique({ where: { code_ecran: 'ECR-STOCK' } })).toBeNull();
@@ -123,16 +125,6 @@ describe('DELETE /api/materiels_all/:id — fiches « Sans poste » et PC en sto
             where: { id_materiels: ficheVide.id_materiels }, orderBy: { id_historique: 'desc' },
         });
         expect(trace).toMatchObject({ ancienne_valeur: 'Sans poste : 10 - Utilisateur 10', nouvelle_valeur: 'Fiche « Sans poste » supprimée' });
-    });
-
-    it('supprime une ancienne fiche dont l\'état est « Sans poste »', async () => {
-        await prisma.materiels.update({ where: { id_materiels: alice.materiel.id_materiels }, data: { etat_pc: 'Sans poste' } });
-
-        const res = await as(admin).delete(`/api/materiels_all/${alice.materiel.id_materiels}`);
-
-        expect(res.status).toBe(200);
-        expect(await prisma.materiels.findUnique({ where: { id_materiels: alice.materiel.id_materiels } }))
-            .toMatchObject({ id_n: null });
     });
 
     it('sort un PC en stock de l\'inventaire, puis répond 404 à une seconde suppression', async () => {
@@ -220,7 +212,7 @@ describe('Corbeille : GET /corbeille et POST /:id/restaurer', () => {
 
         expect(res.status).toBe(200);
         expect(res.body.materiel).toMatchObject({
-            date_suppression: null, id_n: null, etat_pc: 'Stock', est_actif: false, utilisateur: 'Stock',
+            date_suppression: null, id_n: null, est_actif: false, utilisateur: 'Stock',
         });
         const affectation = await prisma.affectationMateriel.findFirst({
             where: { type_affectation: 'PC', id_materiels: alice.materiel.id_materiels, date_fin: null },

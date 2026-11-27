@@ -11,6 +11,7 @@ import {
 } from 'react-icons/fa';
 import FormItem from '../../components/FormItem/FormItem';
 import { getMaterielFieldIcon } from './materielFieldIcons';
+import { etatPhysiqueOptions } from './materielsTableConfig';
 import AppModal from '../../components/AppModal/AppModal';
 import './MaterielsModals.css';
 
@@ -25,8 +26,8 @@ const getFormattedTodayDate = () => {
     return `${today.getFullYear()}-${month}-${day}`;
 };
 
-// Même valeur que ETAT_STOCK / LIBELLE_STOCK côté backend (affectationService).
-const ETAT_STOCK = 'Stock';
+// Même valeur que LIBELLE_STOCK côté backend (affectationService).
+const LIBELLE_STOCK = 'Stock';
 
 const AddModal = ({ onClose, onMaterialAdded }) => {
     const [formData, setFormData] = useState({
@@ -51,7 +52,8 @@ const AddModal = ({ onClose, onMaterialAdded }) => {
         commentaire: '', 
         id_marque: '', 
         id_local: '',
-        est_actif: true
+        est_actif: true,
+        en_stock: false
     });
     
     const [error, setError] = useState(null); 
@@ -68,21 +70,17 @@ const AddModal = ({ onClose, onMaterialAdded }) => {
     const handleChange = useCallback((e) => {
         const { name, value, type, checked } = e.target;
 
-        // Un PC en stock n'a ni bénéficiaire ni écran et est inactif ; en sortant
-        // de « Stock », on revient aux valeurs par défaut du formulaire.
-        if (name === 'etat_pc') {
-            setFormData(prev => {
-                if (value === ETAT_STOCK) {
-                    return {
-                        ...prev, etat_pc: value, id_n: '', utilisateur: ETAT_STOCK, equipe: ETAT_STOCK,
-                        ecran: '', code_ecran: '', est_actif: false,
-                    };
+        // Un PC en stock n'a ni bénéficiaire ni écran et est inactif ; en
+        // décochant « En stock », on revient aux valeurs par défaut du formulaire.
+        // L'état physique (etat_pc) est indépendant et conservé.
+        if (name === 'en_stock') {
+            setFormData(prev => (checked
+                ? {
+                    ...prev, en_stock: true, id_n: '', utilisateur: LIBELLE_STOCK, equipe: LIBELLE_STOCK,
+                    ecran: '', code_ecran: '', est_actif: false,
                 }
-                if (prev.etat_pc === ETAT_STOCK) {
-                    return { ...prev, etat_pc: value, utilisateur: 'Non défini', equipe: 'Autres', est_actif: true };
-                }
-                return { ...prev, etat_pc: value };
-            });
+                : { ...prev, en_stock: false, utilisateur: 'Non défini', equipe: 'Autres', est_actif: true }
+            ));
             setIdError("");
             return;
         }
@@ -178,7 +176,7 @@ const AddModal = ({ onClose, onMaterialAdded }) => {
         loadExistingIds();
     }, []);
 
-    const enStock = formData.etat_pc === ETAT_STOCK;
+    const enStock = formData.en_stock;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -285,22 +283,32 @@ const AddModal = ({ onClose, onMaterialAdded }) => {
                 lignes « Équipe » + « Date PC » (cf. .mat-form-2col--add), ce qui aligne
                 « Date Écran » avec « Mot de passe local ». */}
             <div className="add-modal-form-grid mat-form-2col mat-form-2col--add">
-                {/* État PC en tête : « Stock » vide et désactive les champs bénéficiaire et écran ci-dessous. */}
+                {/* État physique en tête ; « En stock » vide et désactive les champs bénéficiaire et écran ci-dessous. */}
                 <div>
                     <FormItem label="État PC" name="etat_pc" type="select"
-                        options={[
-                            { value: 'Très Bon', label: '✅ Très Bon' },
-                            { value: 'Bon', label: '👍 Bon' },
-                            { value: 'Moyen', label: '⚠️ Moyen' },
-                            { value: 'Mauvais', label: '❗ Mauvais' },
-                            { value: ETAT_STOCK, label: '🗄️ Stock' },
-                            { value: 'HS', label: '❌ HS' }
-                        ]}
+                        options={etatPhysiqueOptions}
                         formData={formData}
                         handleChange={handleChange} icon={getMaterielFieldIcon("etat_pc")}
                     />
                 </div>
-                <div className="add-modal-form-group add-modal-actif-group">
+                <div className="add-modal-form-group add-modal-actif-group d-flex gap-4">
+                    <label className="add-modal-label mat-form-title-label">
+                        <span className="add-modal-actif-state">
+                            En stock
+                            {enStock ? (
+                                <FaCheckCircle className="add-modal-actif-icon is-on" aria-hidden="true" />
+                            ) : (
+                                <FaTimesCircle className="add-modal-actif-icon" aria-hidden="true" />
+                            )}
+                        </span>
+                        <div
+                            className={`add-modal-toggle ${enStock ? 'is-on' : ''}`}
+                            onClick={() => handleChange({ target: { name: 'en_stock', type: 'checkbox', checked: !enStock }})}
+                            title="PC ajouté sans utilisateur, à affecter plus tard"
+                        >
+                            <div className="add-modal-toggle-knob" />
+                        </div>
+                    </label>
                     <label className="add-modal-label mat-form-title-label">
                         <span className="add-modal-actif-state">
                             Actif

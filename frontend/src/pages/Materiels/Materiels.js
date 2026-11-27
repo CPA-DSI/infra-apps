@@ -20,7 +20,7 @@ import DateRangeFilter, { EMPTY_RANGE, isRangeActive, matchesDateRange } from '.
 import PageHeader from '../../components/PageHeader/PageHeader';
 import ExcelImportPanel from '../../components/ExcelImportPanel/ExcelImportPanel';
 import { paginationOptions } from '../../styles/dataTableTheme';
-import { materielsTableStyles, statusConfig } from './materielsTableConfig';
+import { materielsTableStyles, statusConfig, statutConfig, ETATS_PHYSIQUES } from './materielsTableConfig';
 import { toneClass } from '../../utils/tones';
 import { useMaterielImportExport } from './useMaterielImportExport';
 
@@ -28,21 +28,25 @@ import './Materiels.css';
 
 const DEFAULT_STATUS = { emoji: '❓', tone: 'neutral' };
 
-// Onglets de filtre par état (ordre d'affichage)
-const ETATS = ['Très Bon', 'Bon', 'Moyen', 'Mauvais', 'HS', 'Stock', 'Sans poste'];
+// Deux filtres indépendants :
+// - le statut (onglets) se déduit de l'affectation, pas de etat_pc ;
+// - l'état physique (menu « État ») est la valeur de etat_pc.
+const isSansPoste = (materiel) => Boolean(materiel.est_vide);
 
-// 'Stock' : poste sans bénéficiaire (id_n null), y compris ceux mis en stock
-// avant que la mise en stock ne pose etat_pc = 'Stock'.
-// 'Sans poste' : utilisateur dont le PC est parti en stock (fiche vide),
-// ou poste dont l'état a été passé à « Sans poste » via la modification.
-const isSansPoste = (materiel) => Boolean(materiel.est_vide) || materiel.etat_pc === 'Sans poste';
+const STATUTS = ['Affecté', 'Stock', 'Sans poste'];
 
-const matchesEtat = (materiel, etat) => {
-    if (!etat) return true;
-    if (etat === 'Stock') return materiel.id_n == null;
-    if (etat === 'Sans poste') return isSansPoste(materiel);
-    return (materiel.etat_pc || '') === etat;
+const getStatut = (materiel) => {
+    if (isSansPoste(materiel)) return 'Sans poste';
+    if (materiel.id_n == null) return 'Stock';
+    return 'Affecté';
 };
+
+const ETAT_NON_DEFINI = 'Non défini';
+// Une fiche « Sans poste » n'a pas de PC, donc pas d'état physique.
+const getEtatPhysique = (materiel) => (isSansPoste(materiel) ? null : (materiel.etat_pc || ETAT_NON_DEFINI));
+
+const matchesStatut = (materiel, statut) => !statut || getStatut(materiel) === statut;
+const matchesEtat = (materiel, etat) => !etat || getEtatPhysique(materiel) === etat;
 
 // ==========================================================
 // --- Composant principal Materiels ---
@@ -55,6 +59,7 @@ const userIdN = user?.id_n ? String(user.id_n) : '';
 const [materiels, setMateriels] = useState([]);
 const [loading, setLoading] = useState(false);
 const [searchTerm, setSearchTerm] = useState('');
+const [filterStatut, setFilterStatut] = useState('');
 const [filterEtat, setFilterEtat] = useState('');
 const [filterEquipe, setFilterEquipe] = useState('');
 const [filterNomLocal, setFilterNomLocal] = useState('');
@@ -110,7 +115,7 @@ const handleCloseAddMarque = useCallback(() => {
 }, [fetchMateriels]);
 
 const handleResetFilters = useCallback(() => {
-    setSearchTerm(''); setFilterEtat(''); setFilterEquipe(''); setFilterNomLocal(''); setFilterMarque(''); setFilterPeriode(EMPTY_RANGE); setFilterEstActif('');
+    setSearchTerm(''); setFilterStatut(''); setFilterEtat(''); setFilterEquipe(''); setFilterNomLocal(''); setFilterMarque(''); setFilterPeriode(EMPTY_RANGE); setFilterEstActif('');
 }, []);
 
 const handleMaterialAdded = useCallback(() => {
@@ -214,7 +219,7 @@ const handleToggleEstActif = useCallback(async (row) => {
 }, [fetchMateriels]);
 
 // --- Fonctions de filtrage et recherche ---
-// Tous les filtres sauf l'état : sert de base aux compteurs des onglets
+// Tous les filtres sauf statut et état : base des compteurs
 const materielsHorsEtat = useMemo(() => {
     return materiels.filter(materiel => {
         const lowerCaseSearch = searchTerm.toLowerCase();
@@ -249,15 +254,36 @@ const materielsHorsEtat = useMemo(() => {
 }, [materiels, searchTerm, filterEquipe, filterNomLocal, filterMarque, filterPeriode, filterEstActif, userRole, userIdN]);
 
 const filteredMateriels = useMemo(
-    () => materielsHorsEtat.filter(m => matchesEtat(m, filterEtat)),
-    [materielsHorsEtat, filterEtat]
+    () => materielsHorsEtat.filter(m => matchesStatut(m, filterStatut) && matchesEtat(m, filterEtat)),
+    [materielsHorsEtat, filterStatut, filterEtat]
 );
 
-const etatCounts = useMemo(() => {
-    const counts = {};
-    ETATS.forEach(etat => { counts[etat] = materielsHorsEtat.filter(m => matchesEtat(m, etat)).length; });
+// Compteurs des onglets : tiennent compte de l'état choisi, et inversement.
+const statutCounts = useMemo(() => {
+    const counts = { all: 0 };
+    STATUTS.forEach(s => { counts[s] = 0; });
+    materielsHorsEtat.forEach(m => {
+        if (!matchesEtat(m, filterEtat)) return;
+        counts.all++;
+        counts[getStatut(m)]++;
+    });
     return counts;
-}, [materielsHorsEtat]);
+}, [materielsHorsEtat, filterEtat]);
+
+// Options du menu « État » : états connus, puis valeurs libres (import), puis « Non défini ».
+const etatOptions = useMemo(() => {
+    const counts = {};
+    materielsHorsEtat.forEach(m => {
+        const etat = getEtatPhysique(m);
+        if (etat && matchesStatut(m, filterStatut)) counts[etat] = (counts[etat] || 0) + 1;
+    });
+    const autres = Object.keys(counts)
+        .filter(e => !ETATS_PHYSIQUES.includes(e) && e !== ETAT_NON_DEFINI)
+        .sort((a, b) => a.localeCompare(b));
+    return [...ETATS_PHYSIQUES, ...autres, ETAT_NON_DEFINI]
+        .filter(e => ETATS_PHYSIQUES.includes(e) || counts[e])
+        .map(e => ({ value: e, label: `${statusConfig[e]?.emoji || DEFAULT_STATUS.emoji} ${e} (${counts[e] || 0})` }));
+}, [materielsHorsEtat, filterStatut]);
 
 // --- Fonctions de rendu partagées (tableau + vue cartes) ---
 const formatDate = useCallback((dateString) => {
@@ -267,11 +293,13 @@ const formatDate = useCallback((dateString) => {
 }, []);
 
 const renderStatus = useCallback((row) => {
-        const currentConfig = statusConfig[row.etat_pc] || DEFAULT_STATUS;
+        const etat = getEtatPhysique(row);
+        if (!etat) return <span className="text-muted" title="Pas de PC sur cette fiche">—</span>;
+        const currentConfig = statusConfig[etat] || DEFAULT_STATUS;
         return (
             <span className={`mat-status-badge ${toneClass(currentConfig.tone)}`}>
                 <span className="mat-status-emoji" aria-hidden="true">{currentConfig.emoji}</span>
-                {row.etat_pc}
+                {etat}
             </span>
         );
 }, []);
@@ -449,7 +477,7 @@ const renderMaterielCard = useCallback((row) => (
 const importExport = useMaterielImportExport({ materiels, filteredMateriels, filterNomLocal, fetchMateriels, setFilterMarque });
 const { showImportSection, isImporting, toggleImportSection, handleExportExcel, handleExportByLocal } = importExport;
 
-const hasActiveFilters = Boolean(searchTerm || filterEtat || filterEquipe || filterNomLocal || filterMarque || isRangeActive(filterPeriode) || filterEstActif);
+const hasActiveFilters = Boolean(searchTerm || filterStatut || filterEtat || filterEquipe || filterNomLocal || filterMarque || isRangeActive(filterPeriode) || filterEstActif);
 const filterClass = (value) => `filter-pill ${value ? 'is-active' : ''}`;
 
 // --- Rendu du JSX ---
@@ -548,14 +576,14 @@ return (
                     {userRole !== 'USER' && (
                     <div className="col-12">
                         <Tabs
-                            activeKey={filterEtat || 'all'}
-                            onSelect={(key) => setFilterEtat(key === 'all' ? '' : key)}
+                            activeKey={filterStatut || 'all'}
+                            onSelect={(key) => setFilterStatut(key === 'all' ? '' : key)}
                             className="materiel-etat-tabs mb-0"
                             fill
                         >
-                            <Tab eventKey="all" title={<span className="d-inline-flex align-items-center gap-2"><FaDesktop size={12} aria-hidden="true" />Tous ({materielsHorsEtat.length})</span>} />
-                            {ETATS.map(etat => (
-                                <Tab key={etat} eventKey={etat} title={<span className="d-inline-flex align-items-center gap-2"><span aria-hidden="true">{statusConfig[etat].emoji}</span>{etat} ({etatCounts[etat]})</span>} />
+                            <Tab eventKey="all" title={<span className="d-inline-flex align-items-center gap-2"><FaDesktop size={12} aria-hidden="true" />Tous ({statutCounts.all})</span>} />
+                            {STATUTS.map(statut => (
+                                <Tab key={statut} eventKey={statut} title={<span className="d-inline-flex align-items-center gap-2"><span aria-hidden="true">{statutConfig[statut].emoji}</span>{statut} ({statutCounts[statut]})</span>} />
                             ))}
                         </Tabs>
                     </div>
@@ -582,6 +610,20 @@ return (
 
                     {userRole !== 'USER' && (
                     <>
+                    <div className="col-6 col-md-4 col-lg">
+                        <Form.Select
+                            value={filterEtat}
+                            onChange={(e) => setFilterEtat(e.target.value)}
+                            className={filterClass(filterEtat)}
+                            aria-label="Filtrer par état physique"
+                        >
+                            <option value="">État</option>
+                            {etatOptions.map(o => (
+                                <option key={o.value} value={o.value}>{o.label}</option>
+                            ))}
+                        </Form.Select>
+                    </div>
+
                     <div className="col-6 col-md-4 col-lg">
                         <SearchableSelect
                             value={filterEquipe}
@@ -631,9 +673,9 @@ return (
                             value={filterEstActif}
                             onChange={(e) => setFilterEstActif(e.target.value)}
                             className={filterClass(filterEstActif)}
-                            aria-label="Filtrer par statut"
+                            aria-label="Filtrer par actif / inactif"
                         >
-                            <option value="">Status</option>
+                            <option value="">Actif / Inactif</option>
                             <option value="Actif">Actif</option>
                             <option value="Inactif">Inactif</option>
                         </Form.Select>

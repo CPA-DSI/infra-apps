@@ -4,7 +4,7 @@
 // puis ouverture des affectations et rattachement des écrans.
 import prisma from '../prismaClient.js';
 import bcrypt from 'bcryptjs';
-import { ETAT_DISPONIBLE_RETIRE, ETAT_REMIS_EN_SERVICE, ouvrirAffectationInitiale, rattacherEcranParCode } from './affectationService.js';
+import { ETAT_PAR_DEFAUT, ETATS_STATUT_RETIRES, ouvrirAffectationInitiale, rattacherEcranParCode } from './affectationService.js';
 import {
     validateDate,
     convertBoolean,
@@ -29,8 +29,6 @@ const BCRYPT_ROUNDS = 10;
 // qui applique la même convention pour la création manuelle). L'utilisateur doit le changer à la
 // première connexion (users.must_change_password vaut true par défaut).
 const DEFAULT_PASSWORD = 'User123456';
-// État d'un PC créé par l'import sans colonne « État PC ».
-const ETAT_PAR_DEFAUT_IMPORT = ETAT_REMIS_EN_SERVICE;
 
 // Génère un id_n via la séquence PostgreSQL dédiée (users_id_n_auto_seq),
 // ce qui garantit l'atomicité entre imports concurrents contrairement à un
@@ -462,10 +460,11 @@ export async function importMateriels(items, idNAuteur) {
             const lan = convertBoolean(findFieldValue(item, allKeys, ['LAN', 'lan', 'Ethernet']));
             const usb = convertBoolean(findFieldValue(item, allKeys, ['USB', 'usb']));
             // Colonne absente ou vide => undefined : une mise à jour garde l'état
-            // en base, une création prend ETAT_PAR_DEFAUT_IMPORT (cf. createMany).
-            // « Disponible » (ancien état retiré) est traité comme vide.
+            // en base, une création prend ETAT_PAR_DEFAUT (cf. createMany).
+            // « Stock », « Sans poste », « Disponible » sont des statuts, pas des
+            // états physiques : traités comme vides (le statut suit l'affectation).
             const etatLu = cleanString(findFieldValue(item, allKeys, ['État PC', 'Etat PC', 'etat_pc', 'EtatPc', 'Statut']));
-            const etat_pc = etatLu && etatLu !== ETAT_DISPONIBLE_RETIRE ? etatLu : undefined;
+            const etat_pc = etatLu && !ETATS_STATUT_RETIRES.includes(etatLu) ? etatLu : undefined;
             const salle = cleanString(findFieldValue(item, allKeys, ['salle', 'Salle', 'SALL', 'Room']));
             const mdp_pc = cleanString(findFieldValue(item, allKeys, ['Password_Local', 'Password Local', 'password_local', 'mdp_pc', 'MdpLocal']));
             const mdp_admin = cleanString(findFieldValue(item, allKeys, ['Password_Admin', 'Password Admin', 'password_admin', 'mdp_admin', 'MdpAdmin']));
@@ -559,7 +558,7 @@ export async function importMateriels(items, idNAuteur) {
 
     // Une fiche créée sans état reçoit l'état par défaut.
     for (const row of rowsACreer) {
-        if (row.data.etat_pc === undefined) row.data.etat_pc = ETAT_PAR_DEFAUT_IMPORT;
+        if (row.data.etat_pc === undefined) row.data.etat_pc = ETAT_PAR_DEFAUT;
     }
 
     if (rowsACreer.length > 0) {

@@ -21,13 +21,14 @@ const LIBELLES_STATUT = {
 
 export const LIBELLE_STOCK = 'Stock';
 
-// Valeurs de materiels.etat_pc posées par la mise en stock.
-export const ETAT_STOCK = 'Stock';
-export const ETAT_SANS_POSTE = 'Sans poste';
-// État repris par un PC qui sort du stock (même valeur que le bouton Status).
-export const ETAT_REMIS_EN_SERVICE = 'Bon';
-// Ancien état, retiré : il mélangeait statut et état physique. Refusé en saisie.
-export const ETAT_DISPONIBLE_RETIRE = 'Disponible';
+// materiels.etat_pc ne porte que l'état physique du PC. Le statut se déduit
+// de l'affectation : est_vide => « Sans poste », id_n null => « Stock »,
+// sinon « Affecté ». Un PC garde donc son état physique en stock.
+export const ETATS_PHYSIQUES = ['Très Bon', 'Bon', 'Moyen', 'Mauvais', 'HS'];
+// État par défaut d'un PC créé par l'import sans colonne « État PC ».
+export const ETAT_PAR_DEFAUT = 'Bon';
+// Anciennes valeurs de etat_pc qui étaient des statuts : refusées en saisie.
+export const ETATS_STATUT_RETIRES = ['Stock', 'Sans poste', 'Disponible'];
 
 export class AffectationError extends Error {
     constructor(message, status = 400, details = undefined) {
@@ -130,7 +131,8 @@ const creerPosteVide = async (tx, materiel, now, auteur, description) => {
             id_local: materiel.id_local,
             est_vide: true,
             est_actif: false,
-            etat_pc: ETAT_SANS_POSTE,
+            // Pas de PC, donc pas d'état physique.
+            etat_pc: null,
             date_modification: now,
         },
     });
@@ -197,12 +199,12 @@ export const affecterPC = async (tx, { id_materiels, id_n, utilisateur, equipe, 
 
     await fermerAffectationEnCours(tx, { type_affectation: 'PC', id_materiels }, now);
 
-    // Un PC en stock est inactif, état « Stock » ; il redevient actif quand il
-    // est réaffecté.
+    // Un PC en stock est inactif ; il redevient actif quand il est réaffecté.
+    // Son état physique (etat_pc) n'est pas touché.
     const statutPC = miseEnStock
-        ? { est_actif: false, etat_pc: ETAT_STOCK }
+        ? { est_actif: false }
         : materiel.id_n === null
-            ? { est_actif: true, ...(materiel.etat_pc === ETAT_STOCK ? { etat_pc: ETAT_REMIS_EN_SERVICE } : {}) }
+            ? { est_actif: true }
             : {};
 
     const misAJour = await tx.materiels.update({
@@ -426,9 +428,8 @@ export const ouvrirAffectationInitiale = async (tx, materiel, auteurIdN, motif =
     });
 };
 
-// Fiche « Sans poste » : poste vide créé par la mise en stock, ou ancienne
-// saisie dont l'état a été passé à « Sans poste ».
-const estSansPoste = (materiel) => materiel.est_vide || materiel.etat_pc === ETAT_SANS_POSTE;
+// Fiche « Sans poste » : poste vide créé par la mise en stock ou la réaffectation.
+const estSansPoste = (materiel) => materiel.est_vide;
 
 /**
  * Suppression logique d'une fiche « Sans poste » (utilisateur parti) ou d'un
@@ -510,7 +511,6 @@ export const restaurerPC = async (tx, id_materiels, auteurIdN) => {
             utilisateur: LIBELLE_STOCK,
             equipe: LIBELLE_STOCK,
             est_actif: false,
-            etat_pc: ETAT_STOCK,
             date_modification: now,
         },
     });

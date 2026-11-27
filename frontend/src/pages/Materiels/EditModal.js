@@ -7,23 +7,11 @@ import { escapeHtml } from '../../utils/escapeHtml';
 import { FaVideo, FaNetworkWired, FaUsb, FaPlug, FaCheckCircle, FaTimesCircle, FaTimes, FaEdit, FaSave, FaInfoCircle, FaKeyboard as FaKeyboardIcon } from 'react-icons/fa';
 import FormItem from '../../components/FormItem/FormItem';
 import { getMaterielFieldIcon } from './materielFieldIcons';
+import { ETATS_PHYSIQUES, etatPhysiqueOptions } from './materielsTableConfig';
 import AffectationModal from './AffectationModal';
 import AppModal from '../../components/AppModal/AppModal';
 import './MaterielsModals.css';
 
-// États posés par la mise en stock (affectation), jamais enregistrés par le
-// PUT : les choisir ici déclenche la vraie mise en stock.
-const ETATS_MISE_EN_STOCK = ['Stock', 'Sans poste'];
-
-const ETAT_OPTIONS = [
-    { value: 'Très Bon', label: '✅ Très Bon' },
-    { value: 'Bon', label: '👍 Bon' },
-    { value: 'Moyen', label: '⚠️ Moyen' },
-    { value: 'Mauvais', label: '❗ Mauvais' },
-    { value: 'HS', label: '❌ HS' },
-    { value: 'Stock', label: '📥 Stock' },
-    { value: 'Sans poste', label: '🚫 Sans poste' }
-];
 
 const customSelectStyles = {
     control: (provided) => ({
@@ -98,12 +86,13 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
     const [error, setError] = useState(null);
     const [affectationStock, setAffectationStock] = useState(false);
 
-    // Un PC affecté peut être mis en stock ; sinon « Stock » / « Sans poste »
-    // ne sont proposés que s'ils sont déjà l'état actuel.
+    // La mise en stock (statut) est distincte de l'état physique : bouton dédié
+    // pour un PC affecté, qui ouvre la réaffectation.
     const peutMettreEnStock = Boolean(data?.id_n) && !data?.est_vide;
-    const etatOptions = ETAT_OPTIONS.filter(o =>
-        !ETATS_MISE_EN_STOCK.includes(o.value) || peutMettreEnStock || o.value === data?.etat_pc
-    );
+    // Une ancienne valeur libre (import) reste affichée pour ne pas être perdue.
+    const etatOptions = data?.etat_pc && !ETATS_PHYSIQUES.includes(data.etat_pc)
+        ? [...etatPhysiqueOptions, { value: data.etat_pc, label: data.etat_pc }]
+        : etatPhysiqueOptions;
 
     const showNotification = (message, type = 'success') => {
         notify(message, type);
@@ -186,28 +175,23 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
         }));
     }, []);
 
-    const handleSubmit = async (e) => {
+    // confirmerStock : bouton « Enregistrer et mettre en stock » ; les
+    // modifications sont enregistrées, puis la réaffectation s'ouvre.
+    const handleSubmit = async (e, confirmerStock = false) => {
         e.preventDefault();
 
-        // « Stock » / « Sans poste » sur un PC affecté : on propose la vraie mise
-        // en stock (fenêtre de réaffectation) au lieu de changer le seul libellé.
-        const miseEnStock = peutMettreEnStock && ETATS_MISE_EN_STOCK.includes(formData.etat_pc);
-        let confirmerStock = false;
-        if (miseEnStock) {
+        if (confirmerStock) {
             const choix = await MySwal.fire({
                 icon: 'question',
                 title: 'Mettre le PC en stock ?',
-                html: `L'état « ${escapeHtml(formData.etat_pc)} » correspond à une mise en stock du PC <b>${escapeHtml(formData.code_pc || `#${formData.id_materiels}`)}</b> : `
-                    + `${escapeHtml(formData.utilisateur)} gardera une fiche « Sans poste »${formData.id_ecran ? ` et l'écran ${escapeHtml(formData.code_ecran)} partira en stock` : ''}.`
-                    + `<br/><br/>Les autres modifications sont enregistrées dans les deux cas.`,
-                showDenyButton: true,
+                html: `Le PC <b>${escapeHtml(formData.code_pc || `#${formData.id_materiels}`)}</b> sera retiré à ${escapeHtml(formData.utilisateur)}, `
+                    + `qui gardera une fiche « Sans poste »${formData.id_ecran ? ` ; l'écran ${escapeHtml(formData.code_ecran)} partira en stock` : ''}. `
+                    + `Son état physique est conservé.`,
                 showCancelButton: true,
-                confirmButtonText: '📥 Mettre en stock',
-                denyButtonText: "Enregistrer sans changer l'état",
+                confirmButtonText: '📥 Continuer',
                 cancelButtonText: 'Annuler',
             });
-            if (choix.isDismissed) return;
-            confirmerStock = choix.isConfirmed;
+            if (!choix.isConfirmed) return;
         }
 
         try {
@@ -231,9 +215,6 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
                 id_local: formData.id_local ? parseInt(formData.id_local, 10) : null,
                 date_pc: formData.date_pc ? new Date(formData.date_pc) : null,
             };
-
-            // L'état est alors posé par la mise en stock (ou reste inchangé).
-            if (miseEnStock) delete apiPayload.etat_pc;
 
             await updateMateriel(formData.id_materiels, apiPayload);
 
@@ -335,6 +316,12 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
                     <button type="button" onClick={onClose} className="add-modal-cancel-btn">
                         Annuler
                     </button>
+                    {peutMettreEnStock && (
+                        <button type="button" className="add-modal-cancel-btn" onClick={(e) => handleSubmit(e, true)}
+                            title="Enregistrer, puis retirer le PC à son utilisateur">
+                            📥 Enregistrer et mettre en stock
+                        </button>
+                    )}
                     <button type="submit" className="add-modal-submit-btn">
                         <FaSave aria-hidden="true" /> Sauvegarder
                     </button>

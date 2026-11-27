@@ -9,10 +9,7 @@ import { UserRole, PERMISSIONS, canViewAllMateriels } from '../constants/roles.j
 import { encryptPassMail } from '../services/passMailCrypto.js';
 import {
     affecterPC,
-    ETAT_DISPONIBLE_RETIRE,
-    ETAT_REMIS_EN_SERVICE,
-    ETAT_SANS_POSTE,
-    ETAT_STOCK,
+    ETATS_STATUT_RETIRES,
     LIBELLE_STOCK,
     ouvrirAffectationInitiale,
     rattacherEcranParCode,
@@ -234,9 +231,10 @@ router.post('/', requirePermission(PERMISSIONS.MATERIELS_WRITE), asyncHandler(as
         }
     });
 
-    if (dataToCreate.etat_pc === ETAT_DISPONIBLE_RETIRE) {
+    // etat_pc est l'état physique ; « Stock » se demande avec en_stock.
+    if (ETATS_STATUT_RETIRES.includes(dataToCreate.etat_pc)) {
         return res.status(400).json({
-            error: "L'état « Disponible » n'existe plus : choisissez l'état physique du PC, ou « Stock » pour un PC sans utilisateur.",
+            error: `« ${dataToCreate.etat_pc} » n'est pas un état physique : choisissez l'état du PC, et cochez « En stock » pour un PC sans utilisateur.`,
         });
     }
 
@@ -246,8 +244,8 @@ router.post('/', requirePermission(PERMISSIONS.MATERIELS_WRITE), asyncHandler(as
     }
 
     // Un PC créé en stock n'a ni bénéficiaire ni écran, et est inactif : mêmes
-    // valeurs que la mise en stock par affecterPC.
-    if (dataToCreate.etat_pc === ETAT_STOCK) {
+    // valeurs que la mise en stock par affecterPC. L'état physique est gardé.
+    if (rawData.en_stock === true || rawData.en_stock === 'true') {
         Object.assign(dataToCreate, {
             id_n: null,
             utilisateur: LIBELLE_STOCK,
@@ -406,15 +404,11 @@ router.put('/:id', requirePermission(PERMISSIONS.MATERIELS_WRITE), asyncHandler(
     // « Stock » et « Sans poste » sont posés par l'affectation (mise en stock :
     // fiche vide, écran en stock, historique). Les saisir ici ne changeait que
     // le libellé. Une valeur inchangée reste acceptée (anciennes saisies).
-    // « Disponible » n'est plus un état : un PC à attribuer est en stock.
-    if (req.body.etat_pc === ETAT_DISPONIBLE_RETIRE && req.body.etat_pc !== actuel.etat_pc) {
+    // etat_pc est l'état physique : le statut (stock, sans poste) se change
+    // par l'affectation, qui trace la fiche vide, l'écran et l'historique.
+    if (ETATS_STATUT_RETIRES.includes(req.body.etat_pc)) {
         return res.status(400).json({
-            error: "L'état « Disponible » n'existe plus : pour libérer le PC, utilisez « Réaffecter le PC » → « Mettre en stock ».",
-        });
-    }
-    if ([ETAT_STOCK, ETAT_SANS_POSTE].includes(req.body.etat_pc) && req.body.etat_pc !== actuel.etat_pc) {
-        return res.status(400).json({
-            error: `L'état « ${req.body.etat_pc} » ne se saisit pas : utilisez « Réaffecter le PC » → « Mettre en stock ».`,
+            error: `« ${req.body.etat_pc} » n'est pas un état physique : pour libérer le PC, utilisez « Réaffecter le PC » → « Mettre en stock ».`,
         });
     }
 
@@ -454,9 +448,6 @@ router.put('/:id', requirePermission(PERMISSIONS.MATERIELS_WRITE), asyncHandler(
         if (actuel.est_vide) {
             dataToUpdate.est_vide = false;
             dataToUpdate.est_actif = true;
-            if (!dataToUpdate.etat_pc || dataToUpdate.etat_pc === ETAT_SANS_POSTE) {
-                dataToUpdate.etat_pc = ETAT_REMIS_EN_SERVICE;
-            }
         }
     }
 
