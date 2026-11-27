@@ -343,6 +343,7 @@
 /* ── Mini sparkline ── */
 .dhc-stat-sparkline {
     margin: 0 -4px;
+    min-height: 40px; /* garde les cartes alignées quand la courbe est masquée */
     opacity: 0.75;
     pointer-events: none;
 }
@@ -610,6 +611,57 @@
 
 .dhc-monthly-table .col-net.positive { color: var(--color-success); }
 .dhc-monthly-table .col-net.negative { color: var(--dhc-out); }
+
+.dhc-monthly-table tfoot tr {
+    background: rgba(15, 23, 42, 0.9);
+    border-top: 1px solid rgba(100, 116, 139, 0.2);
+    font-weight: 700;
+}
+
+.dhc-monthly-table tfoot td {
+    padding: 10px 16px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.dhc-monthly-table tr.is-future .col-month,
+.dhc-monthly-table .col-future {
+    color: var(--color-text-sub);
+    opacity: 0.6;
+    font-style: italic;
+}
+
+.dhc-monthly-table .col-future {
+    text-align: center;
+}
+
+/* ── Rafraîchissement (changement d'année) ────────────────────────────────── */
+.dhc-body {
+    transition: opacity 0.2s ease;
+}
+
+.dhc-body.is-refreshing {
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+/* ── Période sans mouvement ───────────────────────────────────────────────── */
+.dhc-empty {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    height: 340px;
+    color: var(--color-text-sub);
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.dhc-empty svg {
+    stroke: currentColor;
+    opacity: 0.5;
+}
 
 /* ── États de chargement / erreur ─────────────────────────────────────────── */
 .dhc-loading,

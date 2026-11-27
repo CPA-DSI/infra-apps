@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Chart from 'react-apexcharts';
 import { fetchAllMouvements, fetchAnneesDisponibles } from '../../services/api';
 import { cssVar } from '../../styles/cssVar';
@@ -18,10 +18,16 @@ const PERIODS = [
   { key: 's2',   label: 'S2',        range: [6, 11] },
 ];
 
+const NOW           = new Date();
+const CURRENT_YEAR  = NOW.getFullYear();
+const CURRENT_MONTH = NOW.getMonth(); // 0-11
+
 // Fenêtre par défaut (N-3 à N+1), utilisée tant que les années réellement
 // disponibles n'ont pas encore été récupérées depuis le backend, ou en cas d'échec.
-const CURRENT_YEAR = new Date().getFullYear();
 const DEFAULT_YEAR_BOUNDS = { minYear: CURRENT_YEAR - 3, maxYear: CURRENT_YEAR + 1 };
+
+const FONT = "'Inter Variable', system-ui, sans-serif";
+const ZEROS = Array(12).fill(0);
 
 // ApexCharts a besoin de vraies couleurs : on lit les tokens de styles/theme.css
 const THEME = {
@@ -33,6 +39,33 @@ const THEME = {
   inGrad:  cssVar('--color-primary-light'),
   outGrad: cssVar('--color-rose-border'),
   white:   cssVar('--color-bg'),
+};
+
+// ─── Utilitaires ──────────────────────────────────────────────────────────────
+const fmt = (n) => Number(n || 0).toLocaleString('fr-FR');
+const sum = (arr) => arr.reduce((a, b) => a + b, 0);
+
+// Réponse de GET /mouvements/stats/:year : [{ mois: 1..12, total_entrees, total_sorties }]
+// → deux tableaux de 12 valeurs. Les éventuels doublons d'un même mois sont cumulés.
+const toMonthly = (rows) => {
+  const entrees = Array(12).fill(0);
+  const sorties = Array(12).fill(0);
+  (Array.isArray(rows) ? rows : []).forEach(({ mois, total_entrees, total_sorties }) => {
+    const idx = parseInt(mois, 10) - 1;
+    if (idx >= 0 && idx < 12) {
+      entrees[idx] += Number(total_entrees) || 0;
+      sorties[idx] += Number(total_sorties) || 0;
+    }
+  });
+  return { entrees, sorties };
+};
+
+// Variation en % par rapport à N-1. null = pas de base de comparaison.
+// Le dénominateur est en valeur absolue : pour un solde net négatif
+// (ex. -564 → -224), une amélioration doit donner une variation positive.
+const computeTrend = (current, previous) => {
+  if (previous === 0) return current === 0 ? 0 : null;
+  return ((current - previous) / Math.abs(previous)) * 100;
 };
 
 // ─── Icônes SVG inline ────────────────────────────────────────────────────────
@@ -107,13 +140,14 @@ const Icons = {
 // ─── Composant StatCard avec mini sparkline ───────────────────────────────────
 const StatCard = ({
   type, icon, label, value, unit,
-  prevYear, prevValue, trendValue, trendPositiveWhen,
+  prevLabel, prevValue, trendValue, trendPositiveWhen,
   sparkData,
 }) => {
-  const isPositive  = trendPositiveWhen === 'up' ? trendValue >= 0 : trendValue <= 0;
-  const trendClass  = trendValue === 0 ? 'neutral' : (isPositive ? 'positive' : 'negative');
-  const TrendIcon   = trendValue >= 0 ? Icons.TrendingUp : Icons.TrendingDown;
-  const sign        = trendValue >= 0 ? '+' : '';
+  const hasTrend   = trendValue !== null && Number.isFinite(trendValue);
+  const isPositive = trendPositiveWhen === 'up' ? trendValue >= 0 : trendValue <= 0;
+  const trendClass = !hasTrend || trendValue === 0 ? 'neutral' : (isPositive ? 'positive' : 'negative');
+  const TrendIcon  = trendValue >= 0 ? Icons.TrendingUp : Icons.TrendingDown;
+  const sign       = trendValue > 0 ? '+' : '';
 
   // Couleur du sparkline selon le type de carte
   const sparkColor = { in: THEME.in, out: THEME.out, net: THEME.net, ratio: THEME.ratio }[type] || THEME.in;
@@ -130,6 +164,8 @@ const StatCard = ({
   }), [sparkColor]);
 
   const sparkSeries = useMemo(() => [{ data: sparkData || [] }], [sparkData]);
+  // Une courbe plate à zéro n'apporte rien : on ne l'affiche pas
+  const showSpark = sparkData && sparkData.length > 1 && sparkData.some(v => v !== 0);
 
   return (
     <div className={`dhc-stat-card ${type}`}>
@@ -140,36 +176,31 @@ const StatCard = ({
 
       <div className="dhc-stat-card-body">
         <div className="dhc-stat-main-row">
-          <span className="dhc-stat-value">
-            {typeof value === 'number' ? value.toLocaleString('fr-FR') : value}
-          </span>
+          <span className="dhc-stat-value">{fmt(value)}</span>
           <span className="dhc-stat-unit">{unit}</span>
         </div>
 
-        {/* Mini sparkline */}
-        {sparkData && sparkData.length > 0 && (
-          <div className="dhc-stat-sparkline">
-            <Chart
-              options={sparkOptions}
-              series={sparkSeries}
-              type="line"
-              height={40}
-              width="100%"
-            />
-          </div>
-        )}
+        <div className="dhc-stat-sparkline">
+          {showSpark && (
+            <Chart options={sparkOptions} series={sparkSeries} type="line" height={40} width="100%" />
+          )}
+        </div>
 
         <div className="dhc-stat-footer-row">
           <div className="dhc-stat-prev-year">
-            <span className="dhc-stat-label-prev">N-1 ({prevYear}) :</span>
-            <span className="dhc-stat-value-prev">
-              {typeof prevValue === 'number' ? prevValue.toLocaleString('fr-FR') : prevValue}
-            </span>
+            <span className="dhc-stat-label-prev">{prevLabel} :</span>
+            <span className="dhc-stat-value-prev">{fmt(prevValue)}</span>
           </div>
-          <div className={`dhc-stat-trend ${trendClass}`}>
-            <TrendIcon />
-            <span>{sign}{trendValue.toFixed(1)}%</span>
-          </div>
+          {hasTrend ? (
+            <div className={`dhc-stat-trend ${trendClass}`}>
+              <TrendIcon />
+              <span>{sign}{trendValue.toFixed(1)}%</span>
+            </div>
+          ) : (
+            <div className="dhc-stat-trend neutral" title="Aucune valeur N-1 sur la même période : variation non calculable">
+              <span>N/A</span>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -180,30 +211,24 @@ const StatCard = ({
 const FlowProgressBar = ({ entrees, sorties }) => {
   const total = entrees + sorties;
   if (total === 0) return null;
-  const pctIn  = ((entrees / total) * 100).toFixed(1);
-  const pctOut = ((sorties / total) * 100).toFixed(1);
+  const pctIn  = (entrees / total) * 100;
+  const pctOut = 100 - pctIn;
 
   return (
     <div className="dhc-flow-progress-bar">
       <div className="dhc-flow-progress-labels">
         <span className="dhc-flow-label-in">
           <span className="dhc-flow-dot dhc-dot-in" />
-          Entrées {pctIn}%
+          Entrées {pctIn.toFixed(1)}%
         </span>
         <span className="dhc-flow-label-out">
-          Sorties {pctOut}%
+          Sorties {pctOut.toFixed(1)}%
           <span className="dhc-flow-dot dhc-dot-out" />
         </span>
       </div>
       <div className="dhc-flow-progress-track">
-        <div
-          className="dhc-flow-progress-fill dhc-fill-in"
-          style={{ width: `${pctIn}%` }}
-        />
-        <div
-          className="dhc-flow-progress-fill dhc-fill-out"
-          style={{ width: `${pctOut}%` }}
-        />
+        {pctIn > 0  && <div className="dhc-flow-progress-fill dhc-fill-in"  style={{ width: `${pctIn}%` }} />}
+        {pctOut > 0 && <div className="dhc-flow-progress-fill dhc-fill-out" style={{ width: `${pctOut}%` }} />}
       </div>
     </div>
   );
@@ -214,15 +239,22 @@ const MonthlyTable = ({ monthlyEntrees, monthlySorties, year, visibleRange }) =>
   const [open, setOpen] = useState(false);
   const [start, end] = visibleRange;
 
-  const rows = useMemo(() => {
-    return MONTHS.slice(start, end + 1).map((month, i) => {
-      const idx = start + i;
-      const e   = monthlyEntrees[idx] || 0;
-      const s   = monthlySorties[idx] || 0;
-      const net = e - s;
-      return { month, e, s, net };
-    });
-  }, [monthlyEntrees, monthlySorties, start, end]);
+  const rows = useMemo(() => MONTHS.slice(start, end + 1).map((month, i) => {
+    const idx = start + i;
+    const e = monthlyEntrees[idx] || 0;
+    const s = monthlySorties[idx] || 0;
+    const isFuture = year > CURRENT_YEAR || (year === CURRENT_YEAR && idx > CURRENT_MONTH);
+    return { month, e, s, net: e - s, isFuture };
+  }), [monthlyEntrees, monthlySorties, start, end, year]);
+
+  const totals = useMemo(() => {
+    const e = sum(rows.map(r => r.e));
+    const s = sum(rows.map(r => r.s));
+    return { e, s, net: e - s };
+  }, [rows]);
+
+  const netCell = (net) => `${net > 0 ? '+' : ''}${fmt(net)}`;
+  const netClass = (net) => (net > 0 ? 'positive' : net < 0 ? 'negative' : '');
 
   return (
     <div className="dhc-monthly-table-wrapper">
@@ -244,17 +276,29 @@ const MonthlyTable = ({ monthlyEntrees, monthlySorties, year, visibleRange }) =>
               </tr>
             </thead>
             <tbody>
-              {rows.map(({ month, e, s, net }) => (
-                <tr key={month}>
+              {rows.map(({ month, e, s, net, isFuture }) => (
+                <tr key={month} className={isFuture ? 'is-future' : undefined}>
                   <td className="col-month">{month}</td>
-                  <td className="col-in">{e.toLocaleString('fr-FR')}</td>
-                  <td className="col-out">{s.toLocaleString('fr-FR')}</td>
-                  <td className={`col-net ${net >= 0 ? 'positive' : 'negative'}`}>
-                    {net >= 0 ? '+' : ''}{net.toLocaleString('fr-FR')}
-                  </td>
+                  {isFuture ? (
+                    <td colSpan={3} className="col-future">à venir</td>
+                  ) : (
+                    <>
+                      <td className="col-in">{fmt(e)}</td>
+                      <td className="col-out">{fmt(s)}</td>
+                      <td className={`col-net ${netClass(net)}`}>{netCell(net)}</td>
+                    </>
+                  )}
                 </tr>
               ))}
             </tbody>
+            <tfoot>
+              <tr>
+                <td className="col-month">Total</td>
+                <td className="col-in">{fmt(totals.e)}</td>
+                <td className="col-out">{fmt(totals.s)}</td>
+                <td className={`col-net ${netClass(totals.net)}`}>{netCell(totals.net)}</td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       )}
@@ -265,133 +309,150 @@ const MonthlyTable = ({ monthlyEntrees, monthlySorties, year, visibleRange }) =>
 // ─── Composant principal ──────────────────────────────────────────────────────
 const DashboardHistoriqueChart = () => {
   // ── États ─────────────────────────────────────────────────────────────────
-  const [year,           setYear]           = useState(CURRENT_YEAR);
-  const [yearBounds,     setYearBounds]     = useState(DEFAULT_YEAR_BOUNDS);
-  const [allEntrees,     setAllEntrees]     = useState(Array(12).fill(0));
-  const [allSorties,     setAllSorties]     = useState(Array(12).fill(0));
-  const [allPrevEntrees, setAllPrevEntrees] = useState(Array(12).fill(0));
-  const [allPrevSorties, setAllPrevSorties] = useState(Array(12).fill(0));
-  const [,      setTotals]      = useState({ totalEntrees: 0, totalSorties: 0 });
-  const [chartType,   setChartType]   = useState('bar');   // 'bar' | 'line'
-  const [period,      setPeriod]      = useState('all');   // clé de PERIODS
-  const [loading,     setLoading]     = useState(true);
-  const [error,       setError]       = useState(null);
+  const [year,       setYear]       = useState(CURRENT_YEAR);
+  const [yearBounds, setYearBounds] = useState(DEFAULT_YEAR_BOUNDS);
+  const [data,       setData]       = useState(null); // { entrees, sorties, prevEntrees, prevSorties }
+  const [chartType,  setChartType]  = useState('bar'); // 'bar' | 'line'
+  const [period,     setPeriod]     = useState('all'); // clé de PERIODS
+  const [loading,    setLoading]    = useState(true);
+  const [error,      setError]      = useState(null);
 
   // ── Années sélectionnables, dérivées des données réelles en base ──────────
   const selectableYears = useMemo(() => {
     const { minYear, maxYear } = yearBounds;
     const length = Math.max(0, maxYear - minYear + 1);
-    return Array.from({ length }, (_, i) => minYear + i);
+    return Array.from({ length }, (_, i) => maxYear - i); // plus récente en premier
   }, [yearBounds]);
 
   // ── Récupération une seule fois de la plage d'années disponibles ──────────
   useEffect(() => {
     const controller = new AbortController();
-
     fetchAnneesDisponibles(controller.signal)
       .then(bounds => {
-        if (bounds) setYearBounds(bounds);
+        if (bounds && Number.isInteger(bounds.minYear) && Number.isInteger(bounds.maxYear)) {
+          setYearBounds(bounds);
+        }
       })
       .catch(() => {
         // En cas d'échec, on conserve la fenêtre par défaut (N-3 à N+1)
       });
-
     return () => controller.abort();
   }, []);
 
+  // ── Chargement des données de l'année et de N-1 ───────────────────────────
+  useEffect(() => {
+    const controller = new AbortController();
+    const { signal } = controller;
+    setLoading(true);
+    setError(null);
+
+    Promise.all([
+      fetchAllMouvements(year, signal),
+      // N-1 sert uniquement à la comparaison : son échec ne bloque pas l'affichage
+      fetchAllMouvements(year - 1, signal).catch(() => null),
+    ])
+      .then(([currentRows, prevRows]) => {
+        if (signal.aborted) return;
+        const current = toMonthly(currentRows);
+        const prev    = toMonthly(prevRows);
+        setData({
+          entrees: current.entrees,
+          sorties: current.sorties,
+          prevEntrees: prev.entrees,
+          prevSorties: prev.sorties,
+        });
+      })
+      .catch(err => {
+        if (!signal.aborted) setError(err.message || 'Erreur de chargement');
+      })
+      .finally(() => {
+        if (!signal.aborted) setLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [year]);
+
+  const allEntrees     = data?.entrees     ?? ZEROS;
+  const allSorties     = data?.sorties     ?? ZEROS;
+  const allPrevEntrees = data?.prevEntrees ?? ZEROS;
+  const allPrevSorties = data?.prevSorties ?? ZEROS;
+
   // ── Période active ─────────────────────────────────────────────────────────
-  const activePeriod = useMemo(
-    () => PERIODS.find(p => p.key === period) || PERIODS[0],
-    [period]
-  );
+  const activePeriod = PERIODS.find(p => p.key === period) || PERIODS[0];
   const [rangeStart, rangeEnd] = activePeriod.range;
 
+  // Pour l'année en cours, les mois futurs sont vides : on compare N-1 sur les
+  // mêmes mois écoulés uniquement, sinon l'année partielle paraît toujours en baisse.
+  const isPartialYear = year === CURRENT_YEAR && rangeEnd > CURRENT_MONTH;
+  const isFuturePeriod = year > CURRENT_YEAR || (year === CURRENT_YEAR && rangeStart > CURRENT_MONTH);
+  const cmpEnd = isPartialYear ? Math.max(rangeStart - 1, CURRENT_MONTH) : rangeEnd;
+
   // ── Données filtrées selon la période ─────────────────────────────────────
-  const filteredEntrees = useMemo(
-    () => allEntrees.slice(rangeStart, rangeEnd + 1),
-    [allEntrees, rangeStart, rangeEnd]
-  );
-  const filteredSorties = useMemo(
-    () => allSorties.slice(rangeStart, rangeEnd + 1),
-    [allSorties, rangeStart, rangeEnd]
-  );
-  const filteredPrevEntrees = useMemo(
-    () => allPrevEntrees.slice(rangeStart, rangeEnd + 1),
-    [allPrevEntrees, rangeStart, rangeEnd]
-  );
-  const filteredPrevSorties = useMemo(
-    () => allPrevSorties.slice(rangeStart, rangeEnd + 1),
-    [allPrevSorties, rangeStart, rangeEnd]
-  );
+  const filteredEntrees = useMemo(() => allEntrees.slice(rangeStart, rangeEnd + 1), [allEntrees, rangeStart, rangeEnd]);
+  const filteredSorties = useMemo(() => allSorties.slice(rangeStart, rangeEnd + 1), [allSorties, rangeStart, rangeEnd]);
+  const filteredNet     = useMemo(() => filteredEntrees.map((e, i) => e - filteredSorties[i]), [filteredEntrees, filteredSorties]);
 
   const series = useMemo(() => [
     { name: 'Entrées', data: filteredEntrees },
     { name: 'Sorties', data: filteredSorties },
   ], [filteredEntrees, filteredSorties]);
 
-  // ── Totaux de la période filtrée ───────────────────────────────────────────
-  const periodEntrees     = useMemo(() => filteredEntrees.reduce((a, b) => a + b, 0), [filteredEntrees]);
-  const periodSorties     = useMemo(() => filteredSorties.reduce((a, b) => a + b, 0), [filteredSorties]);
-  // N-1 calculé sur la même plage de mois que la période sélectionnée, pour une comparaison cohérente
-  const periodPrevEntrees = useMemo(() => filteredPrevEntrees.reduce((a, b) => a + b, 0), [filteredPrevEntrees]);
-  const periodPrevSorties = useMemo(() => filteredPrevSorties.reduce((a, b) => a + b, 0), [filteredPrevSorties]);
+  // ── Totaux de la période ───────────────────────────────────────────────────
+  const periodEntrees     = sum(filteredEntrees);
+  const periodSorties     = sum(filteredSorties);
+  const periodPrevEntrees = sum(allPrevEntrees.slice(rangeStart, cmpEnd + 1));
+  const periodPrevSorties = sum(allPrevSorties.slice(rangeStart, cmpEnd + 1));
+  const hasMovements      = periodEntrees + periodSorties > 0;
 
   // ── Métriques dérivées ─────────────────────────────────────────────────────
   const netValue     = periodEntrees - periodSorties;
   const prevNetValue = periodPrevEntrees - periodPrevSorties;
-  const hasPrevData  = periodPrevEntrees > 0 || periodPrevSorties > 0;
+  // Période future : rien à comparer (sinon N-1 donnerait un faux -100 %)
+  const hasPrevData  = !isFuturePeriod && (periodPrevEntrees > 0 || periodPrevSorties > 0);
 
-  const calculateTrend = useCallback((current, previous) => {
-    if (previous === 0) return current > 0 ? 100 : 0;
-    return ((current - previous) / previous) * 100;
-  }, []);
+  const entreesPercent  = hasPrevData ? computeTrend(periodEntrees, periodPrevEntrees) : null;
+  const sortiesPercent  = hasPrevData ? computeTrend(periodSorties, periodPrevSorties) : null;
+  const netValuePercent = hasPrevData ? computeTrend(netValue, prevNetValue) : null;
 
-  const entreesPercent  = hasPrevData ? calculateTrend(periodEntrees, periodPrevEntrees) : 0;
-  const sortiesPercent  = hasPrevData ? calculateTrend(periodSorties, periodPrevSorties) : 0;
-  const netValuePercent = hasPrevData ? calculateTrend(netValue, prevNetValue) : 0;
+  const prevLabel = isPartialYear && !isFuturePeriod
+    ?`N-1 (${year - 1}, ${MONTHS_SHORT[rangeStart].toLowerCase()}.–${MONTHS_SHORT[cmpEnd].toLowerCase()}.)`
+    : `N-1 (${year - 1})`;
 
   // ── Mois les plus actifs sur la période affichée ───────────────────────────
   const peakMonth = useMemo(() => {
-    const maxEntrees = Math.max(0, ...filteredEntrees);
-    const maxSorties = Math.max(0, ...filteredSorties);
-    const maxEntreesIdx = filteredEntrees.indexOf(maxEntrees);
-    const maxSortiesIdx = filteredSorties.indexOf(maxSorties);
-    return {
-      entrees: maxEntrees > 0 ? { month: MONTHS[rangeStart + maxEntreesIdx], value: maxEntrees } : null,
-      sorties: maxSorties > 0 ? { month: MONTHS[rangeStart + maxSortiesIdx], value: maxSorties } : null,
+    const peak = (values) => {
+      const max = Math.max(0, ...values);
+      if (max === 0) return null;
+      const idx = rangeStart + values.indexOf(max);
+      return { idx, month: MONTHS[idx], value: max };
     };
+    return { entrees: peak(filteredEntrees), sorties: peak(filteredSorties) };
   }, [filteredEntrees, filteredSorties, rangeStart]);
 
   // ── Annotations du mois pic sur le graphique ───────────────────────────────
   const peakAnnotations = useMemo(() => {
-    const annotations = { xaxis: [] };
-    if (peakMonth.entrees) {
-      annotations.xaxis.push({
-        x: MONTHS_SHORT[MONTHS.indexOf(peakMonth.entrees.month)] + ' ' + year,
-        borderColor: THEME.in,
-        strokeDashArray: 4,
-        label: {
-          text: '▲ Pic E',
-          style: { color: THEME.white, background: THEME.in, fontSize: '10px', fontFamily: "'Inter Variable', system-ui, sans-serif" },
-          position: 'top',
-          orientation: 'horizontal',
-        },
-      });
+    const make = (idx, text, color) => ({
+      x: `${MONTHS_SHORT[idx]} ${year}`,
+      borderColor: color,
+      strokeDashArray: 4,
+      label: {
+        text,
+        borderColor: color,
+        style: { color: THEME.white, background: color, fontSize: '10px', fontFamily: FONT },
+        position: 'top',
+        orientation: 'horizontal',
+      },
+    });
+    const { entrees, sorties } = peakMonth;
+    const xaxis = [];
+    if (entrees && sorties && entrees.idx === sorties.idx) {
+      // Même mois : une seule annotation, sinon les deux étiquettes se superposent
+      xaxis.push(make(entrees.idx, '★ Pic E + S', THEME.sub));
+    } else {
+      if (entrees) xaxis.push(make(entrees.idx, '▲ Pic E', THEME.in));
+      if (sorties) xaxis.push(make(sorties.idx, '▼ Pic S', THEME.out));
     }
-    if (peakMonth.sorties) {
-      annotations.xaxis.push({
-        x: MONTHS_SHORT[MONTHS.indexOf(peakMonth.sorties.month)] + ' ' + year,
-        borderColor: THEME.out,
-        strokeDashArray: 4,
-        label: {
-          text: '▼ Pic S',
-          style: { color: THEME.white, background: THEME.out, fontSize: '10px', fontFamily: "'Inter Variable', system-ui, sans-serif" },
-          position: 'top',
-          orientation: 'horizontal',
-        },
-      });
-    }
-    return annotations;
+    return { xaxis };
   }, [peakMonth, year]);
 
   // ── Options du graphique ───────────────────────────────────────────────────
@@ -403,7 +464,7 @@ const DashboardHistoriqueChart = () => {
       chart: {
         type: chartType,
         toolbar: { show: false },
-        fontFamily: "'Inter Variable', system-ui, sans-serif",
+        fontFamily: FONT,
         animations: { enabled: true, speed: 600, animateGradually: { enabled: true, delay: 80 } },
         background: 'transparent',
       },
@@ -425,21 +486,21 @@ const DashboardHistoriqueChart = () => {
         axisBorder: { show: false },
         axisTicks: { show: false },
         labels: {
-          style: {
-            colors: Array(categories.length).fill(THEME.sub),
-            fontSize: '11px',
-            fontFamily: "'Inter Variable', system-ui, sans-serif",
-          },
+          style: { colors: Array(categories.length).fill(THEME.sub), fontSize: '11px', fontFamily: FONT },
         },
         crosshairs: {
           show: true,
           stroke: { color: 'rgba(100,116,139,0.3)', width: 1, dashArray: 4 },
         },
+        tooltip: { enabled: false },
       },
       yaxis: {
+        min: 0,
+        forceNiceScale: true,
         labels: {
-          style: { colors: [THEME.sub], fontSize: '12px', fontFamily: "'Inter Variable', system-ui, sans-serif" },
-          formatter: (v) => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v,
+          style: { colors: [THEME.sub], fontSize: '12px', fontFamily: FONT },
+          // Quantités entières : pas de graduations décimales sur les petites valeurs
+          formatter: (v) => (v >= 1000 ? `${(v / 1000).toFixed(1)}k` : Math.round(v).toString()),
         },
       },
       grid: {
@@ -458,144 +519,158 @@ const DashboardHistoriqueChart = () => {
         markers: { size: 6, shape: 'circle' },
         itemMargin: { horizontal: 12 },
       },
-      fill: isLine
-        ? {
-            type: 'gradient',
-            gradient: {
+      fill: {
+        type: 'gradient',
+        gradient: isLine
+          ? {
               shade: 'dark', type: 'vertical', shadeIntensity: 0.3,
               gradientToColors: [THEME.inGrad, THEME.outGrad],
               opacityFrom: 0.4, opacityTo: 0.05, stops: [0, 100],
-            },
-          }
-        : {
-            type: 'gradient',
-            gradient: {
+            }
+          : {
               shade: 'dark', type: 'vertical',
               gradientToColors: [THEME.inGrad, THEME.outGrad],
               stops: [0, 100],
             },
-          },
+      },
       tooltip: {
         theme: 'dark',
         shared: true,
         intersect: false,
-        style: { fontFamily: "'Inter Variable', system-ui, sans-serif", fontSize: '12px' },
+        style: { fontFamily: FONT, fontSize: '12px' },
+        x: {
+          formatter: (_v, { dataPointIndex }) => `${MONTHS[rangeStart + dataPointIndex] || ''} ${year}`,
+        },
         y: {
-          formatter: (v, { seriesIndex, dataPointIndex }) => {
-            const monthName = MONTHS[rangeStart + dataPointIndex] || '';
-            const label = seriesIndex === 0 ? 'Entrées' : 'Sorties';
-            return `${label} (${monthName} ${year}): <strong>${v.toLocaleString('fr-FR')}</strong> unités`;
-          },
+          formatter: (v) => `${fmt(v)} unités`,
         },
       },
     };
   }, [chartType, year, rangeStart, rangeEnd, peakAnnotations]);
 
-  // ── Déduplication des données par mois ────────────────────────────────────
-  const deduplicateByMonth = useCallback((data) => {
-    const map = {};
-    for (let m = 1; m <= 12; m++) {
-      map[m] = { mois: m, total_entrees: 0, total_sorties: 0, _seen: false };
+  // ── Rendu du corps (chargement / erreur / données) ─────────────────────────
+  const renderBody = () => {
+    if (error) {
+      return (
+        <div className="dhc-error" role="alert">
+          <Icons.Chart />
+          <span>Erreur : {error}</span>
+        </div>
+      );
     }
-    data.forEach(item => {
-      const mois = parseInt(item.mois);
-      if (!isNaN(mois) && mois >= 1 && mois <= 12) {
-        if (!map[mois]._seen) {
-          map[mois].total_entrees = Number(item.total_entrees) || 0;
-          map[mois].total_sorties = Number(item.total_sorties) || 0;
-          map[mois]._seen = true;
-        } else {
-          map[mois].total_entrees += Number(item.total_entrees) || 0;
-          map[mois].total_sorties += Number(item.total_sorties) || 0;
-        }
-      }
-    });
-    return Object.values(map)
-      .sort((a, b) => a.mois - b.mois)
-      .map(({ _seen, ...rest }) => rest);
-  }, []);
 
-  // ── Chargement des données ─────────────────────────────────────────────────
-  useEffect(() => {
-    const controller = new AbortController();
+    if (!data) {
+      return (
+        <div className="dhc-loading">
+          <div className="dhc-spinner" />
+          <span>Chargement des données {year}…</span>
+        </div>
+      );
+    }
 
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+    return (
+      <div className={`dhc-body ${loading ? 'is-refreshing' : ''}`} aria-busy={loading}>
+        {/* ── Grille des statistiques ── */}
+        <div className="dhc-stats-grid">
+          <StatCard
+            type="in"
+            icon={<Icons.ArrowUp />}
+            label="Entrées"
+            value={periodEntrees}
+            unit="unités"
+            prevLabel={prevLabel}
+            prevValue={periodPrevEntrees}
+            trendValue={entreesPercent}
+            trendPositiveWhen="up"
+            sparkData={filteredEntrees}
+          />
+          <StatCard
+            type="out"
+            icon={<Icons.ArrowDown />}
+            label="Sorties"
+            value={periodSorties}
+            unit="unités"
+            prevLabel={prevLabel}
+            prevValue={periodPrevSorties}
+            trendValue={sortiesPercent}
+            trendPositiveWhen="down"
+            sparkData={filteredSorties}
+          />
+          <StatCard
+            type={netValue >= 0 ? 'net' : 'out'}
+            icon={<Icons.Box />}
+            label="Solde Net"
+            value={netValue}
+            unit="unités"
+            prevLabel={prevLabel}
+            prevValue={prevNetValue}
+            trendValue={netValuePercent}
+            trendPositiveWhen="up"
+            sparkData={filteredNet}
+          />
+        </div>
 
-        const [currentYearData, prevYearData] = await Promise.all([
-          fetchAllMouvements(year, controller.signal),
-          fetchAllMouvements(year - 1, controller.signal),
-        ]);
-        if (!currentYearData) {
-          if (!controller.signal.aborted) {
-            setError(`Aucune donnée disponible pour ${year}`);
-          }
-          return;
-        }
+        {/* ── Barre de progression Entrées vs Sorties ── */}
+        <FlowProgressBar entrees={periodEntrees} sorties={periodSorties} />
 
-        const monthlyEntrees = Array(12).fill(0);
-        const monthlySorties = Array(12).fill(0);
-        const monthlyPrevEntrees = Array(12).fill(0);
-        const monthlyPrevSorties = Array(12).fill(0);
-        let annualEntrees = 0, annualSorties = 0;
+        {/* ── Mois les plus actifs ── */}
+        {(peakMonth.entrees || peakMonth.sorties) && (
+          <div className="dhc-peak-months-bar">
+            {peakMonth.entrees && (
+              <div className="dhc-peak-item dhc-peak-in">
+                <Icons.Star />
+                <span className="dhc-peak-label">Pic Entrées :</span>
+                <span className="dhc-peak-month">{peakMonth.entrees.month}</span>
+                <span className="dhc-peak-value">{fmt(peakMonth.entrees.value)} unités</span>
+              </div>
+            )}
+            {peakMonth.sorties && (
+              <div className="dhc-peak-item dhc-peak-out">
+                <Icons.Star />
+                <span className="dhc-peak-label">Pic Sorties :</span>
+                <span className="dhc-peak-month">{peakMonth.sorties.month}</span>
+                <span className="dhc-peak-value">{fmt(peakMonth.sorties.value)} unités</span>
+              </div>
+            )}
+          </div>
+        )}
 
-        const dedupedCurrent = deduplicateByMonth(currentYearData);
-        dedupedCurrent.forEach(item => {
-          const idx = item.mois - 1;
-          monthlyEntrees[idx] = item.total_entrees;
-          monthlySorties[idx] = item.total_sorties;
-          annualEntrees += item.total_entrees;
-          annualSorties += item.total_sorties;
-        });
+        {/* ── Graphique principal ── */}
+        <div className="dhc-chart-container">
+          {hasMovements ? (
+            <Chart
+              key={`${chartType}-${period}`}
+              options={chartOptions}
+              series={series}
+              type={chartType}
+              height={340}
+            />
+          ) : (
+            <div className="dhc-empty">
+              <Icons.Chart />
+              <span>
+                {isFuturePeriod
+                  ? `Période à venir : aucun mouvement pour ${activePeriod.label === 'Annuel' ? year : `${activePeriod.label} ${year}`}`
+                  : `Aucun mouvement enregistré sur ${activePeriod.label === 'Annuel' ? year : `${activePeriod.label} ${year}`}`}
+              </span>
+            </div>
+          )}
+        </div>
 
-        if (prevYearData) {
-          const dedupedPrev = deduplicateByMonth(prevYearData);
-          dedupedPrev.forEach(item => {
-            const idx = item.mois - 1;
-            monthlyPrevEntrees[idx] = item.total_entrees;
-            monthlyPrevSorties[idx] = item.total_sorties;
-          });
-        }
-
-        setAllEntrees(monthlyEntrees);
-        setAllSorties(monthlySorties);
-        setAllPrevEntrees(monthlyPrevEntrees);
-        setAllPrevSorties(monthlyPrevSorties);
-        setTotals({ totalEntrees: annualEntrees, totalSorties: annualSorties });
-
-      } catch (err) {
-        if (!controller.signal.aborted) setError(err.message);
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
-      }
-    };
-
-    fetchData();
-    return () => controller.abort();
-  }, [year, deduplicateByMonth]);
-
-  // ── États de chargement / erreur ───────────────────────────────────────────
-  if (loading) return (
-    <div className="dhc-root">
-      <div className="dhc-loading">
-        <div className="dhc-spinner" />
-        <span>Chargement des données {year}…</span>
+        {/* ── Tableau récapitulatif mensuel ── */}
+        <MonthlyTable
+          monthlyEntrees={allEntrees}
+          monthlySorties={allSorties}
+          year={year}
+          visibleRange={activePeriod.range}
+        />
       </div>
-    </div>
-  );
-
-  if (error) return (
-    <div className="dhc-root">
-      <div className="dhc-error">
-        <Icons.Chart />
-        <span>Erreur : {error}</span>
-      </div>
-    </div>
-  );
+    );
+  };
 
   // ── Rendu principal ────────────────────────────────────────────────────────
+  // L'en-tête reste affiché pendant le chargement et en cas d'erreur, pour
+  // pouvoir changer d'année sans recharger la page.
   return (
     <div className="dhc-root">
 
@@ -609,13 +684,12 @@ const DashboardHistoriqueChart = () => {
             <h2 className="dhc-title">
               Bilan <span className="dhc-year">{year}</span>
               {period !== 'all' && (
-                <span className="dhc-period-badge">
-                  {activePeriod.label}
-                </span>
+                <span className="dhc-period-badge">{activePeriod.label}</span>
               )}
             </h2>
             <p className="dhc-subtitle">
-              Flux d'arrivées et de sorties&nbsp;•&nbsp;Historique annuel
+              Flux d'arrivées et de sorties&nbsp;•&nbsp;
+              {year === CURRENT_YEAR ? `Année en cours, au ${NOW.toLocaleDateString('fr-FR')}` : 'Historique annuel'}
             </p>
           </div>
         </div>
@@ -681,96 +755,7 @@ const DashboardHistoriqueChart = () => {
         </div>
       </header>
 
-      {/* ── Grille des statistiques ── */}
-      <div className="dhc-stats-grid">
-
-        {/* Entrées */}
-        <StatCard
-          type="in"
-          icon={<Icons.ArrowUp />}
-          label="Entrées"
-          value={periodEntrees}
-          unit="unités"
-          prevYear={year - 1}
-          prevValue={periodPrevEntrees}
-          trendValue={entreesPercent}
-          trendPositiveWhen="up"
-          sparkData={allEntrees}
-        />
-
-        {/* Sorties */}
-        <StatCard
-          type="out"
-          icon={<Icons.ArrowDown />}
-          label="Sorties"
-          value={periodSorties}
-          unit="unités"
-          prevYear={year - 1}
-          prevValue={periodPrevSorties}
-          trendValue={sortiesPercent}
-          trendPositiveWhen="down"
-          sparkData={allSorties}
-        />
-
-        {/* Solde Net */}
-        <StatCard
-          type={netValue >= 0 ? 'net' : 'out'}
-          icon={<Icons.Box />}
-          label="Solde Net"
-          value={netValue}
-          unit="unités"
-          prevYear={year - 1}
-          prevValue={prevNetValue}
-          trendValue={netValuePercent}
-          trendPositiveWhen="up"
-          sparkData={allEntrees.map((e, i) => e - allSorties[i])}
-        />
-
-      </div>
-
-      {/* ── Barre de progression Entrées vs Sorties ── */}
-      <FlowProgressBar entrees={periodEntrees} sorties={periodSorties} />
-
-      {/* ── Mois les plus actifs ── */}
-      {(peakMonth.entrees || peakMonth.sorties) && (
-        <div className="dhc-peak-months-bar">
-          {peakMonth.entrees && (
-            <div className="dhc-peak-item dhc-peak-in">
-              <Icons.Star />
-              <span className="dhc-peak-label">Pic Entrées :</span>
-              <span className="dhc-peak-month">{peakMonth.entrees.month}</span>
-              <span className="dhc-peak-value">{peakMonth.entrees.value.toLocaleString('fr-FR')} unités</span>
-            </div>
-          )}
-          {peakMonth.sorties && (
-            <div className="dhc-peak-item dhc-peak-out">
-              <Icons.Star />
-              <span className="dhc-peak-label">Pic Sorties :</span>
-              <span className="dhc-peak-month">{peakMonth.sorties.month}</span>
-              <span className="dhc-peak-value">{peakMonth.sorties.value.toLocaleString('fr-FR')} unités</span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── Graphique principal ── */}
-      <div className="dhc-chart-container">
-        <Chart
-          key={`${chartType}-${period}`}
-          options={chartOptions}
-          series={series}
-          type={chartType}
-          height={340}
-        />
-      </div>
-
-      {/* ── Tableau récapitulatif mensuel ── */}
-      <MonthlyTable
-        monthlyEntrees={allEntrees}
-        monthlySorties={allSorties}
-        year={year}
-        visibleRange={activePeriod.range}
-      />
+      {renderBody()}
     </div>
   );
 };
