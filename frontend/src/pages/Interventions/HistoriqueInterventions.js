@@ -8,7 +8,7 @@ import DataTable from 'react-data-table-component';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import {
-  FaTools, FaPlus, FaSync, FaFileExcel, FaChevronLeft, FaChevronRight, FaEdit, FaTrash, FaSearch, FaTicketAlt, FaUserSlash, FaLock,
+  FaTools, FaPlus, FaSync, FaFileExcel, FaChevronLeft, FaChevronRight, FaEdit, FaTrash, FaSearch, FaTicketAlt, FaUserSlash, FaLock, FaTimes,
 } from 'react-icons/fa';
 import PageHeader from '../../components/PageHeader/PageHeader';
 import { getInterventions, deleteIntervention } from '../../services/api';
@@ -46,10 +46,14 @@ const HistoriqueInterventions = () => {
   const dateUrl = searchParams.get('date');
   const ref = useMemo(() => lireRef(dateUrl), [dateUrl]);
 
-  const [types, setTypes] = useState([]);
+  // Filtre type initial depuis l'URL (lien « Répartition par type » du tableau de bord)
+  const [types, setTypes] = useState(() => (INTERVENTION_TYPES.includes(searchParams.get('type')) ? [searchParams.get('type')] : []));
   const [technicien, setTechnicien] = useState('');
   const [source, setSource] = useState('');
   const [bloque, setBloque] = useState(false);
+  // Filtres matériel / bénéficiaire initiaux depuis l'URL (panneau « Récurrences » du tableau de bord)
+  const [materiel, setMateriel] = useState(() => searchParams.get('materiel') || '');
+  const [beneficiaire, setBeneficiaire] = useState(() => searchParams.get('beneficiaire') || '');
   const [recherche, setRecherche] = useState('');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -65,13 +69,13 @@ const HistoriqueInterventions = () => {
     setLoading(true);
     setError('');
     try {
-      setData(await getInterventions({ periode, date: dateParam(periode, dayjs(refKey)), types, technicien, source, bloque }));
+      setData(await getInterventions({ periode, date: dateParam(periode, dayjs(refKey)), types, technicien, source, bloque, materiel, beneficiaire }));
     } catch (err) {
       setError(err.message || 'Impossible de charger les interventions.');
     } finally {
       setLoading(false);
     }
-  }, [periode, refKey, types, technicien, source, bloque]);
+  }, [periode, refKey, types, technicien, source, bloque, materiel, beneficiaire]);
 
   useEffect(() => { charger(); }, [charger]);
 
@@ -96,6 +100,16 @@ const HistoriqueInterventions = () => {
   }, [data, recherche]);
 
   const stats = data?.stats;
+
+  // Libellé des filtres matériel / bénéficiaire, lu sur les interventions chargées
+  const libelleMateriel = useMemo(() => {
+    const it = (data?.interventions || []).find(i => String(i.id_materiels) === materiel);
+    return it?.materiel?.code_pc || `Matériel n°${materiel}`;
+  }, [data, materiel]);
+  const libelleBeneficiaire = useMemo(() => {
+    const it = (data?.interventions || []).find(i => String(i.id_n_beneficiaire) === beneficiaire && i.materiel?.id_n === i.id_n_beneficiaire);
+    return it ? `${beneficiaire} - ${it.materiel.utilisateur}` : `Utilisateur N°${beneficiaire}`;
+  }, [data, beneficiaire]);
 
   const handleSaved = (_saved, { ticketCloture } = {}) => {
     setModal({ show: false, intervention: null, prefill: null });
@@ -295,8 +309,18 @@ const HistoriqueInterventions = () => {
         <button type="button" aria-pressed={bloque} className={`itv-chip ${bloque ? 'is-active tone--danger' : ''}`} onClick={() => setBloque(b => !b)}>
           <FaUserSlash aria-hidden="true" /> Utilisateur bloqué
         </button>
-        {(types.length > 0 || technicien || source || bloque) && (
-          <button type="button" className="itv-link" onClick={() => { setTypes([]); setTechnicien(''); setSource(''); setBloque(false); }}>Réinitialiser</button>
+        {materiel && (
+          <button type="button" className="itv-chip is-active" aria-label={`Retirer le filtre ${libelleMateriel}`} onClick={() => setMateriel('')}>
+            {libelleMateriel} <FaTimes aria-hidden="true" />
+          </button>
+        )}
+        {beneficiaire && (
+          <button type="button" className="itv-chip is-active" aria-label={`Retirer le filtre ${libelleBeneficiaire}`} onClick={() => setBeneficiaire('')}>
+            {libelleBeneficiaire} <FaTimes aria-hidden="true" />
+          </button>
+        )}
+        {(types.length > 0 || technicien || source || bloque || materiel || beneficiaire) && (
+          <button type="button" className="itv-link" onClick={() => { setTypes([]); setTechnicien(''); setSource(''); setBloque(false); setMateriel(''); setBeneficiaire(''); }}>Réinitialiser</button>
         )}
       </div>
 
@@ -307,7 +331,7 @@ const HistoriqueInterventions = () => {
         <div className="itv-kpi"><span>Temps passé</span><strong>{stats ? formatDuree(stats.duree_totale) : '—'}</strong></div>
         <div className="itv-kpi"><span>Matériels concernés</span><strong>{stats?.materiels_concernes ?? '—'}</strong></div>
         <div className="itv-kpi"><span>Issues de tickets</span><strong>{stats?.depuis_tickets ?? '—'}</strong></div>
-        <div className="itv-kpi"><span>Utilisateur bloqué</span><strong>{stats?.utilisateurs_bloques ?? '—'}</strong></div>
+        <div className="itv-kpi"><span>Interventions bloquantes</span><strong>{stats?.interventions_bloquantes ?? '—'}</strong></div>
       </div>
 
       <div className="itv-grid">

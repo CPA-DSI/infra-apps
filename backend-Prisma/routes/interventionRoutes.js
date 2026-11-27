@@ -1,8 +1,9 @@
 // routes/interventionRoutes.js
 // Historique des interventions (réservé IT_ADMIN / DIRECTION).
-//   GET    /api/interventions?periode=jour|mois|annee&date=AAAA-MM-JJ[&types=&technicien=&source=&bloque=1]
+//   GET    /api/interventions?periode=jour|mois|annee&date=AAAA-MM-JJ[&types=&technicien=&source=&bloque=1&materiel=&beneficiaire=]
 //   GET    /api/interventions/stats?periode=&date= : statistiques seules (tableau de
 //          bord d'accueil) + totaux de la période précédente (« à date » si en cours)
+//          et sa série complète (courbe cumulée comparée)
 //   POST   /api/interventions        : le technicien est l'utilisateur connecté
 //   PUT    /api/interventions/:id    : uniquement ses propres interventions
 //   DELETE /api/interventions/:id    : idem, suppression logique (refusée pour
@@ -19,7 +20,8 @@ import { PERMISSIONS, hasPermission } from '../constants/roles.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import {
     INTERVENTION_TYPES, InterventionError, bornesPeriode, statistiques, nomTechnicien, lireBooleen,
-    fermerTicketDepuisIntervention, synchroniserFermeture, periodePrecedente,
+    fermerTicketDepuisIntervention, synchroniserFermeture, periodePrecedente, serieInterventions,
+    resumeBlocages, nommerRecurrences,
 } from '../services/interventionService.js';
 
 const router = express.Router();
@@ -137,6 +139,9 @@ router.get('/', requirePermission(PERMISSIONS.INTERVENTIONS_READ), asyncHandler(
         }
         if (req.query.source === 'TICKET' || req.query.source === 'MANUELLE') where.source = req.query.source;
         if (req.query.bloque === '1') where.utilisateur_bloque = true;
+        // Liens « Récurrences » du tableau de bord
+        if (req.query.materiel) where.id_materiels = entierOptionnel(req.query.materiel, 'materiel');
+        if (req.query.beneficiaire) where.id_n_beneficiaire = entierOptionnel(req.query.beneficiaire, 'beneficiaire');
 
         const interventions = await prisma.intervention.findMany({
             where,
@@ -148,7 +153,7 @@ router.get('/', requirePermission(PERMISSIONS.INTERVENTIONS_READ), asyncHandler(
             periode,
             debut,
             fin,
-            stats: statistiques(interventions, periode, debut),
+            stats: await nommerRecurrences(prisma, statistiques(interventions, periode, debut)),
             interventions: interventions.map(it => formatIntervention(it, req.user.id_n)),
         });
     } catch (err) {
@@ -160,6 +165,7 @@ router.get('/', requirePermission(PERMISSIONS.INTERVENTIONS_READ), asyncHandler(
 const SELECT_STATS = {
     date_intervention: true, duree_minutes: true, type: true, source: true,
     utilisateur_bloque: true, id_technicien: true, nom_technicien: true, id_materiels: true,
+    id_n_beneficiaire: true,
 };
 
 router.get('/stats', requirePermission(PERMISSIONS.INTERVENTIONS_READ), asyncHandler(async (req, res) => {
@@ -168,22 +174,25 @@ router.get('/stats', requirePermission(PERMISSIONS.INTERVENTIONS_READ), asyncHan
         const bornes = bornesPeriode(periode, req.query.date);
         const prec = periodePrecedente(periode, bornes);
 
-        const [courantes, precedentes] = await Promise.all([
+        // Période précédente lue en entier (courbe cumulée complète) ;
+        // les totaux, eux, s'arrêtent à prec.fin (« à date » si la période est en cours).
+        const [courantes, precedentesEntieres] = await Promise.all([
             prisma.intervention.findMany({
                 where: { date_suppression: null, date_intervention: { gte: bornes.debut, lt: bornes.fin } },
                 select: SELECT_STATS,
             }),
             prisma.intervention.findMany({
-                where: { date_suppression: null, date_intervention: { gte: prec.debut, lt: prec.fin } },
-                select: { duree_minutes: true, utilisateur_bloque: true },
+                where: { date_suppression: null, date_intervention: { gte: prec.debut, lt: bornes.debut } },
+                select: { date_intervention: true, duree_minutes: true, utilisateur_bloque: true, id_n_beneficiaire: true },
             }),
         ]);
+        const precedentes = precedentesEntieres.filter(it => it.date_intervention < prec.fin);
 
         res.json({
             periode,
             debut: bornes.debut,
             fin: bornes.fin,
-            stats: statistiques(courantes, periode, bornes.debut),
+            stats: await nommerRecurrences(prisma, statistiques(courantes, periode, bornes.debut)),
             precedent: {
                 debut: prec.debut,
                 fin: prec.fin,
@@ -191,7 +200,8 @@ router.get('/stats', requirePermission(PERMISSIONS.INTERVENTIONS_READ), asyncHan
                 a_venir: prec.aVenir,
                 total: precedentes.length,
                 duree_totale: precedentes.reduce((s, it) => s + (it.duree_minutes || 0), 0),
-                utilisateurs_bloques: precedentes.filter(it => it.utilisateur_bloque).length,
+                ...resumeBlocages(precedentes),
+                serie: serieInterventions(precedentesEntieres, periode, prec.debut),
             },
         });
     } catch (err) {

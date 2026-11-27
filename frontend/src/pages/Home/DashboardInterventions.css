@@ -217,6 +217,21 @@
     font-size: 0.8rem;
 }
 
+.dit-stat-detail {
+    color: var(--color-text-sub);
+    font-size: 0.75rem;
+    margin-top: -4px;
+}
+
+.dit-stat-detail strong {
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.dit-alerte {
+    color: var(--color-warning);
+}
+
 .dit-stat-footer {
     display: flex;
     align-items: center;
@@ -325,6 +340,152 @@
     opacity: 0.5;
 }
 
+/* ── Panneaux secondaires : types, techniciens, récurrences ───────────────────── */
+.dit-panels {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.dit-panels--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dit-empty--small {
+    height: 260px;
+}
+
+.dit-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.7) 0%, rgba(10, 15, 28, 0.6) 100%);
+    padding: 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(100, 116, 139, 0.15);
+}
+
+/* Techniciens */
+.dit-techs {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: minmax(0, max-content) minmax(40px, 1fr) max-content;
+    gap: 10px 12px;
+    align-items: center;
+    font-size: 0.8rem;
+}
+
+.dit-techs li {
+    display: contents;
+}
+
+.dit-tech-nom {
+    color: var(--dash-text);
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dit-tech-barre {
+    height: 12px;
+    background: rgba(100, 116, 139, 0.12);
+    border-radius: 0 4px 4px 0;
+}
+
+.dit-tech-barre span {
+    display: block;
+    height: 100%;
+    border-radius: 0 4px 4px 0;
+    background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+}
+
+.dit-tech-val {
+    color: var(--dash-text);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.dit-tech-val small {
+    color: var(--dash-text-sub);
+    font-size: 0.75rem;
+}
+
+/* Récurrences (matériels / utilisateurs) */
+.dit-segment--small {
+    padding: 3px;
+}
+
+.dit-segment--small button {
+    padding: 4px 10px;
+    font-size: 0.7rem;
+}
+
+.dit-recurrences {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.8rem;
+}
+
+.dit-recurrences button {
+    display: grid;
+    grid-template-columns: minmax(0, 150px) minmax(40px, 1fr) max-content;
+    gap: 12px;
+    align-items: center;
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.dit-recurrences button:hover,
+.dit-recurrences button:focus-visible {
+    background: rgba(99, 102, 241, 0.08);
+    border-color: rgba(99, 102, 241, 0.25);
+}
+
+.dit-rec-nom {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.dit-rec-nom strong,
+.dit-rec-nom small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dit-rec-nom strong {
+    color: var(--dash-text);
+    font-weight: 600;
+}
+
+.dit-rec-nom small {
+    color: var(--dash-text-sub);
+    font-size: 0.7rem;
+}
+
+.dit-rec-bloque {
+    margin-left: 6px;
+    color: var(--color-rose);
+    vertical-align: -1px;
+}
+
 /* ── États ────────────────────────────────────────────────────────────────── */
 .dit-body {
     transition: opacity 0.2s ease;
@@ -362,6 +523,15 @@
 @media (max-width: 1200px) {
     .dit-stats-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+    .dit-panels {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .dit-panels {
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 

@@ -304,7 +304,7 @@ describe('GET /api/interventions : filtre Jour / Mois / Année', () => {
     it('compte et filtre les interventions où l\'utilisateur n\'a pas pu travailler', async () => {
         await as(admin).post('/api/interventions').send(intervention({ date_intervention: '2026-11-20T10:00:00', utilisateur_bloque: true }));
         const tout = await as(admin).get('/api/interventions?periode=mois&date=2026-11');
-        expect(tout.body.stats).toMatchObject({ total: 4, utilisateurs_bloques: 1 });
+        expect(tout.body.stats).toMatchObject({ total: 4, interventions_bloquantes: 1, utilisateurs_bloques: 1, temps_bloque: 45 });
         const bloquees = await as(admin).get('/api/interventions?periode=mois&date=2026-11&bloque=1');
         expect(bloquees.body.stats).toMatchObject({ total: 1, utilisateurs_bloques: 1 });
     });
@@ -360,6 +360,58 @@ describe('GET /api/interventions/stats', () => {
         expect(res.body.stats).toMatchObject({ total: 3, duree_totale: 120, utilisateurs_bloques: 1 });
         expect(res.body.stats.serie).toHaveLength(30);
         expect(res.body.precedent).toMatchObject({ total: 2, duree_totale: 60, utilisateurs_bloques: 1, a_date: false, a_venir: false });
+    });
+
+    it('détaille bloquées par point, jour × heure, durée moyenne par type et série précédente', async () => {
+        await as(admin).post('/api/interventions').send(intervention({ date_intervention: '2025-11-05T11:00:00', type: 'DEPANNAGE', duree_minutes: null }));
+        const { stats, precedent } = (await as(admin).get('/api/interventions/stats?periode=mois&date=2025-11')).body;
+
+        expect(stats.serie[25]).toMatchObject({ index: 26, total: 1, duree: 45, bloquees: 1 });
+        expect(stats.serie[2].bloquees).toBe(0);
+        // 3 nov. = lundi 10 h, 4 nov. = mardi 10 h, 5 nov. = mercredi 11 h, 26 nov. = mercredi 9 h
+        expect(stats.par_jour_heure).toHaveLength(7);
+        expect(stats.par_jour_heure[0][10]).toBe(1);
+        expect(stats.par_jour_heure[1][10]).toBe(1);
+        expect(stats.par_jour_heure[2][9]).toBe(1);
+        expect(stats.par_jour_heure[2][11]).toBe(1);
+        expect(stats.par_jour_heure.flat().reduce((s, n) => s + n, 0)).toBe(4);
+        // Durée non renseignée : exclue de la moyenne
+        expect(stats.duree_moyenne_par_type).toMatchObject({ INSTALLATION: 40, DEPANNAGE: null, AUTRE: null });
+
+        expect(precedent.serie).toHaveLength(31);
+        expect(precedent.serie[4]).toMatchObject({ index: 5, total: 1, bloquees: 0 });
+        expect(precedent.serie[19]).toMatchObject({ index: 20, total: 1, bloquees: 1 });
+    });
+
+    it('utilisateurs bloqués distincts, temps de blocage, durées renseignées et récurrences', async () => {
+        const posteAlice = alice.materiel.id_materiels;
+        const depannage = (o) => intervention({ type: 'DEPANNAGE', id_materiels: posteAlice, ...o });
+        await as(admin).post('/api/interventions').send(depannage({ date_intervention: '2025-11-10T10:00:00', duree_minutes: 30, utilisateur_bloque: true }));
+        await as(admin).post('/api/interventions').send(depannage({ date_intervention: '2025-11-12T10:00:00', duree_minutes: 20, utilisateur_bloque: true }));
+        // Installation : travail planifié, hors récurrences
+        await as(admin).post('/api/interventions').send(intervention({ date_intervention: '2025-11-13T10:00:00', id_materiels: posteAlice }));
+        // Une seule intervention sur ce poste : pas une récurrence ; durée non renseignée
+        await as(admin).post('/api/interventions').send(depannage({ date_intervention: '2025-11-14T10:00:00', id_materiels: admin2.materiel.id_materiels, duree_minutes: null }));
+
+        const { stats, precedent } = (await as(admin).get('/api/interventions/stats?periode=mois&date=2025-11')).body;
+        // Bloquantes : les 2 d'Alice + celle du 26 nov. sans bénéficiaire
+        expect(stats).toMatchObject({
+            total: 7, avec_duree: 6, interventions_bloquantes: 3, utilisateurs_bloques: 2, temps_bloque: 95,
+        });
+        expect(stats.recurrences.materiels).toEqual([
+            { id: posteAlice, total: 2, duree: 50, bloquees: 2, libelle: alice.materiel.code_pc || `Matériel n°${posteAlice}`, detail: 'Utilisateur 10' },
+        ]);
+        expect(stats.recurrences.utilisateurs).toEqual([
+            { id: 10, total: 2, duree: 50, bloquees: 2, libelle: '10 - Utilisateur 10', detail: alice.materiel.code_pc ?? null },
+        ]);
+        expect(precedent).toMatchObject({ interventions_bloquantes: 1, utilisateurs_bloques: 1, temps_bloque: 30 });
+
+        // Liens du tableau de bord : historique filtré par matériel ou par bénéficiaire
+        const parPoste = await as(admin).get(`/api/interventions?periode=mois&date=2025-11&materiel=${posteAlice}`);
+        expect(parPoste.body.stats.total).toBe(3);
+        const parPersonne = await as(admin).get('/api/interventions?periode=mois&date=2025-11&beneficiaire=10');
+        expect(parPersonne.body.stats.total).toBe(3);
+        expect((await as(admin).get('/api/interventions?periode=mois&date=2025-11&materiel=abc')).status).toBe(400);
     });
 
     it('mêmes chiffres que la page Historique', async () => {

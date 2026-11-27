@@ -144,13 +144,15 @@ export const periodePrecedente = (periode, { debut, fin }, maintenant = new Date
 };
 
 // Série du graphique : par heure (jour), par jour (mois) ou par mois (année).
+// bloquees : interventions où l'utilisateur ne pouvait pas travailler.
 const serieVide = (periode, debut) => {
-    if (periode === 'annee') return Array.from({ length: 12 }, (_, i) => ({ index: i, total: 0, duree: 0 }));
+    const point = index => ({ index, total: 0, duree: 0, bloquees: 0 });
+    if (periode === 'annee') return Array.from({ length: 12 }, (_, i) => point(i));
     if (periode === 'mois') {
         const n = new Date(debut.getFullYear(), debut.getMonth() + 1, 0).getDate();
-        return Array.from({ length: n }, (_, i) => ({ index: i + 1, total: 0, duree: 0 }));
+        return Array.from({ length: n }, (_, i) => point(i + 1));
     }
-    return Array.from({ length: 24 }, (_, i) => ({ index: i, total: 0, duree: 0 }));
+    return Array.from({ length: 24 }, (_, i) => point(i));
 };
 
 const indexSerie = (periode, date) => {
@@ -159,19 +161,119 @@ const indexSerie = (periode, date) => {
     return date.getHours();
 };
 
+const ajouterAuPoint = (serie, periode, it) => {
+    const point = serie[indexSerie(periode, it.date_intervention)];
+    if (!point) return;
+    point.total += 1;
+    point.duree += it.duree_minutes || 0;
+    if (it.utilisateur_bloque) point.bloquees += 1;
+};
+
+// Série seule (courbe de la période précédente du tableau de bord).
+export const serieInterventions = (interventions, periode, debut) => {
+    const serie = serieVide(periode, debut);
+    for (const it of interventions) ajouterAuPoint(serie, periode, it);
+    return serie;
+};
+
+// Interventions où l'utilisateur n'a pas pu travailler :
+//  - interventions_bloquantes : nombre d'interventions cochées
+//  - utilisateurs_bloques : personnes distinctes (id_n_beneficiaire) ; une intervention
+//    bloquante sans bénéficiaire renseigné compte pour une personne à part
+//  - temps_bloque : durée cumulée de ces interventions (minutes)
+export const resumeBlocages = (interventions) => {
+    const beneficiaires = new Set();
+    let bloquantes = 0;
+    let sansBeneficiaire = 0;
+    let tempsBloque = 0;
+    for (const it of interventions) {
+        if (!it.utilisateur_bloque) continue;
+        bloquantes += 1;
+        tempsBloque += it.duree_minutes || 0;
+        if (it.id_n_beneficiaire === null || it.id_n_beneficiaire === undefined) sansBeneficiaire += 1;
+        else beneficiaires.add(it.id_n_beneficiaire);
+    }
+    return {
+        interventions_bloquantes: bloquantes,
+        utilisateurs_bloques: beneficiaires.size + sansBeneficiaire,
+        temps_bloque: tempsBloque,
+    };
+};
+
+// Travaux planifiés : ne signalent pas un matériel ou un utilisateur « à problème »
+export const TYPES_PLANIFIES = ['INSTALLATION', 'PREVENTIF', 'DEMENAGEMENT'];
+export const RECURRENCES_MAX = 5;
+
+// Matériels / bénéficiaires revenant au moins deux fois (hors travaux planifiés),
+// les plus fréquents d'abord.
+const recurrences = (interventions, champ) => {
+    const parCle = new Map();
+    for (const it of interventions) {
+        const id = it[champ];
+        if (id === null || id === undefined || TYPES_PLANIFIES.includes(it.type)) continue;
+        const r = parCle.get(id) || { id, total: 0, duree: 0, bloquees: 0 };
+        r.total += 1;
+        r.duree += it.duree_minutes || 0;
+        if (it.utilisateur_bloque) r.bloquees += 1;
+        parCle.set(id, r);
+    }
+    return [...parCle.values()]
+        .filter(r => r.total >= 2)
+        .sort((a, b) => b.total - a.total || b.duree - a.duree || a.id - b.id)
+        .slice(0, RECURRENCES_MAX);
+};
+
+// Libellés des récurrences (code PC, nom de l'utilisateur), lus en une requête :
+// le nom d'une personne vient de sa fiche matériel, comme nomTechnicien.
+export const nommerRecurrences = async (tx, stats) => {
+    const { materiels, utilisateurs } = stats.recurrences;
+    if (!materiels.length && !utilisateurs.length) return stats;
+    const fiches = await tx.materiels.findMany({
+        where: {
+            OR: [
+                { id_materiels: { in: materiels.map(m => m.id) } },
+                { id_n: { in: utilisateurs.map(u => u.id) } },
+            ],
+        },
+        select: { id_materiels: true, id_n: true, code_pc: true, utilisateur: true },
+    });
+    const parMateriel = new Map(fiches.map(f => [f.id_materiels, f]));
+    const parPersonne = new Map(fiches.filter(f => f.id_n !== null).map(f => [f.id_n, f]));
+    stats.recurrences = {
+        materiels: materiels.map(m => {
+            const f = parMateriel.get(m.id);
+            return { ...m, libelle: f?.code_pc || `Matériel n°${m.id}`, detail: f?.utilisateur || null };
+        }),
+        utilisateurs: utilisateurs.map(u => {
+            const f = parPersonne.get(u.id);
+            return { ...u, libelle: f?.utilisateur ? `${u.id} - ${f.utilisateur}` : `N°${u.id}`, detail: f?.code_pc || null };
+        }),
+    };
+    return stats;
+};
+
 export const statistiques = (interventions, periode, debut) => {
     const serie = serieVide(periode, debut);
     const parType = Object.fromEntries(INTERVENTION_TYPES.map(t => [t, 0]));
+    // Moyenne calculée sur les seules interventions dont la durée est renseignée
+    const dureesType = Object.fromEntries(INTERVENTION_TYPES.map(t => [t, { duree: 0, n: 0 }]));
+    // Lundi = 0 … dimanche = 6, puis heure 0-23
+    const parJourHeure = Array.from({ length: 7 }, () => Array(24).fill(0));
     const parTechnicien = new Map();
     const materiels = new Set();
     let dureeTotale = 0;
-    let bloquantes = 0;
+    let avecDuree = 0;
 
     for (const it of interventions) {
         const duree = it.duree_minutes || 0;
-        if (it.utilisateur_bloque) bloquantes += 1;
-        const point = serie[indexSerie(periode, it.date_intervention)];
-        if (point) { point.total += 1; point.duree += duree; }
+        ajouterAuPoint(serie, periode, it);
+        const d = it.date_intervention;
+        parJourHeure[(d.getDay() + 6) % 7][d.getHours()] += 1;
+        if (it.duree_minutes !== null && it.duree_minutes !== undefined) {
+            avecDuree += 1;
+            dureesType[it.type].duree += it.duree_minutes;
+            dureesType[it.type].n += 1;
+        }
         parType[it.type] += 1;
         dureeTotale += duree;
         if (it.id_materiels) materiels.add(it.id_materiels);
@@ -185,11 +287,20 @@ export const statistiques = (interventions, periode, debut) => {
     return {
         total: interventions.length,
         duree_totale: dureeTotale,
+        // Interventions dont la durée est renseignée : base de la durée moyenne
+        avec_duree: avecDuree,
         materiels_concernes: materiels.size,
         depuis_tickets: interventions.filter(it => it.source === 'TICKET').length,
-        utilisateurs_bloques: bloquantes,
+        ...resumeBlocages(interventions),
         par_type: parType,
+        duree_moyenne_par_type: Object.fromEntries(Object.entries(dureesType)
+            .map(([t, { duree, n }]) => [t, n ? Math.round(duree / n) : null])),
+        par_jour_heure: parJourHeure,
         par_technicien: [...parTechnicien.values()].sort((a, b) => b.duree - a.duree || b.total - a.total),
+        recurrences: {
+            materiels: recurrences(interventions, 'id_materiels'),
+            utilisateurs: recurrences(interventions, 'id_n_beneficiaire'),
+        },
         serie,
     };
 };
