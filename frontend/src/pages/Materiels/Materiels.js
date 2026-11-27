@@ -16,6 +16,7 @@ import HistoriqueModal from './HistoriqueModal';
 import EcransModal from './EcransModal';
 import CorbeilleModal from './CorbeilleModal';
 import SearchableSelect from '../../components/SearchableSelect/SearchableSelect';
+import DateRangeFilter, { EMPTY_RANGE, isRangeActive, matchesDateRange } from '../../components/DateRangeFilter/DateRangeFilter';
 import PageHeader from '../../components/PageHeader/PageHeader';
 import ExcelImportPanel from '../../components/ExcelImportPanel/ExcelImportPanel';
 import { paginationOptions } from '../../styles/dataTableTheme';
@@ -58,7 +59,7 @@ const [filterEtat, setFilterEtat] = useState('');
 const [filterEquipe, setFilterEquipe] = useState('');
 const [filterNomLocal, setFilterNomLocal] = useState('');
 const [filterMarque, setFilterMarque] = useState('');
-const [filterYear, setFilterYear] = useState('');
+const [filterPeriode, setFilterPeriode] = useState(EMPTY_RANGE);
 const [filterEstActif, setFilterEstActif] = useState('');
 const [selectedMateriel, setSelectedMateriel] = useState(null);
 const [modalType, setModalType] = useState(null);
@@ -109,7 +110,7 @@ const handleCloseAddMarque = useCallback(() => {
 }, [fetchMateriels]);
 
 const handleResetFilters = useCallback(() => {
-    setSearchTerm(''); setFilterEtat(''); setFilterEquipe(''); setFilterNomLocal(''); setFilterMarque(''); setFilterYear(''); setFilterEstActif('');
+    setSearchTerm(''); setFilterEtat(''); setFilterEquipe(''); setFilterNomLocal(''); setFilterMarque(''); setFilterPeriode(EMPTY_RANGE); setFilterEstActif('');
 }, []);
 
 const handleMaterialAdded = useCallback(() => {
@@ -243,16 +244,13 @@ const materielsHorsEtat = useMemo(() => {
         const marqueMatch = !filterMarque || nom_marque === filterMarque;
         const estActifMatch = !filterEstActif || estActifLabel === filterEstActif;
 
-        const datePc = materiel.date_pc ? new Date(materiel.date_pc) : null;
-        const yearValue = datePc ? datePc.getFullYear() : null;
-        const yearMatch = !filterYear ||
-            (filterYear === 'none' ? !materiel.date_pc : yearValue === parseInt(filterYear, 10));
+        const periodeMatch = matchesDateRange(materiel.date_pc, filterPeriode);
 
         const userMatch = userRole !== 'USER' || (id_n_string === userIdN);
 
-        return searchMatch && equipeMatch && nomLocalMatch && marqueMatch && yearMatch && estActifMatch && userMatch;
+        return searchMatch && equipeMatch && nomLocalMatch && marqueMatch && periodeMatch && estActifMatch && userMatch;
     });
-}, [materiels, searchTerm, filterEquipe, filterNomLocal, filterMarque, filterYear, filterEstActif, userRole, userIdN]);
+}, [materiels, searchTerm, filterEquipe, filterNomLocal, filterMarque, filterPeriode, filterEstActif, userRole, userIdN]);
 
 const filteredMateriels = useMemo(
     () => materielsHorsEtat.filter(m => matchesEtat(m, filterEtat)),
@@ -455,7 +453,7 @@ const renderMaterielCard = useCallback((row) => (
 const importExport = useMaterielImportExport({ materiels, filteredMateriels, filterNomLocal, fetchMateriels, setFilterMarque });
 const { showImportSection, isImporting, toggleImportSection, handleExportExcel, handleExportByLocal } = importExport;
 
-const hasActiveFilters = Boolean(searchTerm || filterEtat || filterEquipe || filterNomLocal || filterMarque || filterYear || filterEstActif);
+const hasActiveFilters = Boolean(searchTerm || filterEtat || filterEquipe || filterNomLocal || filterMarque || isRangeActive(filterPeriode) || filterEstActif);
 const filterClass = (value) => `filter-pill ${value ? 'is-active' : ''}`;
 
 // --- Rendu du JSX ---
@@ -613,14 +611,12 @@ return (
                     </div>
 
                     <div className="col-6 col-md-4 col-lg">
-                        <SearchableSelect
-                            value={filterYear}
-                            onChange={setFilterYear}
-                            placeholder="Années"
-                            options={[
-                                ...[...new Set(materiels.map(m => m.date_pc ? new Date(m.date_pc).getFullYear() : null).filter(y => y !== null))].sort((a, b) => b - a).map(year => ({ value: String(year), label: String(year) }))
-                            ]}
-                            styleClass={filterClass(filterYear)}
+                        <DateRangeFilter
+                            value={filterPeriode}
+                            onChange={setFilterPeriode}
+                            placeholder="Date PC"
+                            years={[...new Set(materiels.map(m => m.date_pc ? new Date(m.date_pc).getFullYear() : null).filter(y => y !== null))].sort((a, b) => b - a)}
+                            styleClass={filterClass(isRangeActive(filterPeriode))}
                         />
                     </div>
 

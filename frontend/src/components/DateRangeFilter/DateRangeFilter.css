@@ -1,0 +1,220 @@
+/* ============================================================
+   DateRangeFilter — filtre de période (raccourcis + dates fixes)
+   ============================================================ */
+
+.drf {
+  position: relative;
+}
+
+.drf-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 14px;
+  padding-right: 14px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.drf-icon {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+
+.drf-label {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.drf-arrow {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  opacity: 0.5;
+}
+
+/* ---- Fenêtre ---- */
+.drf-popover {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: var(--z-dropdown);
+  width: 560px;
+  max-width: calc(100vw - 32px);
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+.drf-body {
+  display: flex;
+  max-height: 440px;
+}
+
+.drf-presets {
+  flex: 0 0 190px;
+  padding: 8px 0;
+  overflow-y: auto;
+  border-right: 1px solid var(--color-border);
+}
+
+.drf-fixed {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 0;
+  overflow-y: auto;
+}
+
+.drf-group {
+  padding: 4px 0;
+}
+
+.drf-group-title {
+  padding: 4px 14px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.drf-group-title--section {
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.75rem;
+  color: var(--color-text-sub);
+}
+
+/* ---- Raccourcis ---- */
+.drf-preset {
+  display: block;
+  width: 100%;
+  padding: 7px 14px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 0.85rem;
+  color: var(--color-text-body);
+  cursor: pointer;
+}
+
+.drf-preset:hover {
+  background-color: var(--color-border-light);
+}
+
+.drf-preset.is-selected {
+  background-color: var(--color-primary-soft-strong);
+  color: var(--color-primary-darker);
+  font-weight: 600;
+}
+
+.drf-years {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 0 10px;
+}
+
+.drf-years .drf-preset {
+  width: auto;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+}
+
+/* ---- Période fixe ---- */
+.drf-dates {
+  display: flex;
+  margin-bottom: 4px;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 14px;
+}
+
+.drf-dates input {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8rem;
+}
+
+.drf-sep {
+  color: var(--color-text-muted);
+}
+
+.drf-error {
+  padding: 4px 14px 0;
+  font-size: 0.75rem;
+  color: var(--color-danger);
+}
+
+/* ---- Pied ---- */
+.drf-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--color-border);
+}
+
+/* ---- Calendrier (react-day-picker) ---- */
+.drf-calendar {
+  --rdp-accent-color: var(--color-primary);
+  --rdp-accent-background-color: var(--color-primary-soft);
+  --rdp-day-height: 36px;
+  --rdp-day-width: 36px;
+  --rdp-day_button-height: 34px;
+  --rdp-day_button-width: 34px;
+  --rdp-day_button-border-radius: var(--radius-sm);
+  --rdp-nav-height: 36px;
+  --rdp-nav_button-height: 30px;
+  --rdp-nav_button-width: 30px;
+
+  display: flex;
+  justify-content: center;
+  padding: 6px 10px 0;
+  font-size: 0.85rem;
+}
+
+.drf-calendar .rdp-caption_label,
+.drf-calendar .rdp-dropdowns {
+  font-size: 0.9rem;
+  text-transform: capitalize;
+}
+
+.drf-calendar .rdp-weekday {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  text-transform: capitalize;
+}
+
+/* ---- Mobile : colonnes empilées ---- */
+@media (width <= 575.98px) {
+  .drf-body {
+    flex-direction: column;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  .drf-presets {
+    flex-basis: auto;
+    overflow-y: visible;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .drf-fixed {
+    overflow-y: visible;
+  }
+
+  .drf-calendar {
+    --rdp-day-height: 34px;
+    --rdp-day-width: 34px;
+    --rdp-day_button-height: 32px;
+    --rdp-day_button-width: 32px;
+  }
+}
