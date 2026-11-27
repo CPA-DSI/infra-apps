@@ -11,7 +11,8 @@ import {
 import { getInterventionStats } from '../../services/api';
 import { cssVar } from '../../styles/cssVar';
 import {
-  PERIODES, TYPE_CONFIG, INTERVENTION_TYPES, dateParam, decaler, libellePeriode, estPeriodeCourante, libelleSerie, formatDuree,
+  PERIODES, TYPE_CONFIG, INTERVENTION_TYPES, dateParam, decaler, libellePeriode, estPeriodeCourante, estPeriodeFuture,
+  libelleSerie, formatDuree,
 } from '../Interventions/interventionConfig';
 import './DashboardInterventions.css';
 
@@ -19,11 +20,14 @@ const ZOOM = { annee: 'mois', mois: 'jour' };
 // Granularité de la série selon la période
 const UNITE_SERIE = { annee: 'mois', mois: 'jour', jour: 'heure' };
 const LIBELLE_PRECEDENT = { jour: 'Veille', mois: 'Mois préc.', annee: 'Année préc.' };
-const COMPARAISON = { jour: 'la veille', mois: 'le mois précédent', annee: "l'année précédente" };
-const CUMUL_VS = { jour: 'à la veille', mois: 'au mois précédent', annee: "à l'année précédente" };
+// « comparée au mois précédent », « Cumul comparé à la veille »…
+const COMPARE_A = { jour: 'à la veille', mois: 'au mois précédent', annee: "à l'année précédente" };
 const FONT ="'Inter Variable', system-ui, sans-serif";
 
 const fmt = (n) => Number(n || 0).toLocaleString('fr-FR');
+
+// Pourcentage signé au format français : « +50,0 % », « -12,5 % », « 0,0 % ».
+export const formatVariation = (v) => `${v > 0 ? '+' : ''}${v.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} %`;
 
 // Variation en % ; null = pas de base de comparaison (période précédente à zéro).
 export const variation = (courant, precedent) => {
@@ -46,7 +50,7 @@ const Tendance = ({ valeur, sens, indisponible }) => {
   return (
     <span className={`dit-trend ${classe}`}>
       {valeur !== 0 && (hausse ? <FaArrowUp aria-hidden="true" /> : <FaArrowDown aria-hidden="true" />)}
-      {hausse ? '+' : ''}{valeur.toFixed(1)}%
+      {formatVariation(valeur)}
     </span>
   );
 };
@@ -184,7 +188,9 @@ const Recurrences = ({ recurrences, materielsConcernes, onSelect }) => {
       </div>
       <span className="dit-hint">
         2 interventions ou plus, hors travaux planifiés
-        {onglet === 'materiels' ? ` · ${fmt(materielsConcernes)} matériel${materielsConcernes > 1 ? 's' : ''} concerné${materielsConcernes > 1 ? 's' : ''} au total` : ''}
+        {onglet === 'materiels' && materielsConcernes > 0
+          ? ` · sur ${fmt(materielsConcernes)} matériel${materielsConcernes > 1 ? 's' : ''} ayant eu une intervention`
+          : ''}
       </span>
       {lignes.length ? (
         <ul className="dit-recurrences">
@@ -270,7 +276,7 @@ const CumulCompare = ({ serie, seriePrec, periode, refDate }) => {
   return (
     <div className="dit-panel">
       <div className="dit-chart-head">
-        <h3>Cumul comparé {CUMUL_VS[periode]}</h3>
+        <h3>Cumul comparé {COMPARE_A[periode]}</h3>
       </div>
       <Chart type="line" height={260} series={config.series} options={config.options} />
     </div>
@@ -285,7 +291,7 @@ const BloquantesSerie = ({ serie, periode, totalBloquees }) => {
     return {
       series: [
         { name: 'Bloquante', data: serie.map(p => p.bloquees || 0) },
-        { name: 'Non bloquant', data: serie.map(p => p.total - (p.bloquees || 0)) },
+        { name: 'Non bloquante', data: serie.map(p => p.total - (p.bloquees || 0)) },
       ],
       options: {
         ...base,
@@ -424,25 +430,39 @@ const DashboardInterventions = () => {
     setLoading(true);
     setError(null);
     getInterventionStats({ periode, date: dateParam(periode, dayjs(refKey)) })
-      .then(d => { if (!annule) setData(d); })
+      // La réponse garde la période qui l'a produite (voir vuePeriode ci-dessous)
+      .then(d => { if (!annule) setData({ ...d, periode, refKey }); })
       .catch(err => { if (!annule) setError(err.message || 'Chargement impossible.'); })
       .finally(() => { if (!annule) setLoading(false); });
     return () => { annule = true; };
   }, [periode, refKey]);
 
+  // Période des données affichées : celle de la dernière réponse reçue. Pendant le
+  // chargement d'une autre période, cartes et graphiques restent ainsi cohérents
+  // avec leurs données (sinon une série journalière serait libellée en mois, etc.).
+  const vuePeriode = data?.periode ?? periode;
+  const vueRefKey = data?.refKey ?? refKey;
+  const vueRef = useMemo(() => dayjs(vueRefKey), [vueRefKey]);
+
   const allerA = useCallback((p, d) => { setPeriode(p); setRef(d); }, []);
-  const voirHistorique = useCallback((filtre = '') => {
-    navigate(`/HistoriqueInterventions?periode=${periode}&date=${refKey}${filtre}`);
-  }, [navigate, periode, refKey]);
-  const voirType = useCallback((type) => { if (type) voirHistorique(`&type=${type}`); }, [voirHistorique]);
-  const voirRecurrence = useCallback((param, id) => voirHistorique(`&${param}=${id}`), [voirHistorique]);
+  const ouvrirHistorique = useCallback((p, date, filtre = '') => {
+    navigate(`/HistoriqueInterventions?periode=${p}&date=${date}${filtre}`);
+  }, [navigate]);
+  const voirType = useCallback((type) => {
+    if (type) ouvrirHistorique(vuePeriode, vueRefKey, `&type=${type}`);
+  }, [ouvrirHistorique, vuePeriode, vueRefKey]);
+  const voirRecurrence = useCallback((param, id) => {
+    ouvrirHistorique(vuePeriode, vueRefKey, `&${param}=${id}`);
+  }, [ouvrirHistorique, vuePeriode, vueRefKey]);
 
   const stats = data?.stats;
   const prec = data?.precedent;
-  const precedentLabel = `${LIBELLE_PRECEDENT[periode]}${prec?.a_date ? ' (à date)' : ''}`;
+  const precedentLabel = `${LIBELLE_PRECEDENT[vuePeriode]}${prec?.a_date ? ' (à date)' : ''}`;
   const indisponible = Boolean(prec?.a_venir);
 
   const chart = useMemo(() => {
+    const periode = vuePeriode;
+    const ref = vueRef;
     const serie = stats?.serie || [];
     const primary = cssVar('--color-primary');
     const warning = cssVar('--color-warning');
@@ -498,9 +518,11 @@ const DashboardInterventions = () => {
         },
       },
     };
-  }, [stats, periode, ref, allerA]);
+  }, [stats, vuePeriode, vueRef, allerA]);
 
   const renderCorps = () => {
+    const periode = vuePeriode;
+    const ref = vueRef;
     if (error) return <div className="dit-state dit-state--error" role="alert">Erreur : {error}</div>;
     if (!data) {
       return (
@@ -589,7 +611,7 @@ const DashboardInterventions = () => {
               Interventions <span className="dit-periode">{libellePeriode(periode, ref)}</span>
             </h2>
             <p className="dit-subtitle">
-              Activité du service informatique&nbsp;•&nbsp;comparée à {COMPARAISON[periode]}
+              Activité du service informatique&nbsp;•&nbsp;comparée {COMPARE_A[vuePeriode]}
               {prec?.a_date ? ' à la même date' : ''}
             </p>
           </div>
@@ -607,10 +629,11 @@ const DashboardInterventions = () => {
           <div className="dit-segment">
             <button type="button" onClick={() => setRef(decaler(periode, ref, -1))} aria-label="Période précédente"><FaChevronLeft /></button>
             <button type="button" disabled={estPeriodeCourante(periode, ref)} onClick={() => setRef(dayjs())}>Aujourd'hui</button>
-            <button type="button" onClick={() => setRef(decaler(periode, ref, 1))} aria-label="Période suivante"><FaChevronRight /></button>
+            <button type="button" disabled={estPeriodeFuture(periode, decaler(periode, ref, 1))}
+              onClick={() => setRef(decaler(periode, ref, 1))} aria-label="Période suivante"><FaChevronRight /></button>
           </div>
           <button type="button" className="dit-link"
-            onClick={() => voirHistorique()}>
+            onClick={() => ouvrirHistorique(periode, refKey)}>
             Voir le détail <FaArrowRight aria-hidden="true" />
           </button>
         </div>

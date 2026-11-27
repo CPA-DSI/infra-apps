@@ -3,7 +3,7 @@ import path from 'path';
 import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { prisma, resetDatabase, createUser, createTicket, createLocal } from './helpers/db.js';
 import { as } from './helpers/http.js';
-import { periodePrecedente, bornesPeriode } from '../services/interventionService.js';
+import { periodePrecedente, bornesPeriode, statistiques } from '../services/interventionService.js';
 
 let admin;
 let admin2;
@@ -344,6 +344,30 @@ describe('Tableau de bord : période précédente', () => {
     });
 });
 
+// Le fuseau est imposé par timezone.js (tests/setup.js, server.js) : ces
+// résultats ne dépendent pas du fuseau de la machine (essayer avec TZ=UTC).
+describe('Fuseau de Madagascar (UTC+03)', () => {
+    it('le processus tourne en Indian/Antananarivo', () => {
+        expect(process.env.TZ).toBe('Indian/Antananarivo');
+    });
+
+    it('une journée commence à minuit heure de Madagascar (21:00 UTC la veille)', () => {
+        const { debut, fin } = bornesPeriode('jour', '2026-11-28');
+        expect(debut.toISOString()).toBe('2026-11-27T21:00:00.000Z');
+        expect(fin.toISOString()).toBe('2026-11-28T21:00:00.000Z');
+        expect(bornesPeriode('mois', '2026-12').debut.toISOString()).toBe('2026-11-30T21:00:00.000Z');
+    });
+
+    it('heures de pointe et série par heure en heure de Madagascar', () => {
+        // Vendredi 27/11 22:30 UTC = samedi 28/11 01:30 à Madagascar
+        const it0 = { date_intervention: new Date('2026-11-27T22:30:00Z'), type: 'DEPANNAGE', duree_minutes: 15 };
+        const { debut } = bornesPeriode('jour', '2026-11-28');
+        const stats = statistiques([it0], 'jour', debut);
+        expect(stats.par_jour_heure[5][1]).toBe(1); // samedi (5), 1 h
+        expect(stats.serie[1].total).toBe(1);
+    });
+});
+
 describe('GET /api/interventions/stats', () => {
     beforeEach(async () => {
         await as(admin).post('/api/interventions').send(intervention({ date_intervention: '2025-10-05T09:00:00', duree_minutes: 30 }));
@@ -402,7 +426,7 @@ describe('GET /api/interventions/stats', () => {
             { id: posteAlice, total: 2, duree: 50, bloquees: 2, libelle: alice.materiel.code_pc || `Matériel n°${posteAlice}`, detail: 'Utilisateur 10' },
         ]);
         expect(stats.recurrences.utilisateurs).toEqual([
-            { id: 10, total: 2, duree: 50, bloquees: 2, libelle: '10 - Utilisateur 10', detail: alice.materiel.code_pc ?? null },
+            { id: 10, total: 2, duree: 50, bloquees: 2, libelle: 'Utilisateur 10', detail: alice.materiel.code_pc ?? null },
         ]);
         expect(precedent).toMatchObject({ interventions_bloquantes: 1, utilisateurs_bloques: 1, temps_bloque: 30 });
 

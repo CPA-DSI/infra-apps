@@ -37,6 +37,9 @@ export const libellePeriode = (periode, ref) => {
 
 export const estPeriodeCourante = (periode, ref) => ref.isSame(dayjs(), UNITE[periode]);
 
+// Période entièrement à venir (commence après maintenant) : rien à afficher.
+export const estPeriodeFuture = (periode, ref) => ref.startOf(UNITE[periode]).isAfter(dayjs());
+
 // Libellés de l'axe du graphique (série renvoyée par l'API).
 export const libelleSerie = (periode, index) => {
   if (periode === 'annee') return dayjs().month(index).locale('fr').format('MMM');

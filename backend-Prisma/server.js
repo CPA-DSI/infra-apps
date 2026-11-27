@@ -1,4 +1,6 @@
 import 'dotenv/config';
+// Fuseau de l'entreprise imposé avant tout calcul de date (voir timezone.js)
+import './timezone.js';
 import prisma from './prismaClient.js';
 import { reloadCronTasks } from './cron-worker.js';
 import { assertPassMailEncryptionKeyConfigured } from './services/passMailCrypto.js';

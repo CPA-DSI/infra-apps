@@ -246,7 +246,8 @@ export const nommerRecurrences = async (tx, stats) => {
         }),
         utilisateurs: utilisateurs.map(u => {
             const f = parPersonne.get(u.id);
-            return { ...u, libelle: f?.utilisateur ? `${u.id} - ${f.utilisateur}` : `N°${u.id}`, detail: f?.code_pc || null };
+            // Nom seul : l'identifiant interne n'apporte rien (homonymes distingués par le poste en détail)
+            return { ...u, libelle: f?.utilisateur || `Utilisateur n°${u.id}`, detail: f?.code_pc || null };
         }),
     };
     return stats;

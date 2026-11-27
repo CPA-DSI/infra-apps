@@ -5,6 +5,9 @@ import { loadTestEnv, assertTestDatabaseUrl } from './helpers/testEnv.js';
 loadTestEnv();
 assertTestDatabaseUrl();
 
+// Même fuseau qu'en production (server.js), quel que soit celui de la machine de test
+await import('../timezone.js');
+
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
     throw new Error('JWT_SECRET (>= 32 caractères) doit être défini pour les tests (.env.test ou variables CI).');
 }

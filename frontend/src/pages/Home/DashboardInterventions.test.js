@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 import dayjs from 'dayjs';
-import DashboardInterventions, { variation } from './DashboardInterventions';
+import DashboardInterventions, { variation, formatVariation } from './DashboardInterventions';
 import { getInterventionStats } from '../../services/api';
 
 vi.mock('react-apexcharts', () => ({ default: () => null }));
@@ -37,6 +37,12 @@ describe('variation', () => {
     expect(variation(0, 0)).toBe(0);
     expect(variation(3, 0)).toBeNull();
   });
+
+  test('formatVariation : format français signé', () => {
+    expect(formatVariation(50)).toBe('+50,0 %');
+    expect(formatVariation(-12.345)).toBe('-12,3 %');
+    expect(formatVariation(0)).toBe('0,0 %');
+  });
 });
 
 describe('DashboardInterventions', () => {
@@ -50,8 +56,8 @@ describe('DashboardInterventions', () => {
     expect(await screen.findByText('12')).toBeTruthy();
     expect(screen.getByText('07:30')).toBeTruthy();
     expect(screen.getByText('05:00')).toBeTruthy();
-    expect(screen.getAllByText('+50.0%')).toHaveLength(2);
-    expect(screen.getByText('-50.0%').className).toMatch(/positive/);
+    expect(screen.getAllByText('+50,0 %')).toHaveLength(2);
+    expect(screen.getByText('-50,0 %').className).toMatch(/positive/);
     expect(screen.getAllByText(/Mois préc\. \(à date\)/)).toHaveLength(3);
     // Utilisateurs distincts, pas interventions
     expect(screen.getByText('utilisateurs')).toBeTruthy();
@@ -106,7 +112,7 @@ describe('DashboardInterventions', () => {
 
     expect(await screen.findByText('Récurrences')).toBeTruthy();
     expect(screen.getByText('PC-COMPTA-07')).toBeTruthy();
-    expect(screen.getByText(/3 matériels concernés au total/)).toBeTruthy();
+    expect(screen.getByText(/sur 3 matériels ayant eu une intervention/)).toBeTruthy();
     expect(screen.getByLabelText('2 bloquantes')).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Utilisateurs' }));
@@ -137,6 +143,35 @@ describe('DashboardInterventions', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Jour' }));
     await waitFor(() => expect(screen.getByText('Cumul comparé à la veille')).toBeTruthy());
     expect(screen.queryByText('Heures de pointe')).toBeNull();
+  });
+
+  test('pendant le chargement d\'une autre période, les données restent libellées selon leur période', async () => {
+    getInterventionStats.mockResolvedValueOnce(reponse({ total: 2 }, { total: 1 }));
+    let resoudre;
+    getInterventionStats.mockReturnValueOnce(new Promise(r => { resoudre = r; }));
+    afficher();
+    expect((await screen.findAllByText(/Mois préc\./)).length).toBe(3);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Année' }));
+    // Réponse annuelle pas encore reçue : les cartes du mois gardent leur libellé
+    expect(screen.getAllByText(/Mois préc\./)).toHaveLength(3);
+    expect(screen.queryByText(/Année préc\./)).toBeNull();
+    expect(screen.getByText(/comparée au mois précédent à la même date/)).toBeTruthy();
+
+    resoudre(reponse({ total: 30 }, { total: 20, a_date: true }));
+    expect((await screen.findAllByText(/Année préc\. \(à date\)/)).length).toBe(3);
+    expect(screen.getByText(/comparée à l'année précédente à la même date/)).toBeTruthy();
+  });
+
+  test('« Période suivante » désactivé sur la période en cours, actif sur une période passée', async () => {
+    getInterventionStats.mockResolvedValue(reponse({}));
+    afficher();
+    await screen.findByText(/Aucune intervention/);
+    const suivante = screen.getByRole('button', { name: 'Période suivante' });
+    expect(suivante.disabled).toBe(true);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Période précédente' }));
+    expect(suivante.disabled).toBe(false);
   });
 
   test('sans intervention, les panneaux secondaires ne sont pas affichés', async () => {
