@@ -396,3 +396,77 @@ describe('POST /api/materiels_all/:id/affecter — bénéficiaire qui a déjà u
         });
     });
 });
+
+describe('POST /api/ecrans/:id/affecter — réaffectation d\'un écran', () => {
+    let bob;
+
+    beforeEach(async () => {
+        bob = await createUser({ idN: 20, withMateriel: true });
+    });
+
+    const pcAlice = () => alice.materiel.id_materiels;
+    const pcBob = () => bob.materiel.id_materiels;
+    const creerEcran = (code, id_materiels) => prisma.ecran.create({ data: { code_ecran: code, id_materiels, statut: 'AFFECTE' } });
+    const relireEcran = (ecran) => prisma.ecran.findUnique({ where: { id_ecran: ecran.id_ecran } });
+    const relirePC = (id) => prisma.materiels.findUnique({ where: { id_materiels: id } });
+
+    it.each(['EN_REPARATION', 'REFORME'])("mode « stock » : l'écran remplacé part avec le statut %s", async (statut) => {
+        const ecranAlice = await creerEcran('ECR-ALICE', pcAlice());
+        const ecranBob = await creerEcran('ECR-BOB', pcBob());
+
+        const res = await as(admin).post(`/api/ecrans/${ecranAlice.id_ecran}/affecter`)
+            .send({ id_materiels: pcBob(), mode_conflit: 'stock', statut_ancien_ecran: statut, motif: 'Panne' });
+
+        expect(res.status).toBe(200);
+        expect(await relireEcran(ecranAlice)).toMatchObject({ id_materiels: pcBob(), statut: 'AFFECTE' });
+        expect(await relireEcran(ecranBob)).toMatchObject({ id_materiels: null, statut });
+        expect(await relirePC(pcBob())).toMatchObject({ code_ecran: 'ECR-ALICE' });
+        expect(await relirePC(pcAlice())).toMatchObject({ code_ecran: null });
+
+        const [aff] = await prisma.affectationMateriel.findMany({
+            where: { type_affectation: 'ECRAN', id_ecran: ecranBob.id_ecran, date_fin: null },
+        });
+        expect(aff.motif).toBe("Remplacé par l'écran ECR-ALICE — Panne");
+    });
+
+    it("mode « stock » sans statut : l'écran remplacé part en stock", async () => {
+        const ecranAlice = await creerEcran('ECR-ALICE', pcAlice());
+        const ecranBob = await creerEcran('ECR-BOB', pcBob());
+
+        const res = await as(admin).post(`/api/ecrans/${ecranAlice.id_ecran}/affecter`)
+            .send({ id_materiels: pcBob(), mode_conflit: 'stock' });
+
+        expect(res.status).toBe(200);
+        expect(await relireEcran(ecranBob)).toMatchObject({ id_materiels: null, statut: 'EN_STOCK' });
+    });
+
+    it("refuse un statut invalide pour l'écran remplacé", async () => {
+        const ecranAlice = await creerEcran('ECR-ALICE', pcAlice());
+        const ecranBob = await creerEcran('ECR-BOB', pcBob());
+
+        const res = await as(admin).post(`/api/ecrans/${ecranAlice.id_ecran}/affecter`)
+            .send({ id_materiels: pcBob(), mode_conflit: 'stock', statut_ancien_ecran: 'AFFECTE' });
+
+        expect(res.status).toBe(400);
+        expect(res.body.error).toMatch(/Statut invalide pour l'ancien écran/);
+        expect(await relireEcran(ecranBob)).toMatchObject({ id_materiels: pcBob() });
+    });
+
+    it("installe sur un poste sans écran l'écran d'un collègue, qui se retrouve sans écran", async () => {
+        const ecranBob = await creerEcran('ECR-BOB', pcBob());
+        await prisma.materiels.update({ where: { id_materiels: pcBob() }, data: { code_ecran: 'ECR-BOB' } });
+
+        const res = await as(admin).post(`/api/ecrans/${ecranBob.id_ecran}/affecter`)
+            .send({ id_materiels: pcAlice() });
+
+        expect(res.status).toBe(200);
+        expect(await relireEcran(ecranBob)).toMatchObject({ id_materiels: pcAlice(), statut: 'AFFECTE' });
+        expect(await relirePC(pcAlice())).toMatchObject({ code_ecran: 'ECR-BOB' });
+        expect(await relirePC(pcBob())).toMatchObject({ code_ecran: null });
+
+        const traceBob = await prisma.historiqueMateriel.findFirst({
+            where: { id_materiels: pcBob() }, orderBy: { id_historique: 'desc' },
+        });
+        expect(traceBob.nouvelle_valeur).toBe('Écran : aucun');
+    });
+});

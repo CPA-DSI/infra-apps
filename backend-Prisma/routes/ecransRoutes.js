@@ -58,14 +58,15 @@ router.post('/', asyncHandler(async (req, res) => {
 
 // POST /api/ecrans/:id/affecter
 // Body : { id_materiels (null = hors poste), statut? (si hors poste),
-//          mode_conflit? ('refuser' | 'echanger' | 'stock'), motif?, etat_remise?, commentaire? }
+//          mode_conflit? ('refuser' | 'echanger' | 'stock'),
+//          statut_ancien_ecran? (mode 'stock' : EN_STOCK | EN_REPARATION | REFORME), motif?, etat_remise?, commentaire? }
 router.post('/:id/affecter', asyncHandler(async (req, res) => {
     const id_ecran = parseInt(req.params.id, 10);
     if (isNaN(id_ecran)) {
         return res.status(400).json({ error: "L'identifiant fourni n'est pas valide." });
     }
 
-    const { id_materiels, statut, mode_conflit, motif, etat_remise, commentaire } = req.body;
+    const { id_materiels, statut, mode_conflit, statut_ancien_ecran, motif, etat_remise, commentaire } = req.body;
     const cibleId = id_materiels === null || id_materiels === undefined || id_materiels === '' ? null : parseInt(id_materiels, 10);
     if (Number.isNaN(cibleId)) {
         return res.status(400).json({ error: 'Poste cible invalide.' });
@@ -73,7 +74,7 @@ router.post('/:id/affecter', asyncHandler(async (req, res) => {
 
     try {
         const ecran = await prisma.$transaction((tx) => affecterEcran(tx, {
-            id_ecran, id_materiels: cibleId, statut, mode_conflit, motif, etat_remise, commentaire,
+            id_ecran, id_materiels: cibleId, statut, mode_conflit, statut_ancien_ecran: statut_ancien_ecran || undefined, motif, etat_remise, commentaire,
         }, req.user?.id_n));
         res.json({ message: 'Écran déplacé avec succès.', ecran });
     } catch (error) {

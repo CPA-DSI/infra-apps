@@ -52,11 +52,13 @@ const AffectationModal = ({ mode, materiel, onClose, onDone, miseEnStock = false
 
     // Saisie
     const [cible, setCible] = useState(isPC && miseEnStock && materiel.id_n ? STOCK : ''); // PC : id_n ou STOCK ; écran : id_materiels ou statut hors poste
-    const [ecranChoisi, setEcranChoisi] = useState(''); // écran : poste sans écran -> écran du stock à installer
+    const [ecranChoisi, setEcranChoisi] = useState(''); // écran : poste sans écran -> écran (stock, réparation ou chez un collègue) à installer
     const [utilisateur, setUtilisateur] = useState('');
     const [equipe, setEquipe] = useState(materiel.equipe || '');
     const [idLocal, setIdLocal] = useState(materiel.id_local ? String(materiel.id_local) : '');
-    const [modeConflit, setModeConflit] = useState('echanger');
+    const [modeConflit, setModeConflit] = useState('stock');
+    // Écran : en mode 'stock', où part l'écran remplacé.
+    const [statutAncienEcran, setStatutAncienEcran] = useState('EN_STOCK');
     // PC : le bénéficiaire a déjà un PC -> 'stock' ou 'echanger'.
     const [modeConflitPC, setModeConflitPC] = useState('stock');
     const [etatAncienPC, setEtatAncienPC] = useState('');
@@ -74,8 +76,11 @@ const AffectationModal = ({ mode, materiel, onClose, onDone, miseEnStock = false
                 } else if (aUnEcran) {
                     setPostes(await fetchAllMateriels());
                 } else {
-                    const [stock, reparation] = await Promise.all([fetchEcrans('EN_STOCK'), fetchEcrans('EN_REPARATION')]);
-                    setEcransDisponibles([...stock, ...reparation]);
+                    // Écrans libres d'abord, puis ceux installés chez un collègue.
+                    const [stock, reparation, affectes] = await Promise.all([
+                        fetchEcrans('EN_STOCK'), fetchEcrans('EN_REPARATION'), fetchEcrans('AFFECTE'),
+                    ]);
+                    setEcransDisponibles([...stock, ...reparation, ...affectes.filter(e => e.materiel)]);
                 }
             } catch (err) {
                 setError(err.message);
@@ -111,25 +116,52 @@ const AffectationModal = ({ mode, materiel, onClose, onDone, miseEnStock = false
     const echangePossible = Boolean(materiel.id_n);
     const echange = Boolean(ancienPC) && modeConflitPC === 'echanger';
 
-    const posteOptions = useMemo(() => [
-        ...HORS_POSTE.map(s => ({ value: s, label: `📦 ${STATUTS_ECRAN_LABELS[s]}` })),
-        ...postes
-            .filter(p => p.id_materiels !== materiel.id_materiels)
-            .map(p => ({
-                value: String(p.id_materiels),
-                label: `${p.id_n ?? 'Stock'} - ${p.utilisateur}${p.code_pc ? ` (${p.code_pc})` : ''} — écran : ${p.code_ecran || 'aucun'}`,
-            })),
-    ], [postes, materiel.id_materiels]);
+    // Écran : on choisit un bénéficiaire (son poste, éventuellement « Sans
+    // poste »), comme pour le PC. Les PC en stock sont proposés à la fin.
+    const posteOptions = useMemo(() => {
+        const autres = postes.filter(p => p.id_materiels !== materiel.id_materiels);
+        const mentionEcran = (p) => (p.code_ecran ? ` (a déjà l'écran ${p.code_ecran})` : '');
+        return [
+            ...HORS_POSTE.map(s => ({ value: s, label: `📦 ${STATUTS_ECRAN_LABELS[s]}` })),
+            ...autres
+                .filter(p => p.id_n != null)
+                .map(p => ({
+                    value: String(p.id_materiels),
+                    label: `${p.id_n} - ${p.utilisateur}${p.est_vide ? ' (sans poste)' : ''}${mentionEcran(p)}`,
+                })),
+            ...autres
+                .filter(p => p.id_n == null)
+                .map(p => ({
+                    value: String(p.id_materiels),
+                    label: `💻 PC en stock ${p.code_pc || `#${p.id_materiels}`}${mentionEcran(p)}`,
+                })),
+        ];
+    }, [postes, materiel.id_materiels]);
 
     const ecranOptions = useMemo(() => ecransDisponibles.map(e => ({
         value: String(e.id_ecran),
-        label: `${e.code_ecran}${e.modele ? ` - ${e.modele}` : ''} (${STATUTS_ECRAN_LABELS[e.statut]})`,
+        label: `${e.code_ecran}${e.modele ? ` - ${e.modele}` : ''} (${e.materiel
+            ? `chez ${e.materiel.id_n ? `${e.materiel.id_n} - ` : ''}${e.materiel.utilisateur}`
+            : STATUTS_ECRAN_LABELS[e.statut]})`,
     })), [ecransDisponibles]);
 
     const posteCible = !isPC && aUnEcran && cible && !HORS_POSTE.includes(cible)
         ? postes.find(p => String(p.id_materiels) === cible)
         : null;
     const conflitEcran = Boolean(posteCible?.id_ecran);
+    const nomPosteCible = posteCible
+        ? (posteCible.id_n != null ? posteCible.utilisateur : `PC en stock ${posteCible.code_pc || `#${posteCible.id_materiels}`}`)
+        : '';
+    // Écran à installer pris chez un collègue : son poste se retrouvera sans écran.
+    const ecranChezCollegue = !isPC && !aUnEcran
+        ? ecransDisponibles.find(e => String(e.id_ecran) === ecranChoisi)?.materiel || null
+        : null;
+
+    const handleDestinationEcranChange = (value) => {
+        setCible(value);
+        setModeConflit('stock');
+        setStatutAncienEcran('EN_STOCK');
+    };
 
     // --- Saisie ---
     const handleBeneficiaireChange = (value) => {
@@ -177,6 +209,7 @@ const AffectationModal = ({ mode, materiel, onClose, onDone, miseEnStock = false
                     id_materiels: horsPoste ? null : parseInt(cible, 10),
                     statut: horsPoste ? cible : undefined,
                     mode_conflit: conflitEcran ? modeConflit : 'refuser',
+                    ...(conflitEcran && modeConflit === 'stock' ? { statut_ancien_ecran: statutAncienEcran } : {}),
                 });
                 message = res.message;
             } else {
@@ -197,7 +230,7 @@ const AffectationModal = ({ mode, materiel, onClose, onDone, miseEnStock = false
     };
 
     // --- Rendu ---
-    const titre = isPC ? 'Réaffecter le PC' : aUnEcran ? 'Déplacer l\'écran' : 'Installer un écran';
+    const titre = isPC ? 'Réaffecter le PC' : aUnEcran ? 'Réaffecter l\'écran' : 'Installer un écran';
     const sousTitre = isPC
         ? `Poste ${materiel.code_pc || `#${materiel.id_materiels}`} — actuellement : ${materiel.id_n ? `${materiel.id_n} - ${materiel.utilisateur}` : 'en stock'}`
         : aUnEcran
@@ -312,22 +345,35 @@ const AffectationModal = ({ mode, materiel, onClose, onDone, miseEnStock = false
 
                     {!isPC && aUnEcran && (
                         <>
-                            <Field label="Destination" required>
-                                <SearchableSelect value={cible} onChange={setCible} options={posteOptions} placeholder="Choisir un poste ou un statut..." style={selectStyle} />
+                            <Field label="Nouveau bénéficiaire" required>
+                                <SearchableSelect value={cible} onChange={handleDestinationEcranChange} options={posteOptions} placeholder="Choisir un utilisateur ou un statut..." style={selectStyle} />
                             </Field>
                             {conflitEcran && (
                                 <div className="mat-conflict-box">
                                     <div className="mat-conflict-title">
-                                        Ce poste a déjà l'écran {posteCible.code_ecran}. Que faire de cet écran ?
+                                        {nomPosteCible} a déjà l'écran {posteCible.code_ecran}. Que faire de cet écran ?
                                     </div>
+                                    <label className="mat-radio-label">
+                                        <input type="radio" checked={modeConflit === 'stock'} onChange={() => setModeConflit('stock')} />
+                                        📦 Le retirer (remplacement)
+                                    </label>
+                                    {modeConflit === 'stock' && (
+                                        <div className="mat-conflict-sub">
+                                            <label className="mat-field-label" htmlFor="statut-ancien-ecran">Destination de l'écran {posteCible.code_ecran}</label>
+                                            <select id="statut-ancien-ecran" className="mat-field-input" value={statutAncienEcran} onChange={e => setStatutAncienEcran(e.target.value)}>
+                                                {HORS_POSTE.map(s => <option key={s} value={s}>{STATUTS_ECRAN_LABELS[s]}</option>)}
+                                            </select>
+                                        </div>
+                                    )}
                                     <label className="mat-radio-label">
                                         <input type="radio" checked={modeConflit === 'echanger'} onChange={() => setModeConflit('echanger')} />
                                         <FaExchangeAlt /> Échanger : il vient sur le poste de {materiel.utilisateur}
                                     </label>
-                                    <label className="mat-radio-label">
-                                        <input type="radio" checked={modeConflit === 'stock'} onChange={() => setModeConflit('stock')} />
-                                        📦 Le mettre en stock
-                                    </label>
+                                </div>
+                            )}
+                            {posteCible && !(conflitEcran && modeConflit === 'echanger') && (
+                                <div className="mat-info-line">
+                                    <FaInfoCircle aria-hidden="true" /> Le poste de {materiel.utilisateur} se retrouvera sans écran.
                                 </div>
                             )}
                         </>
@@ -336,11 +382,17 @@ const AffectationModal = ({ mode, materiel, onClose, onDone, miseEnStock = false
                     {!isPC && !aUnEcran && (
                         <Field label="Écran à installer" required>
                             {ecranOptions.length === 0 ? (
-                                <div className="mat-muted-text">Aucun écran en stock ou en réparation.</div>
+                                <div className="mat-muted-text">Aucun écran disponible.</div>
                             ) : (
-                                <SearchableSelect value={ecranChoisi} onChange={setEcranChoisi} options={ecranOptions} placeholder="Choisir un écran..." style={selectStyle} />
+                                <SearchableSelect value={ecranChoisi} onChange={setEcranChoisi} options={ecranOptions} placeholder="Choisir un écran (stock, réparation ou chez un collègue)..." style={selectStyle} />
                             )}
                         </Field>
+                    )}
+                    {ecranChezCollegue && (
+                        <div className="mat-info-line">
+                            <FaInfoCircle aria-hidden="true" /> Cet écran est chez {ecranChezCollegue.utilisateur}
+                            {ecranChezCollegue.code_pc ? ` (${ecranChezCollegue.code_pc})` : ''} : son poste se retrouvera sans écran.
+                        </div>
                     )}
 
                     <div className="mat-two-cols">

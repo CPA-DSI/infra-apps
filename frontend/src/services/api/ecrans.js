@@ -27,7 +27,8 @@ export const addEcran = async (ecranData) => {
 
 /**
  * Déplace un écran. data : { id_materiels (null = hors poste), statut?,
- * mode_conflit? ('refuser' | 'echanger' | 'stock'), motif?, etat_remise?, commentaire? }
+ * mode_conflit? ('refuser' | 'echanger' | 'stock'),
+ * statut_ancien_ecran? (mode 'stock' : EN_STOCK | EN_REPARATION | REFORME), motif?, etat_remise?, commentaire? }
  * En cas de conflit (poste cible déjà équipé), l'erreur levée porte
  * `status === 409` et `conflit` ({ id_ecran, code_ecran }).
  */

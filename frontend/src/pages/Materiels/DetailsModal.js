@@ -280,7 +280,7 @@ const DetailsModal = ({ isOpen, onClose, data, canManage = false }) => {
                                     </button>
                                 )}
                                 <button type="button" onClick={() => setAffectationMode('ecran')} className="add-modal-submit-btn mat-btn-ecran">
-                                    <FaDesktop aria-hidden="true" /> {data.id_ecran ? "Déplacer l'écran" : 'Installer un écran'}
+                                    <FaDesktop aria-hidden="true" /> {data.id_ecran ? "Réaffecter l'écran" : 'Installer un écran'}
                                 </button>
                             </>
                         )}

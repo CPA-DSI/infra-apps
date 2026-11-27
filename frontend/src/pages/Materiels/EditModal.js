@@ -333,7 +333,7 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
                 <FaInfoCircle aria-hidden="true" />
                 <span>
                     Modifiez les champs souhaités et cliquez sur Sauvegarder. Le matricule, l'utilisateur, le statut Actif
-                    et l'écran se changent depuis le détail du matériel (« Réaffecter le PC » / « Déplacer l'écran »)
+                    et l'écran se changent depuis le détail du matériel (« Réaffecter le PC » / « Réaffecter l'écran »)
                     ou le bouton Status de la liste, pour garder l'historique.
                 </span>
             </div>

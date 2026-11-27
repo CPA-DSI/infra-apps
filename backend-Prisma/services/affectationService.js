@@ -441,9 +441,18 @@ export const affecterPC = async (tx, {
  * Si le poste cible a déjà un écran, mode_conflit décide :
  * - 'refuser' (défaut) : erreur 409 ;
  * - 'echanger'         : l'écran du poste cible part sur l'ancien poste de l'écran déplacé ;
- * - 'stock'            : l'écran du poste cible part en stock.
+ * - 'stock'            : l'écran du poste cible sort du parc actif, avec le statut
+ *                        statut_ancien_ecran (EN_STOCK par défaut, EN_REPARATION, REFORME).
+ *
+ * L'écran déplacé peut venir d'un autre poste : ce poste se retrouve sans écran.
  */
-export const affecterEcran = async (tx, { id_ecran, id_materiels, statut, mode_conflit = 'refuser', motif, etat_remise, commentaire }, auteurIdN) => {
+export const affecterEcran = async (tx, {
+    id_ecran, id_materiels, statut, mode_conflit = 'refuser', statut_ancien_ecran, motif, etat_remise, commentaire,
+}, auteurIdN) => {
+    if (statut_ancien_ecran && !STATUTS_HORS_POSTE.includes(statut_ancien_ecran)) {
+        throw new AffectationError(`Statut invalide pour l'ancien écran : ${statut_ancien_ecran}.`);
+    }
+
     const ecran = await tx.ecran.findUnique({ where: { id_ecran } });
     if (!ecran) {
         throw new AffectationError('Écran introuvable.', 404);
@@ -500,8 +509,8 @@ export const affecterEcran = async (tx, { id_ecran, id_materiels, statut, mode_c
                 ...ctx, motif: `Échange avec l'écran ${ecran.code_ecran}`,
             });
         } else {
-            await deplacerEcran(tx, ecranCible, null, 'EN_STOCK', {
-                ...ctx, motif: `Remplacé par l'écran ${ecran.code_ecran}`,
+            await deplacerEcran(tx, ecranCible, null, statut_ancien_ecran || 'EN_STOCK', {
+                ...ctx, motif: motif ? `Remplacé par l'écran ${ecran.code_ecran} — ${motif}` : `Remplacé par l'écran ${ecran.code_ecran}`,
             });
         }
     }
