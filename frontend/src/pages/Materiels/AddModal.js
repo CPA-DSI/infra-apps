@@ -309,23 +309,6 @@ const AddModal = ({ onClose, onMaterialAdded }) => {
                             <div className="add-modal-toggle-knob" />
                         </div>
                     </label>
-                    <label className="add-modal-label mat-form-title-label">
-                        <span className="add-modal-actif-state">
-                            Actif
-                            {formData.est_actif ? (
-                                <FaCheckCircle className="add-modal-actif-icon is-on" aria-hidden="true" />
-                            ) : (
-                                <FaTimesCircle className="add-modal-actif-icon" aria-hidden="true" />
-                            )}
-                        </span>
-                        <div
-                            className={`add-modal-toggle ${formData.est_actif ? 'is-on' : ''} ${enStock ? 'is-disabled' : ''}`}
-                            onClick={() => !enStock && handleChange({ target: { name: 'est_actif', type: 'checkbox', checked: !formData.est_actif }})}
-                            title={enStock ? 'Un PC en stock est inactif' : undefined}
-                        >
-                            <div className="add-modal-toggle-knob" />
-                        </div>
-                    </label>
                 </div>
 
                 <div>

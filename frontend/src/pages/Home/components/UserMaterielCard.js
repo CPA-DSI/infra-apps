@@ -27,16 +27,6 @@ const MarqueBadge = ({ marque }) => {
   return <div className="userMaterielLogoFallback">{marque?.nom_marque || 'N/A'}</div>;
 };
 
-const ActifBadge = ({ estActif }) => {
-  const isActive = estActif === true || estActif === 'true' || estActif === 'Oui' || estActif === 'oui';
-  return (
-    <span className={`userMaterielActifBadge userMaterielActifBadge--${isActive ? 'on' : 'off'}`}>
-      <span>{isActive ? '✅' : '❌'}</span>
-      {isActive ? 'Actif' : 'Inactif'}
-    </span>
-  );
-};
-
 const InfoRow = ({ icon: Icon, children }) => (
   <div className="userMaterielInfoItem">
     <Icon />
@@ -76,10 +66,6 @@ const UserMaterielCard = ({ materiel }) => {
           {materiel.local?.nom_local || 'Non attribué'}
           {materiel.salle ? ` • Salle ${materiel.salle}` : ''}
         </InfoRow>
-      </div>
-
-      <div className="userMaterielFooter">
-        <ActifBadge estActif={materiel.est_actif} />
       </div>
     </div>
   );

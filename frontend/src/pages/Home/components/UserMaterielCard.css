@@ -102,34 +102,6 @@
   font-size: 0.8rem;
 }
 
-.userMaterielFooter {
-  display: flex;
-  align-items: center;
-}
-
-.userMaterielActifBadge {
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid;
-}
-
-.userMaterielActifBadge--on {
-  color: var(--color-success-fg);
-  background-color: var(--color-success-soft);
-  border-color: var(--color-success);
-}
-
-.userMaterielActifBadge--off {
-  color: var(--color-danger-fg);
-  background-color: var(--color-danger-soft);
-  border-color: var(--color-danger);
-}
-
 .userMaterielEmpty {
   text-align: center;
   padding: 40px 20px;

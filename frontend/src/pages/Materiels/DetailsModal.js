@@ -1,7 +1,7 @@
 // src/pages/Materiels/DetailsModal.js
 
 import React, { useState, useEffect } from 'react';
-import { FaExchangeAlt, FaHistory, FaLaptopCode, FaBarcode, FaDesktop, FaCheckCircle, FaTimesCircle, FaVideo, FaNetworkWired, FaUsb, FaKeyboard as FaKeyboardIcon, FaBatteryFull, FaMicrochip, FaCommentAlt, FaQrcode, FaBuilding, FaHeart, FaUserCircle, FaTerminal, FaPlug, FaShieldAlt, FaHdd, FaTimes, FaCalendarAlt, FaUserFriends, FaKey, FaLocationArrow, FaToggleOn, FaPowerOff, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaExchangeAlt, FaHistory, FaLaptopCode, FaBarcode, FaDesktop, FaCheckCircle, FaTimesCircle, FaVideo, FaNetworkWired, FaUsb, FaKeyboard as FaKeyboardIcon, FaBatteryFull, FaMicrochip, FaCommentAlt, FaQrcode, FaBuilding, FaHeart, FaUserCircle, FaTerminal, FaPlug, FaShieldAlt, FaHdd, FaTimes, FaCalendarAlt, FaUserFriends, FaKey, FaLocationArrow, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { MdMonitor, MdComputer, MdSecurity, MdComment } from 'react-icons/md';
 import { fetchAffectationsMateriel } from '../../services/api';
 import AffectationModal from './AffectationModal';
@@ -117,7 +117,6 @@ const DetailsModal = ({ isOpen, onClose, data, canManage = false }) => {
         switch(name) {
             case 'id_n': return <FaQrcode />;
             case 'id_marque': return <FaLaptopCode />;
-            case 'est_actif': return <FaToggleOn />;
             case 'ecran': return <FaDesktop />;
             case 'equipe': return <FaUserFriends />;
             case 'date_pc': return <FaCalendarAlt />;
@@ -144,7 +143,7 @@ const DetailsModal = ({ isOpen, onClose, data, canManage = false }) => {
     const InfoCard = ({ label, value, name }) => {
         let displayValue = value;
 
-        if (name === 'hdmi' || name === 'lan' || name === 'usb' || name === 'clavier' || name === 'est_actif') {
+        if (name === 'hdmi' || name === 'lan' || name === 'usb' || name === 'clavier') {
             displayValue = value ? 'Oui' : 'Non';
         }
 
@@ -159,8 +158,6 @@ const DetailsModal = ({ isOpen, onClose, data, canManage = false }) => {
                         {displayValue === 'Oui' && <><FaCheckCircle className="mat-yesno-icon" aria-hidden="true" /> Oui</>}
                         {displayValue === 'Non' && <><FaTimesCircle className="mat-yesno-icon" aria-hidden="true" /> Non</>}
                         {displayValue !== 'Oui' && displayValue !== 'Non' && (displayValue || 'N/A')}
-                        {name === 'est_actif' && displayValue === 'Oui' && <FaPowerOff className="est-actif-icon" aria-hidden="true" />}
-                        {name === 'est_actif' && displayValue === 'Non' && <FaPowerOff className="est-actif-icon est-actif-icon-off" aria-hidden="true" />}
                     </span>
                 </div>
             </div>
@@ -345,7 +342,6 @@ const DetailsModal = ({ isOpen, onClose, data, canManage = false }) => {
                     </div>
                     <div className="add-modal-form-grid mat-info-grid">
                         <InfoCard label="Commentaire" value={data.commentaire || 'Aucun commentaire'} name="commentaire" />
-                        <InfoCard label="Statut" value={data.est_actif} name="est_actif" />
                     </div>
                 </div>
 

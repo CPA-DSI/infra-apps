@@ -273,7 +273,6 @@ const toExportRow = (item) => ({
     "Password_Admin": item.mdp_admin,
     "Etat de la batterie": item.etat_batterie,
     "Commentaire": item.commentaire,
-    "Est Actif": item.est_actif,
 });
 
 const exportRowsToExcel = (dataToExport, filename) => {

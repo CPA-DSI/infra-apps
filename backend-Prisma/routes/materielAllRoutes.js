@@ -488,49 +488,6 @@ router.put('/:id', requirePermission(PERMISSIONS.MATERIELS_WRITE), asyncHandler(
     }
 }));
 
-// 4bis. PATCH statut actif / inactif (URL complète: /api/materiels_all/:id/statut)
-// Body : { est_actif }. Remplace la bascule « Status » qui passait par le PUT.
-// Un PC en stock ou une fiche « Sans poste » change de statut uniquement via
-// l'affectation (POST /:id/affecter).
-router.patch('/:id/statut', requirePermission(PERMISSIONS.MATERIELS_WRITE), asyncHandler(async (req, res) => {
-
-    const materielId = parseInt(req.params.id, 10);
-    const { est_actif } = req.body;
-    if (typeof est_actif !== 'boolean') {
-        return res.status(400).json({ error: 'Le champ est_actif (booléen) est requis.' });
-    }
-
-    const actuel = await prisma.materiels.findUnique({
-        where: { id_materiels: materielId },
-        select: { id_n: true, est_vide: true, date_suppression: true },
-    });
-    if (!actuel || actuel.date_suppression) {
-        return res.status(404).json({ error: `Matériel avec l'ID ${materielId} non trouvé.` });
-    }
-    if (actuel.est_vide || actuel.id_n === null) {
-        return res.status(400).json({
-            error: actuel.est_vide
-                ? "Cette fiche « Sans poste » n'a pas de PC : utilisez « Réaffecter le PC » pour lui en attribuer un."
-                : "Ce PC est en stock : son statut change en l'affectant à un utilisateur (« Réaffecter le PC »).",
-        });
-    }
-
-    try {
-        const materiel = await prisma.materiels.update({
-            where: { id_materiels: materielId, date_suppression: null },
-            // L'état physique (etat_pc) n'est pas touché : Actif / Inactif
-            // n'indique pas si le PC est en bon ou mauvais état.
-            data: { est_actif, date_modification: new Date() },
-        });
-        res.json({ message: 'Statut mis à jour', materiel });
-    } catch (error) {
-        if (error.code === 'P2025') {
-            return res.status(404).json({ error: `Matériel avec l'ID ${materielId} non trouvé.` });
-        }
-        throw error;
-    }
-}));
-
 // 5. DELETE materiel (URL complète: /api/materiels_all/:id)
 router.delete('/:id', requirePermission(PERMISSIONS.MATERIELS_DELETE), asyncHandler(async (req, res) => {
     const { id } = req.params;

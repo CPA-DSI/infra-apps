@@ -80,7 +80,9 @@ router.get('/me/dashboard', authenticateToken, ensureActiveUser, asyncHandler(as
   } else {
     const [totalTickets, totalMateriels, ticketsRecents] = await Promise.all([
       prisma.ticket.count(),
-      prisma.Materiels.count({ where: { est_actif: true, date_suppression: null } }),
+      // Parc réel : tous les PC non supprimés, en stock compris
+      // (les fiches « Sans poste » n'ont pas de PC).
+      prisma.Materiels.count({ where: { est_vide: false, date_suppression: null } }),
       prisma.ticket.findMany({
         take: 5,
         orderBy: { dateCreation: 'desc' },

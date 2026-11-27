@@ -55,18 +55,6 @@ describe('PUT /api/materiels_all/:id — etat_pc ne porte que l\'état physique'
 });
 
 describe('État « Disponible » retiré', () => {
-    it('la bascule Inactif / Actif ne change pas l\'état physique', async () => {
-        const id = alice.materiel.id_materiels;
-        await prisma.materiels.update({ where: { id_materiels: id }, data: { etat_pc: 'Mauvais' } });
-
-        const off = await as(admin).patch(`/api/materiels_all/${id}/statut`).send({ est_actif: false });
-        expect(off.status).toBe(200);
-        expect(off.body.materiel).toMatchObject({ est_actif: false, etat_pc: 'Mauvais' });
-
-        const on = await as(admin).patch(`/api/materiels_all/${id}/statut`).send({ est_actif: true });
-        expect(on.body.materiel).toMatchObject({ est_actif: true, etat_pc: 'Mauvais' });
-    });
-
     it('refuse « Disponible » en création', async () => {
         const post = await as(admin).post('/api/materiels_all/')
             .send({ etat_pc: 'Disponible', id_n: 99, utilisateur: 'Bob', equipe: 'Compta', caracteristiques: 'i5' });

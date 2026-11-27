@@ -4,7 +4,7 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import DataTable from 'react-data-table-component';
 import { MySwal, swalButtons } from '../../utils/swal';
 import { useAuth } from '../../contexts/AuthContext';
-import { apiClient, updateMaterielStatut } from '../../services/api';
+import { apiClient } from '../../services/api';
 import { Button, Form, InputGroup, Spinner, Card, Alert, Tabs, Tab } from 'react-bootstrap';
 import { FaEye, FaEdit, FaTrash, FaFileExcel, FaSearch, FaSync, FaTimes, FaDesktop, FaFileImport, FaPlus, FaFileUpload, FaHistory, FaInbox, FaUsers, FaMapMarkerAlt, FaCalendarAlt, FaUserCircle, FaBatteryFull, FaTags, FaTrashRestore } from 'react-icons/fa';
 /// --- Importations des Modales ---
@@ -65,7 +65,6 @@ const [filterEquipe, setFilterEquipe] = useState('');
 const [filterNomLocal, setFilterNomLocal] = useState('');
 const [filterMarque, setFilterMarque] = useState('');
 const [filterPeriode, setFilterPeriode] = useState(EMPTY_RANGE);
-const [filterEstActif, setFilterEstActif] = useState('');
 const [selectedMateriel, setSelectedMateriel] = useState(null);
 const [modalType, setModalType] = useState(null);
 const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -115,7 +114,7 @@ const handleCloseAddMarque = useCallback(() => {
 }, [fetchMateriels]);
 
 const handleResetFilters = useCallback(() => {
-    setSearchTerm(''); setFilterStatut(''); setFilterEtat(''); setFilterEquipe(''); setFilterNomLocal(''); setFilterMarque(''); setFilterPeriode(EMPTY_RANGE); setFilterEstActif('');
+    setSearchTerm(''); setFilterStatut(''); setFilterEtat(''); setFilterEquipe(''); setFilterNomLocal(''); setFilterMarque(''); setFilterPeriode(EMPTY_RANGE);
 }, []);
 
 const handleMaterialAdded = useCallback(() => {
@@ -189,35 +188,6 @@ const closeModal = useCallback(() => {
     setSelectedMateriel(null); setModalType(null); fetchMateriels();
 }, [fetchMateriels]);
 
-const handleToggleEstActif = useCallback(async (row) => {
-    const currentEstActif = row.est_actif;
-    const isCurrentlyActive = currentEstActif === true || currentEstActif === 'true' || currentEstActif === 'Oui' || currentEstActif === 'oui';
-    const newVal = !isCurrentlyActive;
-
-    // Seul est_actif change : l'état physique (etat_pc) est conservé.
-    setMateriels(prev => prev.map(m =>
-        m.id_materiels === row.id_materiels ? { ...m, est_actif: newVal } : m
-    ));
-
-    try {
-        // Route dédiée : le PUT n'accepte plus est_actif (suivi par l'affectation).
-        await updateMaterielStatut(row.id_materiels, newVal);
-        await fetchMateriels();
-    } catch (error) {
-        console.error("Erreur lors de la mise à jour de est_actif:", error);
-        setMateriels(prev => prev.map(m =>
-            m.id_materiels === row.id_materiels ? { ...m, est_actif: currentEstActif } : m
-        ));
-        MySwal.fire({
-            icon: 'error',
-            title: 'Erreur',
-            text: error.message || 'Impossible de modifier le statut.',
-            timer: 2000,
-            showConfirmButton: false
-        });
-    }
-}, [fetchMateriels]);
-
 // --- Fonctions de filtrage et recherche ---
 // Tous les filtres sauf statut et état : base des compteurs
 const materielsHorsEtat = useMemo(() => {
@@ -233,25 +203,21 @@ const materielsHorsEtat = useMemo(() => {
         const caracteristiques = materiel.caracteristiques || ''; 
         const etat_pc = materiel.etat_pc || ''; 
         const nom_marque = materiel.nom_marque || '';
-        const est_actif = materiel.est_actif !== undefined ? String(materiel.est_actif) : '';
-        const isActive = materiel.est_actif === true || materiel.est_actif === 'true' || materiel.est_actif === 'Oui' || materiel.est_actif === 'oui';
-        const estActifLabel = isActive ? 'Actif' : 'Inactif';
 
         const searchMatch = 
-            id_n_string.toLowerCase().includes(lowerCaseSearch) || equipe.toLowerCase().includes(lowerCaseSearch) || utilisateur.toLowerCase().includes(lowerCaseSearch) || codePc.toLowerCase().includes(lowerCaseSearch) || salle.toLowerCase().includes(lowerCaseSearch) || nom_local.toLowerCase().includes(lowerCaseSearch) || caracteristiques.toLowerCase().includes(lowerCaseSearch) || etat_pc.toLowerCase().includes(lowerCaseSearch) || nom_marque.toLowerCase().includes(lowerCaseSearch) || est_actif.toLowerCase().includes(lowerCaseSearch);
+            id_n_string.toLowerCase().includes(lowerCaseSearch) || equipe.toLowerCase().includes(lowerCaseSearch) || utilisateur.toLowerCase().includes(lowerCaseSearch) || codePc.toLowerCase().includes(lowerCaseSearch) || salle.toLowerCase().includes(lowerCaseSearch) || nom_local.toLowerCase().includes(lowerCaseSearch) || caracteristiques.toLowerCase().includes(lowerCaseSearch) || etat_pc.toLowerCase().includes(lowerCaseSearch) || nom_marque.toLowerCase().includes(lowerCaseSearch);
 
         const equipeMatch = !filterEquipe || equipe === filterEquipe;
         const nomLocalMatch = !filterNomLocal || nom_local === filterNomLocal;
         const marqueMatch = !filterMarque || nom_marque === filterMarque;
-        const estActifMatch = !filterEstActif || estActifLabel === filterEstActif;
 
         const periodeMatch = matchesDateRange(materiel.date_pc, filterPeriode);
 
         const userMatch = userRole !== 'USER' || (id_n_string === userIdN);
 
-        return searchMatch && equipeMatch && nomLocalMatch && marqueMatch && periodeMatch && estActifMatch && userMatch;
+        return searchMatch && equipeMatch && nomLocalMatch && marqueMatch && periodeMatch && userMatch;
     });
-}, [materiels, searchTerm, filterEquipe, filterNomLocal, filterMarque, filterPeriode, filterEstActif, userRole, userIdN]);
+}, [materiels, searchTerm, filterEquipe, filterNomLocal, filterMarque, filterPeriode, userRole, userIdN]);
 
 const filteredMateriels = useMemo(
     () => materielsHorsEtat.filter(m => matchesStatut(m, filterStatut) && matchesEtat(m, filterEtat)),
@@ -315,34 +281,6 @@ const renderStatus = useCallback((row) => {
             </span>
         );
 }, []);
-
-const renderEstActif = useCallback((row) => {
-        const val = row.est_actif;
-        const isActive = val === true || val === 'true' || val === 'Oui' || val === 'oui';
-        const label = isActive ? 'Actif' : 'Inactif';
-        const stateClass = isActive ? 'is-active' : 'is-inactive';
-
-        // PC en stock et fiches « Sans poste » : statut piloté par l'affectation.
-        if (userRole === 'USER' || row.est_vide || row.id_n == null) {
-            return (
-                <span className={`mat-actif-badge ${stateClass}`} title={userRole === 'USER' ? undefined : "Statut piloté par l'affectation (« Réaffecter le PC »)"}>
-                    <span className="mat-status-emoji" aria-hidden="true">{isActive ? '✅' : '❌'}</span>
-                    {label}
-                </span>
-            );
-        }
-
-        return (
-            <div
-                className={`mat-actif-toggle ${stateClass}`}
-                onClick={() => handleToggleEstActif(row)}
-                title="Cliquer pour changer le statut"
-            >
-                <div className="mat-actif-toggle-knob" />
-                <span className="mat-actif-toggle-label">{label}</span>
-            </div>
-        );
-}, [userRole, handleToggleEstActif]);
 
 const renderDocumentsCount = useCallback((row) => {
         const count = row.documents_count || 0;
@@ -425,10 +363,9 @@ const columns = useMemo(() => [
     { name: 'Caractéristiques', selector: row => row.caracteristiques, minWidth: '300px', grow: 3 },
     { name: 'État', selector: row => row.etat_pc, sortable: true, grow: 1, center: true, cell: renderStatus },
     { name: 'Local(s)', selector: row => row.nom_local || 'Non attribué', sortable: true, minWidth: '90px', grow: 1 },
-    { name: 'Status', selector: row => row.est_actif, sortable: true, minWidth: '160px', grow: 1, center: true, cell: renderEstActif, ignoreRowClick: true, allowOverflow: true, button: true },
     { name: 'Nb Doc.', selector: row => row.documents_count, sortable: true, minWidth: '80px', grow: 1, center: true, cell: renderDocumentsCount, ignoreRowClick: true, allowOverflow: true, button: true },
     { name: 'Actions', cell: renderActions, ignoreRowClick: true, allowOverflow: true, button: true, width: '130px', grow: 0, center: true },
-], [formatDate, renderMarque, renderStatus, renderEstActif, renderDocumentsCount, renderActions]);
+], [formatDate, renderMarque, renderStatus, renderDocumentsCount, renderActions]);
 
 // --- Carte matériel (vue en cartes, rôle USER) ---
 const renderMaterielCard = useCallback((row) => (
@@ -479,17 +416,16 @@ const renderMaterielCard = useCallback((row) => (
         </div>
 
         <div className="materiel-card-footer">
-            {renderEstActif(row)}
             {renderActions(row)}
         </div>
     </div>
-), [renderMarque, renderStatus, renderEstActif, renderDocumentsCount, renderActions, formatDate]);
+), [renderMarque, renderStatus, renderDocumentsCount, renderActions, formatDate]);
 
 // --- Import/Export Excel ---
 const importExport = useMaterielImportExport({ materiels, filteredMateriels, filterNomLocal, fetchMateriels, setFilterMarque });
 const { showImportSection, isImporting, toggleImportSection, handleExportExcel, handleExportByLocal } = importExport;
 
-const hasActiveFilters = Boolean(searchTerm || filterStatut || filterEtat || filterEquipe || filterNomLocal || filterMarque || isRangeActive(filterPeriode) || filterEstActif);
+const hasActiveFilters = Boolean(searchTerm || filterStatut || filterEtat || filterEquipe || filterNomLocal || filterMarque || isRangeActive(filterPeriode));
 const filterClass = (value) => `filter-pill ${value ? 'is-active' : ''}`;
 
 // --- Rendu du JSX ---
@@ -689,19 +625,6 @@ return (
                             options={[...new Set(materiels.map(m => m.nom_marque).filter(Boolean))].sort((a, b) => a.localeCompare(b))}
                             styleClass={filterClass(filterMarque)}
                         />
-                    </div>
-
-                    <div className="col-6 col-md-4 col-lg">
-                        <Form.Select
-                            value={filterEstActif}
-                            onChange={(e) => setFilterEstActif(e.target.value)}
-                            className={filterClass(filterEstActif)}
-                            aria-label="Filtrer par actif / inactif"
-                        >
-                            <option value="">Actif / Inactif</option>
-                            <option value="Actif">Actif</option>
-                            <option value="Inactif">Inactif</option>
-                        </Form.Select>
                     </div>
                     </>
                     )}

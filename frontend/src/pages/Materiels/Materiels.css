@@ -63,8 +63,7 @@
 }
 
 /* ---- Cellules du tableau ---- */
-.page-materiels .mat-status-badge,
-.page-materiels .mat-actif-badge {
+.page-materiels .mat-status-badge {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -86,66 +85,6 @@
 
 .page-materiels .mat-status-emoji {
     font-size: 0.8rem;
-}
-
-/* Couleurs actif / inactif (badge et interrupteur) */
-.page-materiels .is-active {
-    --mat-actif-color: var(--color-success-fg);
-    --mat-actif-bg: var(--color-success-soft);
-    --mat-actif-border: var(--color-success);
-}
-
-.page-materiels .is-inactive {
-    --mat-actif-color: var(--color-danger-fg);
-    --mat-actif-bg: var(--color-danger-soft);
-    --mat-actif-border: var(--color-danger);
-}
-
-.page-materiels .mat-actif-badge {
-    background-color: var(--mat-actif-bg);
-    border-color: var(--mat-actif-border);
-    color: var(--mat-actif-color);
-}
-
-.page-materiels .mat-actif-toggle {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    width: 60px;
-    height: 26px;
-    padding: 0 4px;
-    border: 2px solid var(--mat-actif-border);
-    border-radius: 13px;
-    background-color: var(--mat-actif-bg);
-    cursor: pointer;
-    user-select: none;
-    transition: all 0.25s ease;
-}
-
-.page-materiels .mat-actif-toggle-knob {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background-color: var(--mat-actif-border);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-    transition: transform 0.25s ease;
-}
-
-.page-materiels .mat-actif-toggle.is-active .mat-actif-toggle-knob {
-    transform: translateX(34px);
-}
-
-.page-materiels .mat-actif-toggle-label {
-    position: absolute;
-    right: 6px;
-    font-size: 0.6rem;
-    font-weight: 700;
-    color: var(--mat-actif-color);
-}
-
-.page-materiels .mat-actif-toggle.is-active .mat-actif-toggle-label {
-    left: 8px;
-    right: auto;
 }
 
 .page-materiels .mat-doc-count {

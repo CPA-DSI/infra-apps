@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { fetchALocaux, fetchAMarques, updateMateriel } from '../../services/api';
 import { MySwal, notify } from '../../utils/swal';
 import { escapeHtml } from '../../utils/escapeHtml';
-import { FaVideo, FaNetworkWired, FaUsb, FaPlug, FaCheckCircle, FaTimesCircle, FaTimes, FaEdit, FaSave, FaInfoCircle, FaKeyboard as FaKeyboardIcon } from 'react-icons/fa';
+import { FaVideo, FaNetworkWired, FaUsb, FaPlug, FaTimes, FaEdit, FaSave, FaInfoCircle, FaKeyboard as FaKeyboardIcon } from 'react-icons/fa';
 import FormItem from '../../components/FormItem/FormItem';
 import { getMaterielFieldIcon } from './materielFieldIcons';
 import { ETATS_PHYSIQUES, etatPhysiqueOptions } from './materielsTableConfig';
@@ -428,25 +428,6 @@ const EditModal = ({ isOpen, onClose, data, onUpdateSuccess }) => {
                         selectStyles={customSelectStyles}
                         noOptionsMessage={() => "Aucune option disponible"}
                     />
-                </div>
-                <div className="add-modal-form-group add-modal-actif-group">
-                    <label className="add-modal-label mat-form-title-label">
-                        <span className="add-modal-actif-state">
-                            Actif
-                            {formData.est_actif ? (
-                                <FaCheckCircle className="add-modal-actif-icon is-on" aria-hidden="true" />
-                            ) : (
-                                <FaTimesCircle className="add-modal-actif-icon" aria-hidden="true" />
-                            )}
-                        </span>
-                        {/* Lecture seule : le statut se change via le bouton Status de la liste. */}
-                        <div
-                            className={`add-modal-toggle is-readonly ${formData.est_actif ? 'is-on' : ''}`}
-                            title="Statut modifiable depuis le bouton Status de la liste"
-                        >
-                            <div className="add-modal-toggle-knob" />
-                        </div>
-                    </label>
                 </div>
             </div>
 
