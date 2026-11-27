@@ -1,0 +1,388 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   DashboardInterventions.css — même langage visuel que DashboardHistoriqueChart
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.dit-root {
+    padding: 24px;
+    background-color: var(--dash-bg-deep);
+    font-family: var(--font-sans);
+    border-radius: 16px;
+    min-height: 100%;
+}
+
+/* ── En-tête ──────────────────────────────────────────────────────────────── */
+.dit-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.dit-header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.dit-icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
+    color: var(--color-white);
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.dit-title {
+    color: var(--dash-text);
+    font-size: 1.625rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.dit-periode {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-lighter) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-transform: capitalize;
+}
+
+.dit-subtitle {
+    color: var(--color-text-sub);
+    margin: 4px 0 0;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+/* ── Contrôles ────────────────────────────────────────────────────────────── */
+.dit-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.dit-segment {
+    display: flex;
+    gap: 4px;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(100, 116, 139, 0.2);
+    border-radius: 10px;
+    padding: 4px;
+}
+
+.dit-segment button {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 7px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--color-text-sub);
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: var(--font-sans);
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+    white-space: nowrap;
+}
+
+.dit-segment button:hover:not(:disabled) {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--color-primary-lighter);
+}
+
+.dit-segment button:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.dit-segment button.active {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(129, 140, 248, 0.15) 100%);
+    color: var(--color-primary-lighter);
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+.dit-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    background: rgba(99, 102, 241, 0.12);
+    color: var(--color-primary-lighter);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.dit-link:hover {
+    background: rgba(99, 102, 241, 0.22);
+}
+
+/* ── Cartes statistiques ──────────────────────────────────────────────────── */
+.dit-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.dit-stat-card {
+    --dit-accent: var(--color-primary);
+    --dit-accent-rgb: 99, 102, 241;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 18px 20px;
+    border-radius: 16px;
+    border: 1px solid rgba(var(--dit-accent-rgb), 0.3);
+    background: linear-gradient(145deg, rgba(var(--dit-accent-rgb), 0.08) 0%, rgba(15, 23, 42, 0.9) 100%);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dit-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3);
+}
+
+.dit-stat-card.time {
+    --dit-accent: var(--color-warning);
+    --dit-accent-rgb: 245, 158, 11;
+}
+
+.dit-stat-card.bloque {
+    --dit-accent: var(--color-rose);
+    --dit-accent-rgb: 244, 63, 94;
+}
+
+.dit-stat-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dit-stat-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: rgba(var(--dit-accent-rgb), 0.15);
+    border: 1px solid rgba(var(--dit-accent-rgb), 0.25);
+    color: var(--dit-accent);
+}
+
+.dit-stat-label {
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.dit-stat-main {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.dit-stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--dit-accent);
+    font-variant-numeric: tabular-nums;
+}
+
+.dit-stat-unit {
+    color: var(--color-text-sub);
+    font-size: 0.8rem;
+}
+
+.dit-stat-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(100, 116, 139, 0.12);
+    flex-wrap: wrap;
+}
+
+.dit-stat-prev {
+    color: var(--color-text-sub);
+    font-size: 0.72rem;
+}
+
+.dit-stat-prev strong {
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Badge de tendance ── */
+.dit-trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 9px;
+    border-radius: 7px;
+    white-space: nowrap;
+}
+
+.dit-trend svg {
+    font-size: 0.65rem;
+}
+
+.dit-trend.positive {
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.22);
+    color: var(--color-success);
+}
+
+.dit-trend.negative {
+    background: rgba(244, 63, 94, 0.12);
+    border: 1px solid rgba(244, 63, 94, 0.22);
+    color: var(--color-rose);
+}
+
+.dit-trend.info {
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.22);
+    color: var(--color-primary-lighter);
+}
+
+.dit-trend.neutral {
+    background: rgba(100, 116, 139, 0.12);
+    border: 1px solid rgba(100, 116, 139, 0.22);
+    color: var(--color-text-sub);
+}
+
+/* ── Graphique ────────────────────────────────────────────────────────────── */
+.dit-chart {
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.7) 0%, rgba(10, 15, 28, 0.6) 100%);
+    padding: 16px 16px 8px;
+    border-radius: 16px;
+    border: 1px solid rgba(100, 116, 139, 0.15);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.dit-chart-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 4px;
+}
+
+.dit-chart-head h3 {
+    margin: 0;
+    color: var(--dash-text);
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.dit-hint {
+    color: var(--color-text-sub);
+    font-size: 0.75rem;
+}
+
+.dit-empty {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    height: 320px;
+    color: var(--color-text-sub);
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.dit-empty svg {
+    font-size: 1.6rem;
+    opacity: 0.5;
+}
+
+/* ── États ────────────────────────────────────────────────────────────────── */
+.dit-body {
+    transition: opacity 0.2s ease;
+}
+
+.dit-body.is-refreshing {
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.dit-state {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    height: 400px;
+    color: var(--color-text-sub);
+}
+
+.dit-state--error {
+    color: var(--color-rose);
+}
+
+.dit-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(99, 102, 241, 0.2);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 1200px) {
+    .dit-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .dit-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 576px) {
+    .dit-root {
+        padding: 14px;
+    }
+    .dit-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    .dit-title {
+        font-size: 1.25rem;
+    }
+    .dit-stat-value {
+        font-size: 1.5rem;
+    }
+}

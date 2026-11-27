@@ -12,6 +12,7 @@ import MailChartFromAPI from '../MailInfo/MailChartFromAPI.js';
 import HistoriqueArriveesChart from '../HistoriqueArrivees/HistoriqueArriveesChart.js';
 import DashboardHistoriqueChart from '../HistoriqueArrivees/DashboardHistoriqueChart.js';
 import TicketChartCount from '../Tickets/TicketChartCount.js';
+import DashboardInterventions from './DashboardInterventions.js';
 
 const Home = () => {
   const { user } = useAuth();
@@ -27,6 +28,14 @@ const Home = () => {
           <div className="home-header-text">
             <h1 className="home-title">Tous les tableaux de bord</h1>
             <p className="home-subtitle">Visualisez les statistiques et indicateurs clés de votre infrastructure</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="home-grid">
+        <div className="home-card">
+          <div className="home-card-content">
+            <DashboardInterventions />
           </div>
         </div>
       </div>
