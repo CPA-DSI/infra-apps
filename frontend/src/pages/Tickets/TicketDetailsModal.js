@@ -6,6 +6,7 @@ import AppModal from '../../components/AppModal/AppModal';
 import { useAuth } from '../../contexts/AuthContext';
 import { hasPermission, PERMISSIONS } from '../../config/api';
 import { toneClass } from '../../utils/tones';
+import { formatDuree } from '../../utils/duree';
 import { STATUS_CONFIG, PRIORITY_CONFIG } from './ticketConfig';
 import './Tickets.css';
 import {
@@ -201,7 +202,7 @@ const TicketDetailsModal = ({ show, handleClose, ticketId }) => {
                             )}
                             {ticket.fermeture.dureeResolution && (
                                 <p className="tck-info-note tck-info-note--tight">
-                                    <strong>Durée de résolution:</strong> {ticket.fermeture.dureeResolution} min
+                                    <strong>Durée de résolution:</strong> {formatDuree(ticket.fermeture.dureeResolution)}
                                 </p>
                             )}
                         </div>

@@ -44,10 +44,5 @@ export const libelleSerie = (periode, index) => {
   return `${index}h`;
 };
 
-export const formatDuree = (minutes) => {
-  if (!minutes) return '0 min';
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (!h) return `${m} min`;
-  return m ? `${h} h ${String(m).padStart(2, '0')}` : `${h} h`;
-};
+// Durées au format hh:mm (utilitaire partagé avec les tickets).
+export { formatDuree } from '../../utils/duree';

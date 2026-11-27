@@ -1,0 +1,158 @@
+/* ============================================================
+   DureePicker — sélecteur de durée à roulettes Heures / Minutes
+   ============================================================ */
+
+.dp {
+  position: relative;
+}
+
+.dp-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+
+.dp-trigger:disabled {
+  cursor: not-allowed;
+}
+
+.dp-placeholder {
+  color: var(--color-text-muted);
+}
+
+.dp-trigger-icon {
+  flex-shrink: 0;
+  margin-left: 8px;
+  color: var(--color-text-sub);
+}
+
+.dp-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: var(--z-dropdown);
+  width: 260px;
+  max-width: calc(100vw - 32px);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.dp-header {
+  padding: 12px 16px;
+  background: var(--color-primary);
+  color: var(--color-white);
+  font-weight: 600;
+  text-align: center;
+}
+
+.dp-labels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.dp-corps {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 0 8px;
+}
+
+/* Bande de sélection au centre, derrière les chiffres */
+.dp-bande {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: calc(var(--dp-item-h) * (var(--dp-visibles) - 1) / 2);
+  height: var(--dp-item-h);
+  background: var(--color-primary);
+  border-radius: var(--radius-pill);
+  pointer-events: none;
+}
+
+.dp-roulette {
+  position: relative;
+  height: calc(var(--dp-item-h) * var(--dp-visibles));
+  padding: calc(var(--dp-item-h) * (var(--dp-visibles) - 1) / 2) 0;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+  outline: none;
+  /* Estompe les lignes du haut et du bas */
+  mask-image: linear-gradient(to bottom, transparent 0, #000 30%, #000 70%, transparent 100%);
+}
+
+.dp-roulette::-webkit-scrollbar {
+  display: none;
+}
+
+.dp-roulette:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--color-primary-lighter);
+  border-radius: var(--radius-sm);
+}
+
+.dp-item {
+  height: var(--dp-item-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  scroll-snap-align: center;
+  color: var(--color-text-main);
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s;
+}
+
+.dp-item.is-selected {
+  color: var(--color-white);
+  font-weight: 600;
+}
+
+.dp-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+.dp-btn {
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.dp-btn--ghost {
+  background: transparent;
+  color: var(--color-text-sub);
+}
+
+.dp-btn--ghost:hover {
+  background: var(--color-bg-alt);
+}
+
+.dp-btn--primary {
+  background: var(--color-primary);
+  color: var(--color-white);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.dp-btn--primary:hover {
+  background: var(--color-primary-dark);
+}
