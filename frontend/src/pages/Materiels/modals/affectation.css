@@ -43,3 +43,14 @@
 .mat-radio-label + .mat-radio-label {
     margin-top: 6px;
 }
+
+.mat-radio-label--disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.mat-conflict-sub {
+    margin: 8px 0 8px 24px;
+    display: grid;
+    gap: 4px;
+}

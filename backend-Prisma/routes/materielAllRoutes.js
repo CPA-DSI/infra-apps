@@ -341,14 +341,16 @@ router.get('/affectation/beneficiaires', requireRole(UserRole.IT_ADMIN, UserRole
 }));
 
 // POST /api/materiels_all/:id/affecter
-// Body : { id_n (null = stock), utilisateur, equipe, id_local?, motif?, etat_remise?, commentaire? }
+// Body : { id_n (null = stock), utilisateur, equipe, id_local?, motif?, etat_remise?, commentaire?,
+//          mode_conflit? ('refuser' | 'stock' | 'echanger'), etat_ancien_pc? }
+// mode_conflit : que faire si le bénéficiaire a déjà un PC (cf. affecterPC).
 router.post('/:id/affecter', requireRole(UserRole.IT_ADMIN, UserRole.DIRECTION), asyncHandler(async (req, res) => {
     const id_materiels = parseInt(req.params.id, 10);
     if (isNaN(id_materiels)) {
         return res.status(400).json({ error: "L'identifiant fourni n'est pas valide." });
     }
 
-    const { id_n, utilisateur, equipe, id_local, motif, etat_remise, commentaire } = req.body;
+    const { id_n, utilisateur, equipe, id_local, motif, etat_remise, commentaire, mode_conflit, etat_ancien_pc } = req.body;
     const cibleIdN = id_n === null || id_n === undefined || id_n === '' ? null : parseInt(id_n, 10);
     if (Number.isNaN(cibleIdN)) {
         return res.status(400).json({ error: 'N° Matricule invalide.' });
@@ -358,8 +360,14 @@ router.post('/:id/affecter', requireRole(UserRole.IT_ADMIN, UserRole.DIRECTION),
     try {
         const materiel = await prisma.$transaction((tx) => affecterPC(tx, {
             id_materiels, id_n: cibleIdN, utilisateur, equipe, id_local: localId, motif, etat_remise, commentaire,
+            mode_conflit: mode_conflit || undefined, etat_ancien_pc: etat_ancien_pc || undefined,
         }, req.user?.id_n));
-        res.json({ message: cibleIdN ? 'PC réaffecté avec succès.' : 'PC mis en stock.', materiel });
+        const message = !cibleIdN
+            ? 'PC mis en stock.'
+            : mode_conflit === 'echanger'
+                ? 'PC échangés avec succès.'
+                : 'PC réaffecté avec succès.';
+        res.json({ message, materiel });
     } catch (error) {
         repondreErreurAffectation(res, error);
     }

@@ -139,6 +139,129 @@ const creerPosteVide = async (tx, materiel, now, auteur, description) => {
     await tracer(tx, vide.id_materiels, null, description, auteur);
 };
 
+// Que faire quand le bénéficiaire a déjà un PC (cf. affecterPC).
+export const MODES_CONFLIT_PC = ['refuser', 'stock', 'echanger'];
+
+const libellePC = (materiel) => `PC ${materiel.code_pc || `#${materiel.id_materiels}`}`;
+
+// Met en stock l'ancien PC du bénéficiaire, remplacé par pcNouveau. Libère son
+// matricule et ses colonnes écran ; renvoie l'écran qu'il portait (celui du
+// bénéficiaire), que l'appelant doit replacer.
+const mettreAncienPCEnStock = async (tx, ancien, pcNouveau, { now, auteur, motif, etat }) => {
+    await fermerAffectationEnCours(tx, { type_affectation: 'PC', id_materiels: ancien.id_materiels }, now);
+    await tx.materiels.update({
+        where: { id_materiels: ancien.id_materiels },
+        data: {
+            id_n: null,
+            utilisateur: LIBELLE_STOCK,
+            equipe: LIBELLE_STOCK,
+            est_actif: false,
+            ...(etat ? { etat_pc: etat } : {}),
+            ecran: null,
+            code_ecran: null,
+            date_ecran: null,
+            date_modification: now,
+        },
+    });
+    const raison = `Remplacé par le ${libellePC(pcNouveau)}`;
+    await tx.affectationMateriel.create({
+        data: {
+            type_affectation: 'PC',
+            id_materiels: ancien.id_materiels,
+            id_n: null,
+            nom_utilisateur: LIBELLE_STOCK,
+            date_debut: now,
+            motif: motif ? `${raison} — ${motif}` : raison,
+            etat_remise: etat || null,
+            ...auteur,
+        },
+    });
+    await tracer(
+        tx,
+        ancien.id_materiels,
+        `Affecté à : ${decrireBeneficiaire(ancien.id_n, ancien.utilisateur)}`,
+        avecMotif(`Affecté à : ${LIBELLE_STOCK} (${raison.toLowerCase()})`, motif),
+        auteur
+    );
+    return ancien.ecran_actuel;
+};
+
+/**
+ * Échange de PC entre le titulaire de pcA et le bénéficiaire, titulaire de
+ * pcB. Chacun garde son écran, son local et son équipe : seuls les PC
+ * changent de mains. Aucune fiche « Sans poste » n'est créée.
+ */
+const echangerPC = async (tx, pcA, pcB, { nom, equipe, motif, etat_remise, commentaire }, now, auteur) => {
+    await fermerAffectationEnCours(tx, { type_affectation: 'PC', id_materiels: { in: [pcA.id_materiels, pcB.id_materiels] } }, now);
+
+    // Le matricule est unique : pcA le libère avant que pcB ne le prenne.
+    await tx.materiels.update({ where: { id_materiels: pcA.id_materiels }, data: { id_n: null } });
+    await tx.materiels.update({
+        where: { id_materiels: pcB.id_materiels },
+        data: {
+            id_n: pcA.id_n,
+            utilisateur: pcA.utilisateur,
+            equipe: pcA.equipe,
+            id_local: pcA.id_local,
+            date_modification: now,
+        },
+    });
+    const misAJour = await tx.materiels.update({
+        where: { id_materiels: pcA.id_materiels },
+        data: {
+            id_n: pcB.id_n,
+            utilisateur: nom,
+            equipe: equipe?.trim() || pcB.equipe,
+            id_local: pcB.id_local,
+            date_modification: now,
+        },
+    });
+
+    const echanges = [
+        { pc: pcA, autre: pcB, id_n: pcB.id_n, nom, remise: { etat_remise, commentaire } },
+        { pc: pcB, autre: pcA, id_n: pcA.id_n, nom: pcA.utilisateur, remise: {} },
+    ];
+    for (const { pc, autre, id_n, nom: beneficiaire, remise } of echanges) {
+        const raison = `Échange avec le ${libellePC(autre)}`;
+        await tx.affectationMateriel.create({
+            data: {
+                type_affectation: 'PC',
+                id_materiels: pc.id_materiels,
+                id_n,
+                nom_utilisateur: beneficiaire,
+                date_debut: now,
+                motif: motif ? `${raison} — ${motif}` : raison,
+                etat_remise: remise.etat_remise || null,
+                commentaire: remise.commentaire || null,
+                ...auteur,
+            },
+        });
+        await tracer(
+            tx,
+            pc.id_materiels,
+            `Affecté à : ${decrireBeneficiaire(pc.id_n, pc.utilisateur)}`,
+            avecMotif(`Affecté à : ${decrireBeneficiaire(id_n, beneficiaire)} (${raison.toLowerCase()})`, motif),
+            auteur
+        );
+    }
+
+    // Les écrans restent sur le bureau de leur utilisateur : ils changent de
+    // fiche poste. ecrans.id_materiels est unique, on les détache d'abord.
+    const ecranA = pcA.ecran_actuel;
+    const ecranB = pcB.ecran_actuel;
+    if (ecranA || ecranB) {
+        const ids = [ecranA, ecranB].filter(Boolean).map(e => e.id_ecran);
+        await tx.ecran.updateMany({ where: { id_ecran: { in: ids } }, data: { id_materiels: null } });
+        const ctx = { now, auteur, motif: 'Reste avec son utilisateur (échange de PC)' };
+        if (ecranA) await deplacerEcran(tx, ecranA, pcB.id_materiels, 'AFFECTE', ctx);
+        if (ecranB) await deplacerEcran(tx, ecranB, pcA.id_materiels, 'AFFECTE', ctx);
+        await syncColonnesEcran(tx, pcA.id_materiels);
+        await syncColonnesEcran(tx, pcB.id_materiels);
+    }
+
+    return misAJour;
+};
+
 /**
  * Réaffecte un PC (la fiche poste) à un autre bénéficiaire, ou le met en stock
  * si id_n est null. L'écran rattaché au poste suit le PC, sauf en cas de mise
@@ -146,8 +269,26 @@ const creerPosteVide = async (tx, materiel, now, auteur, description) => {
  * garde une fiche vide (est_vide), remplacée dès qu'un PC lui est réaffecté.
  * Ses mouvements de stock référencent son matricule (users.id_n) et ne
  * bougent pas.
+ *
+ * Si le bénéficiaire a déjà un PC, mode_conflit décide :
+ * - 'refuser' (défaut) : erreur 409 ;
+ * - 'stock'            : son ancien PC part en stock (état physique etat_ancien_pc
+ *                        si fourni) ; son écran reste avec lui (sur le nouveau PC
+ *                        si celui-ci n'en a pas, sinon en stock) ;
+ * - 'echanger'         : son ancien PC part chez le titulaire actuel du PC
+ *                        réaffecté ; chacun garde son écran et son local.
  */
-export const affecterPC = async (tx, { id_materiels, id_n, utilisateur, equipe, id_local, motif, etat_remise, commentaire }, auteurIdN) => {
+export const affecterPC = async (tx, {
+    id_materiels, id_n, utilisateur, equipe, id_local, motif, etat_remise, commentaire,
+    mode_conflit = 'refuser', etat_ancien_pc,
+}, auteurIdN) => {
+    if (!MODES_CONFLIT_PC.includes(mode_conflit)) {
+        throw new AffectationError(`Mode de conflit invalide : ${mode_conflit}.`);
+    }
+    if (etat_ancien_pc && !ETATS_PHYSIQUES.includes(etat_ancien_pc)) {
+        throw new AffectationError(`État physique invalide : ${etat_ancien_pc}. Valeurs possibles : ${ETATS_PHYSIQUES.join(', ')}.`);
+    }
+
     const materiel = await tx.materiels.findUnique({
         where: { id_materiels },
         include: { ecran_actuel: true },
@@ -165,6 +306,7 @@ export const affecterPC = async (tx, { id_materiels, id_n, utilisateur, equipe, 
     }
 
     let posteVide = null;
+    let ancienPC = null;
     if (cibleIdN !== null) {
         const user = await tx.users.findUnique({
             where: { id_n: cibleIdN },
@@ -176,11 +318,17 @@ export const affecterPC = async (tx, { id_materiels, id_n, utilisateur, equipe, 
         if (user.materiel?.est_vide) {
             posteVide = user.materiel;
         } else if (user.materiel) {
-            throw new AffectationError(
-                `L'utilisateur ${cibleIdN} a déjà le poste ${user.materiel.code_pc || `#${user.materiel.id_materiels}`}. Mettez-le d'abord en stock ou réaffectez-le.`,
-                409,
-                { id_materiels: user.materiel.id_materiels }
-            );
+            ancienPC = user.materiel;
+            if (mode_conflit === 'refuser') {
+                throw new AffectationError(
+                    `L'utilisateur ${cibleIdN} a déjà le poste ${ancienPC.code_pc || `#${ancienPC.id_materiels}`}. Choisissez de le mettre en stock ou de l'échanger.`,
+                    409,
+                    { id_materiels: ancienPC.id_materiels, code_pc: ancienPC.code_pc }
+                );
+            }
+            if (mode_conflit === 'echanger' && materiel.id_n === null) {
+                throw new AffectationError('Ce PC est en stock : il n\'y a personne avec qui échanger. Mettez l\'ancien PC en stock.');
+            }
         }
     }
 
@@ -194,8 +342,17 @@ export const affecterPC = async (tx, { id_materiels, id_n, utilisateur, equipe, 
     const auteur = await resoudreAuteur(tx, auteurIdN);
     const miseEnStock = cibleIdN === null;
 
-    // Le matricule est unique : le poste vide doit le libérer avant le PC.
-    const ecranPosteVide = posteVide ? await supprimerPosteVide(tx, posteVide, now, auteur) : null;
+    if (ancienPC && mode_conflit === 'echanger') {
+        return echangerPC(tx, materiel, ancienPC, { nom, equipe, motif, etat_remise, commentaire }, now, auteur);
+    }
+
+    // Le matricule est unique : le poste vide ou l'ancien PC du bénéficiaire
+    // doit le libérer avant le PC. Son écran est replacé plus bas.
+    const ecranRepris = posteVide
+        ? await supprimerPosteVide(tx, posteVide, now, auteur)
+        : ancienPC
+            ? await mettreAncienPCEnStock(tx, ancienPC, materiel, { now, auteur, motif, etat: etat_ancien_pc })
+            : null;
 
     await fermerAffectationEnCours(tx, { type_affectation: 'PC', id_materiels }, now);
 
@@ -244,20 +401,23 @@ export const affecterPC = async (tx, { id_materiels, id_n, utilisateur, equipe, 
         }
     }
 
-    // L'écran du poste vide rejoint le PC s'il n'en a pas, sinon part en stock.
-    if (ecranPosteVide) {
+    // L'écran du bénéficiaire (poste vide ou ancien PC) rejoint le PC s'il n'en
+    // a pas, sinon part en stock.
+    if (ecranRepris) {
         const versPC = !materiel.ecran_actuel;
-        await deplacerEcran(tx, ecranPosteVide, versPC ? id_materiels : null, versPC ? 'AFFECTE' : 'EN_STOCK', {
-            now, auteur, motif: versPC ? 'Repris du poste vide' : 'Poste vide remplacé',
+        const origine = posteVide ? 'du poste vide' : `de l'ancien ${libellePC(ancienPC)}`;
+        await deplacerEcran(tx, ecranRepris, versPC ? id_materiels : null, versPC ? 'AFFECTE' : 'EN_STOCK', {
+            now, auteur, motif: versPC ? `Repris ${origine}` : (posteVide ? 'Poste vide remplacé' : `Écran ${origine} : le nouveau PC a déjà un écran`),
         });
         if (versPC) await syncColonnesEcran(tx, id_materiels);
     }
 
+    const remplace = ancienPC ? ` (remplace le ${libellePC(ancienPC)})` : '';
     await tracer(
         tx,
         id_materiels,
         `Affecté à : ${decrireBeneficiaire(materiel.id_n, materiel.utilisateur)}`,
-        avecMotif(`Affecté à : ${decrireBeneficiaire(cibleIdN, nom)}`, motif),
+        avecMotif(`Affecté à : ${decrireBeneficiaire(cibleIdN, nom)}${remplace}`, motif),
         auteur
     );
 

@@ -14,6 +14,7 @@ import {
 } from '../../services/api';
 import SearchableSelect from '../../components/SearchableSelect/SearchableSelect';
 import AppModal from '../../components/AppModal/AppModal';
+import { ETATS_PHYSIQUES } from './materielsTableConfig';
 import './MaterielsModals.css';
 
 const STOCK = '__STOCK__';
@@ -56,6 +57,9 @@ const AffectationModal = ({ mode, materiel, onClose, onDone, miseEnStock = false
     const [equipe, setEquipe] = useState(materiel.equipe || '');
     const [idLocal, setIdLocal] = useState(materiel.id_local ? String(materiel.id_local) : '');
     const [modeConflit, setModeConflit] = useState('echanger');
+    // PC : le bénéficiaire a déjà un PC -> 'stock' ou 'echanger'.
+    const [modeConflitPC, setModeConflitPC] = useState('stock');
+    const [etatAncienPC, setEtatAncienPC] = useState('');
     const [motif, setMotif] = useState('');
     const [etatRemise, setEtatRemise] = useState('');
     const [commentaire, setCommentaire] = useState('');
@@ -87,9 +91,25 @@ const AffectationModal = ({ mode, materiel, onClose, onDone, miseEnStock = false
         ...(materiel.id_n ? [{ value: STOCK, label: '📦 Mettre en stock (aucun bénéficiaire)' }] : []),
         ...beneficiaires
             // Pas de filtre sur is_active : l'import Excel crée les utilisateurs inactifs.
-            .filter(b => !b.poste)
-            .map(b => ({ value: String(b.id_n), label: `${b.id_n} - ${b.nom || b.email || 'Sans nom'}${b.poste_vide ? ' (sans poste)' : ''}` })),
-    ], [beneficiaires, materiel.id_n]);
+            // Les utilisateurs qui ont déjà un PC sont proposés : la modale demande
+            // alors quoi faire de leur PC actuel (stock ou échange).
+            .filter(b => b.poste?.id_materiels !== materiel.id_materiels)
+            .map(b => ({
+                value: String(b.id_n),
+                label: `${b.id_n} - ${b.nom || b.email || 'Sans nom'}${b.poste_vide
+                    ? ' (sans poste)'
+                    : b.poste ? ` (a déjà le PC ${b.poste.code_pc || `#${b.poste.id_materiels}`})` : ''}`,
+            })),
+    ], [beneficiaires, materiel.id_n, materiel.id_materiels]);
+
+    const beneficiaireChoisi = isPC && cible && cible !== STOCK
+        ? beneficiaires.find(b => String(b.id_n) === cible)
+        : null;
+    const ancienPC = beneficiaireChoisi?.poste || null;
+    const libelleAncienPC = ancienPC ? `PC ${ancienPC.code_pc || `#${ancienPC.id_materiels}`}` : '';
+    // Échange possible seulement si le PC réaffecté a un titulaire.
+    const echangePossible = Boolean(materiel.id_n);
+    const echange = Boolean(ancienPC) && modeConflitPC === 'echanger';
 
     const posteOptions = useMemo(() => [
         ...HORS_POSTE.map(s => ({ value: s, label: `📦 ${STATUTS_ECRAN_LABELS[s]}` })),
@@ -114,6 +134,8 @@ const AffectationModal = ({ mode, materiel, onClose, onDone, miseEnStock = false
     // --- Saisie ---
     const handleBeneficiaireChange = (value) => {
         setCible(value);
+        setModeConflitPC('stock');
+        setEtatAncienPC('');
         const b = beneficiaires.find(x => String(x.id_n) === value);
         setUtilisateur(b?.nom || '');
         if (b?.equipe) setEquipe(b.equipe);
@@ -142,6 +164,10 @@ const AffectationModal = ({ mode, materiel, onClose, onDone, miseEnStock = false
                     utilisateur,
                     equipe,
                     id_local: idLocal ? parseInt(idLocal, 10) : null,
+                    ...(ancienPC ? {
+                        mode_conflit: modeConflitPC,
+                        etat_ancien_pc: modeConflitPC === 'stock' && etatAncienPC ? etatAncienPC : null,
+                    } : {}),
                 });
                 message = res.message;
             } else if (aUnEcran) {
@@ -210,7 +236,7 @@ const AffectationModal = ({ mode, materiel, onClose, onDone, miseEnStock = false
                     {isPC && (
                         <>
                             <Field label="Nouveau bénéficiaire" required>
-                                <SearchableSelect value={cible} onChange={handleBeneficiaireChange} options={beneficiaireOptions} placeholder="Choisir un utilisateur sans poste..." style={selectStyle} />
+                                <SearchableSelect value={cible} onChange={handleBeneficiaireChange} options={beneficiaireOptions} placeholder="Choisir un utilisateur..." style={selectStyle} />
                             </Field>
                             {cible && cible !== STOCK && (
                                 <div className="mat-two-cols">
@@ -222,22 +248,63 @@ const AffectationModal = ({ mode, materiel, onClose, onDone, miseEnStock = false
                                     </Field>
                                 </div>
                             )}
-                            <Field label="Local">
-                                <select className="mat-field-input" value={idLocal} onChange={e => setIdLocal(e.target.value)}>
-                                    <option value="">Non attribué</option>
-                                    {locaux.map(l => <option key={l.id_local} value={l.id_local}>{l.nom_local}</option>)}
-                                </select>
-                            </Field>
-                            {cible === STOCK ? (
+                            {ancienPC && (
+                                <div className="mat-conflict-box">
+                                    <div className="mat-conflict-title">
+                                        {utilisateur || beneficiaireChoisi.nom} a déjà le {libelleAncienPC}. Que faire de ce PC ?
+                                    </div>
+                                    <label className="mat-radio-label">
+                                        <input type="radio" checked={modeConflitPC === 'stock'} onChange={() => setModeConflitPC('stock')} />
+                                        📦 Le mettre en stock (remplacement)
+                                    </label>
+                                    {modeConflitPC === 'stock' && (
+                                        <div className="mat-conflict-sub">
+                                            <label className="mat-field-label" htmlFor="etat-ancien-pc">État physique du {libelleAncienPC} au retour</label>
+                                            <select id="etat-ancien-pc" className="mat-field-input" value={etatAncienPC} onChange={e => setEtatAncienPC(e.target.value)}>
+                                                <option value="">Inchangé</option>
+                                                {ETATS_PHYSIQUES.map(etat => <option key={etat} value={etat}>{etat}</option>)}
+                                            </select>
+                                        </div>
+                                    )}
+                                    <label className={`mat-radio-label${echangePossible ? '' : ' mat-radio-label--disabled'}`}>
+                                        <input
+                                            type="radio"
+                                            disabled={!echangePossible}
+                                            checked={modeConflitPC === 'echanger'}
+                                            onChange={() => setModeConflitPC('echanger')}
+                                        />
+                                        <FaExchangeAlt /> {echangePossible
+                                            ? `Échanger : il part chez ${materiel.utilisateur}`
+                                            : 'Échanger : impossible, ce PC est en stock'}
+                                    </label>
+                                </div>
+                            )}
+                            {!echange && (
+                                <Field label="Local">
+                                    <select className="mat-field-input" value={idLocal} onChange={e => setIdLocal(e.target.value)}>
+                                        <option value="">Non attribué</option>
+                                        {locaux.map(l => <option key={l.id_local} value={l.id_local}>{l.nom_local}</option>)}
+                                    </select>
+                                </Field>
+                            )}
+                            {echange ? (
+                                <div className="mat-info-line">
+                                    <FaInfoCircle aria-hidden="true" /> Seuls les PC changent de mains : chacun garde son écran, son local et son équipe.
+                                    Aucune fiche « Sans poste » n'est créée.
+                                </div>
+                            ) : cible === STOCK ? (
                                 <div className="mat-info-line">
                                     <FaInfoCircle aria-hidden="true" /> {materiel.utilisateur} gardera une fiche vide (« Sans poste »)
                                     {materiel.id_ecran ? ` et l'écran ${materiel.code_ecran} partira en stock.` : '.'}
                                 </div>
-                            ) : (materiel.id_n || materiel.id_ecran) && (
+                            ) : (materiel.id_n || materiel.id_ecran || ancienPC) && (
                                 <div className="mat-info-line">
                                     <FaInfoCircle aria-hidden="true" />
                                     {materiel.id_n && ` ${materiel.utilisateur} gardera une fiche vide (« Sans poste »).`}
                                     {materiel.id_ecran && ` L'écran ${materiel.code_ecran} reste sur ce poste et suit le PC.`}
+                                    {ancienPC && (materiel.id_ecran
+                                        ? ` L'écran du ${libelleAncienPC}, s'il y en a un, partira en stock.`
+                                        : ` L'écran du ${libelleAncienPC}, s'il y en a un, passera sur ce PC.`)}
                                 </div>
                             )}
                         </>

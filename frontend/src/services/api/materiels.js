@@ -162,7 +162,8 @@ export const fetchBeneficiaires = async () => {
   }
 };
 
-// data : { id_n (null = stock), utilisateur, equipe, id_local?, motif?, etat_remise?, commentaire? }
+// data : { id_n (null = stock), utilisateur, equipe, id_local?, motif?, etat_remise?, commentaire?,
+//          mode_conflit? (si le bénéficiaire a déjà un PC : 'stock' ou 'echanger'), etat_ancien_pc? }
 export const affecterMateriel = async (id, data) => {
   try {
     const response = await apiClient.post(`/materiels_all/${id}/affecter`, data);

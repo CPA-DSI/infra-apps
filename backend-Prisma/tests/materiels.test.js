@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterAll } from 'vitest';
-import { prisma, resetDatabase, createUser, createProduit } from './helpers/db.js';
+import { prisma, resetDatabase, createUser, createProduit, createLocal } from './helpers/db.js';
 import { as } from './helpers/http.js';
 
 let admin;
@@ -233,5 +233,166 @@ describe('Corbeille : GET /corbeille et POST /:id/restaurer', () => {
 
         const actif = await as(admin).post(`/api/materiels_all/${admin.materiel.id_materiels}/restaurer`);
         expect(actif.status).toBe(404);
+    });
+});
+
+describe('POST /api/materiels_all/:id/affecter — bénéficiaire qui a déjà un PC', () => {
+    let bob;
+
+    beforeEach(async () => {
+        bob = await createUser({ idN: 20, withMateriel: true });
+    });
+
+    const pcAlice = () => alice.materiel.id_materiels;
+    const pcBob = () => bob.materiel.id_materiels;
+    const relirePC = (id) => prisma.materiels.findUnique({ where: { id_materiels: id } });
+    const affecterABob = (body = {}) => as(admin).post(`/api/materiels_all/${pcAlice()}/affecter`)
+        .send({ id_n: 20, utilisateur: 'Utilisateur 20', ...body });
+    const affectationsEnCours = (where) => prisma.affectationMateriel.findMany({ where: { ...where, date_fin: null } });
+    const creerEcran = (code, id_materiels) => prisma.ecran.create({ data: { code_ecran: code, id_materiels, statut: 'AFFECTE' } });
+
+    it('refuse par défaut (409) et ne change rien', async () => {
+        const res = await affecterABob();
+
+        expect(res.status).toBe(409);
+        expect(res.body).toMatchObject({ id_materiels: pcBob() });
+        expect(res.body.error).toMatch(/stock ou de l'échanger/);
+        expect(await relirePC(pcAlice())).toMatchObject({ id_n: 10 });
+        expect(await relirePC(pcBob())).toMatchObject({ id_n: 20 });
+    });
+
+    it.each([
+        [{ mode_conflit: 'ecraser' }, /Mode de conflit invalide/],
+        [{ mode_conflit: 'stock', etat_ancien_pc: 'Stock' }, /État physique invalide/],
+    ])('refuse un paramètre invalide (%o)', async (body, message) => {
+        const res = await affecterABob(body);
+
+        expect(res.status).toBe(400);
+        expect(res.body.error).toMatch(message);
+        expect(await relirePC(pcBob())).toMatchObject({ id_n: 20 });
+    });
+
+    describe("mode « stock » : l'ancien PC part en stock", () => {
+        it("met l'ancien PC en stock avec son état de retour et trace le remplacement", async () => {
+            const res = await affecterABob({ mode_conflit: 'stock', etat_ancien_pc: 'HS', motif: 'Panne' });
+
+            expect(res.status).toBe(200);
+            expect(await relirePC(pcAlice())).toMatchObject({ id_n: 20, utilisateur: 'Utilisateur 20', est_actif: true });
+            expect(await relirePC(pcBob())).toMatchObject({
+                id_n: null, utilisateur: 'Stock', equipe: 'Stock', est_actif: false, etat_pc: 'HS', est_vide: false,
+            });
+
+            // Alice perd son PC : fiche « Sans poste ». Bob n'en a pas : il a un PC.
+            expect(await prisma.materiels.findUnique({ where: { id_n: 10 } })).toMatchObject({ est_vide: true });
+            expect(await prisma.materiels.count({ where: { est_vide: true } })).toBe(1);
+
+            const [affBob] = await affectationsEnCours({ type_affectation: 'PC', id_materiels: pcBob() });
+            expect(affBob).toMatchObject({ id_n: null, nom_utilisateur: 'Stock', etat_remise: 'HS' });
+            expect(affBob.motif).toMatch(/Remplacé par le PC .* — Panne/);
+            const [affAlice] = await affectationsEnCours({ type_affectation: 'PC', id_materiels: pcAlice() });
+            expect(affAlice).toMatchObject({ id_n: 20 });
+
+            const trace = await prisma.historiqueMateriel.findFirst({
+                where: { id_materiels: pcAlice() }, orderBy: { id_historique: 'desc' },
+            });
+            expect(trace.nouvelle_valeur).toMatch(/^Affecté à : 20 - Utilisateur 20 \(remplace le PC .*\) — Motif : Panne$/);
+        });
+
+        it("garde l'état physique de l'ancien PC si aucun état de retour n'est donné", async () => {
+            await prisma.materiels.update({ where: { id_materiels: pcBob() }, data: { etat_pc: 'Moyen' } });
+
+            const res = await affecterABob({ mode_conflit: 'stock' });
+
+            expect(res.status).toBe(200);
+            expect(await relirePC(pcBob())).toMatchObject({ id_n: null, etat_pc: 'Moyen' });
+        });
+
+        it("l'écran du bénéficiaire passe sur le nouveau PC s'il n'en a pas", async () => {
+            const ecran = await creerEcran('ECR-BOB', pcBob());
+
+            const res = await affecterABob({ mode_conflit: 'stock' });
+
+            expect(res.status).toBe(200);
+            expect(await prisma.ecran.findUnique({ where: { id_ecran: ecran.id_ecran } }))
+                .toMatchObject({ id_materiels: pcAlice(), statut: 'AFFECTE' });
+            expect(await relirePC(pcAlice())).toMatchObject({ code_ecran: 'ECR-BOB' });
+            expect(await relirePC(pcBob())).toMatchObject({ code_ecran: null });
+        });
+
+        it("l'écran du bénéficiaire part en stock si le nouveau PC a déjà le sien", async () => {
+            const ecranAlice = await creerEcran('ECR-ALICE', pcAlice());
+            const ecranBob = await creerEcran('ECR-BOB', pcBob());
+
+            const res = await affecterABob({ mode_conflit: 'stock' });
+
+            expect(res.status).toBe(200);
+            expect(await prisma.ecran.findUnique({ where: { id_ecran: ecranAlice.id_ecran } }))
+                .toMatchObject({ id_materiels: pcAlice(), statut: 'AFFECTE' });
+            expect(await prisma.ecran.findUnique({ where: { id_ecran: ecranBob.id_ecran } }))
+                .toMatchObject({ id_materiels: null, statut: 'EN_STOCK' });
+            expect(await affectationsEnCours({ type_affectation: 'ECRAN', id_ecran: ecranBob.id_ecran }))
+                .toEqual([expect.objectContaining({ id_materiels: null })]);
+        });
+
+        it('fonctionne avec un PC sorti du stock (sans fiche « Sans poste »)', async () => {
+            await as(admin).post(`/api/materiels_all/${pcAlice()}/affecter`).send({ id_n: null });
+            const vides = await prisma.materiels.count({ where: { est_vide: true } });
+
+            const res = await affecterABob({ mode_conflit: 'stock' });
+
+            expect(res.status).toBe(200);
+            expect(await relirePC(pcAlice())).toMatchObject({ id_n: 20, est_actif: true });
+            expect(await relirePC(pcBob())).toMatchObject({ id_n: null, est_actif: false });
+            expect(await prisma.materiels.count({ where: { est_vide: true } })).toBe(vides);
+        });
+    });
+
+    describe('mode « echanger » : les deux titulaires échangent leurs PC', () => {
+        it("échange les PC ; chacun garde son écran, son local et son équipe, sans fiche « Sans poste »", async () => {
+            const [bureauAlice, bureauBob] = [await createLocal('Bureau A'), await createLocal('Bureau B')];
+            await prisma.materiels.update({ where: { id_materiels: pcAlice() }, data: { id_local: bureauAlice.id_local, equipe: 'Compta' } });
+            await prisma.materiels.update({ where: { id_materiels: pcBob() }, data: { id_local: bureauBob.id_local, equipe: 'Audit' } });
+            const ecranAlice = await creerEcran('ECR-ALICE', pcAlice());
+            const ecranBob = await creerEcran('ECR-BOB', pcBob());
+
+            const res = await affecterABob({ mode_conflit: 'echanger', equipe: 'Audit', motif: 'Besoin de puissance' });
+
+            expect(res.status).toBe(200);
+            expect(res.body.message).toMatch(/échangés/);
+            expect(await relirePC(pcAlice())).toMatchObject({
+                id_n: 20, utilisateur: 'Utilisateur 20', equipe: 'Audit', id_local: bureauBob.id_local, code_ecran: 'ECR-BOB',
+            });
+            expect(await relirePC(pcBob())).toMatchObject({
+                id_n: 10, utilisateur: 'Utilisateur 10', equipe: 'Compta', id_local: bureauAlice.id_local, code_ecran: 'ECR-ALICE',
+            });
+            expect(await prisma.materiels.count({ where: { est_vide: true } })).toBe(0);
+
+            expect(await prisma.ecran.findUnique({ where: { id_ecran: ecranAlice.id_ecran } })).toMatchObject({ id_materiels: pcBob() });
+            expect(await prisma.ecran.findUnique({ where: { id_ecran: ecranBob.id_ecran } })).toMatchObject({ id_materiels: pcAlice() });
+
+            const affA = await affectationsEnCours({ type_affectation: 'PC', id_materiels: pcAlice() });
+            const affB = await affectationsEnCours({ type_affectation: 'PC', id_materiels: pcBob() });
+            expect(affA).toEqual([expect.objectContaining({ id_n: 20, motif: expect.stringMatching(/^Échange avec le PC .* — Besoin de puissance$/) })]);
+            expect(affB).toEqual([expect.objectContaining({ id_n: 10, nom_utilisateur: 'Utilisateur 10' })]);
+        });
+
+        it("échange sans écran : rien ne bouge côté écrans", async () => {
+            const res = await affecterABob({ mode_conflit: 'echanger' });
+
+            expect(res.status).toBe(200);
+            expect(await relirePC(pcAlice())).toMatchObject({ id_n: 20, code_ecran: null });
+            expect(await relirePC(pcBob())).toMatchObject({ id_n: 10, code_ecran: null });
+            expect(await prisma.affectationMateriel.count({ where: { type_affectation: 'ECRAN' } })).toBe(0);
+        });
+
+        it('refuse un échange depuis un PC en stock', async () => {
+            await as(admin).post(`/api/materiels_all/${pcAlice()}/affecter`).send({ id_n: null });
+
+            const res = await affecterABob({ mode_conflit: 'echanger' });
+
+            expect(res.status).toBe(400);
+            expect(res.body.error).toMatch(/personne avec qui échanger/);
+            expect(await relirePC(pcBob())).toMatchObject({ id_n: 20 });
+        });
     });
 });
